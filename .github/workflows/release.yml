@@ -1,0 +1,96 @@
+name: Release Windows Executable
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  release:
+    name: Build & Release Windows Executable
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure git
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: version
+        shell: bash
+        run: |
+          npm version ${{ inputs.bump }} --workspaces --include-workspace-root --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      - name: Build electron TypeScript
+        run: npm run build:electron
+
+      - name: Package Windows executable
+        working-directory: packages/electron
+        run: npx electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit & tag version bump
+        shell: bash
+        run: |
+          git add package.json package-lock.json packages/*/package.json
+          git diff-index --quiet HEAD || git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin HEAD --tags
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "v${{ steps.version.outputs.version }}"
+          $exeFiles = Get-ChildItem -Path "packages/electron/release" -Filter "*.exe" -Recurse |
+            Select-Object -ExpandProperty FullName
+          if (-not $exeFiles) {
+            Write-Error "No .exe files found in packages/electron/release"
+            exit 1
+          }
+          $ghArgs = @("release", "create", $tag, "--title", $tag, "--generate-notes")
+          if ("${{ inputs.prerelease }}" -eq "true") {
+            $ghArgs += "--prerelease"
+          }
+          $ghArgs += $exeFiles
+          gh @ghArgs
