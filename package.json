@@ -14,7 +14,14 @@
     "build:web": "npm run build --workspace=packages/web",
     "build:electron": "npm run build --workspace=packages/electron",
     "build": "npm run build:shared && npm run build:backend && npm run build:web",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:shared": "npm run test --workspace=packages/shared",
+    "test:backend": "npm run test --workspace=packages/backend",
+    "test:web": "npm run test --workspace=packages/web",
+    "test:electron": "npm run test --workspace=packages/electron",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "test:ci": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

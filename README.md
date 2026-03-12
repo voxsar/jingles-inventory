@@ -14,7 +14,154 @@ jingles-inventory/
 └── package.json        # npm workspaces root
 ```
 
-## Tech Stack
+## Testing
+
+This project uses a **TDD-first approach** with [Vitest](https://vitest.dev/) as the test runner across all packages.
+
+### Quick Start — Run All Tests
+
+```bash
+# Install dependencies
+npm install
+
+# Run all tests across all packages
+npm test
+
+# Run tests for individual packages
+npm run test:shared     # Shared types/enums/transitions
+npm run test:backend    # Backend unit + integration tests
+npm run test:web        # React component tests
+npm run test:electron   # Electron scanner + sync tests
+
+# Run with coverage
+npm run test:coverage
+```
+
+### Test Structure
+
+```
+packages/
+  shared/src/__tests__/
+    enums.test.ts            # Enum completeness and values
+    transitions.test.ts      # State machine transition rules
+  backend/src/__tests__/
+    unit/
+      unitConverter.test.ts  # Box/piece/weight/volume conversion
+      spaceEngine.test.ts    # Volume, capacity, stacking validation
+      ocrProcessor.test.ts   # Invoice OCR text parsing
+      vendorService.test.ts  # Vendor access filter
+      grnService.test.ts     # GRN create/submit/inspect workflows
+      eventLedger.test.ts    # Append-only event recording
+      stateMachine.test.ts   # Inventory state transitions (with DB mock)
+    integration/
+      api.test.ts            # HTTP API routes via supertest
+    mocks/
+      prismaMock.ts          # Prisma client mock for unit tests
+      hardwareMocks.ts       # Barcode scanner + OCR mock adapters
+    fixtures/
+      testData.ts            # Seed fixtures (users, SKUs, GRNs, events)
+  web/src/__tests__/
+    components/
+      StateBadge.test.tsx    # State badge color rendering
+      BarcodeInput.test.tsx  # Barcode scan input component
+      ProtectedRoute.test.tsx # RBAC-protected route rendering
+  electron/src/__tests__/
+    scanner.test.ts          # Keyboard wedge scanner logic
+    syncEngine.test.ts       # Offline sync and conflict handling
+```
+
+### Test Coverage
+
+| Package | Tests | Areas |
+|---------|-------|-------|
+| `shared` | 41 | All enums, all state transitions, override rules |
+| `backend` | 105 | Unit converter, space engine, OCR, GRN workflow, event ledger, state machine, API routes |
+| `web` | 34 | StateBadge, BarcodeInput, ProtectedRoute with all roles |
+| `electron` | 22 | Keyboard wedge scanner, sync push/pull/conflict |
+| **Total** | **202** | |
+
+### Mock Strategy
+
+- **Prisma**: Mocked via `vi.mock('../../prisma/client')` — no database required for unit tests
+- **Barcode Scanner**: Mock keyboard-wedge event injector in `hardwareMocks.ts`
+- **OCR**: Mock payload factory in `hardwareMocks.ts` with valid/partial/malformed invoices
+- **Axios (Electron sync)**: Mocked to simulate server push/pull responses and network errors
+- **@testing-library/react**: Component tests with jsdom + mocked API client
+
+### Run Tests in Docker (No Local DB Required)
+
+```bash
+# Run all tests in Docker
+docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+```
+
+### CI Pipeline
+
+GitHub Actions runs on every push and PR:
+1. **Shared tests** — pure TypeScript, no dependencies
+2. **Backend tests** — unit tests with mocked Prisma (no DB)
+3. **Web tests** — React component tests with jsdom
+4. **Electron tests** — unit tests for scanner and sync logic
+5. **Build verification** — ensures all packages compile
+6. **Integration tests** — with real PostgreSQL service container
+
+### Local VM Verification
+
+```bash
+# 1. Clone and install
+git clone https://github.com/voxsar/jingles-inventory.git
+cd jingles-inventory
+npm install
+
+# 2. Run all unit tests (no DB needed)
+npm test
+
+# 3. Start local dev environment with Docker
+docker-compose up -d
+
+# 4. Run database migrations and seed
+cd packages/backend
+cp .env.example .env   # Edit DATABASE_URL if needed
+npx prisma migrate dev
+npm run prisma:seed
+
+# 5. Start development servers
+npm run dev:backend   # Port 3001
+npm run dev:web       # Port 5173
+```
+
+### Business Rules Verified by Tests
+
+| Rule | Test File |
+|------|-----------|
+| All 8 inventory state values exist | `enums.test.ts` |
+| All 9 event types exist | `enums.test.ts` |
+| Valid state transitions allowed | `transitions.test.ts` |
+| Invalid transitions rejected for Staff | `transitions.test.ts`, `stateMachine.test.ts` |
+| Manager/Admin can override invalid transitions | `transitions.test.ts`, `stateMachine.test.ts` |
+| Override flag set on event record | `stateMachine.test.ts` |
+| Events cannot be deleted (no delete mock) | `eventLedger.test.ts` |
+| GRN rejects duplicate invoice reference | `grnService.test.ts` |
+| GRN rejects duplicate SKU lines | `grnService.test.ts` |
+| Submission creates Uninspected inventory | `grnService.test.ts` |
+| Rejected items auto-transition to Damaged | `grnService.test.ts` |
+| GRN status updates to FullyInspected | `grnService.test.ts` |
+| Box→Piece conversion ratio (1:12 default) | `unitConverter.test.ts` |
+| Custom conversion rules take precedence | `unitConverter.test.ts` |
+| Volume calculated from dimensions | `spaceEngine.test.ts` |
+| Stacking height limits enforced | `spaceEngine.test.ts` |
+| Fragile item stacking validation | `spaceEngine.test.ts` |
+| Vendor filter scopes to own products | `vendorService.test.ts` |
+| Admin/Manager not restricted by vendor filter | `vendorService.test.ts` |
+| OCR extracts invoice fields from text | `ocrProcessor.test.ts` |
+| Barcode scanner buffers keystrokes | `scanner.test.ts` |
+| Scanner resets buffer after timeout | `scanner.test.ts` |
+| Sync push queues operations | `syncEngine.test.ts` |
+| Sync conflict detection | `syncEngine.test.ts` |
+| Protected routes redirect unauthenticated users | `ProtectedRoute.test.tsx` |
+| Role-based access control in routes | `ProtectedRoute.test.tsx` |
+
+
 
 | Package | Technologies |
 |---------|-------------|

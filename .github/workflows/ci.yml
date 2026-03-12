@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'fix/**']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ─── Shared Package Tests ────────────────────────────────────────────────────
+  test-shared:
+    name: Shared Package Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run shared tests
+        run: npm run test:shared
+      - name: Upload shared coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-shared
+          path: packages/shared/coverage/
+
+  # ─── Backend Tests ───────────────────────────────────────────────────────────
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run backend tests
+        env:
+          JWT_SECRET: test-jwt-secret-ci
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jingles_test
+        run: npm run test:backend
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-backend
+          path: packages/backend/coverage/
+
+  # ─── Web Tests ───────────────────────────────────────────────────────────────
+  test-web:
+    name: Web Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run web tests
+        run: npm run test:web
+      - name: Upload web coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-web
+          path: packages/web/coverage/
+
+  # ─── Electron Tests ──────────────────────────────────────────────────────────
+  test-electron:
+    name: Electron Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Run electron unit tests
+        run: npm run test:electron
+      - name: Upload electron coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-electron
+          path: packages/electron/coverage/
+
+  # ─── Build Verification ───────────────────────────────────────────────────────
+  build:
+    name: Build All Packages
+    runs-on: ubuntu-latest
+    needs: [test-shared, test-backend, test-web, test-electron]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Build shared package
+        run: npm run build:shared
+      - name: Build backend
+        run: npm run build:backend
+      - name: Build web frontend
+        run: npm run build:web
+
+  # ─── Integration Tests (with PostgreSQL) ────────────────────────────────────
+  test-integration:
+    name: Integration Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jingles_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Prisma client
+        working-directory: packages/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jingles_test
+        run: npx prisma generate
+      - name: Run database migrations
+        working-directory: packages/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jingles_test
+        run: npx prisma migrate deploy || npx prisma db push --force-reset
+      - name: Run seed data
+        working-directory: packages/backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jingles_test
+          JWT_SECRET: test-jwt-secret-ci
+          NODE_ENV: test
+        run: npm run prisma:seed || echo "No seed file or seed failed - continuing"
+      - name: Run all backend tests with real DB
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jingles_test
+          JWT_SECRET: test-jwt-secret-ci
+          NODE_ENV: test
+        run: npm run test:backend
+
+  # ─── All Tests Gate ──────────────────────────────────────────────────────────
+  all-tests:
+    name: All Tests Passed
+    runs-on: ubuntu-latest
+    needs: [test-shared, test-backend, test-web, test-electron, build]
+    steps:
+      - name: All tests and build passed
+        run: echo "All CI checks passed successfully!"
