@@ -9,11 +9,17 @@ on:
 env:
   NODE_VERSION: '20'
 
+# Default minimal permissions for all jobs
+permissions:
+  contents: read
+
 jobs:
   # ─── Shared Package Tests ────────────────────────────────────────────────────
   test-shared:
     name: Shared Package Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,6 +40,8 @@ jobs:
   test-backend:
     name: Backend Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,6 +66,8 @@ jobs:
   test-web:
     name: Web Frontend Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -78,6 +88,8 @@ jobs:
   test-electron:
     name: Electron Unit Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -98,6 +110,8 @@ jobs:
   build:
     name: Build All Packages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [test-shared, test-backend, test-web, test-electron]
     steps:
       - uses: actions/checkout@v4
@@ -117,6 +131,8 @@ jobs:
   test-integration:
     name: Integration Tests (PostgreSQL)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     services:
       postgres:
         image: postgres:16-alpine
@@ -166,6 +182,7 @@ jobs:
   all-tests:
     name: All Tests Passed
     runs-on: ubuntu-latest
+    permissions: {}
     needs: [test-shared, test-backend, test-web, test-electron, build]
     steps:
       - name: All tests and build passed
