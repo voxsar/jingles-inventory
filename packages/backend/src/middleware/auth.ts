@@ -39,3 +39,5 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+export { authenticate as authenticateToken };

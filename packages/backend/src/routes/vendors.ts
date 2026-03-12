@@ -81,4 +81,20 @@ router.put(
   }
 );
 
+router.get(
+  '/:id/products',
+  [param('id').isUUID()],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+    const skus = await prisma.sKU.findMany({
+      where: { vendorId: req.params!.id, isActive: true },
+    });
+    res.json(skus);
+  }
+);
+
 export default router;
