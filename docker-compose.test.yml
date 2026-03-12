@@ -1,0 +1,58 @@
+version: '3.9'
+
+# Docker Compose for running tests in an isolated environment
+# Usage: docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+
+services:
+  # PostgreSQL test database (ephemeral, no volume persistence)
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: jingles-test-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jingles_test
+    ports:
+      - '5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Test runner - runs all tests
+  test-runner:
+    image: node:20-alpine
+    container_name: jingles-test-runner
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-test:5432/jingles_test
+      JWT_SECRET: test-jwt-secret-for-docker-tests
+      JWT_EXPIRES_IN: 7d
+      NODE_ENV: test
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/backend/node_modules
+      - /app/packages/web/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/electron/node_modules
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    command: |
+      sh -c "
+        echo '=== Installing dependencies ===' &&
+        npm ci &&
+        echo '=== Running shared tests ===' &&
+        npm run test:shared &&
+        echo '=== Running backend tests ===' &&
+        npm run test:backend &&
+        echo '=== Running web tests ===' &&
+        npm run test:web &&
+        echo '=== Running electron tests ===' &&
+        npm run test:electron &&
+        echo '=== All tests passed! ==='
+      "

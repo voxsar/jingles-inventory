@@ -7,7 +7,10 @@
     "dev": "concurrently \"tsc -w\" \"wait-on dist/electron/main.js && electron .\"",
     "build": "tsc",
     "build:electron": "electron-builder",
-    "start": "electron ."
+    "start": "electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@jingles/shared": "*",
