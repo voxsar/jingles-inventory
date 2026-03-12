@@ -3,6 +3,7 @@ import { InventoryState, InventoryEventType, GRNStatus, UserRole, SyncStatus, Da
 export interface IUser {
   id: string;
   email: string;
+  passwordHash: string;
   role: UserRole;
   vendorId?: string | null;
   createdAt: Date;

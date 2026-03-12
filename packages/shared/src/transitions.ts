@@ -10,6 +10,7 @@ export const ALLOWED_TRANSITIONS: TransitionMap = {
   [InventoryState.Reserved]: [InventoryState.Sold, InventoryState.ShelfReady, InventoryState.Damaged],
   [InventoryState.Sold]: [InventoryState.Returned],
   [InventoryState.Returned]: [InventoryState.Inspected, InventoryState.Damaged],
+  // Damaged is a terminal state; items cannot transition out without manual DB intervention.
   [InventoryState.Damaged]: [],
 };
 
