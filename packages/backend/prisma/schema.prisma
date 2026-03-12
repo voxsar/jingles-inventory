@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String
+  vendorId     String?  @map("vendor_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  vendor            Vendor?             @relation(fields: [vendorId], references: [id])
+  inventoryRecords  InventoryRecord[]
+  inventoryEvents   InventoryEvent[]
+  grns              GRN[]
+  inspectionRecords InspectionRecord[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id           String   @id @default(uuid())
+  name         String
+  contactEmail String   @map("contact_email")
+  contactPhone String?  @map("contact_phone")
+  address      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  users User[]
+  skus  SKU[]
+  grns  GRN[]
+
+  @@map("vendors")
+}
+
+model SKU {
+  id              String   @id @default(uuid())
+  skuCode         String   @unique @map("sku_code")
+  name            String
+  description     String?
+  category        String?
+  vendorId        String   @map("vendor_id")
+  unitOfMeasure   String   @map("unit_of_measure")
+  conversionRules Json?    @map("conversion_rules")
+  dimensions      Json?
+  isFragile       Boolean  @default(false) @map("is_fragile")
+  maxStackHeight  Float?   @map("max_stack_height")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  vendor           Vendor            @relation(fields: [vendorId], references: [id])
+  inventoryRecords InventoryRecord[]
+  grnLines         GRNLine[]
+
+  @@map("skus")
+}
+
+model Location {
+  id              String  @id @default(uuid())
+  floor           String
+  section         String
+  shelf           String
+  zone            String?
+  capacityCubicCm Float?  @map("capacity_cubic_cm")
+  notes           String?
+  isActive        Boolean @default(true) @map("is_active")
+
+  inventoryRecords InventoryRecord[]
+
+  @@map("locations")
+}
+
+model InventoryRecord {
+  id            String   @id @default(uuid())
+  skuId         String   @map("sku_id")
+  batchId       String?  @map("batch_id")
+  locationId    String?  @map("location_id")
+  quantity      Int
+  state         String
+  sourceEventId String?  @map("source_event_id")
+  terminalId    String?  @map("terminal_id")
+  userId        String?  @map("user_id")
+  version       Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  sku      SKU       @relation(fields: [skuId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id])
+
+  @@map("inventory_records")
+}
+
+model InventoryEvent {
+  id             String   @id @default(uuid())
+  eventType      String   @map("event_type")
+  parentEntityId String?  @map("parent_entity_id")
+  quantityDelta  Int?     @map("quantity_delta")
+  beforeQuantity Int?     @map("before_quantity")
+  afterQuantity  Int?     @map("after_quantity")
+  reasonCode     String?  @map("reason_code")
+  userId         String?  @map("user_id")
+  terminalId     String?  @map("terminal_id")
+  timestamp      DateTime @default(now())
+  overrideFlag   Boolean  @default(false) @map("override_flag")
+  metadata       Json?
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("inventory_events")
+}
+
+model GRN {
+  id                   String    @id @default(uuid())
+  supplierId           String    @map("supplier_id")
+  invoiceReference     String?   @map("invoice_reference")
+  supplierInvoiceDate  DateTime? @map("supplier_invoice_date")
+  expectedDeliveryDate DateTime? @map("expected_delivery_date")
+  deliveryDate         DateTime? @map("delivery_date")
+  status               String    @default("Draft")
+  notes                String?
+  createdBy            String    @map("created_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  supplier Vendor    @relation(fields: [supplierId], references: [id])
+  creator  User      @relation(fields: [createdBy], references: [id])
+  lines    GRNLine[]
+
+  @@map("grns")
+}
+
+model GRNLine {
+  id               String  @id @default(uuid())
+  grnId            String  @map("grn_id")
+  skuId            String  @map("sku_id")
+  expectedQuantity Int     @map("expected_quantity")
+  receivedQuantity Int     @default(0) @map("received_quantity")
+  batchReference   String? @map("batch_reference")
+  notes            String?
+
+  grn               GRN                @relation(fields: [grnId], references: [id])
+  sku               SKU                @relation(fields: [skuId], references: [id])
+  inspectionRecords InspectionRecord[]
+
+  @@map("grn_lines")
+}
+
+model InspectionRecord {
+  id                   String   @id @default(uuid())
+  grnLineId            String   @map("grn_line_id")
+  approvedQuantity     Int      @map("approved_quantity")
+  rejectedQuantity     Int      @map("rejected_quantity")
+  damageClassification String?  @map("damage_classification")
+  inspectorUserId      String   @map("inspector_user_id")
+  timestamp            DateTime @default(now())
+  remarks              String?
+
+  grnLine   GRNLine @relation(fields: [grnLineId], references: [id])
+  inspector User    @relation(fields: [inspectorUserId], references: [id])
+
+  @@map("inspection_records")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  changes    Json?
+  ipAddress  String?  @map("ip_address")
+  timestamp  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SyncQueue {
+  id            String    @id @default(uuid())
+  clientId      String    @map("client_id")
+  operation     String
+  payload       Json
+  status        String    @default("Pending")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  processedAt   DateTime? @map("processed_at")
+  conflictFlag  Boolean   @default(false) @map("conflict_flag")
+  conflictNotes String?   @map("conflict_notes")
+
+  @@map("sync_queue")
+}

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "baseUrl": ".",
+    "paths": {
+      "@jingles/shared": ["../shared/src"],
+      "@jingles/shared/*": ["../shared/src/*"]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": ["electron", "src"],
+  "exclude": ["node_modules", "dist", "release"]
+}

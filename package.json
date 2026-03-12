@@ -1,0 +1,22 @@
+{
+  "name": "jingles-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=packages/backend",
+    "dev:web": "npm run dev --workspace=packages/web",
+    "dev:electron": "npm run dev --workspace=packages/electron",
+    "build:shared": "npm run build --workspace=packages/shared",
+    "build:backend": "npm run build --workspace=packages/backend",
+    "build:web": "npm run build --workspace=packages/web",
+    "build:electron": "npm run build --workspace=packages/electron",
+    "build": "npm run build:shared && npm run build:backend && npm run build:web",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
