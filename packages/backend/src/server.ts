@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
@@ -21,6 +22,14 @@ app.use(
   })
 );
 app.use(express.json());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
