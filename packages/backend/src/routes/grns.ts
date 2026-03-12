@@ -1,24 +1,68 @@
 import { Router, Response } from 'express';
-import { body, param, validationResult } from 'express-validator';
-import prisma from '../prisma/client';
+import { param, validationResult } from 'express-validator';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { UserRole } from '@jingles/shared';
+import { createGRN, submitGRN, submitInspection } from '../modules/grn/grnService';
+import prisma from '../prisma/client';
+import logger from '../utils/logger';
 
 const router = Router();
 
 router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { status, supplierId } = req.query as { status?: string; supplierId?: string };
-  const grns = await prisma.gRN.findMany({
-    where: {
-      ...(status ? { status } : {}),
-      ...(supplierId ? { supplierId } : {}),
-    },
-    include: { supplier: true, creator: true, lines: { include: { sku: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
-  res.json(grns);
+  try {
+    const { status, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+    const user = req.user!;
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(pageSize);
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (user.role === UserRole.Vendor) {
+      const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+      if (dbUser?.vendorId) where.supplierId = dbUser.vendorId;
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.gRN.findMany({
+        where,
+        skip: (pageNum - 1) * pageSizeNum,
+        take: pageSizeNum,
+        include: {
+          supplier: { select: { id: true, name: true } },
+          creator: { select: { id: true, email: true } },
+          lines: { include: { sku: { select: { id: true, skuCode: true, name: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.gRN.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: { items, total, page: pageNum, pageSize: pageSizeNum, totalPages: Math.ceil(total / pageSizeNum) },
+    });
+  } catch (error) {
+    logger.error('Get GRNs error', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch GRNs' });
+  }
 });
+
+router.post(
+  '/',
+  requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const user = req.user!;
+      const grn = await createGRN({ ...req.body, createdBy: user.id });
+      res.status(201).json({ success: true, data: grn });
+    } catch (error: any) {
+      logger.error('Create GRN error', error);
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+);
 
 router.get(
   '/:id',
@@ -29,89 +73,66 @@ router.get(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const grn = await prisma.gRN.findUnique({
-      where: { id: req.params!.id },
-      include: {
-        supplier: true,
-        creator: true,
-        lines: { include: { sku: true, inspectionRecords: true } },
-      },
-    });
-    if (!grn) {
-      res.status(404).json({ error: 'GRN not found' });
-      return;
-    }
-    res.json(grn);
-  }
-);
+    try {
+      const grn = await prisma.gRN.findUnique({
+        where: { id: req.params!.id },
+        include: {
+          supplier: true,
+          creator: { select: { id: true, email: true } },
+          lines: {
+            include: {
+              sku: true,
+              inspectionRecords: {
+                include: { inspector: { select: { id: true, email: true } } },
+              },
+            },
+          },
+        },
+      });
 
-router.post(
-  '/',
-  requireRole('Admin', 'Manager', 'Staff'),
-  [body('supplierId').isUUID()],
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-      return;
+      if (!grn) {
+        res.status(404).json({ success: false, error: 'GRN not found' });
+        return;
+      }
+      res.json({ success: true, data: grn });
+    } catch (error) {
+      logger.error('Get GRN error', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch GRN' });
     }
-    const {
-      supplierId,
-      invoiceReference,
-      supplierInvoiceDate,
-      expectedDeliveryDate,
-      notes,
-      lines,
-    } = req.body as {
-      supplierId: string;
-      invoiceReference?: string;
-      supplierInvoiceDate?: string;
-      expectedDeliveryDate?: string;
-      notes?: string;
-      lines?: Array<{ skuId: string; expectedQuantity: number; batchReference?: string; notes?: string }>;
-    };
-
-    const grn = await prisma.gRN.create({
-      data: {
-        supplierId,
-        invoiceReference,
-        supplierInvoiceDate: supplierInvoiceDate ? new Date(supplierInvoiceDate) : undefined,
-        expectedDeliveryDate: expectedDeliveryDate ? new Date(expectedDeliveryDate) : undefined,
-        notes,
-        createdBy: req.user!.id,
-        lines: lines
-          ? {
-              create: lines.map((l) => ({
-                skuId: l.skuId,
-                expectedQuantity: l.expectedQuantity,
-                batchReference: l.batchReference,
-                notes: l.notes,
-              })),
-            }
-          : undefined,
-      },
-      include: { lines: true },
-    });
-    res.status(201).json(grn);
   }
 );
 
 router.put(
-  '/:id/status',
-  requireRole('Admin', 'Manager'),
-  [param('id').isUUID(), body('status').notEmpty()],
+  '/:id/submit',
+  requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
   async (req: AuthRequest, res: Response): Promise<void> => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errors.array() });
-      return;
+    try {
+      const user = req.user!;
+      const result = await submitGRN(
+        req.params!.id,
+        user.id,
+        req.body.deliveryDate ? new Date(req.body.deliveryDate) : undefined
+      );
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      logger.error('Submit GRN error', error);
+      res.status(400).json({ success: false, error: error.message });
     }
-    const { status } = req.body as { status: string };
-    const grn = await prisma.gRN.update({
-      where: { id: req.params!.id },
-      data: { status },
-    });
-    res.json(grn);
+  }
+);
+
+router.post(
+  '/:id/inspect',
+  requireRole(UserRole.Admin, UserRole.Manager, UserRole.Inspector),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const user = req.user!;
+      const inspection = await submitInspection({ ...req.body, inspectorUserId: user.id });
+      res.status(201).json({ success: true, data: inspection });
+    } catch (error: any) {
+      logger.error('Inspection error', error);
+      res.status(400).json({ success: false, error: error.message });
+    }
   }
 );
 

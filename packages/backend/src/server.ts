@@ -12,6 +12,11 @@ import inventoryRoutes from './routes/inventory';
 import grnRoutes from './routes/grns';
 import inspectionRoutes from './routes/inspections';
 import auditLogRoutes from './routes/auditLogs';
+import ocrRoutes from './routes/ocr';
+import barcodeRoutes from './routes/barcode';
+import reportsRoutes from './routes/reports';
+import spaceRoutes from './routes/space';
+import syncRoutes from './routes/sync';
 
 const app = express();
 
@@ -41,6 +46,11 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/grns', grnRoutes);
 app.use('/api/inspections', inspectionRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/ocr', ocrRoutes);
+app.use('/api/barcode', barcodeRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/space', spaceRoutes);
+app.use('/api/sync', syncRoutes);
 
 app.use(errorHandler);
 

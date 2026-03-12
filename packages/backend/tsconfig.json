@@ -12,8 +12,8 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@jingles/shared": ["../shared/src"],
-      "@jingles/shared/*": ["../shared/src/*"]
+      "@jingles/shared": ["../shared/dist"],
+      "@jingles/shared/*": ["../shared/dist/*"]
     }
   },
   "include": ["src"],
