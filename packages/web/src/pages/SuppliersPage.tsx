@@ -121,78 +121,134 @@ export default function SuppliersPage() {
     {
       key: 'actions', header: 'Actions',
       render: (r: any) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button>
-          <s-button  onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
+        <div className="flex gap-2">
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</button>
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
             {r.isActive ? 'Disable' : 'Enable'}
-          </s-button>
+          </button>
         </div>
       ),
     },
   ];
 
   return (
-    <>
-      <s-stack direction="inline" gap="base">
-        <div>
-          <s-heading>🏭 Suppliers</s-heading>
-          <s-text>Manage suppliers and vendor contacts</s-text>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">🏭 Suppliers</h1>
+          <p className="page-subtitle">Manage suppliers and vendor contacts</p>
         </div>
-        <s-button variant="primary" onClick={openCreate}>+ New Supplier</s-button>
-      </s-stack>
+        <button className="btn-primary" onClick={openCreate}>+ New Supplier</button>
+      </div>
 
-      {showForm && (
-        <s-section heading={editingSupplier ? 'Edit Supplier' : 'New Supplier'}>
-          <form onSubmit={handleSubmit}>
-            <s-stack gap="base">
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Name *" value={form.name} required onChange={(e: any) => setForm(f => ({ ...f, name: e.currentTarget.value }))} />
-                <s-select label="Type *" value={form.type} onChange={(e: any) => setForm(f => ({ ...f, type: e.currentTarget.value }))}>
-                  {VENDOR_TYPES.map(t => <s-option key={t} value={t}>{t}</s-option>)}
-                </s-select>
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Email *" type="email" value={form.contactEmail} required onChange={(e: any) => setForm(f => ({ ...f, contactEmail: e.currentTarget.value }))} />
-                <s-text-field label="Phone" type="tel" value={form.contactPhone} onChange={(e: any) => setForm(f => ({ ...f, contactPhone: e.currentTarget.value }))} />
-              </s-stack>
-              <s-text-field label="Address" value={form.address} onChange={(e: any) => setForm(f => ({ ...f, address: e.currentTarget.value }))} />
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Website" type="url" value={form.website} placeholder="https://..." onChange={(e: any) => setForm(f => ({ ...f, website: e.currentTarget.value }))} />
-                <s-text-field label="Tax ID" value={form.taxId} onChange={(e: any) => setForm(f => ({ ...f, taxId: e.currentTarget.value }))} />
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Payment Terms" value={form.paymentTerms} placeholder="e.g. Net 30" onChange={(e: any) => setForm(f => ({ ...f, paymentTerms: e.currentTarget.value }))} />
-                <s-text-field label="Notes" value={form.notes} onChange={(e: any) => setForm(f => ({ ...f, notes: e.currentTarget.value }))} />
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-button variant="primary" type="submit">{editingSupplier ? 'Update' : 'Create'}</s-button>
-                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-              </s-stack>
-            </s-stack>
-          </form>
-        </s-section>
-      )}
-
-      <s-section>
-        <s-stack direction="inline" gap="base">
-          <s-search-field label="Search" label-visibility="hidden" value={searchTerm} placeholder="Search by name or email..." onChange={(e: any) => setSearchTerm(e.currentTarget.value)} />
-          <s-select label="Type" label-visibility="hidden" value={typeFilter} onChange={(e: any) => setTypeFilter(e.currentTarget.value)}>
-            <s-option value="">All Types</s-option>
-            {VENDOR_TYPES.map(t => <s-option key={t} value={t}>{t}</s-option>)}
-          </s-select>
-          <s-select label="Status" label-visibility="hidden" value={statusFilter} onChange={(e: any) => setStatusFilter(e.currentTarget.value)}>
-            <s-option value="">All Statuses</s-option>
-            <s-option value="true">Active</s-option>
-            <s-option value="false">Inactive</s-option>
-          </s-select>
-        </s-stack>
+      {/* Table section */}
+      <div className="content-section">
+        {/* Filter bar */}
+        <div className="filter-bar">
+          <input
+            type="search"
+            className="filter-input-wide"
+            placeholder="Search by name or email…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
+            <option value="">All Types</option>
+            {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+          {(searchTerm || typeFilter || statusFilter) && (
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); }}>
+              ✕ Clear filters
+            </button>
+          )}
+        </div>
         <DataTable
           columns={columns}
           data={suppliers}
           isLoading={isLoading}
           emptyMessage="No suppliers found"
         />
-      </s-section>
-    </>
+      </div>
+
+      {/* Create / Edit Supplier Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h2 className="modal-title">{editingSupplier ? '✏️ Edit Supplier' : '➕ New Supplier'}</h2>
+              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body form-stack">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Name *</label>
+                    <input className="input-field" type="text" value={form.name} required onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Type *</label>
+                    <select className="input-field" value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value }))}>
+                      {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Email *</label>
+                    <input className="input-field" type="email" value={form.contactEmail} required onChange={(e) => setForm(f => ({ ...f, contactEmail: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone</label>
+                    <input className="input-field" type="tel" value={form.contactPhone} onChange={(e) => setForm(f => ({ ...f, contactPhone: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Address</label>
+                  <input className="input-field" type="text" value={form.address} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Website</label>
+                    <input className="input-field" type="url" value={form.website} placeholder="https://…" onChange={(e) => setForm(f => ({ ...f, website: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Tax ID</label>
+                    <input className="input-field" type="text" value={form.taxId} onChange={(e) => setForm(f => ({ ...f, taxId: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Payment Terms</label>
+                    <input className="input-field" type="text" value={form.paymentTerms} placeholder="e.g. Net 30" onChange={(e) => setForm(f => ({ ...f, paymentTerms: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Notes</label>
+                    <input className="input-field" type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">{editingSupplier ? 'Update Supplier' : 'Create Supplier'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

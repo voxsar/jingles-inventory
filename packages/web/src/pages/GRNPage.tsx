@@ -142,11 +142,11 @@ export default function GRNPage() {
     {
       key: 'actions', header: '',
       render: (r: any) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
           {r.status === GRNStatus.Draft && (
-            <s-button  onClick={() => openEdit(r)}>Edit</s-button>
+            <button className="btn-sm" onClick={() => openEdit(r)}>Edit</button>
           )}
-          <s-button  onClick={() => navigate(`/grns/${r.id}`)}>View</s-button>
+          <button className="btn-sm" onClick={() => navigate(`/grns/${r.id}`)}>View</button>
         </div>
       ),
     },
@@ -155,74 +155,49 @@ export default function GRNPage() {
   const hasFilters = searchTerm || statusFilter || supplierFilter;
 
   return (
-    <>
-      <s-stack direction="inline" gap="base">
-        <div>
-          <s-heading>📋 Goods Receipt Notes</s-heading>
-          <s-text>{total.toLocaleString()} GRNs total</s-text>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">📋 Goods Receipt Notes</h1>
+          <p className="page-subtitle">{total.toLocaleString()} GRNs total</p>
         </div>
-        <s-button variant="primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? '✕ Cancel' : '+ New GRN'}
-        </s-button>
-      </s-stack>
+        <button className="btn-primary" onClick={() => setShowForm(true)}>+ New GRN</button>
+      </div>
 
-      {showForm && (
-        <s-section heading="➕ Create GRN">
-          <form onSubmit={handleCreate}>
-            <s-stack gap="base">
-              <s-stack direction="inline" gap="base">
-                <s-select label="Supplier *" value={form.supplierId} onChange={(e: any) => setForm((f) => ({ ...f, supplierId: e.currentTarget.value }))}>
-                  <s-option value="">Select supplier</s-option>
-                  {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
-                </s-select>
-                <s-text-field label="Invoice Reference" value={form.invoiceReference} placeholder="e.g. INV-2024-001" onChange={(e: any) => setForm((f) => ({ ...f, invoiceReference: e.currentTarget.value }))} />
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Expected Delivery" type="date" value={form.expectedDeliveryDate} onChange={(e: any) => setForm((f) => ({ ...f, expectedDeliveryDate: e.currentTarget.value }))} />
-                <s-text-field label="Notes" value={form.notes} placeholder="Optional notes..." onChange={(e: any) => setForm((f) => ({ ...f, notes: e.currentTarget.value }))} />
-              </s-stack>
-              <div>
-                <s-stack direction="inline" gap="base">
-                  <s-text>Line Items</s-text>
-                  <s-button  type="button" onClick={addLine}>+ Add Line</s-button>
-                </s-stack>
-                <s-search-field label="Filter products" label-visibility="hidden" value={skuSearch} placeholder="Filter products by name or code..." onChange={(e: any) => handleSkuSearchChange(e.currentTarget.value)} />
-                <s-stack gap="base">
-                  {form.lines.map((line, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '8px', background: '#f6f6f7', borderRadius: '6px' }}>
-                      <s-select label="Product" label-visibility="hidden" value={line.skuId} onChange={(e: any) => updateLine(i, 'skuId', e.currentTarget.value)}>
-                        <s-option value="">Select product</s-option>
-                        {skus.map((s: any) => <s-option key={s.id} value={s.id}>{s.skuCode} – {s.name}</s-option>)}
-                      </s-select>
-                      <s-text-field label="Qty" label-visibility="hidden" type="number" value={String(line.expectedQuantity)} placeholder="Qty" onChange={(e: any) => updateLine(i, 'expectedQuantity', parseInt(e.currentTarget.value))} />
-                      <s-text-field label="Batch ref" label-visibility="hidden" value={line.batchReference} placeholder="Batch ref" onChange={(e: any) => updateLine(i, 'batchReference', e.currentTarget.value)} />
-                      {form.lines.length > 1 && <s-button  type="button" onClick={() => removeLine(i)}>✕</s-button>}
-                    </div>
-                  ))}
-                </s-stack>
-              </div>
-              <s-stack direction="inline" gap="base">
-                <s-button variant="primary" type="submit">Create GRN</s-button>
-                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-              </s-stack>
-            </s-stack>
-          </form>
-        </s-section>
-      )}
-
-      <s-section>
-        <s-stack direction="inline" gap="base">
-          <s-search-field label="Search" label-visibility="hidden" value={searchTerm} placeholder="Search invoice ref, supplier..." onChange={(e: any) => handleSearchChange(e.currentTarget.value)} />
-          <s-select label="Status" label-visibility="hidden" value={statusFilter} onChange={(e: any) => { setStatusFilter(e.currentTarget.value); setPage(1); }}>
-            <s-option value="">All Statuses</s-option>
-            {Object.values(GRNStatus).map((s) => <s-option key={s} value={s}>{s}</s-option>)}
-          </s-select>
-          <s-select label="Supplier" label-visibility="hidden" value={supplierFilter} onChange={(e: any) => { setSupplierFilter(e.currentTarget.value); setPage(1); }}>
-            <s-option value="">All Suppliers</s-option>
-            {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
-          </s-select>
-          {hasFilters && <s-button  onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setStatusFilter(''); setSupplierFilter(''); setPage(1); }}>Clear filters</s-button>}
-        </s-stack>
+      {/* Table section */}
+      <div className="content-section">
+        {/* Filter bar */}
+        <div className="filter-bar">
+          <input
+            type="search"
+            className="filter-input-wide"
+            placeholder="Search invoice ref, supplier…"
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Statuses</option>
+            {Object.values(GRNStatus).map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select
+            className="filter-select"
+            value={supplierFilter}
+            onChange={(e) => { setSupplierFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Suppliers</option>
+            {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+          </select>
+          {hasFilters && (
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setStatusFilter(''); setSupplierFilter(''); setPage(1); }}>
+              ✕ Clear filters
+            </button>
+          )}
+        </div>
 
         <DataTable
           columns={columns}
@@ -241,39 +216,144 @@ export default function GRNPage() {
           onPageChange={setPage}
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
-      </s-section>
+      </div>
 
-      {editingGrn && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={(e) => e.target === e.currentTarget && setEditingGrn(null)}>
-          <div style={{ background: 'white', borderRadius: '8px', width: '100%', maxWidth: '512px', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 24px', borderBottom: '1px solid #e1e3e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <s-heading>Edit GRN</s-heading>
-                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6d7175' }}>{editingGrn.id.slice(0, 8)}…</span>
+      {/* Create GRN Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-panel-lg">
+            <div className="modal-header">
+              <h2 className="modal-title">➕ Create New GRN</h2>
+              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreate}>
+              <div className="modal-body form-stack">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Supplier *</label>
+                    <select className="input-field" value={form.supplierId} onChange={(e) => setForm((f) => ({ ...f, supplierId: e.target.value }))} required>
+                      <option value="">Select supplier</option>
+                      {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Invoice Reference</label>
+                    <input className="input-field" type="text" value={form.invoiceReference} placeholder="e.g. INV-2024-001" onChange={(e) => setForm((f) => ({ ...f, invoiceReference: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Expected Delivery</label>
+                    <input className="input-field" type="date" value={form.expectedDeliveryDate} onChange={(e) => setForm((f) => ({ ...f, expectedDeliveryDate: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Notes</label>
+                    <input className="input-field" type="text" value={form.notes} placeholder="Optional notes…" onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+                  </div>
+                </div>
+
+                {/* Line items */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-700">Line Items</span>
+                    <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
+                  </div>
+                  <div className="mb-3">
+                    <input
+                      type="search"
+                      className="input-field"
+                      placeholder="Filter products by name or code…"
+                      value={skuSearch}
+                      onChange={(e) => handleSkuSearchChange(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {form.lines.map((line, i) => (
+                      <div key={i} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <select
+                          className="input-field flex-1"
+                          value={line.skuId}
+                          onChange={(e) => updateLine(i, 'skuId', e.target.value)}
+                        >
+                          <option value="">Select product</option>
+                          {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
+                        </select>
+                        <input
+                          type="number"
+                          className="input-field"
+                          style={{ width: '80px' }}
+                          value={line.expectedQuantity}
+                          placeholder="Qty"
+                          min="1"
+                          onChange={(e) => updateLine(i, 'expectedQuantity', parseInt(e.target.value))}
+                        />
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ width: '140px' }}
+                          value={line.batchReference}
+                          placeholder="Batch ref"
+                          onChange={(e) => updateLine(i, 'batchReference', e.target.value)}
+                        />
+                        {form.lines.length > 1 && (
+                          <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(i)}>✕</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <button onClick={() => setEditingGrn(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#6d7175' }}>✕</button>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Create GRN</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit GRN Modal */}
+      {editingGrn && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingGrn(null)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">Edit GRN</h2>
+                <span className="text-xs text-gray-400 font-mono">{editingGrn.id.slice(0, 8)}…</span>
+              </div>
+              <button className="modal-close" onClick={() => setEditingGrn(null)}>✕</button>
             </div>
-            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
-              <s-stack gap="base">
-                <s-select label="Supplier" value={editForm.supplierId} onChange={(e: any) => setEditForm((f) => ({ ...f, supplierId: e.currentTarget.value }))}>
-                  <s-option value="">Select supplier</s-option>
-                  {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
-                </s-select>
-                <s-text-field label="Invoice Reference" value={editForm.invoiceReference} onChange={(e: any) => setEditForm((f) => ({ ...f, invoiceReference: e.currentTarget.value }))} />
-                <s-text-field label="Expected Delivery Date" type="date" value={editForm.expectedDeliveryDate} onChange={(e: any) => setEditForm((f) => ({ ...f, expectedDeliveryDate: e.currentTarget.value }))} />
-                <s-text-field label="Notes" value={editForm.notes} onChange={(e: any) => setEditForm((f) => ({ ...f, notes: e.currentTarget.value }))} />
-              </s-stack>
+            <div className="modal-body form-stack">
+              <div className="form-group">
+                <label className="form-label">Supplier</label>
+                <select className="input-field" value={editForm.supplierId} onChange={(e) => setEditForm((f) => ({ ...f, supplierId: e.target.value }))}>
+                  <option value="">Select supplier</option>
+                  {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Invoice Reference</label>
+                <input className="input-field" type="text" value={editForm.invoiceReference} onChange={(e) => setEditForm((f) => ({ ...f, invoiceReference: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Expected Delivery Date</label>
+                <input className="input-field" type="date" value={editForm.expectedDeliveryDate} onChange={(e) => setEditForm((f) => ({ ...f, expectedDeliveryDate: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Notes</label>
+                <input className="input-field" type="text" value={editForm.notes} onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))} />
+              </div>
             </div>
-            <div style={{ padding: '16px 24px', borderTop: '1px solid #e1e3e5', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <s-button onClick={() => setEditingGrn(null)}>Cancel</s-button>
-              <s-button variant="primary" onClick={handleSaveEdit} disabled={isSavingEdit}>
-                {isSavingEdit ? '⏳ Saving…' : '💾 Save'}
-              </s-button>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={() => setEditingGrn(null)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSavingEdit}>
+                {isSavingEdit ? '⏳ Saving…' : '💾 Save Changes'}
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

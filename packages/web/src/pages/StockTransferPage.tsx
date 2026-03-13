@@ -128,15 +128,15 @@ export default function StockTransferPage() {
     {
       key: 'actions', header: 'Actions',
       render: (r: any) => (
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div className="flex gap-1">
           {r.status === 'Draft' && (
-            <s-button  onClick={() => handleAction(r.id, 'approve')}>Approve</s-button>
+            <button className="btn-sm" onClick={() => handleAction(r.id, 'approve')}>Approve</button>
           )}
           {r.status === 'Approved' && (
-            <s-button  onClick={() => handleAction(r.id, 'complete')}>Complete</s-button>
+            <button className="btn-sm" onClick={() => handleAction(r.id, 'complete')}>Complete</button>
           )}
           {r.status !== 'Completed' && r.status !== 'Cancelled' && (
-            <s-button  onClick={() => handleAction(r.id, 'cancel')}>Cancel</s-button>
+            <button className="btn-sm text-red-600" onClick={() => handleAction(r.id, 'cancel')}>Cancel</button>
           )}
         </div>
       ),
@@ -144,84 +144,32 @@ export default function StockTransferPage() {
   ];
 
   return (
-    <>
-      <s-stack direction="inline" gap="base">
-        <div>
-          <s-heading>🔄 Stock Transfers</s-heading>
-          <s-text>Transfer stock between branches and locations</s-text>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">🔄 Stock Transfers</h1>
+          <p className="page-subtitle">Transfer stock between branches and locations</p>
         </div>
-        <s-button variant="primary" onClick={() => setShowForm(!showForm)}>+ New Transfer</s-button>
-      </s-stack>
+        <button className="btn-primary" onClick={() => setShowForm(true)}>+ New Transfer</button>
+      </div>
 
-      {showForm && (
-        <s-section heading="New Stock Transfer">
-          <form onSubmit={handleCreate}>
-            <s-stack gap="base">
-              <s-stack direction="inline" gap="base">
-                <s-select label="From Branch" value={form.fromBranchId} onChange={(e: any) => setForm(f => ({ ...f, fromBranchId: e.currentTarget.value }))}>
-                  <s-option value="">— Select Branch —</s-option>
-                  {branches.map((b: any) => <s-option key={b.id} value={b.id}>{b.name}</s-option>)}
-                </s-select>
-                <s-select label="To Branch" value={form.toBranchId} onChange={(e: any) => setForm(f => ({ ...f, toBranchId: e.currentTarget.value }))}>
-                  <s-option value="">— Select Branch —</s-option>
-                  {branches.map((b: any) => <s-option key={b.id} value={b.id}>{b.name}</s-option>)}
-                </s-select>
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-select label="From Location" value={form.fromLocationId} onChange={(e: any) => setForm(f => ({ ...f, fromLocationId: e.currentTarget.value }))}>
-                  <s-option value="">— Select Location —</s-option>
-                  {locations.map((l: any) => <s-option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</s-option>)}
-                </s-select>
-                <s-select label="To Location" value={form.toLocationId} onChange={(e: any) => setForm(f => ({ ...f, toLocationId: e.currentTarget.value }))}>
-                  <s-option value="">— Select Location —</s-option>
-                  {locations.map((l: any) => <s-option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</s-option>)}
-                </s-select>
-              </s-stack>
-              <s-text-field label="Notes" value={form.notes} onChange={(e: any) => setForm(f => ({ ...f, notes: e.currentTarget.value }))} />
-              <div>
-                <s-stack direction="inline" gap="base">
-                  <s-text>Transfer Lines *</s-text>
-                  <s-button  type="button" onClick={addLine}>+ Add Line</s-button>
-                </s-stack>
-                <s-stack gap="base">
-                  {form.lines.map((line, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                      <div style={{ flex: 1 }}>
-                        <s-select label="SKU" label-visibility="hidden" value={line.skuId} onChange={(e: any) => updateLine(idx, 'skuId', e.currentTarget.value)}>
-                          <s-option value="">— Select SKU —</s-option>
-                          {skus.map((s: any) => <s-option key={s.id} value={s.id}>{s.skuCode} – {s.name}</s-option>)}
-                        </s-select>
-                      </div>
-                      <s-text-field label="Qty" label-visibility="hidden" type="number" value={line.requestedQty} placeholder="Qty" onChange={(e: any) => updateLine(idx, 'requestedQty', e.currentTarget.value)} />
-                      <div style={{ flex: 1 }}>
-                        <s-text-field label="Notes" label-visibility="hidden" value={line.notes} placeholder="Notes" onChange={(e: any) => updateLine(idx, 'notes', e.currentTarget.value)} />
-                      </div>
-                      {form.lines.length > 1 && (
-                        <s-button  type="button" onClick={() => removeLine(idx)}>✕</s-button>
-                      )}
-                    </div>
-                  ))}
-                </s-stack>
-              </div>
-              <s-stack direction="inline" gap="base">
-                <s-button variant="primary" type="submit">Create Transfer</s-button>
-                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-              </s-stack>
-            </s-stack>
-          </form>
-        </s-section>
-      )}
-
-      <s-section>
-        <s-stack direction="inline" gap="base">
-          <s-select label="Status" label-visibility="hidden" value={statusFilter} onChange={(e: any) => { setStatusFilter(e.currentTarget.value); setPage(1); }}>
-            <s-option value="">All Statuses</s-option>
+      {/* Table section */}
+      <div className="content-section">
+        {/* Filter bar */}
+        <div className="filter-bar">
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Statuses</option>
             {['Draft', 'Pending', 'Approved', 'InTransit', 'Completed', 'Cancelled'].map(s => (
-              <s-option key={s} value={s}>{s}</s-option>
+              <option key={s} value={s}>{s}</option>
             ))}
-          </s-select>
-          <s-text>{total} transfers</s-text>
-        </s-stack>
+          </select>
+          <span className="text-sm text-gray-500">{total} transfers</span>
+        </div>
 
         <DataTable
           columns={columns}
@@ -239,7 +187,105 @@ export default function StockTransferPage() {
           onPageChange={setPage}
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
-      </s-section>
-    </>
+      </div>
+
+      {/* Create Transfer Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-panel-lg">
+            <div className="modal-header">
+              <h2 className="modal-title">➕ New Stock Transfer</h2>
+              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreate}>
+              <div className="modal-body form-stack">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">From Branch</label>
+                    <select className="input-field" value={form.fromBranchId} onChange={(e) => setForm(f => ({ ...f, fromBranchId: e.target.value }))}>
+                      <option value="">— Select Branch —</option>
+                      {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">To Branch</label>
+                    <select className="input-field" value={form.toBranchId} onChange={(e) => setForm(f => ({ ...f, toBranchId: e.target.value }))}>
+                      <option value="">— Select Branch —</option>
+                      {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">From Location</label>
+                    <select className="input-field" value={form.fromLocationId} onChange={(e) => setForm(f => ({ ...f, fromLocationId: e.target.value }))}>
+                      <option value="">— Select Location —</option>
+                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">To Location</label>
+                    <select className="input-field" value={form.toLocationId} onChange={(e) => setForm(f => ({ ...f, toLocationId: e.target.value }))}>
+                      <option value="">— Select Location —</option>
+                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Notes</label>
+                  <input className="input-field" type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} />
+                </div>
+
+                {/* Transfer lines */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-700">Transfer Lines *</span>
+                    <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {form.lines.map((line, idx) => (
+                      <div key={idx} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <select
+                          className="input-field flex-1"
+                          value={line.skuId}
+                          onChange={(e) => updateLine(idx, 'skuId', e.target.value)}
+                        >
+                          <option value="">— Select SKU —</option>
+                          {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
+                        </select>
+                        <input
+                          type="number"
+                          className="input-field"
+                          style={{ width: '80px' }}
+                          value={line.requestedQty}
+                          placeholder="Qty"
+                          min="1"
+                          onChange={(e) => updateLine(idx, 'requestedQty', e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ width: '140px' }}
+                          value={line.notes}
+                          placeholder="Notes"
+                          onChange={(e) => updateLine(idx, 'notes', e.target.value)}
+                        />
+                        {form.lines.length > 1 && (
+                          <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(idx)}>✕</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Create Transfer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
