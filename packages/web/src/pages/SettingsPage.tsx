@@ -23,6 +23,8 @@ export default function SettingsPage() {
     try {
       const res = await settingsApi.listUnits();
       setUnits(res.data.data);
+    } catch (err) {
+      console.error('Failed to load units', err);
     } finally {
       setIsLoading(false);
     }

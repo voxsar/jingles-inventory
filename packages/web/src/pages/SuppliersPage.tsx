@@ -28,12 +28,14 @@ export default function SuppliersPage() {
 
   const load = async () => {
     try {
-      const params: Record<string, string> = {};
-      if (typeFilter) params.type = typeFilter;
-      if (searchTerm) params.search = searchTerm;
-      if (statusFilter) params.isActive = statusFilter;
-      const res = await vendorsApi.list(params);
+      const queryParams: Record<string, string> = {};
+      if (typeFilter) queryParams.type = typeFilter;
+      if (searchTerm) queryParams.search = searchTerm;
+      if (statusFilter) queryParams.isActive = statusFilter;
+      const res = await vendorsApi.list(queryParams);
       setSuppliers(res.data);
+    } catch (err) {
+      console.error('Failed to load suppliers', err);
     } finally {
       setIsLoading(false);
     }

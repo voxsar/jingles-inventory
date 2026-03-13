@@ -56,6 +56,8 @@ export default function StockTransferPage() {
       setBranches(branchRes.data.data);
       setLocations(locationRes.data.data?.items ?? locationRes.data.data);
       setSkus(skuRes.data.data.items ?? []);
+    } catch (err) {
+      console.error('Failed to load stock transfers data', err);
     } finally {
       setIsLoading(false);
     }
