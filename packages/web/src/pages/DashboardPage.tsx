@@ -82,10 +82,3 @@ export default function DashboardPage() {
     </s-page>
   );
 }
-
-interface StatCard {
-	label: string;
-	value: string | number;
-	color: string;
-	icon: string;
-}

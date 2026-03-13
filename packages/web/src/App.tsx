@@ -28,11 +28,11 @@ function AppRoutes() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail?.path) navigate(detail.path);
+      const href = (e.target as Element)?.getAttribute('href');
+      if (href) navigate(href);
     };
-    window.addEventListener('shopify:navigate', handler);
-    return () => window.removeEventListener('shopify:navigate', handler);
+    document.addEventListener('shopify:navigate', handler);
+    return () => document.removeEventListener('shopify:navigate', handler);
   }, [navigate]);
 
   return (

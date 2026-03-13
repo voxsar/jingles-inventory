@@ -126,32 +126,3 @@ export default function DataTable<T extends Record<string, any>>({
   );
 }
 
-interface Column<T> {
-  key: keyof T | string;
-  header: string;
-  render?: (row: T) => React.ReactNode;
-  sortable?: boolean;
-  align?: 'left' | 'right' | 'center';
-}
-
-interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
-  isLoading?: boolean;
-  emptyMessage?: string;
-  emptyIcon?: string;
-  onRowClick?: (row: T) => void;
-}
-
-function SkeletonRow({ cols }: { cols: number }) {
-  return (
-    <tr>
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
-          {/* Vary skeleton widths (60–100%) per column to look natural */}
-          <div className="h-4 bg-gray-200 rounded animate-pulse" style={{ width: `${60 + (i * 13) % 40}%` }} />
-        </td>
-      ))}
-    </tr>
-  );
-}
