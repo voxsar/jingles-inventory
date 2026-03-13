@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,49 +18,65 @@ import BranchesPage from './pages/BranchesPage';
 import StockTransferPage from './pages/StockTransferPage';
 import SuppliersPage from './pages/SuppliersPage';
 
-export default function App() {
+function AppRoutes() {
   const { loadUser, token } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (token) loadUser();
   }, [token, loadUser]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.path) navigate(detail.path);
+    };
+    window.addEventListener('shopify:navigate', handler);
+    return () => window.removeEventListener('shopify:navigate', handler);
+  }, [navigate]);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="inventory" element={<InventoryPage />} />
+        <Route path="grns" element={<GRNPage />} />
+        <Route path="grns/:id" element={<GRNDetailPage />} />
+        <Route path="skus" element={<SKUPage />} />
+        <Route path="locations" element={<LocationsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="branches" element={<BranchesPage />} />
+        <Route path="stock-transfers" element={<StockTransferPage />} />
+        <Route path="suppliers" element={<SuppliersPage />} />
         <Route
-          path="/"
+          path="vendor-portal"
           element={
-            <ProtectedRoute>
-              <Layout />
+            <ProtectedRoute roles={['Vendor']}>
+              <VendorPortalPage />
             </ProtectedRoute>
           }
-        >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="inventory" element={<InventoryPage />} />
-          <Route path="grns" element={<GRNPage />} />
-          <Route path="grns/:id" element={<GRNDetailPage />} />
-          <Route path="skus" element={<SKUPage />} />
-          <Route path="locations" element={<LocationsPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="categories" element={<CategoriesPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="branches" element={<BranchesPage />} />
-          <Route path="stock-transfers" element={<StockTransferPage />} />
-          <Route path="suppliers" element={<SuppliersPage />} />
-          <Route
-            path="vendor-portal"
-            element={
-              <ProtectedRoute roles={['Vendor']}>
-                <VendorPortalPage />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+        />
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

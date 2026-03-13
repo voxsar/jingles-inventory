@@ -104,133 +104,95 @@ export default function SuppliersPage() {
     { key: 'name', header: 'Name', sortable: true },
     {
       key: 'type', header: 'Type',
-      render: (r: any) => (
-        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-          r.type === 'Supplier' ? 'bg-blue-100 text-blue-700' :
-          r.type === 'Both' ? 'bg-purple-100 text-purple-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>{r.type}</span>
-      ),
+      render: (r: any) => {
+        const tone = r.type === 'Supplier' ? 'info' : r.type === 'Both' ? 'warning' : '';
+        return tone ? <s-badge tone={tone as any}>{r.type}</s-badge> : <s-badge>{r.type}</s-badge>;
+      },
     },
     { key: 'contactEmail', header: 'Email', sortable: true },
     { key: 'contactPhone', header: 'Phone', render: (r: any) => r.contactPhone ?? '—' },
     { key: 'paymentTerms', header: 'Payment Terms', render: (r: any) => r.paymentTerms ?? '—' },
     {
       key: 'isActive', header: 'Status',
-      render: (r: any) => (
-        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-          {r.isActive ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      render: (r: any) => r.isActive
+        ? <s-badge tone="success">Active</s-badge>
+        : <s-badge tone="critical">Inactive</s-badge>,
     },
     {
       key: 'actions', header: 'Actions',
       render: (r: any) => (
-        <div className="flex gap-2">
-          <button onClick={e => { e.stopPropagation(); openEdit(r); }} className="text-xs text-primary-600 hover:underline">Edit</button>
-          <button onClick={e => { e.stopPropagation(); handleToggleActive(r); }} className={`text-xs ${r.isActive ? 'text-red-600' : 'text-green-600'} hover:underline`}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button>
+          <s-button  onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
             {r.isActive ? 'Disable' : 'Enable'}
-          </button>
+          </s-button>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <s-page>
+      <s-stack direction="inline" gap="base">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🏭 Suppliers</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage suppliers and vendor contacts</p>
+          <s-heading>🏭 Suppliers</s-heading>
+          <s-text>Manage suppliers and vendor contacts</s-text>
         </div>
-        <button onClick={openCreate} className="btn-primary">+ New Supplier</button>
-      </div>
+        <s-button variant="primary" onClick={openCreate}>+ New Supplier</s-button>
+      </s-stack>
 
       {showForm && (
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">{editingSupplier ? 'Edit Supplier' : 'New Supplier'}</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="input-field">
-                {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-              <input type="email" value={form.contactEmail} onChange={e => setForm(f => ({ ...f, contactEmail: e.target.value }))} required className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input type="tel" value={form.contactPhone} onChange={e => setForm(f => ({ ...f, contactPhone: e.target.value }))} className="input-field" />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-              <input type="url" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} className="input-field" placeholder="https://..." />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tax ID</label>
-              <input type="text" value={form.taxId} onChange={e => setForm(f => ({ ...f, taxId: e.target.value }))} className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-              <input type="text" value={form.paymentTerms} onChange={e => setForm(f => ({ ...f, paymentTerms: e.target.value }))} className="input-field" placeholder="e.g. Net 30" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input-field" />
-            </div>
-            <div className="col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">{editingSupplier ? 'Update' : 'Create'}</button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
-            </div>
+        <s-section heading={editingSupplier ? 'Edit Supplier' : 'New Supplier'}>
+          <form onSubmit={handleSubmit}>
+            <s-stack gap="base">
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Name *" value={form.name} required onChange={(e: any) => setForm(f => ({ ...f, name: e.currentTarget.value }))} />
+                <s-select label="Type *" value={form.type} onChange={(e: any) => setForm(f => ({ ...f, type: e.currentTarget.value }))}>
+                  {VENDOR_TYPES.map(t => <s-option key={t} value={t}>{t}</s-option>)}
+                </s-select>
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Email *" type="email" value={form.contactEmail} required onChange={(e: any) => setForm(f => ({ ...f, contactEmail: e.currentTarget.value }))} />
+                <s-text-field label="Phone" type="tel" value={form.contactPhone} onChange={(e: any) => setForm(f => ({ ...f, contactPhone: e.currentTarget.value }))} />
+              </s-stack>
+              <s-text-field label="Address" value={form.address} onChange={(e: any) => setForm(f => ({ ...f, address: e.currentTarget.value }))} />
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Website" type="url" value={form.website} placeholder="https://..." onChange={(e: any) => setForm(f => ({ ...f, website: e.currentTarget.value }))} />
+                <s-text-field label="Tax ID" value={form.taxId} onChange={(e: any) => setForm(f => ({ ...f, taxId: e.currentTarget.value }))} />
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Payment Terms" value={form.paymentTerms} placeholder="e.g. Net 30" onChange={(e: any) => setForm(f => ({ ...f, paymentTerms: e.currentTarget.value }))} />
+                <s-text-field label="Notes" value={form.notes} onChange={(e: any) => setForm(f => ({ ...f, notes: e.currentTarget.value }))} />
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-button variant="primary" type="submit">{editingSupplier ? 'Update' : 'Create'}</s-button>
+                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
+              </s-stack>
+            </s-stack>
           </form>
-        </div>
+        </s-section>
       )}
 
-      <div className="card">
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="input-field max-w-xs"
-          />
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="input-field max-w-xs"
-          >
-            <option value="">All Types</option>
-            {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="input-field max-w-xs"
-          >
-            <option value="">All Statuses</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-        </div>
-
+      <s-section>
+        <s-stack direction="inline" gap="base">
+          <s-search-field label="Search" label-visibility="hidden" value={searchTerm} placeholder="Search by name or email..." onChange={(e: any) => setSearchTerm(e.currentTarget.value)} />
+          <s-select label="Type" label-visibility="hidden" value={typeFilter} onChange={(e: any) => setTypeFilter(e.currentTarget.value)}>
+            <s-option value="">All Types</s-option>
+            {VENDOR_TYPES.map(t => <s-option key={t} value={t}>{t}</s-option>)}
+          </s-select>
+          <s-select label="Status" label-visibility="hidden" value={statusFilter} onChange={(e: any) => setStatusFilter(e.currentTarget.value)}>
+            <s-option value="">All Statuses</s-option>
+            <s-option value="true">Active</s-option>
+            <s-option value="false">Inactive</s-option>
+          </s-select>
+        </s-stack>
         <DataTable
           columns={columns}
           data={suppliers}
           isLoading={isLoading}
           emptyMessage="No suppliers found"
         />
-      </div>
-    </div>
+      </s-section>
+    </s-page>
   );
 }

@@ -82,84 +82,73 @@ export default function BranchesPage() {
 
   const columns = [
     { key: 'name', header: 'Name', sortable: true },
-    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code}</span>, sortable: true },
+    { key: 'code', header: 'Code', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.code}</span>, sortable: true },
     { key: 'address', header: 'Address', render: (r: any) => r.address ?? '—' },
     { key: 'phone', header: 'Phone', render: (r: any) => r.phone ?? '—' },
     { key: 'email', header: 'Email', render: (r: any) => r.email ?? '—' },
     {
       key: 'isDefault', header: 'Default',
-      render: (r: any) => r.isDefault ? <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Default</span> : '—',
+      render: (r: any) => r.isDefault ? <s-badge tone="info">Default</s-badge> : <span>—</span>,
     },
     {
       key: 'isActive', header: 'Status',
-      render: (r: any) => (
-        <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-          {r.isActive ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      render: (r: any) => r.isActive
+        ? <s-badge tone="success">Active</s-badge>
+        : <s-badge tone="critical">Inactive</s-badge>,
     },
     {
       key: 'actions', header: 'Actions',
       render: (r: any) => (
-        <div className="flex gap-2">
-          <button onClick={e => { e.stopPropagation(); openEdit(r); }} className="text-xs text-primary-600 hover:underline">Edit</button>
-          <button onClick={e => { e.stopPropagation(); handleToggleActive(r); }} className={`text-xs ${r.isActive ? 'text-red-600' : 'text-green-600'} hover:underline`}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button>
+          <s-button  onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
             {r.isActive ? 'Disable' : 'Enable'}
-          </button>
+          </s-button>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <s-page>
+      <s-stack direction="inline" gap="base">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">🏢 Branches</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage store branches and locations</p>
+          <s-heading>🏢 Branches</s-heading>
+          <s-text>Manage store branches and locations</s-text>
         </div>
-        <button onClick={openCreate} className="btn-primary">+ New Branch</button>
-      </div>
+        <s-button variant="primary" onClick={openCreate}>+ New Branch</s-button>
+      </s-stack>
 
       {showForm && (
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">{editingBranch ? 'Edit Branch' : 'New Branch'}</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required className="input-field" placeholder="e.g. Main Branch" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Code *</label>
-              <input type="text" value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} required className="input-field" placeholder="e.g. MAIN" />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-              <input type="text" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="input-field" />
-            </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="isDefault" checked={form.isDefault} onChange={e => setForm(f => ({ ...f, isDefault: e.target.checked }))} className="rounded" />
-              <label htmlFor="isDefault" className="text-sm font-medium text-gray-700">Set as Default Branch</label>
-            </div>
-            <div className="col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">{editingBranch ? 'Update Branch' : 'Create Branch'}</button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
-            </div>
+        <s-section heading={editingBranch ? 'Edit Branch' : 'New Branch'}>
+          <form onSubmit={handleSubmit}>
+            <s-stack gap="base">
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Name *" value={form.name} required placeholder="e.g. Main Branch" onChange={(e: any) => setForm(f => ({ ...f, name: e.currentTarget.value }))} />
+                <s-text-field label="Code *" value={form.code} required placeholder="e.g. MAIN" onChange={(e: any) => setForm(f => ({ ...f, code: e.currentTarget.value.toUpperCase() }))} />
+              </s-stack>
+              <s-text-field label="Address" value={form.address} onChange={(e: any) => setForm(f => ({ ...f, address: e.currentTarget.value }))} />
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Phone" type="tel" value={form.phone} onChange={(e: any) => setForm(f => ({ ...f, phone: e.currentTarget.value }))} />
+                <s-text-field label="Email" type="email" value={form.email} onChange={(e: any) => setForm(f => ({ ...f, email: e.currentTarget.value }))} />
+              </s-stack>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input type="checkbox" id="isDefault" checked={form.isDefault} onChange={e => setForm(f => ({ ...f, isDefault: e.target.checked }))} />
+                <span>Set as Default Branch</span>
+              </label>
+              <s-stack direction="inline" gap="base">
+                <s-button variant="primary" type="submit">{editingBranch ? 'Update Branch' : 'Create Branch'}</s-button>
+                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
+              </s-stack>
+            </s-stack>
           </form>
-        </div>
+        </s-section>
       )}
 
-      <div className="card">
+      <s-section>
         <DataTable columns={columns} data={branches} isLoading={isLoading} emptyMessage="No branches found" />
-      </div>
-    </div>
+      </s-section>
+    </s-page>
+
   );
 }

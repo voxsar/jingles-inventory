@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import clsx from 'clsx';
 
 interface Column<T> {
   key: keyof T | string;
@@ -16,19 +15,6 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   emptyIcon?: string;
   onRowClick?: (row: T) => void;
-}
-
-function SkeletonRow({ cols }: { cols: number }) {
-  return (
-    <tr>
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
-          {/* Vary skeleton widths (60–100%) per column to look natural */}
-          <div className="h-4 bg-gray-200 rounded animate-pulse" style={{ width: `${60 + (i * 13) % 40}%` }} />
-        </td>
-      ))}
-    </tr>
-  );
 }
 
 export default function DataTable<T extends Record<string, any>>({
@@ -62,44 +48,49 @@ export default function DataTable<T extends Record<string, any>>({
     : data;
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
         <thead>
-          <tr className="bg-gray-50">
+          <tr style={{ background: '#f6f6f7' }}>
             {columns.map((col) => (
               <th
                 key={String(col.key)}
                 onClick={() => col.sortable && handleSort(String(col.key))}
-                className={clsx(
-                  'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider select-none',
-                  col.sortable && 'cursor-pointer hover:bg-gray-100 hover:text-gray-900',
-                  col.align === 'right' && 'text-right',
-                  col.align === 'center' && 'text-center',
-                )}
+                style={{
+                  padding: '12px 16px',
+                  textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  color: '#6d7175',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  cursor: col.sortable ? 'pointer' : 'default',
+                  borderBottom: '1px solid #e1e3e5',
+                  userSelect: 'none',
+                }}
               >
-                <span className="inline-flex items-center gap-1">
-                  {col.header}
-                  {col.sortable && (
-                    <span className={clsx(
-                      'text-gray-400 transition-opacity',
-                      sortKey === String(col.key) ? 'opacity-100 text-primary-600' : 'opacity-0 group-hover:opacity-50'
-                    )}>
-                      {sortKey === String(col.key) ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
-                    </span>
-                  )}
-                </span>
+                {col.header}
+                {col.sortable && sortKey === String(col.key) && (sortDir === 'asc' ? ' ↑' : ' ↓')}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody>
           {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={columns.length} />)
+            Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i}>
+                {Array.from({ length: columns.length }).map((_, j) => (
+                  <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid #e1e3e5' }}>
+                    <div style={{ height: '16px', background: '#e1e3e5', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
+                  </td>
+                ))}
+              </tr>
+            ))
           ) : sortedData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-12 text-center">
-                <div className="text-3xl mb-2">{emptyIcon}</div>
-                <p className="text-sm text-gray-500">{emptyMessage}</p>
+              <td colSpan={columns.length} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{emptyIcon}</div>
+                <s-text>{emptyMessage}</s-text>
               </td>
             </tr>
           ) : (
@@ -107,20 +98,21 @@ export default function DataTable<T extends Record<string, any>>({
               <tr
                 key={idx}
                 onClick={() => onRowClick?.(row)}
-                className={clsx(
-                  'transition-colors',
-                  onRowClick ? 'cursor-pointer hover:bg-blue-50' : 'hover:bg-gray-50',
-                  idx % 2 === 1 && 'bg-gray-50/40',
-                )}
+                style={{
+                  cursor: onRowClick ? 'pointer' : 'default',
+                  background: idx % 2 === 1 ? '#fafbfb' : 'white',
+                  borderBottom: '1px solid #e1e3e5',
+                }}
               >
                 {columns.map((col) => (
                   <td
                     key={String(col.key)}
-                    className={clsx(
-                      'px-4 py-3 text-sm text-gray-800 whitespace-nowrap',
-                      col.align === 'right' && 'text-right',
-                      col.align === 'center' && 'text-center',
-                    )}
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {col.render ? col.render(row) : String(row[String(col.key)] ?? '')}
                   </td>
@@ -131,5 +123,35 @@ export default function DataTable<T extends Record<string, any>>({
         </tbody>
       </table>
     </div>
+  );
+}
+
+interface Column<T> {
+  key: keyof T | string;
+  header: string;
+  render?: (row: T) => React.ReactNode;
+  sortable?: boolean;
+  align?: 'left' | 'right' | 'center';
+}
+
+interface DataTableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  isLoading?: boolean;
+  emptyMessage?: string;
+  emptyIcon?: string;
+  onRowClick?: (row: T) => void;
+}
+
+function SkeletonRow({ cols }: { cols: number }) {
+  return (
+    <tr>
+      {Array.from({ length: cols }).map((_, i) => (
+        <td key={i} className="px-4 py-3">
+          {/* Vary skeleton widths (60–100%) per column to look natural */}
+          <div className="h-4 bg-gray-200 rounded animate-pulse" style={{ width: `${60 + (i * 13) % 40}%` }} />
+        </td>
+      ))}
+    </tr>
   );
 }

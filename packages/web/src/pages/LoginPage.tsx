@@ -19,49 +19,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎵</div>
-          <h1 className="text-2xl font-bold text-gray-900">Jingles Inventory</h1>
-          <p className="text-gray-500 mt-1">Sign in to your account</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className="input-field"
-              placeholder="admin@jingles.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="input-field"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-              {error}
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f2f4' }}>
+      <div style={{ width: '100%', maxWidth: '400px', padding: '16px' }}>
+        <s-section>
+          <s-stack gap="base">
+            <div style={{ textAlign: 'center', padding: '8px 0' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🎵</div>
+              <s-heading>Jingles Inventory</s-heading>
+              <s-text>Sign in to your account</s-text>
             </div>
-          )}
-
-          <button type="submit" disabled={isLoading} className="btn-primary w-full py-3 text-base">
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit}>
+              <s-stack gap="base">
+                <s-text-field
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={email}
+                  required
+                  placeholder="admin@jingles.com"
+                  onChange={(e: any) => setEmail(e.currentTarget.value)}
+                />
+                <s-password-field
+                  label="Password"
+                  name="password"
+                  value={password}
+                  required
+                  placeholder="Enter your password"
+                  onChange={(e: any) => setPassword(e.currentTarget.value)}
+                />
+                {error && <s-banner tone="critical">{error}</s-banner>}
+                <s-button variant="primary" type="submit" disabled={isLoading}>
+                  {isLoading ? 'Signing in...' : 'Sign In'}
+                </s-button>
+              </s-stack>
+            </form>
+          </s-stack>
+        </s-section>
       </div>
     </div>
   );

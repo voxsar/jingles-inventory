@@ -11,7 +11,6 @@ export default function LocationsPage() {
 	const load = async () => {
 		try {
 			const res = await locationsApi.list();
-			// Handle both direct array response and nested { data: { items: [] } } structure
 			const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
 			setLocations(Array.isArray(data) ? data : []);
 		} finally {
@@ -44,41 +43,41 @@ export default function LocationsPage() {
 	];
 
 	return (
-		<div className="space-y-4">
-			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold text-gray-900">Locations</h1>
-				<button onClick={() => setShowForm(!showForm)} className="btn-primary">+ New Location</button>
-			</div>
+		<s-page>
+			<s-stack direction="inline" gap="base">
+				<s-heading>Locations</s-heading>
+				<s-button variant="primary" onClick={() => setShowForm(!showForm)}>+ New Location</s-button>
+			</s-stack>
 
 			{showForm && (
-				<div className="card">
-					<h2 className="text-lg font-semibold mb-4">Create Location</h2>
-					<form onSubmit={handleCreate} className="grid grid-cols-3 gap-4">
-						{(['floor', 'section', 'shelf', 'zone'] as const).map(field => (
-							<div key={field}>
-								<label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{field}{['floor', 'section', 'shelf'].includes(field) ? ' *' : ''}</label>
-								<input type="text" value={form[field]} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))} required={['floor', 'section', 'shelf'].includes(field)} className="input-field" />
-							</div>
-						))}
-						<div>
-							<label className="block text-sm font-medium text-gray-700 mb-1">Capacity (cm³)</label>
-							<input type="number" value={form.capacityCubicCm} onChange={e => setForm(f => ({ ...f, capacityCubicCm: e.target.value }))} className="input-field" />
-						</div>
-						<div className="col-span-3">
-							<label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-							<input type="text" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="input-field" />
-						</div>
-						<div className="col-span-3 flex gap-2">
-							<button type="submit" className="btn-primary">Create Location</button>
-							<button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
-						</div>
+				<s-section heading="Create Location">
+					<form onSubmit={handleCreate}>
+						<s-stack gap="base">
+							<s-stack direction="inline" gap="base">
+								{(['floor', 'section', 'shelf', 'zone'] as const).map(field => (
+									<s-text-field
+										key={field}
+										label={`${field.charAt(0).toUpperCase() + field.slice(1)}${['floor', 'section', 'shelf'].includes(field) ? ' *' : ''}`}
+										value={form[field]}
+										required={['floor', 'section', 'shelf'].includes(field)}
+										onChange={(e: any) => setForm(f => ({ ...f, [field]: e.currentTarget.value }))}
+									/>
+								))}
+								<s-text-field label="Capacity (cm³)" type="number" value={form.capacityCubicCm} onChange={(e: any) => setForm(f => ({ ...f, capacityCubicCm: e.currentTarget.value }))} />
+							</s-stack>
+							<s-text-field label="Notes" value={form.notes} onChange={(e: any) => setForm(f => ({ ...f, notes: e.currentTarget.value }))} />
+							<s-stack direction="inline" gap="base">
+								<s-button variant="primary" type="submit">Create Location</s-button>
+								<s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
+							</s-stack>
+						</s-stack>
 					</form>
-				</div>
+				</s-section>
 			)}
 
-			<div className="card">
+			<s-section>
 				<DataTable columns={columns} data={locations} isLoading={isLoading} emptyMessage="No locations found" />
-			</div>
-		</div>
+			</s-section>
+		</s-page>
 	);
 }
