@@ -30,39 +30,39 @@ export default function Layout() {
     : navItems;
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
-        <div className="p-4 border-b border-gray-700">
-          <h1 className="text-xl font-bold text-white">🎵 Jingles Inventory</h1>
-          <p className="text-xs text-gray-400 mt-1">{user?.email}</p>
-          <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded mt-1 inline-block">
+      <aside className="w-60 bg-gray-950 text-white flex flex-col shrink-0">
+        <div className="px-5 py-5 border-b border-gray-800">
+          <h1 className="text-lg font-bold text-white tracking-tight">🎵 Jingles</h1>
+          <p className="text-xs text-gray-400 mt-0.5 truncate">{user?.email}</p>
+          <span className="text-xs bg-primary-600 text-white px-2 py-0.5 rounded-md mt-2 inline-block font-medium">
             {user?.role}
           </span>
         </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {allNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-primary-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'bg-primary-600 text-white shadow-sm'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                 )
               }
             >
-              <span>{item.icon}</span>
+              <span className="text-base leading-none">{item.icon}</span>
               {item.label}
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-700">
+        <div className="px-3 py-4 border-t border-gray-800">
           <button
             onClick={handleLogout}
-            className="w-full text-left text-sm text-gray-400 hover:text-white transition-colors px-3 py-2"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-all font-medium"
           >
             🚪 Logout
           </button>
@@ -70,16 +70,18 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div />
-            <div className="text-sm text-gray-500">
-              Logged in as <strong>{user?.email}</strong>
+      <main className="flex-1 overflow-auto flex flex-col">
+        <header className="bg-white border-b border-gray-200 px-6 py-3 shrink-0">
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span className="inline-block w-7 h-7 rounded-full bg-primary-100 text-primary-700 text-center leading-7 text-xs font-bold">
+                {user?.email?.[0]?.toUpperCase()}
+              </span>
+              <strong className="text-gray-700">{user?.email}</strong>
             </div>
           </div>
         </header>
-        <div className="p-6">
+        <div className="flex-1 p-6 overflow-auto">
           <Outlet />
         </div>
       </main>
