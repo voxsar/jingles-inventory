@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { grnsApi } from '../api/client';
 import { GRNStatus, DamageClassification } from '@jingles/shared';
 
-const STATUS_COLORS: Record<string, string> = {
-  [GRNStatus.Draft]: 'bg-gray-100 text-gray-700',
-  [GRNStatus.Submitted]: 'bg-blue-100 text-blue-700',
-  [GRNStatus.PartiallyInspected]: 'bg-amber-100 text-amber-700',
-  [GRNStatus.FullyInspected]: 'bg-green-100 text-green-700',
-  [GRNStatus.Closed]: 'bg-gray-100 text-gray-500',
+const STATUS_TONES: Record<string, string> = {
+  [GRNStatus.Draft]: '',
+  [GRNStatus.Submitted]: 'info',
+  [GRNStatus.PartiallyInspected]: 'warning',
+  [GRNStatus.FullyInspected]: 'success',
+  [GRNStatus.Closed]: '',
 };
 
 export default function GRNDetailPage() {
@@ -67,177 +67,151 @@ export default function GRNDetailPage() {
   };
 
   if (isLoading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-    </div>
+    <s-page><s-section><s-text>Loading...</s-text></s-section></s-page>
   );
 
   if (!grn) return (
-    <div className="card text-center text-gray-500 py-12">
-      <div className="text-4xl mb-3">📭</div>
-      <p>GRN not found</p>
-    </div>
+    <s-page><s-section><s-text>GRN not found</s-text></s-section></s-page>
   );
 
   const inspectedCount = grn.lines?.filter((l: any) => l.inspectionRecords?.length > 0).length ?? 0;
   const progress = grn.lines?.length > 0 ? Math.round((inspectedCount / grn.lines.length) * 100) : 0;
+  const statusTone = STATUS_TONES[grn.status] ?? '';
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/grns')} className="text-gray-500 hover:text-gray-700 text-sm">← Back to GRNs</button>
-      </div>
+    <s-page>
+      <s-button  onClick={() => navigate('/grns')}>← Back to GRNs</s-button>
 
-      <div className="page-header">
-        <div className="flex items-center gap-3">
-          <h1 className="page-title">📋 GRN Detail</h1>
-          <span className={`badge text-sm px-3 py-1 ${STATUS_COLORS[grn.status] ?? 'bg-gray-100 text-gray-500'}`}>{grn.status}</span>
-        </div>
+      <s-stack direction="inline" gap="base">
+        <s-stack direction="inline" gap="base">
+          <s-heading>📋 GRN Detail</s-heading>
+          {statusTone ? <s-badge tone={statusTone as any}>{grn.status}</s-badge> : <s-badge>{grn.status}</s-badge>}
+        </s-stack>
         {grn.status === GRNStatus.Draft && (
-          <button onClick={handleSubmit} disabled={isSubmitting} className="btn-primary">
+          <s-button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? '⏳ Submitting…' : '📤 Submit GRN'}
-          </button>
+          </s-button>
         )}
-      </div>
+      </s-stack>
 
-      {/* Summary */}
-      <div className="card">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+      <s-section>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', fontSize: '14px' }}>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Supplier</p>
-            <p className="font-medium text-gray-900">{grn.supplier?.name ?? '—'}</p>
+            <s-text>Supplier</s-text>
+            <strong>{grn.supplier?.name ?? '—'}</strong>
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Invoice Reference</p>
-            <p className="font-medium text-gray-900">{grn.invoiceReference ?? '—'}</p>
+            <s-text>Invoice Reference</s-text>
+            <strong>{grn.invoiceReference ?? '—'}</strong>
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Created By</p>
-            <p className="font-medium text-gray-900">{grn.creator?.email ?? '—'}</p>
+            <s-text>Created By</s-text>
+            <strong>{grn.creator?.email ?? '—'}</strong>
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Created At</p>
-            <p className="font-medium text-gray-900">{new Date(grn.createdAt).toLocaleString()}</p>
+            <s-text>Created At</s-text>
+            <strong>{new Date(grn.createdAt).toLocaleString()}</strong>
           </div>
           {grn.expectedDeliveryDate && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Expected Delivery</p>
-              <p className="font-medium text-gray-900">{new Date(grn.expectedDeliveryDate).toLocaleDateString()}</p>
+              <s-text>Expected Delivery</s-text>
+              <strong>{new Date(grn.expectedDeliveryDate).toLocaleDateString()}</strong>
             </div>
           )}
           {grn.deliveryDate && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Delivery Date</p>
-              <p className="font-medium text-gray-900">{new Date(grn.deliveryDate).toLocaleDateString()}</p>
+              <s-text>Delivery Date</s-text>
+              <strong>{new Date(grn.deliveryDate).toLocaleDateString()}</strong>
             </div>
           )}
           {grn.notes && (
-            <div className="col-span-2 md:col-span-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Notes</p>
-              <p className="text-gray-800">{grn.notes}</p>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <s-text>Notes</s-text>
+              <p>{grn.notes}</p>
             </div>
           )}
         </div>
 
-        {/* Inspection progress */}
         {grn.status !== GRNStatus.Draft && grn.lines?.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-gray-500 uppercase">Inspection Progress</span>
-              <span className="text-xs text-gray-600">{inspectedCount} / {grn.lines.length} lines</span>
+          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e1e3e5' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <s-text>Inspection Progress</s-text>
+              <s-text>{inspectedCount} / {grn.lines.length} lines</s-text>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div style={{ height: '8px', background: '#e1e3e5', borderRadius: '9999px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: '#008060', borderRadius: '9999px', transition: 'width 0.3s', width: `${progress}%` }} />
             </div>
           </div>
         )}
-      </div>
+      </s-section>
 
-      {/* GRN Lines */}
-      <div className="card-flat overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="section-title mb-0">Line Items ({grn.lines?.length ?? 0})</h2>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {grn.lines?.map((line: any) => (
-            <div key={line.id} className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-900">{line.sku?.name}</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{line.sku?.skuCode}</span>
-                    {line.batchReference && <span className="text-xs text-gray-500">Batch: {line.batchReference}</span>}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <span>Expected: <strong className="text-gray-900">{line.expectedQuantity}</strong></span>
-                    <span>Received: <strong className="text-gray-900">{line.receivedQuantity}</strong></span>
-                  </div>
+      <s-section heading={`Line Items (${grn.lines?.length ?? 0})`}>
+        {grn.lines?.map((line: any) => (
+          <div key={line.id} style={{ padding: '24px', borderBottom: '1px solid #e1e3e5' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <strong>{line.sku?.name}</strong>
+                  <span style={{ fontFamily: 'monospace', fontSize: '12px', background: '#f6f6f7', padding: '2px 8px', borderRadius: '4px' }}>{line.sku?.skuCode}</span>
+                  {line.batchReference && <s-text>Batch: {line.batchReference}</s-text>}
                 </div>
-                {grn.status !== GRNStatus.Draft && line.inspectionRecords?.length === 0 && (
-                  <button
-                    onClick={() => { setInspectingLineId(line.id); setInspectionForm({ ...inspectionForm, approvedQuantity: line.receivedQuantity }); }}
-                    className="btn-primary text-sm"
-                  >
-                    🔍 Inspect
-                  </button>
-                )}
-                {line.inspectionRecords?.length > 0 && (
-                  <span className="badge bg-green-50 text-green-700">✓ Inspected</span>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '14px' }}>
+                  <span>Expected: <strong>{line.expectedQuantity}</strong></span>
+                  <span>Received: <strong>{line.receivedQuantity}</strong></span>
+                </div>
               </div>
-
-              {/* Inspection records */}
-              {line.inspectionRecords?.length > 0 && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 space-y-2">
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Inspection Results</p>
-                  {line.inspectionRecords.map((ir: any) => (
-                    <div key={ir.id} className="flex flex-wrap gap-4 text-sm">
-                      <span className="text-green-700 font-medium">✓ Approved: {ir.approvedQuantity}</span>
-                      <span className="text-red-600 font-medium">✗ Rejected: {ir.rejectedQuantity}</span>
-                      {ir.damageClassification && <span className="text-amber-600">⚠️ {ir.damageClassification}</span>}
-                      {ir.remarks && <span className="text-gray-600 italic">"{ir.remarks}"</span>}
-                      <span className="text-gray-400 text-xs">by {ir.inspector?.email}</span>
-                    </div>
-                  ))}
-                </div>
+              {grn.status !== GRNStatus.Draft && line.inspectionRecords?.length === 0 && (
+                <s-button variant="primary" onClick={() => { setInspectingLineId(line.id); setInspectionForm({ ...inspectionForm, approvedQuantity: line.receivedQuantity }); }}>
+                  🔍 Inspect
+                </s-button>
               )}
-
-              {/* Inspection form */}
-              {inspectingLineId === line.id && (
-                <form onSubmit={handleInspect} className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
-                  <p className="text-sm font-semibold text-blue-800">Record Inspection</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase">Approved Qty *</label>
-                      <input type="number" min="0" value={inspectionForm.approvedQuantity} onChange={(e) => setInspectionForm((f) => ({ ...f, approvedQuantity: parseInt(e.target.value) }))} className="input-field" required />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase">Rejected Qty</label>
-                      <input type="number" min="0" value={inspectionForm.rejectedQuantity} onChange={(e) => setInspectionForm((f) => ({ ...f, rejectedQuantity: parseInt(e.target.value) }))} className="input-field" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase">Damage Classification</label>
-                      <select value={inspectionForm.damageClassification} onChange={(e) => setInspectionForm((f) => ({ ...f, damageClassification: e.target.value }))} className="input-field">
-                        <option value="">None</option>
-                        {Object.values(DamageClassification).map((d) => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase">Remarks</label>
-                      <input type="text" value={inspectionForm.remarks} onChange={(e) => setInspectionForm((f) => ({ ...f, remarks: e.target.value }))} className="input-field" placeholder="Optional remarks..." />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="btn-primary text-sm">Save Inspection</button>
-                    <button type="button" onClick={() => setInspectingLineId(null)} className="btn-secondary text-sm">Cancel</button>
-                  </div>
-                </form>
+              {line.inspectionRecords?.length > 0 && (
+                <s-badge tone="success">✓ Inspected</s-badge>
               )}
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
+
+            {line.inspectionRecords?.length > 0 && (
+              <div style={{ marginTop: '16px', background: '#f6f6f7', borderRadius: '6px', padding: '16px' }}>
+                <s-text>Inspection Results</s-text>
+                {line.inspectionRecords.map((ir: any) => (
+                  <div key={ir.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px', marginTop: '8px' }}>
+                    <span style={{ color: '#008060', fontWeight: 500 }}>✓ Approved: {ir.approvedQuantity}</span>
+                    <span style={{ color: '#d82c0d', fontWeight: 500 }}>✗ Rejected: {ir.rejectedQuantity}</span>
+                    {ir.damageClassification && <span style={{ color: '#b98900' }}>⚠️ {ir.damageClassification}</span>}
+                    {ir.remarks && <span style={{ color: '#6d7175', fontStyle: 'italic' }}>"{ir.remarks}"</span>}
+                    <s-text>by {ir.inspector?.email}</s-text>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {inspectingLineId === line.id && (
+              <form onSubmit={handleInspect} style={{ marginTop: '16px' }}>
+                <s-section>
+                  <s-text>Record Inspection</s-text>
+                  <s-stack gap="base">
+                    <s-stack direction="inline" gap="base">
+                      <s-text-field label="Approved Qty *" type="number" value={String(inspectionForm.approvedQuantity)} required onChange={(e: any) => setInspectionForm((f) => ({ ...f, approvedQuantity: parseInt(e.currentTarget.value) }))} />
+                      <s-text-field label="Rejected Qty" type="number" value={String(inspectionForm.rejectedQuantity)} onChange={(e: any) => setInspectionForm((f) => ({ ...f, rejectedQuantity: parseInt(e.currentTarget.value) }))} />
+                    </s-stack>
+                    <s-stack direction="inline" gap="base">
+                      <s-select label="Damage Classification" value={inspectionForm.damageClassification} onChange={(e: any) => setInspectionForm((f) => ({ ...f, damageClassification: e.currentTarget.value }))}>
+                        <s-option value="">None</s-option>
+                        {Object.values(DamageClassification).map((d) => <s-option key={d} value={d}>{d}</s-option>)}
+                      </s-select>
+                      <s-text-field label="Remarks" value={inspectionForm.remarks} placeholder="Optional remarks..." onChange={(e: any) => setInspectionForm((f) => ({ ...f, remarks: e.currentTarget.value }))} />
+                    </s-stack>
+                    <s-stack direction="inline" gap="base">
+                      <s-button variant="primary" type="submit">Save Inspection</s-button>
+                      <s-button type="button" onClick={() => setInspectingLineId(null)}>Cancel</s-button>
+                    </s-stack>
+                  </s-stack>
+                </s-section>
+              </form>
+            )}
+          </div>
+        ))}
+      </s-section>
+    </s-page>
   );
 }

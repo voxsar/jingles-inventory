@@ -32,25 +32,26 @@ export default function BarcodeInput({ onResult, placeholder = 'Scan or type bar
   };
 
   return (
-    <div className="flex gap-2">
+    <s-stack direction="inline" gap="base">
       <input
         ref={inputRef}
         type="text"
         value={barcode}
-        onChange={e => setBarcode(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && handleScan(barcode)}
         placeholder={placeholder}
-        className="input-field flex-1"
         disabled={isLoading}
+        onChange={(e) => setBarcode(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleScan(barcode)}
+        style={{ flex: 1, padding: '8px 12px', border: '1px solid #c9cccf', borderRadius: '6px', fontSize: '14px' }}
       />
       <button
+        type="button"
         onClick={() => handleScan(barcode)}
         disabled={isLoading || !barcode}
-        className="btn-primary whitespace-nowrap"
+        style={{ padding: '8px 16px', background: '#008060', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
       >
-        {isLoading ? '...' : '🔍 Scan'}
+        {isLoading ? 'Scanning...' : 'Scan'}
       </button>
-      {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
-    </div>
+      {error && <s-banner tone="critical">{error}</s-banner>}
+    </s-stack>
   );
 }

@@ -15,7 +15,6 @@ export default function VendorPortalPage() {
 			vendorsApi.getProducts(user.vendorId),
 			reportsApi.inventoryValuation(),
 		]).then(([prodRes, valRes]) => {
-			// Handle both direct array response and nested { data: [...] } structure
 			const prodData = prodRes.data?.data ?? prodRes.data ?? [];
 			const valData = valRes.data?.data ?? valRes.data ?? [];
 			setProducts(Array.isArray(prodData) ? prodData : []);
@@ -25,7 +24,7 @@ export default function VendorPortalPage() {
 	}, [user?.vendorId]);
 
 	const productColumns = [
-		{ key: 'skuCode', header: 'SKU Code', render: (r: any) => <span className="font-mono text-xs">{r.skuCode}</span> },
+		{ key: 'skuCode', header: 'SKU Code', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.skuCode}</span> },
 		{ key: 'name', header: 'Name' },
 		{ key: 'category', header: 'Category', render: (r: any) => r.category ?? '—' },
 		{ key: 'unitOfMeasure', header: 'UoM' },
@@ -40,25 +39,21 @@ export default function VendorPortalPage() {
 
 	if (!user?.vendorId) {
 		return (
-			<div className="card text-center text-gray-500">
-				<p>No vendor profile associated with your account. Contact an administrator.</p>
-			</div>
+			<s-page><s-section><s-text>No vendor profile associated with your account. Contact an administrator.</s-text></s-section></s-page>
 		);
 	}
 
 	return (
-		<div className="space-y-6">
-			<h1 className="text-2xl font-bold text-gray-900">Vendor Portal</h1>
+		<s-page>
+			<s-heading>Vendor Portal</s-heading>
 
-			<div className="card">
-				<h2 className="text-lg font-semibold mb-4">My Products</h2>
+			<s-section heading="My Products">
 				<DataTable columns={productColumns} data={products} isLoading={isLoading} emptyMessage="No products found" />
-			</div>
+			</s-section>
 
-			<div className="card">
-				<h2 className="text-lg font-semibold mb-4">Inventory Status</h2>
+			<s-section heading="Inventory Status">
 				<DataTable columns={valuationColumns} data={valuation} isLoading={isLoading} emptyMessage="No inventory data" />
-			</div>
-		</div>
+			</s-section>
+		</s-page>
 	);
 }

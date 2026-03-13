@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Check if running in Electron
 const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI;
 
 export default function ElectronApp() {
@@ -33,34 +31,29 @@ export default function ElectronApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Offline Banner */}
+    <div>
       {!isOnline && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white text-center py-1 text-sm font-medium">
-          ⚠️ Offline Mode — Changes will sync when connection is restored
-        </div>
+        <s-banner tone="warning">
+          Offline Mode — Changes will sync when connection is restored
+        </s-banner>
       )}
-
-      {/* Sync Status */}
       {syncStatus === 'syncing' && (
-        <div className="fixed bottom-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
-          🔄 Syncing...
-        </div>
+        <s-banner tone="info">Syncing...</s-banner>
       )}
       {syncStatus === 'error' && (
-        <div className="fixed bottom-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-lg text-sm shadow-lg cursor-pointer" onClick={() => setSyncStatus('idle')}>
-          ❌ Sync failed — Click to dismiss
-        </div>
+        <s-banner tone="critical" onClick={() => setSyncStatus('idle')}>
+          Sync failed — Click to dismiss
+        </s-banner>
       )}
-
-      {/* Main App Content - Renders the web app inside Electron */}
-      <div className={!isOnline ? 'mt-7' : ''}>
-        <p className="text-center text-gray-500 p-8">
-          {isElectron
-            ? 'Electron app running. The web interface is loaded from the backend server.'
-            : 'Web mode: Use the standard web interface.'}
-        </p>
-      </div>
+      <s-page>
+        <s-section>
+          <s-text>
+            {isElectron
+              ? 'Electron app running. The web interface is loaded from the backend server.'
+              : 'Web mode: Use the standard web interface.'}
+          </s-text>
+        </s-section>
+      </s-page>
     </div>
   );
 }

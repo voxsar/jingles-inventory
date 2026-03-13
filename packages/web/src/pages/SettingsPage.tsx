@@ -88,152 +88,79 @@ export default function SettingsPage() {
   }, {});
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">⚙️ Settings</h1>
-      </div>
+    <s-page>
+      <s-heading>⚙️ Settings</s-heading>
 
-      {/* Tab bar */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex gap-6">
-          <button
-            onClick={() => setActiveTab('units')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'units'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Units of Measure
-          </button>
-        </nav>
-      </div>
+      <s-stack direction="inline" gap="base">
+        <s-button variant={activeTab === 'units' ? 'primary' : 'plain'} onClick={() => setActiveTab('units')}>
+          Units of Measure
+        </s-button>
+      </s-stack>
 
       {activeTab === 'units' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-500">
-              Define custom units of measure. System units cannot be modified.
-            </p>
-            <button onClick={openCreate} className="btn-primary">+ Add Unit</button>
-          </div>
+        <s-stack gap="base">
+          <s-stack direction="inline" gap="base">
+            <s-text>Define custom units of measure. System units cannot be modified.</s-text>
+            <s-button variant="primary" onClick={openCreate}>+ Add Unit</s-button>
+          </s-stack>
 
           {showForm && (
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4">
-                {editingUnit ? 'Edit Unit' : 'New Unit of Measure'}
-              </h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    required
-                    className="input-field"
-                    placeholder="e.g. Kilogram"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Abbreviation *</label>
-                  <input
-                    type="text"
-                    value={form.abbreviation}
-                    onChange={e => setForm(f => ({ ...f, abbreviation: e.target.value }))}
-                    required
-                    className="input-field"
-                    placeholder="e.g. kg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-                  <select
-                    value={form.type}
-                    onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                    className="input-field"
-                  >
-                    {UNIT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Base Unit</label>
-                  <input
-                    type="text"
-                    value={form.baseUnit}
-                    onChange={e => setForm(f => ({ ...f, baseUnit: e.target.value }))}
-                    className="input-field"
-                    placeholder="e.g. gram"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Conversion Factor</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={form.conversionFactor}
-                    onChange={e => setForm(f => ({ ...f, conversionFactor: e.target.value }))}
-                    className="input-field"
-                    placeholder="e.g. 1000 (1 kg = 1000 g)"
-                  />
-                </div>
-                <div className="col-span-2 flex gap-2">
-                  <button type="submit" className="btn-primary">
-                    {editingUnit ? 'Update Unit' : 'Create Unit'}
-                  </button>
-                  <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
-                    Cancel
-                  </button>
-                </div>
+            <s-section heading={editingUnit ? 'Edit Unit' : 'New Unit of Measure'}>
+              <form onSubmit={handleSubmit}>
+                <s-stack gap="base">
+                  <s-stack direction="inline" gap="base">
+                    <s-text-field label="Name *" value={form.name} required placeholder="e.g. Kilogram" onChange={(e: any) => setForm(f => ({ ...f, name: e.currentTarget.value }))} />
+                    <s-text-field label="Abbreviation *" value={form.abbreviation} required placeholder="e.g. kg" onChange={(e: any) => setForm(f => ({ ...f, abbreviation: e.currentTarget.value }))} />
+                  </s-stack>
+                  <s-stack direction="inline" gap="base">
+                    <s-select label="Type *" value={form.type} onChange={(e: any) => setForm(f => ({ ...f, type: e.currentTarget.value }))}>
+                      {UNIT_TYPES.map(t => <s-option key={t} value={t}>{t}</s-option>)}
+                    </s-select>
+                    <s-text-field label="Base Unit" value={form.baseUnit} placeholder="e.g. gram" onChange={(e: any) => setForm(f => ({ ...f, baseUnit: e.currentTarget.value }))} />
+                    <s-text-field label="Conversion Factor" type="number" value={form.conversionFactor} placeholder="e.g. 1000" onChange={(e: any) => setForm(f => ({ ...f, conversionFactor: e.currentTarget.value }))} />
+                  </s-stack>
+                  <s-stack direction="inline" gap="base">
+                    <s-button variant="primary" type="submit">{editingUnit ? 'Update Unit' : 'Create Unit'}</s-button>
+                    <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
+                  </s-stack>
+                </s-stack>
               </form>
-            </div>
+            </s-section>
           )}
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-            </div>
+            <s-section><s-text>Loading...</s-text></s-section>
           ) : (
-            <div className="grid gap-4">
+            <s-stack gap="base">
               {UNIT_TYPES.map(type => {
                 const items = grouped[type];
                 if (!items || items.length === 0) return null;
                 return (
-                  <div key={type} className="card">
-                    <h3 className="font-semibold text-gray-700 mb-3">{type}</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                  <s-section key={type} heading={type}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ background: '#f6f6f7' }}>
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Abbreviation</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Base Unit</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Conversion Factor</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            {['Name', 'Abbreviation', 'Base Unit', 'Conversion Factor', 'Status', 'Actions'].map(h => (
+                              <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', borderBottom: '1px solid #e1e3e5' }}>{h}</th>
+                            ))}
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody>
                           {items.map((unit: any) => (
-                            <tr key={unit.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-2 text-sm font-medium text-gray-900">{unit.name}</td>
-                              <td className="px-4 py-2 text-sm text-gray-500">{unit.abbreviation}</td>
-                              <td className="px-4 py-2 text-sm text-gray-500">{unit.baseUnit ?? '—'}</td>
-                              <td className="px-4 py-2 text-sm text-gray-500">{unit.conversionFactor ?? '—'}</td>
-                              <td className="px-4 py-2 text-sm">
-                                {unit.isSystem ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">System</span>
-                                ) : unit.isActive ? (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Active</span>
-                                ) : (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Inactive</span>
-                                )}
+                            <tr key={unit.id} style={{ borderBottom: '1px solid #e1e3e5' }}>
+                              <td style={{ padding: '8px 16px', fontSize: '14px', fontWeight: 500 }}>{unit.name}</td>
+                              <td style={{ padding: '8px 16px', fontSize: '14px', color: '#6d7175' }}>{unit.abbreviation}</td>
+                              <td style={{ padding: '8px 16px', fontSize: '14px', color: '#6d7175' }}>{unit.baseUnit ?? '—'}</td>
+                              <td style={{ padding: '8px 16px', fontSize: '14px', color: '#6d7175' }}>{unit.conversionFactor ?? '—'}</td>
+                              <td style={{ padding: '8px 16px', fontSize: '14px' }}>
+                                {unit.isSystem ? <s-badge>System</s-badge> : unit.isActive ? <s-badge tone="success">Active</s-badge> : <s-badge tone="critical">Inactive</s-badge>}
                               </td>
-                              <td className="px-4 py-2 text-sm">
+                              <td style={{ padding: '8px 16px', fontSize: '14px' }}>
                                 {!unit.isSystem && (
-                                  <div className="flex gap-2">
-                                    <button onClick={() => openEdit(unit)} className="text-primary-600 hover:underline text-xs">Edit</button>
-                                    <button onClick={() => handleDelete(unit)} className="text-red-600 hover:underline text-xs">Delete</button>
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <s-button  onClick={() => openEdit(unit)}>Edit</s-button>
+                                    <s-button  onClick={() => handleDelete(unit)}>Delete</s-button>
                                   </div>
                                 )}
                               </td>
@@ -242,18 +169,16 @@ export default function SettingsPage() {
                         </tbody>
                       </table>
                     </div>
-                  </div>
+                  </s-section>
                 );
               })}
               {units.length === 0 && (
-                <div className="card text-center py-8 text-gray-500">
-                  No units configured. Click "+ Add Unit" to get started.
-                </div>
+                <s-section><s-text>No units configured. Click "+ Add Unit" to get started.</s-text></s-section>
               )}
-            </div>
+            </s-stack>
           )}
-        </div>
+        </s-stack>
       )}
-    </div>
+    </s-page>
   );
 }

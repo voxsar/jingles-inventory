@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { categoriesApi } from '../api/client';
-import clsx from 'clsx';
 
 interface Category {
   id: string;
@@ -43,27 +42,25 @@ function CategoryRow({
 }) {
   return (
     <>
-      <tr className="hover:bg-gray-50">
-        <td className="px-4 py-2 text-sm">
-          <div style={{ paddingLeft: `${depth * 20}px` }} className="flex items-center gap-2">
-            {depth > 0 && <span className="text-gray-300">└</span>}
-            <span className="font-medium text-gray-900">{category.name}</span>
+      <tr style={{ borderBottom: '1px solid #e1e3e5' }}>
+        <td style={{ padding: '8px 16px', fontSize: '14px' }}>
+          <div style={{ paddingLeft: `${depth * 20}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {depth > 0 && <span style={{ color: '#c9cccf' }}>└</span>}
+            <span style={{ fontWeight: 500 }}>{category.name}</span>
           </div>
         </td>
-        <td className="px-4 py-2 text-sm text-gray-500 font-mono">{category.slug}</td>
-        <td className="px-4 py-2 text-sm text-gray-500">{category.description ?? '—'}</td>
-        <td className="px-4 py-2 text-sm text-center">{category.sortOrder}</td>
-        <td className="px-4 py-2 text-sm">
-          {category.isActive ? (
-            <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Active</span>
-          ) : (
-            <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Inactive</span>
-          )}
+        <td style={{ padding: '8px 16px', fontSize: '14px', fontFamily: 'monospace', color: '#6d7175' }}>{category.slug}</td>
+        <td style={{ padding: '8px 16px', fontSize: '14px', color: '#6d7175' }}>{category.description ?? '—'}</td>
+        <td style={{ padding: '8px 16px', fontSize: '14px', textAlign: 'center' }}>{category.sortOrder}</td>
+        <td style={{ padding: '8px 16px', fontSize: '14px' }}>
+          {category.isActive
+            ? <s-badge tone="success">Active</s-badge>
+            : <s-badge tone="critical">Inactive</s-badge>}
         </td>
-        <td className="px-4 py-2 text-sm">
-          <div className="flex gap-2">
-            <button onClick={() => onEdit(category)} className="text-primary-600 hover:underline text-xs">Edit</button>
-            <button onClick={() => onDelete(category)} className="text-red-600 hover:underline text-xs">Delete</button>
+        <td style={{ padding: '8px 16px', fontSize: '14px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <s-button  onClick={() => onEdit(category)}>Edit</s-button>
+            <s-button  onClick={() => onDelete(category)}>Delete</s-button>
           </div>
         </td>
       </tr>
@@ -165,110 +162,62 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <s-page>
+      <s-stack direction="inline" gap="base">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📂 Categories</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage nested product categories and sub-categories</p>
+          <s-heading>📂 Categories</s-heading>
+          <s-text>Manage nested product categories and sub-categories</s-text>
         </div>
-        <button onClick={() => openCreate()} className="btn-primary">+ New Category</button>
-      </div>
+        <s-button variant="primary" onClick={() => openCreate()}>+ New Category</s-button>
+      </s-stack>
 
       {showForm && (
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingCategory ? 'Edit Category' : 'New Category'}
-          </h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={e => handleNameChange(e.target.value)}
-                required
-                className="input-field"
-                placeholder="e.g. Electronics"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-                required
-                className="input-field"
-                placeholder="e.g. electronics"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Parent Category</label>
-              <select
-                value={form.parentId}
-                onChange={e => setForm(f => ({ ...f, parentId: e.target.value }))}
-                className="input-field"
-              >
-                <option value="">— Top Level —</option>
-                {flat
-                  .filter(c => !editingCategory || c.id !== editingCategory.id)
-                  .map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+        <s-section heading={editingCategory ? 'Edit Category' : 'New Category'}>
+          <form onSubmit={handleSubmit}>
+            <s-stack gap="base">
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="Name *" value={form.name} required placeholder="e.g. Electronics" onChange={(e: any) => handleNameChange(e.currentTarget.value)} />
+                <s-text-field label="Slug *" value={form.slug} required placeholder="e.g. electronics" onChange={(e: any) => setForm(f => ({ ...f, slug: e.currentTarget.value }))} />
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-select label="Parent Category" value={form.parentId} onChange={(e: any) => setForm(f => ({ ...f, parentId: e.currentTarget.value }))}>
+                  <s-option value="">— Top Level —</s-option>
+                  {flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => (
+                    <s-option key={c.id} value={c.id}>{c.name}</s-option>
                   ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
-              <input
-                type="number"
-                value={form.sortOrder}
-                onChange={e => setForm(f => ({ ...f, sortOrder: e.target.value }))}
-                className="input-field"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                className="input-field"
-                rows={2}
-              />
-            </div>
-            <div className="col-span-2 flex gap-2">
-              <button type="submit" className="btn-primary">
-                {editingCategory ? 'Update' : 'Create'}
-              </button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
-                Cancel
-              </button>
-            </div>
+                </s-select>
+                <s-text-field label="Sort Order" type="number" value={form.sortOrder} onChange={(e: any) => setForm(f => ({ ...f, sortOrder: e.currentTarget.value }))} />
+              </s-stack>
+              <s-text-field label="Description" value={form.description} onChange={(e: any) => setForm(f => ({ ...f, description: e.currentTarget.value }))} />
+              <s-stack direction="inline" gap="base">
+                <s-button variant="primary" type="submit">{editingCategory ? 'Update' : 'Create'}</s-button>
+                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
+              </s-stack>
+            </s-stack>
           </form>
-        </div>
+        </s-section>
       )}
 
-      <div className="card">
+      <s-section>
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-          </div>
+          <s-text>Loading...</s-text>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: '#f6f6f7' }}>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Order</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Slug</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Description</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Order</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {categories.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#6d7175' }}>
                       No categories yet. Click "+ New Category" to create one.
                     </td>
                   </tr>
@@ -288,7 +237,7 @@ export default function CategoriesPage() {
             </table>
           </div>
         )}
-      </div>
-    </div>
+      </s-section>
+    </s-page>
   );
 }

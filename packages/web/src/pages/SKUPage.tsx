@@ -230,195 +230,263 @@ export default function SKUPage() {
   const getTagName = (id: string) => allTags.find((t: any) => t.id === id)?.name ?? id;
 
   const columns = [
-    { key: 'skuCode', header: 'SKU Code', sortable: true, render: (r: any) => <span className="font-mono text-xs font-medium bg-gray-100 px-2 py-0.5 rounded">{r.skuCode}</span> },
+    { key: 'skuCode', header: 'SKU Code', sortable: true, render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.skuCode}</span> },
     { key: 'name', header: 'Product Name', sortable: true },
-    { key: 'category', header: 'Category', render: (r: any) => r.category?.name ?? <span className="text-gray-400">—</span> },
+    { key: 'category', header: 'Category', render: (r: any) => r.category?.name ?? <s-text>—</s-text> },
     { key: 'vendor', header: 'Vendor', render: (r: any) => r.vendor?.name },
     { key: 'unitOfMeasure', header: 'UoM' },
     {
       key: 'tags', header: 'Tags',
       render: (r: any) => (
-        <div className="flex flex-wrap gap-1">
-          {r.tags?.slice(0, 3).map((t: any) => <span key={t.id} className="badge bg-indigo-50 text-indigo-700">{t.tag?.name ?? t.name}</span>)}
-          {r.tags?.length > 3 && <span className="badge bg-gray-100 text-gray-500">+{r.tags.length - 3}</span>}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+          {r.tags?.slice(0, 3).map((t: any) => <s-badge key={t.id} tone="info">{t.tag?.name ?? t.name}</s-badge>)}
+          {r.tags?.length > 3 && <s-badge>+{r.tags.length - 3}</s-badge>}
         </div>
       ),
     },
-    { key: 'lowStockThreshold', header: 'Low Stock', render: (r: any) => r.lowStockThreshold != null ? <span className="text-amber-600 font-medium">≤{r.lowStockThreshold}</span> : <span className="text-gray-400">—</span> },
-    { key: 'isFragile', header: 'Fragile', render: (r: any) => r.isFragile ? <span className="badge bg-orange-50 text-orange-700">⚠️ Fragile</span> : <span className="text-gray-400">No</span> },
-    { key: 'isActive', header: 'Status', render: (r: any) => r.isActive ? <span className="badge bg-green-50 text-green-700">● Active</span> : <span className="badge bg-gray-100 text-gray-500">○ Inactive</span> },
-    { key: 'actions', header: '', render: (r: any) => <button onClick={(e) => { e.stopPropagation(); openEdit(r); }} className="text-xs text-primary-600 hover:text-primary-800 font-medium px-2 py-1 rounded hover:bg-primary-50">Edit</button> },
+    { key: 'lowStockThreshold', header: 'Low Stock', render: (r: any) => r.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{r.lowStockThreshold}</span> : <s-text>—</s-text> },
+    { key: 'isFragile', header: 'Fragile', render: (r: any) => r.isFragile ? <s-badge tone="warning">⚠️ Fragile</s-badge> : <s-text>No</s-text> },
+    { key: 'isActive', header: 'Status', render: (r: any) => r.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge> },
+    { key: 'actions', header: '', render: (r: any) => <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button> },
   ];
 
   return (
-    <div className="space-y-5">
-      <div className="page-header">
+    <s-page>
+      <s-stack direction="inline" gap="base">
         <div>
-          <h1 className="page-title">🏷️ Products (SKUs)</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} products total</p>
+          <s-heading>🏷️ Products (SKUs)</s-heading>
+          <s-text>{total.toLocaleString()} products total</s-text>
         </div>
-        <button onClick={() => setShowCreateForm(!showCreateForm)} className="btn-primary">
+        <s-button variant="primary" onClick={() => setShowCreateForm(!showCreateForm)}>
           {showCreateForm ? '✕ Cancel' : '+ New Product'}
-        </button>
-      </div>
+        </s-button>
+      </s-stack>
 
       {showCreateForm && (
-        <div className="card">
-          <h2 className="section-title">➕ Create New Product</h2>
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">SKU Code *</label><input type="text" value={form.skuCode} onChange={(e) => setForm((f) => ({ ...f, skuCode: e.target.value }))} required className="input-field" placeholder="e.g. WDG-001" /></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Product Name *</label><input type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required className="input-field" /></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Category</label><select value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))} className="input-field"><option value="">— No Category —</option>{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Vendor *</label><select value={form.vendorId} onChange={(e) => setForm((f) => ({ ...f, vendorId: e.target.value }))} required className="input-field"><option value="">Select vendor</option>{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Unit of Measure *</label>
-                {units.length > 0 ? <select value={form.unitOfMeasureId} onChange={(e) => handleUnitChange(e.target.value, setForm)} required className="input-field"><option value="">— Select Unit —</option>{units.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</option>)}</select>
-                : <input type="text" value={form.unitOfMeasure} onChange={(e) => setForm((f) => ({ ...f, unitOfMeasure: e.target.value }))} required className="input-field" placeholder="e.g. Piece" />}
+        <s-section heading="➕ Create New Product">
+          <form onSubmit={handleCreate}>
+            <s-stack gap="base">
+              <s-stack direction="inline" gap="base">
+                <s-text-field label="SKU Code *" value={form.skuCode} required placeholder="e.g. WDG-001" onChange={(e: any) => setForm((f) => ({ ...f, skuCode: e.currentTarget.value }))} />
+                <s-text-field label="Product Name *" value={form.name} required onChange={(e: any) => setForm((f) => ({ ...f, name: e.currentTarget.value }))} />
+                <s-select label="Category" value={form.categoryId} onChange={(e: any) => setForm((f) => ({ ...f, categoryId: e.currentTarget.value }))}>
+                  <s-option value="">— No Category —</s-option>
+                  {categories.map((c: any) => <s-option key={c.id} value={c.id}>{c.name}</s-option>)}
+                </s-select>
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-select label="Vendor *" value={form.vendorId} onChange={(e: any) => setForm((f) => ({ ...f, vendorId: e.currentTarget.value }))}>
+                  <s-option value="">Select vendor</s-option>
+                  {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
+                </s-select>
+                {units.length > 0 ? (
+                  <s-select label="Unit of Measure *" value={form.unitOfMeasureId} onChange={(e: any) => handleUnitChange(e.currentTarget.value, setForm)}>
+                    <s-option value="">— Select Unit —</s-option>
+                    {units.map((u: any) => <s-option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</s-option>)}
+                  </s-select>
+                ) : (
+                  <s-text-field label="Unit of Measure *" value={form.unitOfMeasure} required placeholder="e.g. Piece" onChange={(e: any) => setForm((f) => ({ ...f, unitOfMeasure: e.currentTarget.value }))} />
+                )}
+                <s-text-field label="Low Stock Alert" type="number" value={form.lowStockThreshold} placeholder="Alert when qty ≤ value" onChange={(e: any) => setForm((f) => ({ ...f, lowStockThreshold: e.currentTarget.value }))} />
+              </s-stack>
+              <s-text-field label="Description" value={form.description} onChange={(e: any) => setForm((f) => ({ ...f, description: e.currentTarget.value }))} />
+              <div>
+                <s-text>Tags</s-text>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                  {formTags.map((id) => (
+                    <span key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <s-badge tone="info">{getTagName(id)}</s-badge>
+                      <button type="button" onClick={() => setFormTags((p) => p.filter((t) => t !== id))} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                    </span>
+                  ))}
+                </div>
+                <s-stack direction="inline" gap="base">
+                  <input type="text" placeholder="Add or create tag..." value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addFormTag(); } }} list="create-tag-opts" style={{ flex: 1, padding: '8px', border: '1px solid #c9cccf', borderRadius: '6px', fontSize: '14px' }} />
+                  <datalist id="create-tag-opts">{allTags.map((t: any) => <option key={t.id} value={t.name} />)}</datalist>
+                  <s-button type="button" onClick={addFormTag}>Add Tag</s-button>
+                </s-stack>
               </div>
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Low Stock Alert</label><input type="number" min="0" value={form.lowStockThreshold} onChange={(e) => setForm((f) => ({ ...f, lowStockThreshold: e.target.value }))} className="input-field" placeholder="Alert when qty ≤ value" /></div>
-            </div>
-            <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Description</label><textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="input-field" rows={2} /></div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Tags</label>
-              <div className="flex flex-wrap gap-2 mb-2">{formTags.map((id) => <span key={id} className="inline-flex items-center gap-1 badge bg-indigo-50 text-indigo-700">{getTagName(id)}<button type="button" onClick={() => setFormTags((p) => p.filter((t) => t !== id))} className="ml-1 text-indigo-400 hover:text-indigo-700">✕</button></span>)}</div>
-              <div className="flex gap-2">
-                <input type="text" placeholder="Add or create tag..." value={newTagInput} onChange={(e) => setNewTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addFormTag(); } }} list="create-tag-opts" className="input-field max-w-xs" />
-                <datalist id="create-tag-opts">{allTags.map((t: any) => <option key={t.id} value={t.name} />)}</datalist>
-                <button type="button" onClick={addFormTag} className="btn-secondary text-xs">Add Tag</button>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isFragile} onChange={(e) => setForm((f) => ({ ...f, isFragile: e.target.checked }))} className="rounded border-gray-300" /><span className="text-sm text-gray-700">⚠️ Fragile</span></label>
-              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} className="rounded border-gray-300" /><span className="text-sm text-gray-700">Active</span></label>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="btn-primary">Create Product</button>
-              <button type="button" onClick={() => { setShowCreateForm(false); setForm(defaultForm); setFormTags([]); }} className="btn-secondary">Cancel</button>
-            </div>
+              <s-stack direction="inline" gap="base">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.isFragile} onChange={(e) => setForm((f) => ({ ...f, isFragile: e.target.checked }))} />
+                  <span>⚠️ Fragile</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />
+                  <span>Active</span>
+                </label>
+              </s-stack>
+              <s-stack direction="inline" gap="base">
+                <s-button variant="primary" type="submit">Create Product</s-button>
+                <s-button type="button" onClick={() => { setShowCreateForm(false); setForm(defaultForm); setFormTags([]); }}>Cancel</s-button>
+              </s-stack>
+            </s-stack>
           </form>
-        </div>
+        </s-section>
       )}
 
-      <div className="card-flat overflow-hidden">
-        <div className="filter-bar">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-            <input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => handleSearchChange(e.target.value)} className="filter-input pl-9 w-full" />
-          </div>
-          <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }} className="filter-input"><option value="">All Categories</option>{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-          <select value={vendorFilter} onChange={(e) => { setVendorFilter(e.target.value); setPage(1); }} className="filter-input"><option value="">All Vendors</option>{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
-          {(searchTerm || categoryFilter || vendorFilter) && <button onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setCategoryFilter(''); setVendorFilter(''); setPage(1); }} className="text-sm text-gray-500 hover:text-gray-700 underline whitespace-nowrap">Clear filters</button>}
-        </div>
+      <s-section>
+        <s-stack direction="inline" gap="base">
+          <s-search-field label="Search" label-visibility="hidden" value={searchTerm} placeholder="Search products..." onChange={(e: any) => handleSearchChange(e.currentTarget.value)} />
+          <s-select label="Category" label-visibility="hidden" value={categoryFilter} onChange={(e: any) => { setCategoryFilter(e.currentTarget.value); setPage(1); }}>
+            <s-option value="">All Categories</s-option>
+            {categories.map((c: any) => <s-option key={c.id} value={c.id}>{c.name}</s-option>)}
+          </s-select>
+          <s-select label="Vendor" label-visibility="hidden" value={vendorFilter} onChange={(e: any) => { setVendorFilter(e.currentTarget.value); setPage(1); }}>
+            <s-option value="">All Vendors</s-option>
+            {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
+          </s-select>
+          {(searchTerm || categoryFilter || vendorFilter) && (
+            <s-button  onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setCategoryFilter(''); setVendorFilter(''); setPage(1); }}>Clear filters</s-button>
+          )}
+        </s-stack>
         <DataTable columns={columns} data={skus} isLoading={isLoading} emptyMessage="No products found." emptyIcon="🏷️" onRowClick={openEdit} />
         <Pagination page={page} totalPages={totalPages} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
-      </div>
+      </s-section>
 
       {editingSku && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingSku(null)}>
-          <div className="modal-panel max-w-2xl">
-            <div className="modal-header">
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={(e) => e.target === e.currentTarget && setEditingSku(null)}>
+          <div style={{ background: 'white', borderRadius: '8px', width: '100%', maxWidth: '672px', maxHeight: '90vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #e1e3e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h2 className="text-lg font-semibold">{editingSku.name}</h2>
-                <span className="font-mono text-xs text-gray-500">{editingSku.skuCode}</span>
+                <s-heading>{editingSku.name}</s-heading>
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#6d7175' }}>{editingSku.skuCode}</span>
               </div>
-              <div className="flex items-center gap-3">
-                {saveSuccess && <span className="text-sm text-green-600 font-medium">✓ Saved</span>}
-                <button onClick={() => setEditingSku(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {saveSuccess && <s-text>✓ Saved</s-text>}
+                <button onClick={() => setEditingSku(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#6d7175' }}>✕</button>
               </div>
             </div>
-            <div className="border-b border-gray-200 px-6">
-              <nav className="flex">
+            <div style={{ borderBottom: '1px solid #e1e3e5', padding: '0 24px' }}>
+              <s-stack direction="inline" gap="base">
                 {(['details', 'tags', 'barcodes', 'locations'] as ModalTab[]).map((tab) => (
-                  <button key={tab} onClick={() => handleTabChange(tab)} className={`py-3 px-3 text-sm font-medium border-b-2 transition-colors ${modalTab === tab ? 'border-primary-600 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                  <s-button key={tab} variant={modalTab === tab ? 'primary' : 'plain'} onClick={() => handleTabChange(tab)}>
                     {tab === 'details' && '📝 '}{tab === 'tags' && '🏷️ '}{tab === 'barcodes' && '📊 '}{tab === 'locations' && '📍 '}
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
+                  </s-button>
                 ))}
-              </nav>
+              </s-stack>
             </div>
-            <div className="modal-body">
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
               {modalTab === 'details' && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">SKU Code</label><input type="text" value={editForm.skuCode} onChange={(e) => setEditForm((f) => ({ ...f, skuCode: e.target.value }))} className="input-field" /></div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Product Name</label><input type="text" value={editForm.name} onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} className="input-field" /></div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Category</label><select value={editForm.categoryId} onChange={(e) => setEditForm((f) => ({ ...f, categoryId: e.target.value }))} className="input-field"><option value="">— No Category —</option>{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Vendor</label><select value={editForm.vendorId} onChange={(e) => setEditForm((f) => ({ ...f, vendorId: e.target.value }))} className="input-field"><option value="">Select vendor</option>{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Unit of Measure</label>
-                      {units.length > 0 ? <select value={editForm.unitOfMeasureId} onChange={(e) => handleUnitChange(e.target.value, setEditForm)} className="input-field"><option value="">— Select —</option>{units.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</option>)}</select>
-                      : <input type="text" value={editForm.unitOfMeasure} onChange={(e) => setEditForm((f) => ({ ...f, unitOfMeasure: e.target.value }))} className="input-field" />}
-                    </div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Low Stock Threshold</label><input type="number" min="0" value={editForm.lowStockThreshold} onChange={(e) => setEditForm((f) => ({ ...f, lowStockThreshold: e.target.value }))} className="input-field" /></div>
-                    <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Max Stack Height (cm)</label><input type="number" value={editForm.maxStackHeight} onChange={(e) => setEditForm((f) => ({ ...f, maxStackHeight: e.target.value }))} className="input-field" /></div>
-                  </div>
-                  <div><label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Description</label><textarea value={editForm.description} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} className="input-field" rows={3} /></div>
-                  <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editForm.isFragile} onChange={(e) => setEditForm((f) => ({ ...f, isFragile: e.target.checked }))} className="rounded border-gray-300" /><span className="text-sm">⚠️ Fragile</span></label>
-                    <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm((f) => ({ ...f, isActive: e.target.checked }))} className="rounded border-gray-300" /><span className="text-sm">Active</span></label>
-                  </div>
-                </div>
+                <s-stack gap="base">
+                  <s-stack direction="inline" gap="base">
+                    <s-text-field label="SKU Code" value={editForm.skuCode} onChange={(e: any) => setEditForm((f) => ({ ...f, skuCode: e.currentTarget.value }))} />
+                    <s-text-field label="Product Name" value={editForm.name} onChange={(e: any) => setEditForm((f) => ({ ...f, name: e.currentTarget.value }))} />
+                  </s-stack>
+                  <s-stack direction="inline" gap="base">
+                    <s-select label="Category" value={editForm.categoryId} onChange={(e: any) => setEditForm((f) => ({ ...f, categoryId: e.currentTarget.value }))}>
+                      <s-option value="">— No Category —</s-option>
+                      {categories.map((c: any) => <s-option key={c.id} value={c.id}>{c.name}</s-option>)}
+                    </s-select>
+                    <s-select label="Vendor" value={editForm.vendorId} onChange={(e: any) => setEditForm((f) => ({ ...f, vendorId: e.currentTarget.value }))}>
+                      <s-option value="">Select vendor</s-option>
+                      {vendors.map((v: any) => <s-option key={v.id} value={v.id}>{v.name}</s-option>)}
+                    </s-select>
+                  </s-stack>
+                  <s-stack direction="inline" gap="base">
+                    {units.length > 0 ? (
+                      <s-select label="Unit of Measure" value={editForm.unitOfMeasureId} onChange={(e: any) => handleUnitChange(e.currentTarget.value, setEditForm)}>
+                        <s-option value="">— Select —</s-option>
+                        {units.map((u: any) => <s-option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</s-option>)}
+                      </s-select>
+                    ) : (
+                      <s-text-field label="Unit of Measure" value={editForm.unitOfMeasure} onChange={(e: any) => setEditForm((f) => ({ ...f, unitOfMeasure: e.currentTarget.value }))} />
+                    )}
+                    <s-text-field label="Low Stock Threshold" type="number" value={editForm.lowStockThreshold} onChange={(e: any) => setEditForm((f) => ({ ...f, lowStockThreshold: e.currentTarget.value }))} />
+                    <s-text-field label="Max Stack Height (cm)" type="number" value={editForm.maxStackHeight} onChange={(e: any) => setEditForm((f) => ({ ...f, maxStackHeight: e.currentTarget.value }))} />
+                  </s-stack>
+                  <s-text-field label="Description" value={editForm.description} onChange={(e: any) => setEditForm((f) => ({ ...f, description: e.currentTarget.value }))} />
+                  <s-stack direction="inline" gap="base">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={editForm.isFragile} onChange={(e) => setEditForm((f) => ({ ...f, isFragile: e.target.checked }))} />
+                      <span>⚠️ Fragile</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm((f) => ({ ...f, isActive: e.target.checked }))} />
+                      <span>Active</span>
+                    </label>
+                  </s-stack>
+                </s-stack>
               )}
               {modalTab === 'tags' && (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-500">Assign tags for filtering and organization.</p>
-                  <div className="flex flex-wrap gap-2 min-h-[36px]">
-                    {editTags.length === 0 ? <p className="text-sm text-gray-400 italic">No tags assigned</p>
-                      : editTags.map((id) => <span key={id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-indigo-100 text-indigo-800">{getTagName(id)}<button onClick={() => removeEditTag(id)} className="text-indigo-400 hover:text-indigo-700">✕</button></span>)}
-                  </div>
-                  <div className="border-t pt-4">
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="Type tag name..." value={editNewTagInput} onChange={(e) => setEditNewTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEditTagByName(); } }} list="edit-tag-opts" className="input-field" />
-                      <datalist id="edit-tag-opts">{allTags.filter((t: any) => !editTags.includes(t.id)).map((t: any) => <option key={t.id} value={t.name} />)}</datalist>
-                      <button onClick={addEditTagByName} className="btn-primary text-sm whitespace-nowrap">+ Add</button>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">New tags created automatically.</p>
-                  </div>
-                  <div className="border-t pt-4">
-                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase">Available Tags</p>
-                    <div className="flex flex-wrap gap-2">
-                      {allTags.length === 0 ? <p className="text-sm text-gray-400 italic">No tags yet.</p>
-                        : allTags.map((t: any) => <button key={t.id} onClick={() => addEditTag(t.id)} disabled={editTags.includes(t.id)} className={`text-sm px-3 py-1 rounded-full border transition-colors ${editTags.includes(t.id) ? 'bg-indigo-100 text-indigo-700 border-indigo-200 cursor-default' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>{editTags.includes(t.id) ? '✓ ' : '+ '}{t.name}</button>)}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {modalTab === 'barcodes' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    {barcodes.length === 0 ? <p className="text-sm text-gray-500 py-4 text-center">No barcodes assigned.</p>
-                      : barcodes.map((bc: any) => (
-                        <div key={bc.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-sm">{bc.barcode}</span>
-                            <span className="badge bg-gray-100 text-gray-600">{bc.barcodeType}</span>
-                            {bc.isDefault && <span className="badge bg-primary-50 text-primary-700">Default</span>}
-                            {bc.label && <span className="text-xs text-gray-400">({bc.label})</span>}
-                          </div>
-                          <button onClick={() => handleDeleteBarcode(bc.id)} className="text-red-500 hover:text-red-700 text-sm">Remove</button>
-                        </div>
+                <s-stack gap="base">
+                  <s-text>Assign tags for filtering and organization.</s-text>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', minHeight: '36px' }}>
+                    {editTags.length === 0 ? <s-text>No tags assigned</s-text>
+                      : editTags.map((id) => (
+                        <span key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <s-badge tone="info">{getTagName(id)}</s-badge>
+                          <button onClick={() => removeEditTag(id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        </span>
                       ))}
                   </div>
-                  <form onSubmit={handleAddBarcode} className="border-t pt-4 space-y-3">
-                    <p className="text-xs font-semibold text-gray-600 uppercase">Add Barcode</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2"><input type="text" placeholder="Barcode value *" value={newBarcode.barcode} onChange={(e) => setNewBarcode((b) => ({ ...b, barcode: e.target.value }))} required className="input-field" /></div>
-                      <select value={newBarcode.barcodeType} onChange={(e) => setNewBarcode((b) => ({ ...b, barcodeType: e.target.value }))} className="input-field">{['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map((t) => <option key={t} value={t}>{t}</option>)}</select>
-                      <input type="text" placeholder="Label (optional)" value={newBarcode.label} onChange={(e) => setNewBarcode((b) => ({ ...b, label: e.target.value }))} className="input-field" />
-                      <div className="flex items-center gap-2 col-span-2"><input type="checkbox" id="bcDefault" checked={newBarcode.isDefault} onChange={(e) => setNewBarcode((b) => ({ ...b, isDefault: e.target.checked }))} className="rounded border-gray-300" /><label htmlFor="bcDefault" className="text-sm">Set as Default</label></div>
+                  <div style={{ borderTop: '1px solid #e1e3e5', paddingTop: '16px' }}>
+                    <s-stack direction="inline" gap="base">
+                      <input type="text" placeholder="Type tag name..." value={editNewTagInput} onChange={(e) => setEditNewTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEditTagByName(); } }} list="edit-tag-opts" style={{ flex: 1, padding: '8px', border: '1px solid #c9cccf', borderRadius: '6px', fontSize: '14px' }} />
+                      <datalist id="edit-tag-opts">{allTags.filter((t: any) => !editTags.includes(t.id)).map((t: any) => <option key={t.id} value={t.name} />)}</datalist>
+                      <s-button variant="primary" onClick={addEditTagByName}>+ Add</s-button>
+                    </s-stack>
+                    <s-text>New tags created automatically.</s-text>
+                  </div>
+                  <div style={{ borderTop: '1px solid #e1e3e5', paddingTop: '16px' }}>
+                    <s-text>Available Tags</s-text>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                      {allTags.length === 0 ? <s-text>No tags yet.</s-text>
+                        : allTags.map((t: any) => (
+                          <button key={t.id} onClick={() => addEditTag(t.id)} disabled={editTags.includes(t.id)} style={{ fontSize: '14px', padding: '4px 12px', borderRadius: '9999px', border: '1px solid', borderColor: editTags.includes(t.id) ? '#b5c4ff' : '#c9cccf', background: editTags.includes(t.id) ? '#e8efff' : 'white', color: editTags.includes(t.id) ? '#3b5bdb' : '#6d7175', cursor: editTags.includes(t.id) ? 'default' : 'pointer' }}>
+                            {editTags.includes(t.id) ? '✓ ' : '+ '}{t.name}
+                          </button>
+                        ))}
                     </div>
-                    <button type="submit" className="btn-primary">Add Barcode</button>
+                  </div>
+                </s-stack>
+              )}
+              {modalTab === 'barcodes' && (
+                <s-stack gap="base">
+                  {barcodes.length === 0 ? <s-text>No barcodes assigned.</s-text>
+                    : barcodes.map((bc: any) => (
+                      <div key={bc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '1px solid #e1e3e5', borderRadius: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <span style={{ fontFamily: 'monospace' }}>{bc.barcode}</span>
+                          <s-badge>{bc.barcodeType}</s-badge>
+                          {bc.isDefault && <s-badge tone="info">Default</s-badge>}
+                          {bc.label && <s-text>({bc.label})</s-text>}
+                        </div>
+                        <s-button  onClick={() => handleDeleteBarcode(bc.id)}>Remove</s-button>
+                      </div>
+                    ))}
+                  <form onSubmit={handleAddBarcode} style={{ borderTop: '1px solid #e1e3e5', paddingTop: '16px' }}>
+                    <s-stack gap="base">
+                      <s-text>Add Barcode</s-text>
+                      <s-text-field label="Barcode value *" value={newBarcode.barcode} required onChange={(e: any) => setNewBarcode((b) => ({ ...b, barcode: e.currentTarget.value }))} />
+                      <s-stack direction="inline" gap="base">
+                        <s-select label="Type" value={newBarcode.barcodeType} onChange={(e: any) => setNewBarcode((b) => ({ ...b, barcodeType: e.currentTarget.value }))}>
+                          {['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map((t) => <s-option key={t} value={t}>{t}</s-option>)}
+                        </s-select>
+                        <s-text-field label="Label (optional)" value={newBarcode.label} onChange={(e: any) => setNewBarcode((b) => ({ ...b, label: e.currentTarget.value }))} />
+                      </s-stack>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input type="checkbox" id="bcDefault" checked={newBarcode.isDefault} onChange={(e) => setNewBarcode((b) => ({ ...b, isDefault: e.target.checked }))} />
+                        <span>Set as Default</span>
+                      </label>
+                      <s-button variant="primary" type="submit">Add Barcode</s-button>
+                    </s-stack>
                   </form>
-                </div>
+                </s-stack>
               )}
               {modalTab === 'locations' && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-4">Current inventory locations for this product.</p>
+                  <s-text>Current inventory locations for this product.</s-text>
                   {locationsLoading ? (
-                    <div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600" /></div>
+                    <s-text>Loading...</s-text>
                   ) : inventoryLocations.length === 0 ? (
-                    <div className="text-center py-8"><div className="text-3xl mb-2">📭</div><p className="text-sm text-gray-500">No inventory records found</p></div>
+                    <div style={{ textAlign: 'center', padding: '32px' }}>
+                      <div style={{ fontSize: '3rem', marginBottom: '8px' }}>📭</div>
+                      <s-text>No inventory records found</s-text>
+                    </div>
                   ) : (
-                    <div className="space-y-2">
+                    <s-stack gap="base">
                       {Object.entries(
                         inventoryLocations.reduce((acc: any, r: any) => {
                           const loc = r.location ? [r.location.floor, r.location.section, r.location.shelf, r.location.zone].filter(Boolean).join('-') : 'Unlocated';
@@ -429,34 +497,35 @@ export default function SKUPage() {
                       ).map(([locKey, val]: [string, any]) => {
                         const totalQty = val.records.reduce((s: number, r: any) => s + (r.quantity || 0), 0);
                         return (
-                          <div key={locKey} className="border border-gray-200 rounded-lg overflow-hidden">
-                            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
-                              <span className="font-medium text-sm">📍 {val.location ? [val.location.floor, val.location.section, val.location.shelf, val.location.zone].filter(Boolean).join(' › ') : 'No Location'}</span>
-                              <span className="badge bg-blue-50 text-blue-700 font-semibold">{totalQty} units</span>
+                          <div key={locKey} style={{ border: '1px solid #e1e3e5', borderRadius: '6px', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: '#f6f6f7', borderBottom: '1px solid #e1e3e5' }}>
+                              <span style={{ fontWeight: 500, fontSize: '14px' }}>📍 {val.location ? [val.location.floor, val.location.section, val.location.shelf, val.location.zone].filter(Boolean).join(' › ') : 'No Location'}</span>
+                              <s-badge tone="info">{totalQty} units</s-badge>
                             </div>
-                            <div className="divide-y divide-gray-100">
-                              {val.records.map((r: any) => (
-                                <div key={r.id} className="flex items-center justify-between px-4 py-2 text-sm">
-                                  <div className="flex items-center gap-3"><span className="badge bg-gray-100 text-gray-700">{r.state}</span>{r.batchId && <span className="text-gray-500 text-xs">Batch: {r.batchId}</span>}</div>
-                                  <span className="font-medium">{r.quantity} {editingSku?.unitOfMeasure}</span>
+                            {val.records.map((r: any) => (
+                              <div key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', fontSize: '14px', borderBottom: '1px solid #f1f1f1' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <s-badge>{r.state}</s-badge>
+                                  {r.batchId && <s-text>Batch: {r.batchId}</s-text>}
                                 </div>
-                              ))}
-                            </div>
+                                <span style={{ fontWeight: 500 }}>{r.quantity} {editingSku?.unitOfMeasure}</span>
+                              </div>
+                            ))}
                           </div>
                         );
                       })}
-                    </div>
+                    </s-stack>
                   )}
                 </div>
               )}
             </div>
-            <div className="modal-footer">
-              <button onClick={() => setEditingSku(null)} className="btn-secondary">Close</button>
-              {modalTab === 'details' && <button onClick={handleSaveEdit} disabled={isSaving} className="btn-primary min-w-[120px]">{isSaving ? '⏳ Saving…' : '💾 Save Changes'}</button>}
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e1e3e5', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <s-button onClick={() => setEditingSku(null)}>Close</s-button>
+              {modalTab === 'details' && <s-button variant="primary" onClick={handleSaveEdit} disabled={isSaving}>{isSaving ? '⏳ Saving…' : '💾 Save Changes'}</s-button>}
             </div>
           </div>
         </div>
       )}
-    </div>
+    </s-page>
   );
 }

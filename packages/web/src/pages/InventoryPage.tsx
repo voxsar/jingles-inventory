@@ -82,23 +82,23 @@ export default function InventoryPage() {
   };
 
   const columns = [
-    { key: 'sku', header: 'SKU Code', sortable: true, render: (r: any) => <span className="font-mono text-xs font-medium bg-gray-100 px-2 py-0.5 rounded">{r.sku?.skuCode}</span> },
-    { key: 'name', header: 'Product', render: (r: any) => <span className="font-medium">{r.sku?.name}</span> },
-    { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span className="font-semibold">{r.quantity}</span> },
+    { key: 'sku', header: 'SKU Code', sortable: true, render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.sku?.skuCode}</span> },
+    { key: 'name', header: 'Product', render: (r: any) => <span>{r.sku?.name}</span> },
+    { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
-    { key: 'location', header: 'Location', render: (r: any) => <span className="text-sm text-gray-600">{formatLocation(r.location)}</span> },
-    { key: 'batchId', header: 'Batch', render: (r: any) => r.batchId ? <span className="font-mono text-xs text-gray-500">{r.batchId}</span> : <span className="text-gray-400">—</span> },
-    { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <span className="text-xs text-gray-500">{new Date(r.updatedAt).toLocaleDateString()}</span> },
+    { key: 'location', header: 'Location', render: (r: any) => <s-text>{formatLocation(r.location)}</s-text> },
+    { key: 'batchId', header: 'Batch', render: (r: any) => r.batchId ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batchId}</span> : <s-text>—</s-text> },
+    { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <s-text>{new Date(r.updatedAt).toLocaleDateString()}</s-text> },
     {
       key: 'actions', header: '',
       render: (r: any) => (
-        <button
-          onClick={(e) => { e.stopPropagation(); handleTransition(r); }}
+        <s-button
+          
+          onClick={(e: any) => { e.stopPropagation(); handleTransition(r); }}
           disabled={transitioning === r.id}
-          className="text-xs text-primary-600 hover:text-primary-800 font-medium px-2 py-1 rounded hover:bg-primary-50 disabled:opacity-50"
         >
           {transitioning === r.id ? '…' : 'Transition'}
-        </button>
+        </s-button>
       ),
     },
   ];
@@ -114,51 +114,48 @@ export default function InventoryPage() {
   const hasFilters = stateFilter || locationFilter || searchTerm;
 
   return (
-    <div className="space-y-5">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">📦 Inventory</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{total.toLocaleString()} records</p>
-        </div>
-      </div>
+    <s-page>
+      <s-stack direction="inline" gap="base">
+        <s-heading>📦 Inventory</s-heading>
+        <s-text>{total.toLocaleString()} records</s-text>
+      </s-stack>
 
-      {/* Barcode scan */}
-      <div className="card">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Quick Barcode Lookup</label>
+      <s-section>
+        <s-stack direction="inline" gap="base">
+          <div style={{ flex: 1 }}>
             <BarcodeInput onResult={setBarcodeScanResult} />
           </div>
           {barcodeScanResult && (
-            <div className="flex-1 p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
-              <strong className="text-green-800">Found:</strong> {barcodeScanResult.sku?.name}
-              <span className="ml-2 text-green-600">— {barcodeScanResult.inventoryRecords?.length ?? 0} records</span>
-            </div>
+            <s-banner tone="success">
+              Found: {barcodeScanResult.sku?.name} — {barcodeScanResult.inventoryRecords?.length ?? 0} records
+            </s-banner>
           )}
-        </div>
-      </div>
+        </s-stack>
+      </s-section>
 
-      <div className="card-flat overflow-hidden">
-        {/* Filter Bar */}
-        <div className="filter-bar">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-            <input type="text" placeholder="Search by SKU or name..." value={searchTerm} onChange={(e) => handleSearchChange(e.target.value)} className="filter-input pl-9 w-full" />
-          </div>
-          <select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setPage(1); }} className="filter-input">
-            <option value="">All States</option>
-            {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select value={locationFilter} onChange={(e) => { setLocationFilter(e.target.value); setPage(1); }} className="filter-input">
-            <option value="">All Locations</option>
+      <s-section>
+        <s-stack direction="inline" gap="base">
+          <s-search-field
+            label="Search"
+            label-visibility="hidden"
+            value={searchTerm}
+            placeholder="Search by SKU or name..."
+            onChange={(e: any) => handleSearchChange(e.currentTarget.value)}
+          />
+          <s-select label="State" label-visibility="hidden" value={stateFilter} onChange={(e: any) => { setStateFilter(e.currentTarget.value); setPage(1); }}>
+            <s-option value="">All States</s-option>
+            {Object.values(InventoryState).map((s) => <s-option key={s} value={s}>{s}</s-option>)}
+          </s-select>
+          <s-select label="Location" label-visibility="hidden" value={locationFilter} onChange={(e: any) => { setLocationFilter(e.currentTarget.value); setPage(1); }}>
+            <s-option value="">All Locations</s-option>
             {locations.map((loc: any) => (
-              <option key={loc.id} value={loc.id}>
+              <s-option key={loc.id} value={loc.id}>
                 {[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}
-              </option>
+              </s-option>
             ))}
-          </select>
-          {hasFilters && <button onClick={clearFilters} className="text-sm text-gray-500 hover:text-gray-700 underline whitespace-nowrap">Clear filters</button>}
-        </div>
+          </s-select>
+          {hasFilters && <s-button  onClick={clearFilters}>Clear filters</s-button>}
+        </s-stack>
 
         <DataTable
           columns={columns}
@@ -176,7 +173,7 @@ export default function InventoryPage() {
           onPageChange={setPage}
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
-      </div>
-    </div>
+      </s-section>
+    </s-page>
   );
 }
