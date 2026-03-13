@@ -307,6 +307,30 @@ router.get('/tags/all', async (_req, res: Response): Promise<void> => {
   res.json({ success: true, data: tags });
 });
 
+// Create a new global tag
+router.post(
+  '/tags/create',
+  requireRole('Admin', 'Manager'),
+  [body('name').notEmpty().trim()],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+    try {
+      const tag = await prisma.tag.upsert({
+        where: { name: req.body.name.trim() },
+        create: { name: req.body.name.trim(), color: req.body.color },
+        update: {},
+      });
+      res.status(201).json({ success: true, data: tag });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  }
+);
+
 router.post(
   '/:id/tags',
   requireRole('Admin', 'Manager'),

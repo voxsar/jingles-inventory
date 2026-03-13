@@ -48,8 +48,11 @@ export const skusApi = {
   deleteImage: (id: string, imgId: string) => api.delete(`/skus/${id}/images/${imgId}`),
   // Tags
   getAllTags: () => api.get('/skus/tags/all'),
+  createTag: (name: string, color?: string) => api.post('/skus/tags/create', { name, color }),
   addTag: (id: string, tagId: string) => api.post(`/skus/${id}/tags`, { tagId }),
   removeTag: (id: string, tagId: string) => api.delete(`/skus/${id}/tags/${tagId}`),
+  // Inventory locations
+  getInventoryLocations: (id: string) => api.get('/inventory', { params: { skuId: id, pageSize: '100' } }),
 };
 
 // Inventory
@@ -70,6 +73,7 @@ export const grnsApi = {
     api.get('/grns', { params }),
   get: (id: string) => api.get(`/grns/${id}`),
   create: (data: any) => api.post('/grns', data),
+  update: (id: string, data: any) => api.put(`/grns/${id}`, data),
   submit: (id: string, deliveryDate?: string) =>
     api.put(`/grns/${id}/submit`, { deliveryDate }),
   inspect: (id: string, data: any) => api.post(`/grns/${id}/inspect`, data),

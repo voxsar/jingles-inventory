@@ -12,13 +12,21 @@ router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
-		const { status, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+		const { status, search, supplierId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
 		const user = req.user!;
 		const pageNum = parseInt(page);
 		const pageSizeNum = parseInt(pageSize);
 
 		const where: any = {};
 		if (status) where.status = status;
+		if (supplierId) where.supplierId = supplierId;
+		if (search) {
+			where.OR = [
+				{ invoiceReference: { contains: search, mode: 'insensitive' } },
+				{ supplier: { name: { contains: search, mode: 'insensitive' } } },
+				{ notes: { contains: search, mode: 'insensitive' } },
+			];
+		}
 		if (user.role === UserRole.Vendor) {
 			const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
 			if (dbUser?.vendorId) where.supplierId = dbUser.vendorId;
@@ -115,6 +123,49 @@ router.get(
 		} catch (error) {
 			logger.error('Get GRN error', error);
 			res.status(500).json({ success: false, error: 'Failed to fetch GRN' });
+		}
+	}
+);
+
+router.put(
+	'/:id',
+	requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
+		try {
+			const grn = await prisma.gRN.findUnique({ where: { id: req.params!.id } });
+			if (!grn) {
+				res.status(404).json({ success: false, error: 'GRN not found' });
+				return;
+			}
+			if (grn.status !== 'Draft') {
+				res.status(400).json({ success: false, error: 'Only Draft GRNs can be edited' });
+				return;
+			}
+			const { supplierId, invoiceReference, expectedDeliveryDate, notes } = req.body;
+			const updateData: any = {};
+			if (supplierId !== undefined) updateData.supplierId = supplierId;
+			if (invoiceReference !== undefined) updateData.invoiceReference = invoiceReference;
+			if (notes !== undefined) updateData.notes = notes;
+			if (expectedDeliveryDate) {
+				// Parse the date string safely; if no time component, treat as UTC midnight
+				const parsed = new Date(expectedDeliveryDate);
+				if (isNaN(parsed.getTime())) {
+					res.status(400).json({ success: false, error: 'Invalid expectedDeliveryDate format' });
+					return;
+				}
+				updateData.expectedDeliveryDate = parsed;
+			}
+			const updated = await prisma.gRN.update({ where: { id: req.params!.id }, data: updateData });
+			res.json({ success: true, data: updated });
+		} catch (error: any) {
+			logger.error('Update GRN error', error);
+			res.status(400).json({ success: false, error: error.message });
 		}
 	}
 );
