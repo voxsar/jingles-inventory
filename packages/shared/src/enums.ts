@@ -61,3 +61,36 @@ export enum UnitOfMeasure {
   Meter = 'Meter',
   Centimeter = 'Centimeter',
 }
+
+export enum StockTransferStatus {
+  Draft = 'Draft',
+  Pending = 'Pending',
+  Approved = 'Approved',
+  InTransit = 'InTransit',
+  Completed = 'Completed',
+  Cancelled = 'Cancelled',
+}
+
+export enum VendorType {
+  Vendor = 'Vendor',
+  Supplier = 'Supplier',
+  Both = 'Both',
+}
+
+export enum BarcodeType {
+  EAN13 = 'EAN13',
+  UPC = 'UPC',
+  QRCode = 'QRCode',
+  Code128 = 'Code128',
+  Code39 = 'Code39',
+  Custom = 'Custom',
+}
+
+export enum UnitType {
+  Weight = 'Weight',
+  Volume = 'Volume',
+  Length = 'Length',
+  Count = 'Count',
+  Area = 'Area',
+  Other = 'Other',
+}

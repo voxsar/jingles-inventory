@@ -17,6 +17,10 @@ import barcodeRoutes from './routes/barcode';
 import reportsRoutes from './routes/reports';
 import spaceRoutes from './routes/space';
 import syncRoutes from './routes/sync';
+import categoryRoutes from './routes/categories';
+import settingsRoutes from './routes/settings';
+import branchRoutes from './routes/branches';
+import stockTransferRoutes from './routes/stockTransfers';
 
 const app = express();
 
@@ -54,6 +58,10 @@ app.use('/api/barcode', barcodeRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/space', spaceRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/branches', branchRoutes);
+app.use('/api/stock-transfers', stockTransferRoutes);
 
 app.use(errorHandler);
 
@@ -63,3 +71,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

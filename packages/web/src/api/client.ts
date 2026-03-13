@@ -38,6 +38,18 @@ export const skusApi = {
   get: (id: string) => api.get(`/skus/${id}`),
   create: (data: any) => api.post('/skus', data),
   update: (id: string, data: any) => api.put(`/skus/${id}`, data),
+  // Barcodes
+  getBarcodes: (id: string) => api.get(`/skus/${id}/barcodes`),
+  addBarcode: (id: string, data: any) => api.post(`/skus/${id}/barcodes`, data),
+  deleteBarcode: (id: string, bcId: string) => api.delete(`/skus/${id}/barcodes/${bcId}`),
+  // Images
+  getImages: (id: string) => api.get(`/skus/${id}/images`),
+  addImage: (id: string, data: any) => api.post(`/skus/${id}/images`, data),
+  deleteImage: (id: string, imgId: string) => api.delete(`/skus/${id}/images/${imgId}`),
+  // Tags
+  getAllTags: () => api.get('/skus/tags/all'),
+  addTag: (id: string, tagId: string) => api.post(`/skus/${id}/tags`, { tagId }),
+  removeTag: (id: string, tagId: string) => api.delete(`/skus/${id}/tags/${tagId}`),
 };
 
 // Inventory
@@ -71,10 +83,49 @@ export const locationsApi = {
   update: (id: string, data: any) => api.put(`/locations/${id}`, data),
 };
 
-// Vendors
+// Vendors / Suppliers
 export const vendorsApi = {
-  list: () => api.get('/vendors'),
+  list: (params?: Record<string, string>) => api.get('/vendors', { params }),
+  get: (id: string) => api.get(`/vendors/${id}`),
+  create: (data: any) => api.post('/vendors', data),
+  update: (id: string, data: any) => api.put(`/vendors/${id}`, data),
   getProducts: (id: string) => api.get(`/vendors/${id}/products`),
+};
+
+// Categories
+export const categoriesApi = {
+  list: () => api.get('/categories'),
+  tree: () => api.get('/categories/tree'),
+  get: (id: string) => api.get(`/categories/${id}`),
+  create: (data: any) => api.post('/categories', data),
+  update: (id: string, data: any) => api.put(`/categories/${id}`, data),
+  delete: (id: string) => api.delete(`/categories/${id}`),
+};
+
+// Settings (Units of Measure)
+export const settingsApi = {
+  listUnits: () => api.get('/settings/units'),
+  createUnit: (data: any) => api.post('/settings/units', data),
+  updateUnit: (id: string, data: any) => api.put(`/settings/units/${id}`, data),
+  deleteUnit: (id: string) => api.delete(`/settings/units/${id}`),
+};
+
+// Branches
+export const branchesApi = {
+  list: () => api.get('/branches'),
+  get: (id: string) => api.get(`/branches/${id}`),
+  create: (data: any) => api.post('/branches', data),
+  update: (id: string, data: any) => api.put(`/branches/${id}`, data),
+};
+
+// Stock Transfers
+export const stockTransfersApi = {
+  list: (params?: Record<string, string>) => api.get('/stock-transfers', { params }),
+  get: (id: string) => api.get(`/stock-transfers/${id}`),
+  create: (data: any) => api.post('/stock-transfers', data),
+  approve: (id: string) => api.put(`/stock-transfers/${id}/approve`),
+  complete: (id: string) => api.put(`/stock-transfers/${id}/complete`),
+  cancel: (id: string) => api.put(`/stock-transfers/${id}/cancel`),
 };
 
 // Reports
@@ -115,3 +166,4 @@ export const syncApi = {
   pull: (clientId: string, since?: string) =>
     api.get('/sync/pull', { params: { clientId, since } }),
 };
+

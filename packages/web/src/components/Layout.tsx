@@ -6,9 +6,14 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/inventory', label: 'Inventory', icon: '📦' },
   { to: '/grns', label: 'GRNs', icon: '📋' },
-  { to: '/skus', label: 'SKUs', icon: '🏷️' },
+  { to: '/skus', label: 'Products (SKUs)', icon: '🏷️' },
+  { to: '/categories', label: 'Categories', icon: '📂' },
   { to: '/locations', label: 'Locations', icon: '📍' },
+  { to: '/branches', label: 'Branches', icon: '🏢' },
+  { to: '/stock-transfers', label: 'Stock Transfers', icon: '🔄' },
+  { to: '/suppliers', label: 'Suppliers', icon: '🏭' },
   { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function Layout() {
@@ -35,7 +40,7 @@ export default function Layout() {
             {user?.role}
           </span>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {allNavItems.map((item) => (
             <NavLink
               key={item.to}
@@ -81,3 +86,4 @@ export default function Layout() {
     </div>
   );
 }
+

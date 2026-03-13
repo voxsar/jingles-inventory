@@ -16,12 +16,14 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")
 
-  vendor            Vendor?             @relation(fields: [vendorId], references: [id])
-  inventoryRecords  InventoryRecord[]
-  inventoryEvents   InventoryEvent[]
-  grns              GRN[]
-  inspectionRecords InspectionRecord[]
-  auditLogs         AuditLog[]
+  vendor                 Vendor?                @relation(fields: [vendorId], references: [id])
+  inventoryRecords       InventoryRecord[]
+  inventoryEvents        InventoryEvent[]
+  grns                   GRN[]
+  inspectionRecords      InspectionRecord[]
+  auditLogs              AuditLog[]
+  stockTransfersCreated  StockTransfer[]        @relation("StockTransferCreator")
+  stockTransfersApproved StockTransfer[]        @relation("StockTransferApprover")
 
   @@map("users")
 }
@@ -32,6 +34,11 @@ model Vendor {
   contactEmail String   @map("contact_email")
   contactPhone String?  @map("contact_phone")
   address      String?
+  type         String   @default("Vendor") @map("type")
+  website      String?
+  taxId        String?  @map("tax_id")
+  paymentTerms String?  @map("payment_terms")
+  notes        String?
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")
 
@@ -42,31 +49,141 @@ model Vendor {
   @@map("vendors")
 }
 
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  parentId    String?   @map("parent_id")
+  sortOrder   Int       @default(0) @map("sort_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  skus     SKU[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  skus SKUTag[]
+
+  @@map("tags")
+}
+
+model UnitOfMeasureModel {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  abbreviation String
+  baseUnit     String?  @map("base_unit")
+  conversionFactor Float? @map("conversion_factor")
+  type         String
+  isActive     Boolean  @default(true) @map("is_active")
+  isSystem     Boolean  @default(false) @map("is_system")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  skus SKU[]
+
+  @@map("units_of_measure")
+}
+
+model Branch {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true) @map("is_active")
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  locations             Location[]
+  stockTransfersFrom    StockTransfer[] @relation("StockTransferFrom")
+  stockTransfersTo      StockTransfer[] @relation("StockTransferTo")
+
+  @@map("branches")
+}
+
 model SKU {
   id              String   @id @default(uuid())
   skuCode         String   @unique @map("sku_code")
   name            String
   description     String?
-  category        String?
+  categoryId      String?  @map("category_id")
   vendorId        String   @map("vendor_id")
+  unitOfMeasureId String?  @map("unit_of_measure_id")
   unitOfMeasure   String   @map("unit_of_measure")
   conversionRules Json?    @map("conversion_rules")
   dimensions      Json?
   isFragile       Boolean  @default(false) @map("is_fragile")
   maxStackHeight  Float?   @map("max_stack_height")
+  batchPricing    Json?    @map("batch_pricing")
+  lowStockThreshold Int?   @map("low_stock_threshold")
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  vendor           Vendor            @relation(fields: [vendorId], references: [id])
+  vendor           Vendor              @relation(fields: [vendorId], references: [id])
+  category         Category?           @relation(fields: [categoryId], references: [id])
+  unitModel        UnitOfMeasureModel? @relation(fields: [unitOfMeasureId], references: [id])
   inventoryRecords InventoryRecord[]
   grnLines         GRNLine[]
+  images           ProductImage[]
+  barcodes         ProductBarcode[]
+  tags             SKUTag[]
 
   @@map("skus")
 }
 
+model SKUTag {
+  skuId String @map("sku_id")
+  tagId String @map("tag_id")
+
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([skuId, tagId])
+  @@map("sku_tags")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  skuId     String   @map("sku_id")
+  url       String
+  altText   String?  @map("alt_text")
+  isPrimary Boolean  @default(false) @map("is_primary")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductBarcode {
+  id          String   @id @default(uuid())
+  skuId       String   @map("sku_id")
+  barcode     String   @unique
+  barcodeType String   @default("EAN13") @map("barcode_type")
+  isDefault   Boolean  @default(false) @map("is_default")
+  label       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@map("product_barcodes")
+}
+
 model Location {
   id              String  @id @default(uuid())
+  branchId        String? @map("branch_id")
   floor           String
   section         String
   shelf           String
@@ -75,9 +192,51 @@ model Location {
   notes           String?
   isActive        Boolean @default(true) @map("is_active")
 
+  branch           Branch?         @relation(fields: [branchId], references: [id])
   inventoryRecords InventoryRecord[]
+  transfersFrom    StockTransfer[] @relation("StockTransferFromLocation")
+  transfersTo      StockTransfer[] @relation("StockTransferToLocation")
 
   @@map("locations")
+}
+
+model StockTransfer {
+  id               String    @id @default(uuid())
+  referenceNumber  String    @unique @map("reference_number")
+  fromBranchId     String?   @map("from_branch_id")
+  toBranchId       String?   @map("to_branch_id")
+  fromLocationId   String?   @map("from_location_id")
+  toLocationId     String?   @map("to_location_id")
+  status           String    @default("Draft")
+  notes            String?
+  requestedBy      String    @map("requested_by")
+  approvedBy       String?   @map("approved_by")
+  requestedAt      DateTime  @default(now()) @map("requested_at")
+  approvedAt       DateTime? @map("approved_at")
+  completedAt      DateTime? @map("completed_at")
+
+  fromBranch   Branch?   @relation("StockTransferFrom", fields: [fromBranchId], references: [id])
+  toBranch     Branch?   @relation("StockTransferTo", fields: [toBranchId], references: [id])
+  fromLocation Location? @relation("StockTransferFromLocation", fields: [fromLocationId], references: [id])
+  toLocation   Location? @relation("StockTransferToLocation", fields: [toLocationId], references: [id])
+  requester    User      @relation("StockTransferCreator", fields: [requestedBy], references: [id])
+  approver     User?     @relation("StockTransferApprover", fields: [approvedBy], references: [id])
+  lines        StockTransferLine[]
+
+  @@map("stock_transfers")
+}
+
+model StockTransferLine {
+  id               String @id @default(uuid())
+  transferId       String @map("transfer_id")
+  skuId            String @map("sku_id")
+  requestedQty     Int    @map("requested_qty")
+  transferredQty   Int    @default(0) @map("transferred_qty")
+  notes            String?
+
+  transfer StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+
+  @@map("stock_transfer_lines")
 }
 
 model InventoryRecord {
