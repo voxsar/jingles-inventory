@@ -20,10 +20,16 @@ export default function GRNPage() {
 	const [skus, setSkus] = useState<any[]>([]);
 	const navigate = useNavigate();
 
+	// Helper to get today's date in YYYY-MM-DD format
+	const getTodayString = () => {
+		const today = new Date();
+		return today.toISOString().split('T')[0];
+	};
+
 	const [form, setForm] = useState({
 		supplierId: '',
 		invoiceReference: '',
-		expectedDeliveryDate: '',
+		expectedDeliveryDate: getTodayString(),
 		notes: '',
 		lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }],
 	});
@@ -54,7 +60,7 @@ export default function GRNPage() {
 			const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
 			setGrns(Array.isArray(data) ? data : []);
 			setShowForm(false);
-			setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }] });
+			setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }] });
 		} catch (err: any) {
 			alert(err.response?.data?.error ?? 'Failed to create GRN');
 		}
