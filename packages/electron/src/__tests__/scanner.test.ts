@@ -34,10 +34,10 @@ function createKeyboardWedgeListener(onScan: (barcode: string) => void) {
 
 describe('Keyboard wedge scanner logic', () => {
   let handler: (event: any) => void;
-  let onScan: ReturnType<typeof vi.fn>;
+  let onScan: ReturnType<typeof vi.fn<(barcode: string) => void>>;
 
   beforeEach(() => {
-    onScan = vi.fn();
+    onScan = vi.fn<(barcode: string) => void>();
     handler = createKeyboardWedgeListener(onScan);
     vi.useFakeTimers();
   });
