@@ -155,7 +155,7 @@ export default function GRNPage() {
   const hasFilters = searchTerm || statusFilter || supplierFilter;
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>📋 Goods Receipt Notes</s-heading>
@@ -273,7 +273,7 @@ export default function GRNPage() {
           </div>
         </div>
       )}
-    </s-page>
+    </>
   );
 }
 

@@ -144,7 +144,7 @@ export default function StockTransferPage() {
   ];
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>🔄 Stock Transfers</s-heading>
@@ -240,6 +240,6 @@ export default function StockTransferPage() {
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
       </s-section>
-    </s-page>
+    </>
   );
 }

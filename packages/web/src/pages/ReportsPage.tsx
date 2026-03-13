@@ -68,7 +68,7 @@ export default function ReportsPage() {
 	const tableData = activeReport === 'sales' && !Array.isArray(data) ? [data] : (Array.isArray(data) ? data : []);
 
 	return (
-		<s-page>
+		<>
 			<s-heading>Reports & Analytics</s-heading>
 
 			<s-stack direction="inline" gap="base">
@@ -86,6 +86,6 @@ export default function ReportsPage() {
 			<s-section>
 				<DataTable columns={columns as any} data={tableData} isLoading={isLoading} emptyMessage="No data available" />
 			</s-section>
-		</s-page>
+		</>
 	);
 }

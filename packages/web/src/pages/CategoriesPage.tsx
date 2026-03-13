@@ -162,7 +162,7 @@ export default function CategoriesPage() {
   };
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>📂 Categories</s-heading>
@@ -238,6 +238,6 @@ export default function CategoriesPage() {
           </div>
         )}
       </s-section>
-    </s-page>
+    </>
   );
 }
