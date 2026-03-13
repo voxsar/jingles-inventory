@@ -99,56 +99,79 @@ export default function BranchesPage() {
     {
       key: 'actions', header: 'Actions',
       render: (r: any) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button>
-          <s-button  onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
+        <div className="flex gap-2">
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</button>
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); handleToggleActive(r); }}>
             {r.isActive ? 'Disable' : 'Enable'}
-          </s-button>
+          </button>
         </div>
       ),
     },
   ];
 
   return (
-    <>
-      <s-stack direction="inline" gap="base">
-        <div>
-          <s-heading>🏢 Branches</s-heading>
-          <s-text>Manage store branches and locations</s-text>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">🏢 Branches</h1>
+          <p className="page-subtitle">Manage store branches and locations</p>
         </div>
-        <s-button variant="primary" onClick={openCreate}>+ New Branch</s-button>
-      </s-stack>
+        <button className="btn-primary" onClick={openCreate}>+ New Branch</button>
+      </div>
 
-      {showForm && (
-        <s-section heading={editingBranch ? 'Edit Branch' : 'New Branch'}>
-          <form onSubmit={handleSubmit}>
-            <s-stack gap="base">
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Name *" value={form.name} required placeholder="e.g. Main Branch" onChange={(e: any) => setForm(f => ({ ...f, name: e.currentTarget.value }))} />
-                <s-text-field label="Code *" value={form.code} required placeholder="e.g. MAIN" onChange={(e: any) => setForm(f => ({ ...f, code: e.currentTarget.value.toUpperCase() }))} />
-              </s-stack>
-              <s-text-field label="Address" value={form.address} onChange={(e: any) => setForm(f => ({ ...f, address: e.currentTarget.value }))} />
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Phone" type="tel" value={form.phone} onChange={(e: any) => setForm(f => ({ ...f, phone: e.currentTarget.value }))} />
-                <s-text-field label="Email" type="email" value={form.email} onChange={(e: any) => setForm(f => ({ ...f, email: e.currentTarget.value }))} />
-              </s-stack>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <input type="checkbox" id="isDefault" checked={form.isDefault} onChange={e => setForm(f => ({ ...f, isDefault: e.target.checked }))} />
-                <span>Set as Default Branch</span>
-              </label>
-              <s-stack direction="inline" gap="base">
-                <s-button variant="primary" type="submit">{editingBranch ? 'Update Branch' : 'Create Branch'}</s-button>
-                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-              </s-stack>
-            </s-stack>
-          </form>
-        </s-section>
-      )}
-
-      <s-section>
+      {/* Table section */}
+      <div className="content-section">
         <DataTable columns={columns} data={branches} isLoading={isLoading} emptyMessage="No branches found" />
-      </s-section>
-    </>
+      </div>
 
+      {/* Create / Edit Branch Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h2 className="modal-title">{editingBranch ? '✏️ Edit Branch' : '➕ New Branch'}</h2>
+              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body form-stack">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Name *</label>
+                    <input className="input-field" type="text" value={form.name} required placeholder="e.g. Main Branch" onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Code *</label>
+                    <input className="input-field" type="text" value={form.code} required placeholder="e.g. MAIN" onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Address</label>
+                  <input className="input-field" type="text" value={form.address} onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))} />
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Phone</label>
+                    <input className="input-field" type="tel" value={form.phone} onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Email</label>
+                    <input className="input-field" type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} />
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                  <input type="checkbox" checked={form.isDefault} onChange={e => setForm(f => ({ ...f, isDefault: e.target.checked }))} className="rounded" />
+                  Set as Default Branch
+                </label>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">{editingBranch ? 'Update Branch' : 'Create Branch'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

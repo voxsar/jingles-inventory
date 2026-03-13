@@ -9,21 +9,35 @@
 }
 
 @layer components {
+  /* ── Buttons ─────────────────────────────────────────────── */
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm;
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm cursor-pointer;
   }
   .btn-secondary {
-    @apply bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium text-sm shadow-sm;
+    @apply bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors font-medium text-sm shadow-sm cursor-pointer;
   }
   .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-sm;
+    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm shadow-sm cursor-pointer;
+  }
+  .btn-sm {
+    @apply bg-white text-gray-700 px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors font-medium text-xs shadow-sm cursor-pointer;
   }
   .btn-icon {
-    @apply p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-gray-600;
+    @apply p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-gray-600 cursor-pointer;
   }
+
+  /* ── Form elements ───────────────────────────────────────── */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow bg-white;
   }
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  .form-group {
+    @apply flex flex-col gap-1;
+  }
+
+  /* ── Cards ───────────────────────────────────────────────── */
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
   }
@@ -33,34 +47,95 @@
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+
+  /* ── Page layout ─────────────────────────────────────────── */
   .page-header {
-    @apply flex items-center justify-between mb-6;
+    @apply flex items-start justify-between mb-6 gap-4;
+  }
+  .page-header-left {
+    @apply flex flex-col gap-0.5;
   }
   .page-title {
     @apply text-2xl font-bold text-gray-900 tracking-tight;
   }
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-0.5;
+  }
   .section-title {
     @apply text-base font-semibold text-gray-800 mb-3;
   }
+  .content-section {
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm mb-4;
+  }
+  .content-section-header {
+    @apply flex items-center justify-between px-6 py-4 border-b border-gray-100;
+  }
+
+  /* ── Filter bar ──────────────────────────────────────────── */
   .filter-bar {
-    @apply flex flex-wrap items-center gap-3 p-4 border-b border-gray-100;
+    @apply flex flex-wrap items-center gap-3 px-6 py-3 border-b border-gray-100 bg-gray-50/50;
   }
   .filter-input {
-    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white min-w-[180px];
+    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white;
+    width: 200px;
   }
+  .filter-input-wide {
+    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white;
+    width: 240px;
+  }
+  .filter-select {
+    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white cursor-pointer;
+    width: 180px;
+  }
+
+  /* ── Table inside card ───────────────────────────────────── */
+  .table-container {
+    @apply overflow-x-auto;
+  }
+
+  /* ── Modals ──────────────────────────────────────────────── */
   .modal-overlay {
     @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4;
   }
   .modal-panel {
     @apply bg-white rounded-xl shadow-2xl w-full max-h-[90vh] overflow-y-auto;
   }
+  .modal-panel-sm {
+    @apply bg-white rounded-xl shadow-2xl w-full max-h-[90vh] overflow-y-auto;
+    max-width: 480px;
+  }
+  .modal-panel-md {
+    @apply bg-white rounded-xl shadow-2xl w-full max-h-[90vh] overflow-y-auto;
+    max-width: 640px;
+  }
+  .modal-panel-lg {
+    @apply bg-white rounded-xl shadow-2xl w-full max-h-[90vh] overflow-y-auto;
+    max-width: 800px;
+  }
   .modal-header {
-    @apply flex items-center justify-between px-6 py-4 border-b border-gray-200;
+    @apply flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10;
+  }
+  .modal-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+  .modal-close {
+    @apply text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer bg-transparent border-0 p-1;
   }
   .modal-body {
-    @apply px-6 py-4;
+    @apply px-6 py-5;
   }
   .modal-footer {
-    @apply flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl;
+    @apply flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl sticky bottom-0;
+  }
+
+  /* ── Form grid inside modal ──────────────────────────────── */
+  .form-grid-2 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2;
+  }
+  .form-grid-3 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-3;
+  }
+  .form-stack {
+    @apply flex flex-col gap-4;
   }
 }

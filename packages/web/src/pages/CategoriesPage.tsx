@@ -58,9 +58,9 @@ function CategoryRow({
             : <s-badge tone="critical">Inactive</s-badge>}
         </td>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <s-button  onClick={() => onEdit(category)}>Edit</s-button>
-            <s-button  onClick={() => onDelete(category)}>Delete</s-button>
+          <div className="flex gap-2">
+            <button className="btn-sm" onClick={() => onEdit(category)}>Edit</button>
+            <button className="btn-sm text-red-600" onClick={() => onDelete(category)}>Delete</button>
           </div>
         </td>
       </tr>
@@ -162,62 +162,37 @@ export default function CategoriesPage() {
   };
 
   return (
-    <>
-      <s-stack direction="inline" gap="base">
-        <div>
-          <s-heading>📂 Categories</s-heading>
-          <s-text>Manage nested product categories and sub-categories</s-text>
+    <div className="flex flex-col gap-4">
+      {/* Page header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">🗂️ Categories</h1>
+          <p className="page-subtitle">Manage nested product categories and sub-categories</p>
         </div>
-        <s-button variant="primary" onClick={() => openCreate()}>+ New Category</s-button>
-      </s-stack>
+        <button className="btn-primary" onClick={() => openCreate()}>+ New Category</button>
+      </div>
 
-      {showForm && (
-        <s-section heading={editingCategory ? 'Edit Category' : 'New Category'}>
-          <form onSubmit={handleSubmit}>
-            <s-stack gap="base">
-              <s-stack direction="inline" gap="base">
-                <s-text-field label="Name *" value={form.name} required placeholder="e.g. Electronics" onChange={(e: any) => handleNameChange(e.currentTarget.value)} />
-                <s-text-field label="Slug *" value={form.slug} required placeholder="e.g. electronics" onChange={(e: any) => setForm(f => ({ ...f, slug: e.currentTarget.value }))} />
-              </s-stack>
-              <s-stack direction="inline" gap="base">
-                <s-select label="Parent Category" value={form.parentId} onChange={(e: any) => setForm(f => ({ ...f, parentId: e.currentTarget.value }))}>
-                  <s-option value="">— Top Level —</s-option>
-                  {flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => (
-                    <s-option key={c.id} value={c.id}>{c.name}</s-option>
-                  ))}
-                </s-select>
-                <s-text-field label="Sort Order" type="number" value={form.sortOrder} onChange={(e: any) => setForm(f => ({ ...f, sortOrder: e.currentTarget.value }))} />
-              </s-stack>
-              <s-text-field label="Description" value={form.description} onChange={(e: any) => setForm(f => ({ ...f, description: e.currentTarget.value }))} />
-              <s-stack direction="inline" gap="base">
-                <s-button variant="primary" type="submit">{editingCategory ? 'Update' : 'Create'}</s-button>
-                <s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-              </s-stack>
-            </s-stack>
-          </form>
-        </s-section>
-      )}
-
-      <s-section>
+      {/* Table section */}
+      <div className="content-section">
         {isLoading ? (
-          <s-text>Loading...</s-text>
+          <div className="px-6 py-8 text-gray-500 text-sm">Loading…</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead style={{ background: '#f6f6f7' }}>
-                <tr>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Name</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Slug</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Description</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Order</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase' }}>Actions</th>
+          <div className="overflow-x-auto">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#f6f6f7' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Slug</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Description</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Order</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {categories.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#6d7175' }}>
+                    <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
                       No categories yet. Click "+ New Category" to create one.
                     </td>
                   </tr>
@@ -237,7 +212,56 @@ export default function CategoriesPage() {
             </table>
           </div>
         )}
-      </s-section>
-    </>
+      </div>
+
+      {/* Create / Edit Category Modal */}
+      {showForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h2 className="modal-title">{editingCategory ? '✏️ Edit Category' : '➕ New Category'}</h2>
+              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body form-stack">
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Name *</label>
+                    <input className="input-field" type="text" value={form.name} required placeholder="e.g. Electronics" onChange={(e) => handleNameChange(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Slug *</label>
+                    <input className="input-field" type="text" value={form.slug} required placeholder="e.g. electronics" onChange={(e) => setForm(f => ({ ...f, slug: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Parent Category</label>
+                    <select className="input-field" value={form.parentId} onChange={(e) => setForm(f => ({ ...f, parentId: e.target.value }))}>
+                      <option value="">— Top Level —</option>
+                      {flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Sort Order</label>
+                    <input className="input-field" type="number" value={form.sortOrder} onChange={(e) => setForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <input className="input-field" type="text" value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">{editingCategory ? 'Update Category' : 'Create Category'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -43,41 +43,65 @@ export default function LocationsPage() {
 	];
 
 	return (
-		<>
-			<s-stack direction="inline" gap="base">
-				<s-heading>Locations</s-heading>
-				<s-button variant="primary" onClick={() => setShowForm(!showForm)}>+ New Location</s-button>
-			</s-stack>
+		<div className="flex flex-col gap-4">
+			{/* Page header */}
+			<div className="page-header">
+				<div className="page-header-left">
+					<h1 className="page-title">📍 Locations</h1>
+					<p className="page-subtitle">Manage warehouse storage locations</p>
+				</div>
+				<button className="btn-primary" onClick={() => setShowForm(true)}>+ New Location</button>
+			</div>
 
-			{showForm && (
-				<s-section heading="Create Location">
-					<form onSubmit={handleCreate}>
-						<s-stack gap="base">
-							<s-stack direction="inline" gap="base">
-								{(['floor', 'section', 'shelf', 'zone'] as const).map(field => (
-									<s-text-field
-										key={field}
-										label={`${field.charAt(0).toUpperCase() + field.slice(1)}${['floor', 'section', 'shelf'].includes(field) ? ' *' : ''}`}
-										value={form[field]}
-										required={['floor', 'section', 'shelf'].includes(field)}
-										onChange={(e: any) => setForm(f => ({ ...f, [field]: e.currentTarget.value }))}
-									/>
-								))}
-								<s-text-field label="Capacity (cm³)" type="number" value={form.capacityCubicCm} onChange={(e: any) => setForm(f => ({ ...f, capacityCubicCm: e.currentTarget.value }))} />
-							</s-stack>
-							<s-text-field label="Notes" value={form.notes} onChange={(e: any) => setForm(f => ({ ...f, notes: e.currentTarget.value }))} />
-							<s-stack direction="inline" gap="base">
-								<s-button variant="primary" type="submit">Create Location</s-button>
-								<s-button type="button" onClick={() => setShowForm(false)}>Cancel</s-button>
-							</s-stack>
-						</s-stack>
-					</form>
-				</s-section>
-			)}
-
-			<s-section>
+			{/* Table section */}
+			<div className="content-section">
 				<DataTable columns={columns} data={locations} isLoading={isLoading} emptyMessage="No locations found" />
-			</s-section>
-		</>
+			</div>
+
+			{/* Create Location Modal */}
+			{showForm && (
+				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+					<div className="modal-panel-md">
+						<div className="modal-header">
+							<h2 className="modal-title">➕ Create Location</h2>
+							<button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+						</div>
+						<form onSubmit={handleCreate}>
+							<div className="modal-body form-stack">
+								<div className="form-grid-2">
+									{(['floor', 'section', 'shelf', 'zone'] as const).map(field => (
+										<div key={field} className="form-group">
+											<label className="form-label">
+												{field.charAt(0).toUpperCase() + field.slice(1)}
+												{['floor', 'section', 'shelf'].includes(field) ? ' *' : ''}
+											</label>
+											<input
+												className="input-field"
+												type="text"
+												value={form[field]}
+												required={['floor', 'section', 'shelf'].includes(field)}
+												onChange={(e) => setForm(f => ({ ...f, [field]: e.target.value }))}
+											/>
+										</div>
+									))}
+									<div className="form-group">
+										<label className="form-label">Capacity (cm³)</label>
+										<input className="input-field" type="number" value={form.capacityCubicCm} onChange={(e) => setForm(f => ({ ...f, capacityCubicCm: e.target.value }))} />
+									</div>
+								</div>
+								<div className="form-group">
+									<label className="form-label">Notes</label>
+									<input className="input-field" type="text" value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} />
+								</div>
+							</div>
+							<div className="modal-footer">
+								<button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+								<button type="submit" className="btn-primary">Create Location</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
+		</div>
 	);
 }
