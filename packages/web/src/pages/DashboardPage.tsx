@@ -46,11 +46,11 @@ export default function DashboardPage() {
   ];
 
   if (isLoading) {
-    return <s-page><s-section><s-text>Loading...</s-text></s-section></s-page>;
+    return <><s-section><s-text>Loading...</s-text></s-section></>;
   }
 
   return (
-    <s-page>
+    <>
       <s-section heading="Dashboard">
         <s-stack direction="inline" gap="base">
           {cards.map(card => (
@@ -79,6 +79,6 @@ export default function DashboardPage() {
           ))}
         </s-stack>
       </s-section>
-    </s-page>
+    </>
   );
 }

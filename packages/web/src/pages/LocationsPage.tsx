@@ -43,7 +43,7 @@ export default function LocationsPage() {
 	];
 
 	return (
-		<s-page>
+		<>
 			<s-stack direction="inline" gap="base">
 				<s-heading>Locations</s-heading>
 				<s-button variant="primary" onClick={() => setShowForm(!showForm)}>+ New Location</s-button>
@@ -78,6 +78,6 @@ export default function LocationsPage() {
 			<s-section>
 				<DataTable columns={columns} data={locations} isLoading={isLoading} emptyMessage="No locations found" />
 			</s-section>
-		</s-page>
+		</>
 	);
 }

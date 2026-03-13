@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -20,20 +20,10 @@ import SuppliersPage from './pages/SuppliersPage';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (token) loadUser();
   }, [token, loadUser]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const href = (e.target as Element)?.getAttribute('href');
-      if (href) navigate(href);
-    };
-    document.addEventListener('shopify:navigate', handler);
-    return () => document.removeEventListener('shopify:navigate', handler);
-  }, [navigate]);
 
   return (
     <Routes>

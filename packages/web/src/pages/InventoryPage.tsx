@@ -114,7 +114,7 @@ export default function InventoryPage() {
   const hasFilters = stateFilter || locationFilter || searchTerm;
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <s-heading>📦 Inventory</s-heading>
         <s-text>{total.toLocaleString()} records</s-text>
@@ -174,6 +174,6 @@ export default function InventoryPage() {
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
       </s-section>
-    </s-page>
+    </>
   );
 }

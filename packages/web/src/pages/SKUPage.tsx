@@ -251,7 +251,7 @@ export default function SKUPage() {
   ];
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>🏷️ Products (SKUs)</s-heading>
@@ -526,6 +526,6 @@ export default function SKUPage() {
           </div>
         </div>
       )}
-    </s-page>
+    </>
   );
 }

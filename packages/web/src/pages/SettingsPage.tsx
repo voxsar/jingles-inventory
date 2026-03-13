@@ -88,7 +88,7 @@ export default function SettingsPage() {
   }, {});
 
   return (
-    <s-page>
+    <>
       <s-heading>⚙️ Settings</s-heading>
 
       <s-stack direction="inline" gap="base">
@@ -179,6 +179,6 @@ export default function SettingsPage() {
           )}
         </s-stack>
       )}
-    </s-page>
+    </>
   );
 }

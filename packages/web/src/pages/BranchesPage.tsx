@@ -110,7 +110,7 @@ export default function BranchesPage() {
   ];
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>🏢 Branches</s-heading>
@@ -148,7 +148,7 @@ export default function BranchesPage() {
       <s-section>
         <DataTable columns={columns} data={branches} isLoading={isLoading} emptyMessage="No branches found" />
       </s-section>
-    </s-page>
+    </>
 
   );
 }

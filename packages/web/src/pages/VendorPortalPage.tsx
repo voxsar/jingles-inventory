@@ -39,12 +39,12 @@ export default function VendorPortalPage() {
 
 	if (!user?.vendorId) {
 		return (
-			<s-page><s-section><s-text>No vendor profile associated with your account. Contact an administrator.</s-text></s-section></s-page>
+			<><s-section><s-text>No vendor profile associated with your account. Contact an administrator.</s-text></s-section></>
 		);
 	}
 
 	return (
-		<s-page>
+		<>
 			<s-heading>Vendor Portal</s-heading>
 
 			<s-section heading="My Products">
@@ -54,6 +54,6 @@ export default function VendorPortalPage() {
 			<s-section heading="Inventory Status">
 				<DataTable columns={valuationColumns} data={valuation} isLoading={isLoading} emptyMessage="No inventory data" />
 			</s-section>
-		</s-page>
+		</>
 	);
 }

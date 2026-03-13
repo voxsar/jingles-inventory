@@ -67,11 +67,11 @@ export default function GRNDetailPage() {
   };
 
   if (isLoading) return (
-    <s-page><s-section><s-text>Loading...</s-text></s-section></s-page>
+    <><s-section><s-text>Loading...</s-text></s-section></>
   );
 
   if (!grn) return (
-    <s-page><s-section><s-text>GRN not found</s-text></s-section></s-page>
+    <><s-section><s-text>GRN not found</s-text></s-section></>
   );
 
   const inspectedCount = grn.lines?.filter((l: any) => l.inspectionRecords?.length > 0).length ?? 0;
@@ -79,7 +79,7 @@ export default function GRNDetailPage() {
   const statusTone = STATUS_TONES[grn.status] ?? '';
 
   return (
-    <s-page>
+    <>
       <s-button  onClick={() => navigate('/grns')}>← Back to GRNs</s-button>
 
       <s-stack direction="inline" gap="base">
@@ -212,6 +212,6 @@ export default function GRNDetailPage() {
           </div>
         ))}
       </s-section>
-    </s-page>
+    </>
   );
 }

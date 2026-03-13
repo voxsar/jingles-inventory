@@ -132,7 +132,7 @@ export default function SuppliersPage() {
   ];
 
   return (
-    <s-page>
+    <>
       <s-stack direction="inline" gap="base">
         <div>
           <s-heading>🏭 Suppliers</s-heading>
@@ -193,6 +193,6 @@ export default function SuppliersPage() {
           emptyMessage="No suppliers found"
         />
       </s-section>
-    </s-page>
+    </>
   );
 }
