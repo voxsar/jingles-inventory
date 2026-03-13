@@ -1,4 +1,4 @@
-import { InventoryState, InventoryEventType, GRNStatus, UserRole, SyncStatus, DamageClassification, UnitOfMeasure } from './enums';
+import { InventoryState, InventoryEventType, GRNStatus, UserRole, SyncStatus, DamageClassification, UnitOfMeasure, StockTransferStatus, VendorType, BarcodeType, UnitType } from './enums';
 
 export interface IUser {
   id: string;
@@ -16,8 +16,77 @@ export interface IVendor {
   contactEmail: string;
   contactPhone?: string | null;
   address?: string | null;
+  type: VendorType;
+  website?: string | null;
+  taxId?: string | null;
+  paymentTerms?: string | null;
+  notes?: string | null;
   createdAt: Date;
   isActive: boolean;
+}
+
+export interface ICategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  parentId?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: Date;
+  children?: ICategory[];
+  parent?: ICategory | null;
+}
+
+export interface ITag {
+  id: string;
+  name: string;
+  color?: string | null;
+  createdAt: Date;
+}
+
+export interface IUnitOfMeasure {
+  id: string;
+  name: string;
+  abbreviation: string;
+  baseUnit?: string | null;
+  conversionFactor?: number | null;
+  type: UnitType;
+  isActive: boolean;
+  isSystem: boolean;
+  createdAt: Date;
+}
+
+export interface IBranch {
+  id: string;
+  name: string;
+  code: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: Date;
+}
+
+export interface IProductImage {
+  id: string;
+  skuId: string;
+  url: string;
+  altText?: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+  createdAt: Date;
+}
+
+export interface IProductBarcode {
+  id: string;
+  skuId: string;
+  barcode: string;
+  barcodeType: BarcodeType;
+  isDefault: boolean;
+  label?: string | null;
+  createdAt: Date;
 }
 
 export interface IDimensions {
@@ -34,25 +103,40 @@ export interface IConversionRule {
   ratio: number;
 }
 
+export interface IBatchPricingTier {
+  minQty: number;
+  maxQty?: number | null;
+  price: number;
+  currency?: string;
+}
+
 export interface ISKU {
   id: string;
   skuCode: string;
   name: string;
   description?: string | null;
-  category?: string | null;
+  categoryId?: string | null;
   vendorId: string;
-  unitOfMeasure: UnitOfMeasure;
+  unitOfMeasureId?: string | null;
+  unitOfMeasure: string;
   conversionRules?: IConversionRule[] | null;
   dimensions?: IDimensions | null;
   isFragile: boolean;
   maxStackHeight?: number | null;
+  batchPricing?: IBatchPricingTier[] | null;
+  lowStockThreshold?: number | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  category?: ICategory | null;
+  images?: IProductImage[];
+  barcodes?: IProductBarcode[];
+  tags?: ITag[];
 }
 
 export interface ILocation {
   id: string;
+  branchId?: string | null;
   floor: string;
   section: string;
   shelf: string;
@@ -60,6 +144,33 @@ export interface ILocation {
   capacityCubicCm?: number | null;
   notes?: string | null;
   isActive: boolean;
+  branch?: IBranch | null;
+}
+
+export interface IStockTransferLine {
+  id: string;
+  transferId: string;
+  skuId: string;
+  requestedQty: number;
+  transferredQty: number;
+  notes?: string | null;
+}
+
+export interface IStockTransfer {
+  id: string;
+  referenceNumber: string;
+  fromBranchId?: string | null;
+  toBranchId?: string | null;
+  fromLocationId?: string | null;
+  toLocationId?: string | null;
+  status: StockTransferStatus;
+  notes?: string | null;
+  requestedBy: string;
+  approvedBy?: string | null;
+  requestedAt: Date;
+  approvedAt?: Date | null;
+  completedAt?: Date | null;
+  lines?: IStockTransferLine[];
 }
 
 export interface IInventoryRecord {

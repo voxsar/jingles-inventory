@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { body, param, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -7,8 +7,26 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', async (_req, res: Response): Promise<void> => {
-  const vendors = await prisma.vendor.findMany({ where: { isActive: true } });
+router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  const { type, isActive, search } = req.query as { type?: string; isActive?: string; search?: string };
+
+  const where: any = {
+    ...(type ? { type } : {}),
+    ...(isActive !== undefined ? { isActive: isActive === 'true' } : { isActive: true }),
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { contactEmail: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
+
+  const vendors = await prisma.vendor.findMany({
+    where,
+    orderBy: { name: 'asc' },
+  });
   res.json(vendors);
 });
 
@@ -43,14 +61,29 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, contactEmail, contactPhone, address } = req.body as {
+    const { name, contactEmail, contactPhone, address, type, website, taxId, paymentTerms, notes } = req.body as {
       name: string;
       contactEmail: string;
       contactPhone?: string;
       address?: string;
+      type?: string;
+      website?: string;
+      taxId?: string;
+      paymentTerms?: string;
+      notes?: string;
     };
     const vendor = await prisma.vendor.create({
-      data: { name, contactEmail, contactPhone, address },
+      data: {
+        name,
+        contactEmail,
+        contactPhone,
+        address,
+        type: type ?? 'Vendor',
+        website,
+        taxId,
+        paymentTerms,
+        notes,
+      },
     });
     res.status(201).json(vendor);
   }
@@ -66,16 +99,21 @@ router.put(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, contactEmail, contactPhone, address, isActive } = req.body as {
+    const { name, contactEmail, contactPhone, address, isActive, type, website, taxId, paymentTerms, notes } = req.body as {
       name?: string;
       contactEmail?: string;
       contactPhone?: string;
       address?: string;
       isActive?: boolean;
+      type?: string;
+      website?: string;
+      taxId?: string;
+      paymentTerms?: string;
+      notes?: string;
     };
     const vendor = await prisma.vendor.update({
       where: { id: req.params!.id },
-      data: { name, contactEmail, contactPhone, address, isActive },
+      data: { name, contactEmail, contactPhone, address, isActive, type, website, taxId, paymentTerms, notes },
     });
     res.json(vendor);
   }
@@ -98,3 +136,4 @@ router.get(
 );
 
 export default router;
+
