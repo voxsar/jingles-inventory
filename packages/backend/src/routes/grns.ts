@@ -153,10 +153,13 @@ router.put(
 			if (invoiceReference !== undefined) updateData.invoiceReference = invoiceReference;
 			if (notes !== undefined) updateData.notes = notes;
 			if (expectedDeliveryDate) {
-				const dateStr = expectedDeliveryDate.includes('T')
-					? expectedDeliveryDate
-					: expectedDeliveryDate + 'T00:00:00.000Z';
-				updateData.expectedDeliveryDate = new Date(dateStr);
+				// Parse the date string safely; if no time component, treat as UTC midnight
+				const parsed = new Date(expectedDeliveryDate);
+				if (isNaN(parsed.getTime())) {
+					res.status(400).json({ success: false, error: 'Invalid expectedDeliveryDate format' });
+					return;
+				}
+				updateData.expectedDeliveryDate = parsed;
 			}
 			const updated = await prisma.gRN.update({ where: { id: req.params!.id }, data: updateData });
 			res.json({ success: true, data: updated });

@@ -106,7 +106,7 @@ export default function SKUPage() {
       };
       const res = await skusApi.create(payload);
       const newSku = res.data.data;
-      for (const tagId of formTags) { await skusApi.addTag(newSku.id, tagId); }
+      await Promise.all(formTags.map((tagId) => skusApi.addTag(newSku.id, tagId)));
       setShowCreateForm(false);
       setForm(defaultForm);
       setFormTags([]);

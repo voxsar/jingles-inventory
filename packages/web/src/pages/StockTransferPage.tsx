@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { branchesApi, locationsApi, skusApi, stockTransfersApi } from '../api/client';
 import DataTable from '../components/DataTable';
+import Pagination from '../components/Pagination';
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: 'bg-gray-100 text-gray-700',
@@ -22,7 +23,9 @@ function StatusBadge({ status }: { status: string }) {
 export default function StockTransferPage() {
   const [transfers, setTransfers] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
@@ -43,7 +46,7 @@ export default function StockTransferPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const params: Record<string, string> = { page: String(page), pageSize: '20' };
+      const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (statusFilter) params.status = statusFilter;
       const [transferRes, branchRes, locationRes, skuRes] = await Promise.all([
         stockTransfersApi.list(params),
@@ -53,6 +56,7 @@ export default function StockTransferPage() {
       ]);
       setTransfers(transferRes.data.data.items);
       setTotal(transferRes.data.data.total);
+      setTotalPages(transferRes.data.data.totalPages ?? 1);
       setBranches(branchRes.data.data);
       setLocations(locationRes.data.data?.items ?? locationRes.data.data);
       setSkus(skuRes.data.data.items ?? []);
@@ -63,7 +67,7 @@ export default function StockTransferPage() {
     }
   };
 
-  useEffect(() => { loadData(); }, [page, statusFilter]);
+  useEffect(() => { loadData(); }, [page, pageSize, statusFilter]);
 
   const addLine = () => {
     setForm(f => ({ ...f, lines: [...f.lines, { skuId: '', requestedQty: '1', notes: '' }] }));
@@ -247,13 +251,17 @@ export default function StockTransferPage() {
           data={transfers}
           isLoading={isLoading}
           emptyMessage="No stock transfers found"
+          emptyIcon="🔄"
         />
 
-        <div className="flex items-center justify-between mt-4">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="btn-secondary text-sm">← Previous</button>
-          <span className="text-sm text-gray-500">Page {page}</span>
-          <button disabled={transfers.length < 20} onClick={() => setPage(p => p + 1)} className="btn-secondary text-sm">Next →</button>
-        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        />
       </div>
     </div>
   );

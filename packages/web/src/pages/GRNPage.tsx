@@ -23,6 +23,7 @@ export default function GRNPage() {
   const [showForm, setShowForm] = useState(false);
   const [vendors, setVendors] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
+  const [skuSearch, setSkuSearch] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -52,22 +53,34 @@ export default function GRNPage() {
       if (debouncedSearch) params.search = debouncedSearch;
       if (statusFilter) params.status = statusFilter;
       if (supplierFilter) params.supplierId = supplierFilter;
-      const [grnRes, vendorRes, skuRes] = await Promise.all([
+      const [grnRes, vendorRes] = await Promise.all([
         grnsApi.list(params),
         vendorsApi.list(),
-        skusApi.list({ pageSize: '200' }),
       ]);
       const grnData = grnRes.data?.data?.items ?? grnRes.data?.data ?? grnRes.data ?? [];
       setGrns(Array.isArray(grnData) ? grnData : []);
       setTotal(grnRes.data?.data?.total ?? 0);
       setTotalPages(grnRes.data?.data?.totalPages ?? 1);
       setVendors(vendorRes.data?.data?.items ?? vendorRes.data?.data ?? vendorRes.data ?? []);
-      setSkus(skuRes.data?.data?.items ?? skuRes.data?.data ?? skuRes.data ?? []);
     } catch { /* ignore */ }
     finally { setIsLoading(false); }
   };
 
   useEffect(() => { loadData(); }, [page, pageSize, debouncedSearch, statusFilter, supplierFilter]);
+
+  // Load SKUs lazily when the create form is opened, with optional search
+  useEffect(() => {
+    if (!showForm) return;
+    const params: Record<string, string> = { pageSize: '50' };
+    if (skuSearch) params.search = skuSearch;
+    skusApi.list(params).then((res) => {
+      setSkus(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+    }).catch(() => {});
+  }, [showForm, skuSearch]);
+
+  const handleSkuSearchChange = (value: string) => {
+    setSkuSearch(value);
+  };
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -178,6 +191,16 @@ export default function GRNPage() {
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Line Items</label>
                 <button type="button" onClick={addLine} className="text-sm text-primary-600 hover:text-primary-800 font-medium">+ Add Line</button>
+              </div>
+              {/* SKU search to filter the product dropdown */}
+              <div className="mb-2">
+                <input
+                  type="text"
+                  placeholder="🔍 Filter products by name or code..."
+                  value={skuSearch}
+                  onChange={(e) => handleSkuSearchChange(e.target.value)}
+                  className="input-field max-w-sm text-sm"
+                />
               </div>
               <div className="space-y-2">
                 {form.lines.map((line, i) => (
