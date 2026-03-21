@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, skusApi } from '../api/client';
+import { grnsApi, vendorsApi, skusApi, locationsApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -31,7 +31,8 @@ export default function GRNPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [editingGrn, setEditingGrn] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '' });
+  const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', locationId: '' });
+  const [locations, setLocations] = useState<any[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function GRNPage() {
     invoiceReference: '',
     expectedDeliveryDate: getTodayString(),
     notes: '',
+    locationId: '',
     lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }],
   });
 
@@ -53,15 +55,17 @@ export default function GRNPage() {
       if (debouncedSearch) params.search = debouncedSearch;
       if (statusFilter) params.status = statusFilter;
       if (supplierFilter) params.supplierId = supplierFilter;
-      const [grnRes, vendorRes] = await Promise.all([
+      const [grnRes, vendorRes, locationRes] = await Promise.all([
         grnsApi.list(params),
         vendorsApi.list(),
+        locationsApi.list(),
       ]);
       const grnData = grnRes.data?.data?.items ?? grnRes.data?.data ?? grnRes.data ?? [];
       setGrns(Array.isArray(grnData) ? grnData : []);
       setTotal(grnRes.data?.data?.total ?? 0);
       setTotalPages(grnRes.data?.data?.totalPages ?? 1);
       setVendors(vendorRes.data?.data?.items ?? vendorRes.data?.data ?? vendorRes.data ?? []);
+      setLocations(locationRes.data?.data?.items ?? locationRes.data?.data ?? locationRes.data ?? []);
     } catch { /* ignore */ }
     finally { setIsLoading(false); }
   };
@@ -90,9 +94,9 @@ export default function GRNPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await grnsApi.create(form);
+      await grnsApi.create({ ...form, locationId: form.locationId || undefined });
       setShowForm(false);
-      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }] });
+      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', locationId: '', lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }] });
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create GRN');
@@ -110,6 +114,7 @@ export default function GRNPage() {
       invoiceReference: grn.invoiceReference ?? '',
       expectedDeliveryDate: grn.expectedDeliveryDate ? grn.expectedDeliveryDate.split('T')[0] : getTodayString(),
       notes: grn.notes ?? '',
+      locationId: grn.locationId ?? '',
     });
   };
 
@@ -131,6 +136,7 @@ export default function GRNPage() {
     { key: 'id', header: 'GRN ID', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.id.slice(0, 8)}…</span> },
     { key: 'supplier', header: 'Supplier', sortable: true, render: (r: any) => r.supplier?.name },
     { key: 'invoiceReference', header: 'Invoice Ref', render: (r: any) => r.invoiceReference ?? <s-text>—</s-text> },
+    { key: 'location', header: 'Location', render: (r: any) => r.location ? <span className="text-xs">{[r.location.floor, r.location.section, r.location.shelf, r.location.zone].filter(Boolean).join(' › ')}</span> : <s-text>—</s-text> },
     {
       key: 'status', header: 'Status', render: (r: any) => {
         const tone = STATUS_TONES[r.status] ?? '';
@@ -251,6 +257,15 @@ export default function GRNPage() {
                     <input className="input-field" type="text" value={form.notes} placeholder="Optional notes…" onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
                   </div>
                 </div>
+                <div className="form-group">
+                  <label className="form-label">Receive Location</label>
+                  <select className="input-field" value={form.locationId} onChange={(e) => setForm((f) => ({ ...f, locationId: e.target.value }))}>
+                    <option value="">— No Location (assign later) —</option>
+                    {locations.map((loc: any) => (
+                      <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* Line items */}
                 <div>
@@ -342,6 +357,15 @@ export default function GRNPage() {
               <div className="form-group">
                 <label className="form-label">Notes</label>
                 <input className="input-field" type="text" value={editForm.notes} onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Receive Location</label>
+                <select className="input-field" value={editForm.locationId} onChange={(e) => setEditForm((f) => ({ ...f, locationId: e.target.value }))}>
+                  <option value="">— No Location —</option>
+                  {locations.map((loc: any) => (
+                    <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="modal-footer">

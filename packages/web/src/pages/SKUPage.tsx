@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { skusApi, vendorsApi, categoriesApi, settingsApi } from '../api/client';
+import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 
@@ -51,6 +51,7 @@ export default function SKUPage() {
   const [newBarcode, setNewBarcode] = useState({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '' });
   const [inventoryLocations, setInventoryLocations] = useState<any[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
+  const [transitioningInv, setTransitioningInv] = useState<string | null>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = async () => {
@@ -225,6 +226,21 @@ export default function SKUPage() {
     setModalTab(tab);
     if (tab === 'barcodes') loadBarcodes();
     if (tab === 'locations') loadLocations();
+  };
+
+  const handleTransitionInv = async (record: any) => {
+    const newState = prompt(`Transition to new state (current: ${record.state}):`);
+    if (!newState) return;
+    const reason = prompt('Reason (optional):') ?? undefined;
+    setTransitioningInv(record.id);
+    try {
+      await inventoryApi.transition(record.id, newState, reason);
+      await loadLocations();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Transition failed');
+    } finally {
+      setTransitioningInv(null);
+    }
   };
 
   const getTagName = (id: string) => allTags.find((t: any) => t.id === id)?.name ?? id;
@@ -565,7 +581,7 @@ export default function SKUPage() {
               )}
               {modalTab === 'locations' && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-4">Current inventory locations for this product.</p>
+                  <p className="text-sm text-gray-500 mb-4">Current inventory by location for this product. Click Transition to change state.</p>
                   {locationsLoading ? (
                     <p className="text-sm text-gray-400">Loading…</p>
                   ) : inventoryLocations.length === 0 ? (
@@ -584,11 +600,15 @@ export default function SKUPage() {
                         }, {})
                       ).map(([locKey, val]: [string, any]) => {
                         const totalQty = val.records.reduce((s: number, r: any) => s + (r.quantity || 0), 0);
+                        const isLowStock = editingSku?.lowStockThreshold != null && totalQty <= editingSku.lowStockThreshold;
                         return (
                           <div key={locKey} className="border border-gray-200 rounded-lg overflow-hidden">
                             <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
                               <span className="font-medium text-sm">📍 {val.location ? [val.location.floor, val.location.section, val.location.shelf, val.location.zone].filter(Boolean).join(' › ') : 'No Location'}</span>
-                              <s-badge tone="info">{totalQty} units</s-badge>
+                              <div className="flex items-center gap-2">
+                                {isLowStock && <s-badge tone="warning">⚠️ Low Stock</s-badge>}
+                                <s-badge tone="info">{totalQty} units</s-badge>
+                              </div>
                             </div>
                             {val.records.map((r: any) => (
                               <div key={r.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-gray-100 last:border-0">
@@ -596,7 +616,16 @@ export default function SKUPage() {
                                   <s-badge>{r.state}</s-badge>
                                   {r.batchId && <span className="text-xs text-gray-500">Batch: {r.batchId}</span>}
                                 </div>
-                                <span className="font-medium">{r.quantity} {editingSku?.unitOfMeasure}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium">{r.quantity} {editingSku?.unitOfMeasure}</span>
+                                  <button
+                                    className="btn-sm"
+                                    disabled={transitioningInv === r.id}
+                                    onClick={() => handleTransitionInv(r)}
+                                  >
+                                    {transitioningInv === r.id ? '…' : 'Transition'}
+                                  </button>
+                                </div>
                               </div>
                             ))}
                           </div>

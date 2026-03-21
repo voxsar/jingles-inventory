@@ -77,4 +77,33 @@ router.put(
   }
 );
 
+router.delete(
+  '/:id',
+  requireRole('Admin', 'Manager'),
+  [param('id').isUUID()],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+    const location = await prisma.location.findUnique({ where: { id: req.params!.id } });
+    if (!location) {
+      res.status(404).json({ error: 'Location not found' });
+      return;
+    }
+    // Null out locationId on inventory records (preserve history events)
+    await prisma.inventoryRecord.updateMany({
+      where: { locationId: req.params!.id },
+      data: { locationId: null },
+    });
+    // Soft-delete the location
+    const updated = await prisma.location.update({
+      where: { id: req.params!.id },
+      data: { isActive: false },
+    });
+    res.json({ success: true, data: updated });
+  }
+);
+
 export default router;

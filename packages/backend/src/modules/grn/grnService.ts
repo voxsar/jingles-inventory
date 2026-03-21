@@ -5,6 +5,7 @@ import { recordEvent } from '../inventory/eventLedger';
 
 export async function createGRN(data: {
   supplierId: string;
+  locationId?: string;
   invoiceReference?: string;
   supplierInvoiceDate?: Date;
   expectedDeliveryDate?: Date;
@@ -35,6 +36,7 @@ export async function createGRN(data: {
   const grn = await prisma.gRN.create({
     data: {
       supplierId: data.supplierId,
+      locationId: data.locationId,
       invoiceReference: data.invoiceReference,
       supplierInvoiceDate: data.supplierInvoiceDate,
       expectedDeliveryDate: data.expectedDeliveryDate,
@@ -86,6 +88,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
         data: {
           skuId: line.skuId,
           batchId: line.batchReference,
+          locationId: grn.locationId,
           quantity: line.expectedQuantity,
           state: InventoryState.Uninspected,
           userId,
