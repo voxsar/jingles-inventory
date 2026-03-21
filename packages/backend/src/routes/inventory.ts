@@ -226,6 +226,62 @@ router.post(
   }
 );
 
+// PUT /api/inventory/:id
+router.put(
+  '/:id',
+  requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params as { id: string };
+      const { locationId, quantity, batchId } = req.body as {
+        locationId?: string | null;
+        quantity?: number;
+        batchId?: string | null;
+      };
+      const user = req.user!;
+
+      const existing = await prisma.inventoryRecord.findUnique({ where: { id } });
+      if (!existing) {
+        res.status(404).json({ success: false, error: 'Inventory record not found' });
+        return;
+      }
+
+      const updateData: any = { version: { increment: 1 }, updatedAt: new Date() };
+      if (locationId !== undefined) updateData.locationId = locationId || null;
+      if (quantity !== undefined) {
+        if (quantity < 1) {
+          res.status(400).json({ success: false, error: 'quantity must be at least 1' });
+          return;
+        }
+        updateData.quantity = quantity;
+      }
+      if (batchId !== undefined) updateData.batchId = batchId || null;
+
+      const record = await prisma.inventoryRecord.update({
+        where: { id },
+        data: updateData,
+        include: { sku: true, location: true },
+      });
+
+      if (quantity !== undefined && quantity !== existing.quantity) {
+        await recordEvent({
+          eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+          parentEntityId: id,
+          quantityDelta: quantity - existing.quantity,
+          beforeQuantity: existing.quantity,
+          afterQuantity: quantity,
+          userId: user.id,
+        });
+      }
+
+      res.json({ success: true, data: record });
+    } catch (error) {
+      logger.error('Update inventory error', error);
+      res.status(500).json({ success: false, error: 'Failed to update inventory record' });
+    }
+  }
+);
+
 // POST /api/inventory/:id/transition
 router.post('/:id/transition', async (req: AuthRequest, res: Response): Promise<void> => {
   try {

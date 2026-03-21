@@ -60,6 +60,7 @@ export const inventoryApi = {
   list: (params?: Record<string, string>) =>
     api.get('/inventory', { params }),
   create: (data: any) => api.post('/inventory', data),
+  update: (id: string, data: any) => api.put(`/inventory/${id}`, data),
   transition: (id: string, toState: string, reason?: string) =>
     api.post(`/inventory/${id}/transition`, { toState, reason }),
   openBox: (data: any) => api.post('/inventory/box-open', data),
@@ -85,6 +86,7 @@ export const locationsApi = {
     api.get('/locations', { params }),
   create: (data: any) => api.post('/locations', data),
   update: (id: string, data: any) => api.put(`/locations/${id}`, data),
+  delete: (id: string) => api.delete(`/locations/${id}`),
 };
 
 // Areas

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, locationsApi } from '../api/client';
+import { inventoryApi, locationsApi, skusApi } from '../api/client';
 import { InventoryState } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -8,6 +8,9 @@ import BarcodeInput from '../components/BarcodeInput';
 
 const PAGE_SIZE = 20;
 
+const defaultNewForm = { skuId: '', locationId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultEditForm = { locationId: '', quantity: '1', batchId: '' };
+
 export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,15 +18,19 @@ export default function InventoryPage() {
   const [locationFilter, setLocationFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortBy, setSortBy] = useState('updatedAt');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [locations, setLocations] = useState<any[]>([]);
+  const [skus, setSkus] = useState<any[]>([]);
   const [barcodeScanResult, setBarcodeScanResult] = useState<any>(null);
   const [transitioning, setTransitioning] = useState<string | null>(null);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newForm, setNewForm] = useState(defaultNewForm);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [editForm, setEditForm] = useState(defaultEditForm);
+  const [isSaving, setIsSaving] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchInventory = async () => {
@@ -52,7 +59,14 @@ export default function InventoryPage() {
     } catch { /* ignore */ }
   };
 
-  useEffect(() => { fetchLocations(); }, []);
+  const fetchSkus = async () => {
+    try {
+      const res = await skusApi.list({ pageSize: '200' });
+      setSkus(res.data?.data?.items ?? []);
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { fetchLocations(); fetchSkus(); }, []);
   useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
@@ -76,6 +90,58 @@ export default function InventoryPage() {
     }
   };
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const qty = parseInt(newForm.quantity);
+    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
+    setIsSaving(true);
+    try {
+      await inventoryApi.create({
+        skuId: newForm.skuId,
+        locationId: newForm.locationId || undefined,
+        quantity: qty,
+        state: newForm.state,
+        batchId: newForm.batchId || undefined,
+      });
+      setShowNewForm(false);
+      setNewForm(defaultNewForm);
+      await fetchInventory();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to create record');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openEdit = (record: any) => {
+    setEditForm({
+      locationId: record.locationId ?? '',
+      quantity: String(record.quantity),
+      batchId: record.batchId ?? '',
+    });
+    setEditingRecord(record);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
+    const qty = parseInt(editForm.quantity);
+    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
+    setIsSaving(true);
+    try {
+      await inventoryApi.update(editingRecord.id, {
+        locationId: editForm.locationId || null,
+        quantity: qty,
+        batchId: editForm.batchId || null,
+      });
+      setEditingRecord(null);
+      await fetchInventory();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to update record');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formatLocation = (location: any) => {
     if (!location) return '—';
     return [location.floor, location.section, location.shelf, location.zone].filter(Boolean).join(' › ');
@@ -92,13 +158,21 @@ export default function InventoryPage() {
     {
       key: 'actions', header: '',
       render: (r: any) => (
-        <button
-          className="btn-sm"
-          onClick={(e: any) => { e.stopPropagation(); handleTransition(r); }}
-          disabled={transitioning === r.id}
-        >
-          {transitioning === r.id ? '…' : 'Transition'}
-        </button>
+        <div className="flex gap-1">
+          <button
+            className="btn-sm"
+            onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}
+          >
+            Edit
+          </button>
+          <button
+            className="btn-sm"
+            onClick={(e: any) => { e.stopPropagation(); handleTransition(r); }}
+            disabled={transitioning === r.id}
+          >
+            {transitioning === r.id ? '…' : 'Transition'}
+          </button>
+        </div>
       ),
     },
   ];
@@ -121,6 +195,7 @@ export default function InventoryPage() {
           <h1 className="page-title">📦 Inventory</h1>
           <p className="page-subtitle">{total.toLocaleString()} records</p>
         </div>
+        <button className="btn-primary" onClick={() => setShowNewForm(true)}>+ New Record</button>
       </div>
 
       {/* Barcode scan section */}
@@ -195,6 +270,106 @@ export default function InventoryPage() {
           onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
         />
       </div>
+
+      {/* New Record Modal */}
+      {showNewForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowNewForm(false)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h2 className="modal-title">➕ New Inventory Record</h2>
+              <button className="modal-close" onClick={() => setShowNewForm(false)}>✕</button>
+            </div>
+            <form onSubmit={handleCreate}>
+              <div className="modal-body form-stack">
+                <div className="form-group">
+                  <label className="form-label">Product (SKU) *</label>
+                  <select className="input-field" value={newForm.skuId} required onChange={(e) => setNewForm(f => ({ ...f, skuId: e.target.value }))}>
+                    <option value="">— Select Product —</option>
+                    {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Quantity *</label>
+                    <input className="input-field" type="number" min="1" required value={newForm.quantity} onChange={(e) => setNewForm(f => ({ ...f, quantity: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">State</label>
+                    <select className="input-field" value={newForm.state} onChange={(e) => setNewForm(f => ({ ...f, state: e.target.value }))}>
+                      {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Location</label>
+                  <select className="input-field" value={newForm.locationId} onChange={(e) => setNewForm(f => ({ ...f, locationId: e.target.value }))}>
+                    <option value="">— No Location —</option>
+                    {locations.map((loc: any) => (
+                      <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Batch ID</label>
+                  <input className="input-field" type="text" placeholder="Optional batch reference" value={newForm.batchId} onChange={(e) => setNewForm(f => ({ ...f, batchId: e.target.value }))} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setShowNewForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={isSaving}>{isSaving ? '⏳ Saving…' : '💾 Create Record'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Record Modal */}
+      {editingRecord && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingRecord(null)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">✏️ Edit Inventory Record</h2>
+                <p className="text-xs text-gray-400 font-mono">{editingRecord.sku?.skuCode} — {editingRecord.sku?.name}</p>
+              </div>
+              <button className="modal-close" onClick={() => setEditingRecord(null)}>✕</button>
+            </div>
+            <div className="modal-body form-stack">
+              <div className="form-group">
+                <label className="form-label">Location</label>
+                <select className="input-field" value={editForm.locationId} onChange={(e) => setEditForm(f => ({ ...f, locationId: e.target.value }))}>
+                  <option value="">— No Location —</option>
+                  {locations.map((loc: any) => (
+                    <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Quantity</label>
+                <input className="input-field" type="number" min="1" value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Batch ID</label>
+                <input className="input-field" type="text" placeholder="Optional batch reference" value={editForm.batchId} onChange={(e) => setEditForm(f => ({ ...f, batchId: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Current State</label>
+                <div className="flex items-center gap-2">
+                  <StateBadge state={editingRecord.state} />
+                  <span className="text-xs text-gray-500">Use "Transition" button to change state</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={() => setEditingRecord(null)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSaving}>
+                {isSaving ? '⏳ Saving…' : '💾 Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
