@@ -92,12 +92,14 @@ export default function InventoryPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const qty = parseInt(newForm.quantity);
+    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
     setIsSaving(true);
     try {
       await inventoryApi.create({
         skuId: newForm.skuId,
         locationId: newForm.locationId || undefined,
-        quantity: parseInt(newForm.quantity),
+        quantity: qty,
         state: newForm.state,
         batchId: newForm.batchId || undefined,
       });
@@ -122,11 +124,13 @@ export default function InventoryPage() {
 
   const handleSaveEdit = async () => {
     if (!editingRecord) return;
+    const qty = parseInt(editForm.quantity);
+    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
     setIsSaving(true);
     try {
       await inventoryApi.update(editingRecord.id, {
         locationId: editForm.locationId || null,
-        quantity: parseInt(editForm.quantity),
+        quantity: qty,
         batchId: editForm.batchId || null,
       });
       setEditingRecord(null);

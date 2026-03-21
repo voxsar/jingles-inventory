@@ -88,7 +88,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
         data: {
           skuId: line.skuId,
           batchId: line.batchReference,
-          locationId: grn.locationId ?? undefined,
+          locationId: grn.locationId,
           quantity: line.expectedQuantity,
           state: InventoryState.Uninspected,
           userId,

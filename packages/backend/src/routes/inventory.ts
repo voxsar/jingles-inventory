@@ -240,7 +240,13 @@ router.put(
 
       const updateData: any = { version: { increment: 1 }, updatedAt: new Date() };
       if (locationId !== undefined) updateData.locationId = locationId || null;
-      if (quantity !== undefined && quantity > 0) updateData.quantity = quantity;
+      if (quantity !== undefined) {
+        if (quantity < 1) {
+          res.status(400).json({ success: false, error: 'quantity must be at least 1' });
+          return;
+        }
+        updateData.quantity = quantity;
+      }
       if (batchId !== undefined) updateData.batchId = batchId || null;
 
       const record = await prisma.inventoryRecord.update({
