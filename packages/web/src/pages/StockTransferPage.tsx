@@ -51,11 +51,11 @@ export default function StockTransferPage() {
         locationsApi.list(),
         skusApi.list({ pageSize: '100' }),
       ]);
-      setTransfers(transferRes.data.data.items);
-      setTotal(transferRes.data.data.total);
-      setTotalPages(transferRes.data.data.totalPages ?? 1);
-      setBranches(branchRes.data.data);
-      setLocations(locationRes.data.data?.items ?? locationRes.data.data);
+      setTransfers(transferRes.data.data?.items ?? []);
+      setTotal(transferRes.data.data?.total ?? 0);
+      setTotalPages(transferRes.data.data?.totalPages ?? 1);
+      setBranches(branchRes.data?.data?.items ?? branchRes.data?.data ?? branchRes.data ?? []);
+      setLocations(locationRes.data?.data?.items ?? locationRes.data?.data ?? locationRes.data ?? []);
       setSkus(skuRes.data.data.items ?? []);
     } catch (err) {
       console.error('Failed to load stock transfers data', err);

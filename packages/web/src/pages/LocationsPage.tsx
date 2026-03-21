@@ -2,11 +2,15 @@ import { useEffect, useState } from 'react';
 import { locationsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 
+const defaultForm = { floor: '', section: '', shelf: '', zone: '', capacityCubicCm: '', notes: '' };
+
 export default function LocationsPage() {
 	const [locations, setLocations] = useState<any[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [showForm, setShowForm] = useState(false);
-	const [form, setForm] = useState({ floor: '', section: '', shelf: '', zone: '', capacityCubicCm: '', notes: '' });
+	const [form, setForm] = useState(defaultForm);
+	const [editingLocation, setEditingLocation] = useState<any>(null);
+	const [editForm, setEditForm] = useState(defaultForm);
 
 	const load = async () => {
 		try {
@@ -25,10 +29,47 @@ export default function LocationsPage() {
 		try {
 			await locationsApi.create({ ...form, capacityCubicCm: form.capacityCubicCm ? parseFloat(form.capacityCubicCm) : null });
 			setShowForm(false);
-			setForm({ floor: '', section: '', shelf: '', zone: '', capacityCubicCm: '', notes: '' });
+			setForm(defaultForm);
 			await load();
 		} catch (err: any) {
 			alert(err.response?.data?.error ?? 'Failed to create location');
+		}
+	};
+
+	const openEdit = (loc: any) => {
+		setEditingLocation(loc);
+		setEditForm({
+			floor: loc.floor ?? '',
+			section: loc.section ?? '',
+			shelf: loc.shelf ?? '',
+			zone: loc.zone ?? '',
+			capacityCubicCm: loc.capacityCubicCm != null ? String(loc.capacityCubicCm) : '',
+			notes: loc.notes ?? '',
+		});
+	};
+
+	const handleSaveEdit = async () => {
+		if (!editingLocation) return;
+		try {
+			await locationsApi.update(editingLocation.id, {
+				...editForm,
+				capacityCubicCm: editForm.capacityCubicCm ? parseFloat(editForm.capacityCubicCm) : null,
+			});
+			setEditingLocation(null);
+			await load();
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to update location');
+		}
+	};
+
+	const handleDelete = async (loc: any) => {
+		const locLabel = [loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join('-');
+		if (!confirm(`Delete location "${locLabel}"? Inventory records at this location will have their location cleared. History will be preserved.`)) return;
+		try {
+			await locationsApi.delete(loc.id);
+			await load();
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to delete location');
 		}
 	};
 
@@ -40,6 +81,17 @@ export default function LocationsPage() {
 		{ key: 'capacityCubicCm', header: 'Capacity (cm³)', render: (r: any) => r.capacityCubicCm?.toLocaleString() ?? '—' },
 		{ key: 'notes', header: 'Notes', render: (r: any) => r.notes ?? '—' },
 		{ key: 'isActive', header: 'Active', render: (r: any) => r.isActive ? '✅' : '❌' },
+		{
+			key: 'actions', header: '',
+			render: (r: any) => (
+				<div className="flex gap-1">
+					<button className="btn-sm" onClick={(e) => { e.stopPropagation(); openEdit(r); }}>Edit</button>
+					{r.isActive && (
+						<button className="btn-sm text-red-600" onClick={(e) => { e.stopPropagation(); handleDelete(r); }}>Delete</button>
+					)}
+				</div>
+			),
+		},
 	];
 
 	return (
@@ -102,6 +154,50 @@ export default function LocationsPage() {
 					</div>
 				</div>
 			)}
+
+			{/* Edit Location Modal */}
+			{editingLocation && (
+				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingLocation(null)}>
+					<div className="modal-panel-md">
+						<div className="modal-header">
+							<h2 className="modal-title">✏️ Edit Location</h2>
+							<button className="modal-close" onClick={() => setEditingLocation(null)}>✕</button>
+						</div>
+						<div className="modal-body form-stack">
+							<div className="form-grid-2">
+								{(['floor', 'section', 'shelf', 'zone'] as const).map(field => (
+									<div key={field} className="form-group">
+										<label className="form-label">
+											{field.charAt(0).toUpperCase() + field.slice(1)}
+											{['floor', 'section', 'shelf'].includes(field) ? ' *' : ''}
+										</label>
+										<input
+											className="input-field"
+											type="text"
+											value={editForm[field]}
+											required={['floor', 'section', 'shelf'].includes(field)}
+											onChange={(e) => setEditForm(f => ({ ...f, [field]: e.target.value }))}
+										/>
+									</div>
+								))}
+								<div className="form-group">
+									<label className="form-label">Capacity (cm³)</label>
+									<input className="input-field" type="number" value={editForm.capacityCubicCm} onChange={(e) => setEditForm(f => ({ ...f, capacityCubicCm: e.target.value }))} />
+								</div>
+							</div>
+							<div className="form-group">
+								<label className="form-label">Notes</label>
+								<input className="input-field" type="text" value={editForm.notes} onChange={(e) => setEditForm(f => ({ ...f, notes: e.target.value }))} />
+							</div>
+						</div>
+						<div className="modal-footer">
+							<button type="button" className="btn-secondary" onClick={() => setEditingLocation(null)}>Cancel</button>
+							<button type="button" className="btn-primary" onClick={handleSaveEdit}>💾 Save Changes</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
+

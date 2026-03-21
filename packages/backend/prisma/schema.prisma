@@ -194,6 +194,7 @@ model Location {
 
   branch           Branch?         @relation(fields: [branchId], references: [id])
   inventoryRecords InventoryRecord[]
+  grns             GRN[]
   transfersFrom    StockTransfer[] @relation("StockTransferFromLocation")
   transfersTo      StockTransfer[] @relation("StockTransferToLocation")
 
@@ -282,6 +283,7 @@ model InventoryEvent {
 model GRN {
   id                   String    @id @default(uuid())
   supplierId           String    @map("supplier_id")
+  locationId           String?   @map("location_id")
   invoiceReference     String?   @map("invoice_reference")
   supplierInvoiceDate  DateTime? @map("supplier_invoice_date")
   expectedDeliveryDate DateTime? @map("expected_delivery_date")
@@ -293,6 +295,7 @@ model GRN {
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
   supplier Vendor    @relation(fields: [supplierId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
   creator  User      @relation(fields: [createdBy], references: [id])
   lines    GRNLine[]
 
