@@ -14,7 +14,7 @@ router.use(authenticate);
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { state, skuId, locationId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+    const { state, skuId, locationId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
     const user = req.user!;
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
@@ -23,6 +23,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     if (state) where.state = state;
     if (skuId) where.skuId = skuId;
     if (locationId) where.locationId = locationId;
+    if (shelfId) where.shelfId = shelfId;
+    if (boxId) where.boxId = boxId;
 
     if (user.role === UserRole.Vendor) {
       const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
@@ -37,6 +39,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         include: {
           sku: { include: { vendor: { select: { id: true, name: true } } } },
           location: true,
+          shelf: true,
+          box: true,
           user: { select: { email: true } },
         },
         orderBy: { updatedAt: 'desc' },
@@ -85,9 +89,11 @@ router.post(
   requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { skuId, locationId, quantity, state, batchId, terminalId } = req.body as {
+      const { skuId, locationId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
         skuId: string;
         locationId?: string;
+        shelfId?: string;
+        boxId?: string;
         quantity: number;
         state?: string;
         batchId?: string;
@@ -104,6 +110,8 @@ router.post(
         data: {
           skuId,
           locationId,
+          shelfId,
+          boxId,
           quantity,
           state: (state as InventoryState) ?? InventoryState.Uninspected,
           batchId,
@@ -111,7 +119,7 @@ router.post(
           userId: user.id,
           version: 1,
         },
-        include: { sku: true, location: true },
+        include: { sku: true, location: true, shelf: true, box: true },
       });
 
       await recordEvent({

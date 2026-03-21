@@ -8,6 +8,9 @@ import authRoutes from './routes/auth';
 import vendorRoutes from './routes/vendors';
 import skuRoutes from './routes/skus';
 import locationRoutes from './routes/locations';
+import areaRoutes from './routes/areas';
+import shelfRoutes from './routes/shelves';
+import boxRoutes from './routes/boxes';
 import inventoryRoutes from './routes/inventory';
 import grnRoutes from './routes/grns';
 import inspectionRoutes from './routes/inspections';
@@ -50,6 +53,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/skus', skuRoutes);
 app.use('/api/locations', locationRoutes);
+app.use('/api/areas', areaRoutes);
+app.use('/api/shelves', shelfRoutes);
+app.use('/api/boxes', boxRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/grns', grnRoutes);
 app.use('/api/inspections', inspectionRoutes);
@@ -67,9 +73,11 @@ app.use('/api/stock-transfers', stockTransferRoutes);
 app.use(errorHandler);
 
 const PORT = Number(process.env.PORT ?? 3001);
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
+}
 
 export default app;
 
