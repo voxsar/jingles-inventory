@@ -65,7 +65,13 @@ router.post(
 router.put(
   '/:id',
   requireRole('Admin', 'Manager'),
-  [param('id').isUUID()],
+  [
+    param('id').isUUID(),
+    body('name').optional().notEmpty(),
+    body('code').optional().notEmpty(),
+    body('description').optional().isString(),
+    body('isActive').optional().isBoolean(),
+  ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

@@ -77,6 +77,11 @@ router.put(
   requireRole('Admin', 'Manager'),
   [
     param('id').isUUID(),
+    body('name').optional().notEmpty(),
+    body('code').optional().notEmpty(),
+    body('isActive').optional().isBoolean(),
+    body('areaId').optional().isUUID(),
+    body('shelfId').optional().isUUID(),
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),

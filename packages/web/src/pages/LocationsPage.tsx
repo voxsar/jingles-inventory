@@ -281,9 +281,9 @@ export default function LocationsPage() {
 			key: 'barcodes', header: 'Barcodes',
 			render: (r: any) => (
 				<div className="flex flex-wrap gap-1">
-					{(r.barcodes ?? []).map((bc: any) => (
-						<span key={bc.id} className="badge" title={bc.barcodeType}>
-							{bc.barcode}{bc.isDefault ? ' ★' : ''}
+					{(r.barcodes ?? []).map((barcode: any) => (
+						<span key={barcode.id} className="badge" title={barcode.barcodeType}>
+							{barcode.barcode}{barcode.isDefault ? ' ★' : ''}
 						</span>
 					))}
 					{(r.barcodes ?? []).length === 0 && <span className="text-gray-400 text-xs">—</span>}
@@ -549,10 +549,10 @@ export default function LocationsPage() {
 							<div className="px-6 pt-4">
 								<p className="text-sm font-medium text-gray-700 mb-2">Existing Barcodes</p>
 								<div className="flex flex-col gap-1">
-									{(selectedBox.barcodes ?? []).map((bc: any) => (
-										<div key={bc.id} className="flex items-center justify-between text-sm bg-gray-50 px-3 py-2 rounded-md">
-											<span><span className="font-mono">{bc.barcode}</span> <span className="text-gray-400 text-xs">({bc.barcodeType})</span>{bc.isDefault ? ' ★' : ''}</span>
-											<button className="btn-sm text-red-600" onClick={() => handleDeleteBarcode(selectedBox.id, bc.id)}>Remove</button>
+									{(selectedBox.barcodes ?? []).map((barcode: any) => (
+										<div key={barcode.id} className="flex items-center justify-between text-sm bg-gray-50 px-3 py-2 rounded-md">
+											<span><span className="font-mono">{barcode.barcode}</span> <span className="text-gray-400 text-xs">({barcode.barcodeType})</span>{barcode.isDefault ? ' ★' : ''}</span>
+											<button className="btn-sm text-red-600" onClick={() => handleDeleteBarcode(selectedBox.id, barcode.id)}>Remove</button>
 										</div>
 									))}
 								</div>
