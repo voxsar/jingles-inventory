@@ -242,8 +242,10 @@ router.put(
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params as { id: string };
-      const { floorId, quantity, batchId } = req.body as {
+      const { floorId, shelfId, boxId, quantity, batchId } = req.body as {
         floorId?: string | null;
+        shelfId?: string | null;
+        boxId?: string | null;
         quantity?: number;
         batchId?: string | null;
       };
@@ -257,6 +259,8 @@ router.put(
 
       const updateData: any = { version: { increment: 1 }, updatedAt: new Date() };
       if (floorId !== undefined) updateData.floorId = floorId || null;
+      if (shelfId !== undefined) updateData.shelfId = shelfId || null;
+      if (boxId !== undefined) updateData.boxId = boxId || null;
       if (quantity !== undefined) {
         if (quantity < 1) {
           res.status(400).json({ success: false, error: 'quantity must be at least 1' });
@@ -269,7 +273,7 @@ router.put(
       const record = await prisma.inventoryRecord.update({
         where: { id },
         data: updateData,
-        include: { sku: true, floor: true },
+        include: { sku: true, floor: true, shelf: true, box: true },
       });
 
       if (quantity !== undefined && quantity !== existing.quantity) {

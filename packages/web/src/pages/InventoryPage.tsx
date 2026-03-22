@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, skusApi, variantsApi } from '../api/client';
+import { inventoryApi, floorsApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -8,8 +8,8 @@ import BarcodeInput from '../components/BarcodeInput';
 
 const PAGE_SIZE = 20;
 
-const defaultNewForm = { skuId: '', variantId: '', floorId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
-const defaultEditForm = { floorId: '', quantity: '1', batchId: '' };
+const defaultNewForm = { skuId: '', variantId: '', floorId: '', shelfId: '', boxId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultEditForm = { floorId: '', shelfId: '', boxId: '', quantity: '1', batchId: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
 export default function InventoryPage() {
@@ -25,6 +25,12 @@ export default function InventoryPage() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [locations, setLocations] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
+  // Shelves and boxes for new-record form (cascade: floor → shelf → box)
+  const [newFormShelves, setNewFormShelves] = useState<any[]>([]);
+  const [newFormBoxes, setNewFormBoxes] = useState<any[]>([]);
+  // Shelves and boxes for edit form (cascade: floor → shelf → box)
+  const [editFormShelves, setEditFormShelves] = useState<any[]>([]);
+  const [editFormBoxes, setEditFormBoxes] = useState<any[]>([]);
   const [barcodeScanResult, setBarcodeScanResult] = useState<any>(null);
   const [transitioning, setTransitioning] = useState<string | null>(null);
   const [transitionRecord, setTransitionRecord] = useState<any>(null);
@@ -70,6 +76,25 @@ export default function InventoryPage() {
     } catch { /* ignore */ }
   };
 
+  const fetchShelves = async (floorId: string, setter: (s: any[]) => void) => {
+    if (!floorId) { setter([]); return; }
+    try {
+      const res = await shelvesApi.list({ floorId });
+      setter(Array.isArray(res.data) ? res.data : []);
+    } catch { setter([]); }
+  };
+
+  const fetchBoxes = async (opts: { shelfId?: string; floorId?: string }, setter: (b: any[]) => void) => {
+    const params: Record<string, string> = {};
+    if (opts.shelfId) params.shelfId = opts.shelfId;
+    else if (opts.floorId) params.floorId = opts.floorId;
+    else { setter([]); return; }
+    try {
+      const res = await boxesApi.list(params);
+      setter(Array.isArray(res.data) ? res.data : []);
+    } catch { setter([]); }
+  };
+
   useEffect(() => { fetchLocations(); fetchSkus(); }, []);
   useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, debouncedSearch]);
 
@@ -113,6 +138,8 @@ export default function InventoryPage() {
         skuId: newForm.skuId,
         variantId: newForm.variantId || undefined,
         floorId: newForm.floorId || undefined,
+        shelfId: newForm.shelfId || undefined,
+        boxId: newForm.boxId || undefined,
         quantity: qty,
         state: newForm.state,
         batchId: newForm.batchId || undefined,
@@ -120,6 +147,8 @@ export default function InventoryPage() {
       setShowNewForm(false);
       setNewForm(defaultNewForm);
       setSkuVariants([]);
+      setNewFormShelves([]);
+      setNewFormBoxes([]);
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create record');
@@ -141,12 +170,23 @@ export default function InventoryPage() {
   };
 
   const openEdit = (record: any) => {
+    const floorId = record.floorId ?? '';
+    const shelfId = record.shelfId ?? '';
+    const boxId = record.boxId ?? '';
     setEditForm({
-      floorId: record.floorId ?? '',
+      floorId,
+      shelfId,
+      boxId,
       quantity: String(record.quantity),
       batchId: record.batchId ?? '',
     });
     setEditingRecord(record);
+    // Pre-load cascading dropdowns
+    if (floorId) {
+      fetchShelves(floorId, setEditFormShelves);
+      if (shelfId) fetchBoxes({ shelfId }, setEditFormBoxes);
+      else fetchBoxes({ floorId }, setEditFormBoxes);
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -157,10 +197,14 @@ export default function InventoryPage() {
     try {
       await inventoryApi.update(editingRecord.id, {
         floorId: editForm.floorId || null,
+        shelfId: editForm.shelfId || null,
+        boxId: editForm.boxId || null,
         quantity: qty,
         batchId: editForm.batchId || null,
       });
       setEditingRecord(null);
+      setEditFormShelves([]);
+      setEditFormBoxes([]);
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to update record');
@@ -169,9 +213,12 @@ export default function InventoryPage() {
     }
   };
 
-  const formatLocation = (floor: any) => {
-    if (!floor) return '—';
-    return `${floor.name} (${floor.code})`;
+  const formatLocation = (record: any) => {
+    const parts: string[] = [];
+    if (record.floor) parts.push(`${record.floor.name} (${record.floor.code})`);
+    if (record.shelf) parts.push(`📚 ${record.shelf.name}`);
+    if (record.box) parts.push(`📦 ${record.box.name}`);
+    return parts.length > 0 ? parts.join(' › ') : '—';
   };
 
   const columns = [
@@ -184,7 +231,7 @@ export default function InventoryPage() {
     )},
     { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
-    { key: 'floor', header: 'Floor', render: (r: any) => <s-text>{formatLocation(r.floor)}</s-text> },
+    { key: 'floor', header: 'Location', render: (r: any) => <s-text>{formatLocation(r)}</s-text> },
     { key: 'batchId', header: 'Batch', render: (r: any) => r.batchId ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batchId}</span> : <s-text>—</s-text> },
     { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <s-text>{new Date(r.updatedAt).toLocaleDateString()}</s-text> },
     {
@@ -343,13 +390,46 @@ export default function InventoryPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Floor</label>
-                  <select className="input-field" value={newForm.floorId} onChange={(e) => setNewForm(f => ({ ...f, floorId: e.target.value }))}>
+                  <select className="input-field" value={newForm.floorId} onChange={(e) => {
+                    const floorId = e.target.value;
+                    setNewForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
+                    fetchShelves(floorId, setNewFormShelves);
+                    setNewFormBoxes([]);
+                    if (floorId) fetchBoxes({ floorId }, setNewFormBoxes);
+                  }}>
                     <option value="">— No Floor —</option>
                     {locations.map((loc: any) => (
                       <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
                     ))}
                   </select>
                 </div>
+                {newForm.floorId && (
+                  <div className="form-group">
+                    <label className="form-label">Shelf <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <select className="input-field" value={newForm.shelfId} onChange={(e) => {
+                      const shelfId = e.target.value;
+                      setNewForm(f => ({ ...f, shelfId, boxId: '' }));
+                      if (shelfId) fetchBoxes({ shelfId }, setNewFormBoxes);
+                      else fetchBoxes({ floorId: newForm.floorId }, setNewFormBoxes);
+                    }}>
+                      <option value="">— No Shelf —</option>
+                      {newFormShelves.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.code}){s.rack ? ` · ${s.rack.name}` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {newForm.floorId && newFormBoxes.length > 0 && (
+                  <div className="form-group">
+                    <label className="form-label">Box <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <select className="input-field" value={newForm.boxId} onChange={(e) => setNewForm(f => ({ ...f, boxId: e.target.value }))}>
+                      <option value="">— No Box —</option>
+                      {newFormBoxes.map((b: any) => (
+                        <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Batch ID</label>
                   <input className="input-field" type="text" placeholder="Optional batch reference" value={newForm.batchId} onChange={(e) => setNewForm(f => ({ ...f, batchId: e.target.value }))} />
@@ -366,25 +446,58 @@ export default function InventoryPage() {
 
       {/* Edit Record Modal */}
       {editingRecord && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingRecord(null)}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); } }}>
           <div className="modal-panel-md">
             <div className="modal-header">
               <div>
                 <h2 className="modal-title">✏️ Edit Inventory Record</h2>
                 <p className="text-xs text-gray-400 font-mono">{editingRecord.sku?.skuCode} — {editingRecord.sku?.name}</p>
               </div>
-              <button className="modal-close" onClick={() => setEditingRecord(null)}>✕</button>
+              <button type="button" className="modal-close" onClick={() => { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); }}>✕</button>
             </div>
             <div className="modal-body form-stack">
               <div className="form-group">
                 <label className="form-label">Floor</label>
-                <select className="input-field" value={editForm.floorId} onChange={(e) => setEditForm(f => ({ ...f, floorId: e.target.value }))}>
+                <select className="input-field" value={editForm.floorId} onChange={(e) => {
+                  const floorId = e.target.value;
+                  setEditForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
+                  fetchShelves(floorId, setEditFormShelves);
+                  setEditFormBoxes([]);
+                  if (floorId) fetchBoxes({ floorId }, setEditFormBoxes);
+                }}>
                   <option value="">— No Floor —</option>
                   {locations.map((loc: any) => (
                     <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
                   ))}
                 </select>
               </div>
+              {editForm.floorId && (
+                <div className="form-group">
+                  <label className="form-label">Shelf <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <select className="input-field" value={editForm.shelfId} onChange={(e) => {
+                    const shelfId = e.target.value;
+                    setEditForm(f => ({ ...f, shelfId, boxId: '' }));
+                    if (shelfId) fetchBoxes({ shelfId }, setEditFormBoxes);
+                    else fetchBoxes({ floorId: editForm.floorId }, setEditFormBoxes);
+                  }}>
+                    <option value="">— No Shelf —</option>
+                    {editFormShelves.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.code}){s.rack ? ` · ${s.rack.name}` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {editForm.floorId && editFormBoxes.length > 0 && (
+                <div className="form-group">
+                  <label className="form-label">Box <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <select className="input-field" value={editForm.boxId} onChange={(e) => setEditForm(f => ({ ...f, boxId: e.target.value }))}>
+                    <option value="">— No Box —</option>
+                    {editFormBoxes.map((b: any) => (
+                      <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Quantity</label>
                 <input className="input-field" type="number" min="1" value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
@@ -402,7 +515,7 @@ export default function InventoryPage() {
               </div>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setEditingRecord(null)}>Cancel</button>
+              <button type="button" className="btn-secondary" onClick={() => { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); }}>Cancel</button>
               <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSaving}>
                 {isSaving ? '⏳ Saving…' : '💾 Save Changes'}
               </button>
