@@ -12,8 +12,6 @@ yarn-error.log*
 Thumbs.db
 *.sqlite
 *.sqlite3
-prisma/migrations/
-packages/backend/prisma/migrations/
 .vscode/
 .idea/
 coverage/

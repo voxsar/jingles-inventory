@@ -4,13 +4,13 @@ import { settingsApi } from '../api/client';
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
 
 const ENTITY_TYPES = [
-  { key: 'inventory', label: 'Inventory States', icon: '📦', description: 'States for inventory records' },
-  { key: 'grn', label: 'GRN Statuses', icon: '📋', description: 'Statuses for Goods Received Notes' },
-  { key: 'product', label: 'Product Statuses', icon: '🎵', description: 'Statuses for products/SKUs' },
-  { key: 'location', label: 'Location Statuses', icon: '📍', description: 'Statuses for warehouse locations' },
-  { key: 'branch', label: 'Branch Statuses', icon: '🏪', description: 'Statuses for branches' },
-  { key: 'supplier', label: 'Supplier Statuses', icon: '🏭', description: 'Statuses for suppliers/vendors' },
-  { key: 'stock_transfer', label: 'Transfer Statuses', icon: '🔄', description: 'Statuses for stock transfers' },
+  { key: 'inventory', label: 'Inventory States', shortLabel: 'Inventory', icon: '📦', description: 'States for inventory records' },
+  { key: 'grn', label: 'GRN Statuses', shortLabel: 'GRN', icon: '📋', description: 'Statuses for Goods Received Notes' },
+  { key: 'product', label: 'Product Statuses', shortLabel: 'Product', icon: '🎵', description: 'Statuses for products/SKUs' },
+  { key: 'location', label: 'Location Statuses', shortLabel: 'Location', icon: '📍', description: 'Statuses for warehouse locations' },
+  { key: 'branch', label: 'Branch Statuses', shortLabel: 'Branch', icon: '🏪', description: 'Statuses for branches' },
+  { key: 'supplier', label: 'Supplier Statuses', shortLabel: 'Supplier', icon: '🏭', description: 'Statuses for suppliers/vendors' },
+  { key: 'stock_transfer', label: 'Transfer Statuses', shortLabel: 'Transfer', icon: '🔄', description: 'Statuses for stock transfers' },
 ];
 
 const defaultUnitForm = { name: '', abbreviation: '', type: 'Count', baseUnit: '', conversionFactor: '' };
@@ -472,7 +472,7 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-500 mt-1">Configure status options for inventory, products, GRNs, branches, suppliers, and transfers</p>
               <div className="flex flex-wrap gap-1 mt-2">
                 {ENTITY_TYPES.slice(0, 4).map(et => (
-                  <span key={et.key} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{et.icon} {et.label.replace(' Statuses', '').replace(' States', '')}</span>
+                  <span key={et.key} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{et.icon} {et.shortLabel}</span>
                 ))}
                 <span className="text-xs text-gray-400">+{ENTITY_TYPES.length - 4} more</span>
               </div>
