@@ -150,7 +150,7 @@ export default function GRNPage() {
     { key: 'id', header: 'GRN ID', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.id.slice(0, 8)}…</span> },
     { key: 'supplier', header: 'Supplier', sortable: true, render: (r: any) => r.supplier?.name },
     { key: 'invoiceReference', header: 'Invoice Ref', render: (r: any) => r.invoiceReference ?? <s-text>—</s-text> },
-    { key: 'floor', header: 'Floor', render: (r: any) => r.floor ? <span className="text-xs">{r.floor.name} <span className="text-gray-400">({r.floor.code})</span></span> : <s-text>—</s-text> },
+    { key: 'floor', header: 'Location', render: (r: any) => r.floor ? <span className="text-xs">{r.floor.branch?.name ? `🏢 ${r.floor.branch.name} › ` : ''}{r.floor.name} <span className="text-gray-400">({r.floor.code})</span></span> : <s-text>—</s-text> },
     {
       key: 'status', header: 'Status', render: (r: any) => {
         const tone = STATUS_TONES[r.status] ?? '';
@@ -276,7 +276,9 @@ export default function GRNPage() {
                   <select className="input-field" value={form.floorId} onChange={(e) => setForm((f) => ({ ...f, floorId: e.target.value }))}>
                     <option value="">— No Location (assign later) —</option>
                     {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                      <option key={loc.id} value={loc.id}>
+                        {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -391,7 +393,9 @@ export default function GRNPage() {
                 <select className="input-field" value={editForm.floorId} onChange={(e) => setEditForm((f) => ({ ...f, floorId: e.target.value }))}>
                   <option value="">— No Location —</option>
                   {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                    <option key={loc.id} value={loc.id}>
+                      {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                    </option>
                   ))}
                 </select>
               </div>

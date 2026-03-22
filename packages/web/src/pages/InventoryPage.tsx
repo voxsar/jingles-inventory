@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
+import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -16,6 +16,7 @@ export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stateFilter, setStateFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -24,6 +25,7 @@ export default function InventoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [locations, setLocations] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
   // Shelves and boxes for new-record form (cascade: floor → shelf → box)
   const [newFormShelves, setNewFormShelves] = useState<any[]>([]);
@@ -49,6 +51,7 @@ export default function InventoryPage() {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
       if (locationFilter) params.floorId = locationFilter;
+      else if (branchFilter) params.branchId = branchFilter;
       if (debouncedSearch) params.search = debouncedSearch;
       const res = await inventoryApi.list(params);
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
@@ -66,6 +69,14 @@ export default function InventoryPage() {
     try {
       const res = await floorsApi.list();
       setLocations(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+    } catch { /* ignore */ }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const res = await branchesApi.list();
+      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+      setBranches(Array.isArray(data) ? data : []);
     } catch { /* ignore */ }
   };
 
@@ -95,8 +106,8 @@ export default function InventoryPage() {
     } catch { setter([]); }
   };
 
-  useEffect(() => { fetchLocations(); fetchSkus(); }, []);
-  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, debouncedSearch]);
+  useEffect(() => { fetchLocations(); fetchSkus(); fetchBranches(); }, []);
+  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, branchFilter, locationFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -215,7 +226,10 @@ export default function InventoryPage() {
 
   const formatLocation = (record: any) => {
     const parts: string[] = [];
-    if (record.floor) parts.push(`${record.floor.name} (${record.floor.code})`);
+    if (record.floor) {
+      const branchName = record.floor.branch?.name;
+      parts.push(branchName ? `🏢 ${branchName} › ${record.floor.name}` : `${record.floor.name} (${record.floor.code})`);
+    }
     if (record.shelf) parts.push(`📚 ${record.shelf.name}`);
     if (record.box) parts.push(`📦 ${record.box.name}`);
     return parts.length > 0 ? parts.join(' › ') : '—';
@@ -258,13 +272,19 @@ export default function InventoryPage() {
 
   const clearFilters = () => {
     setStateFilter('');
+    setBranchFilter('');
     setLocationFilter('');
     setSearchTerm('');
     setDebouncedSearch('');
     setPage(1);
   };
 
-  const hasFilters = stateFilter || locationFilter || searchTerm;
+  const hasFilters = stateFilter || branchFilter || locationFilter || searchTerm;
+
+  // Floors visible in dropdowns: filter by selected branch when applicable
+  const visibleLocations = branchFilter
+    ? locations.filter((l: any) => l.branchId === branchFilter || l.branch?.id === branchFilter)
+    : locations;
 
   return (
     <div className="flex flex-col gap-4">
@@ -315,13 +335,23 @@ export default function InventoryPage() {
           </select>
           <select
             className="filter-select"
+            value={branchFilter}
+            onChange={(e) => { setBranchFilter(e.target.value); setLocationFilter(''); setPage(1); }}
+          >
+            <option value="">All Branches</option>
+            {branches.map((b: any) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+          <select
+            className="filter-select"
             value={locationFilter}
             onChange={(e) => { setLocationFilter(e.target.value); setPage(1); }}
           >
-            <option value="">All Floors</option>
-            {locations.map((loc: any) => (
+            <option value="">All Locations</option>
+            {visibleLocations.map((loc: any) => (
               <option key={loc.id} value={loc.id}>
-                {loc.name} ({loc.code})
+                {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
               </option>
             ))}
           </select>
@@ -399,7 +429,9 @@ export default function InventoryPage() {
                   }}>
                     <option value="">— No Floor —</option>
                     {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                      <option key={loc.id} value={loc.id}>
+                        {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -467,7 +499,9 @@ export default function InventoryPage() {
                 }}>
                   <option value="">— No Floor —</option>
                   {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                    <option key={loc.id} value={loc.id}>
+                      {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                    </option>
                   ))}
                 </select>
               </div>
