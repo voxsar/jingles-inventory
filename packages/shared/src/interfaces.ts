@@ -145,6 +145,61 @@ export interface ILocation {
   notes?: string | null;
   isActive: boolean;
   branch?: IBranch | null;
+  areas?: IArea[];
+}
+
+export interface IArea {
+  id: string;
+  locationId: string;
+  name: string;
+  code: string;
+  description?: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  location?: ILocation;
+  shelves?: IShelf[];
+  boxes?: IStorageBox[];
+}
+
+export interface IShelf {
+  id: string;
+  areaId: string;
+  name: string;
+  code: string;
+  height: number;
+  width: number;
+  length: number;
+  rotationAngle: number;
+  isActive: boolean;
+  createdAt: Date;
+  area?: IArea;
+  boxes?: IStorageBox[];
+}
+
+export interface IBoxBarcode {
+  id: string;
+  boxId: string;
+  barcode: string;
+  barcodeType: BarcodeType;
+  isDefault: boolean;
+  label?: string | null;
+  createdAt: Date;
+}
+
+export interface IStorageBox {
+  id: string;
+  areaId?: string | null;
+  shelfId?: string | null;
+  name: string;
+  code: string;
+  height: number;
+  width: number;
+  length: number;
+  isActive: boolean;
+  createdAt: Date;
+  area?: IArea | null;
+  shelf?: IShelf | null;
+  barcodes?: IBoxBarcode[];
 }
 
 export interface IStockTransferLine {
@@ -178,6 +233,8 @@ export interface IInventoryRecord {
   skuId: string;
   batchId?: string | null;
   locationId?: string | null;
+  shelfId?: string | null;
+  boxId?: string | null;
   quantity: number;
   state: InventoryState;
   sourceEventId?: string | null;

@@ -197,8 +197,78 @@ model Location {
   grns             GRN[]
   transfersFrom    StockTransfer[] @relation("StockTransferFromLocation")
   transfersTo      StockTransfer[] @relation("StockTransferToLocation")
+  areas            Area[]
 
   @@map("locations")
+}
+
+model Area {
+  id          String   @id @default(uuid())
+  locationId  String   @map("location_id")
+  name        String
+  code        String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  location Location      @relation(fields: [locationId], references: [id])
+  shelves  Shelf[]
+  boxes    StorageBox[]
+
+  @@map("areas")
+}
+
+model Shelf {
+  id            String   @id @default(uuid())
+  areaId        String   @map("area_id")
+  name          String
+  code          String
+  height        Float
+  width         Float
+  length        Float
+  rotationAngle Float    @default(0) @map("rotation_angle")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  area             Area             @relation(fields: [areaId], references: [id])
+  boxes            StorageBox[]
+  inventoryRecords InventoryRecord[]
+
+  @@map("shelves")
+}
+
+model StorageBox {
+  id        String   @id @default(uuid())
+  areaId    String?  @map("area_id")
+  shelfId   String?  @map("shelf_id")
+  name      String
+  code      String
+  height    Float
+  width     Float
+  length    Float
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  area             Area?            @relation(fields: [areaId], references: [id])
+  shelf            Shelf?           @relation(fields: [shelfId], references: [id])
+  barcodes         BoxBarcode[]
+  inventoryRecords InventoryRecord[]
+
+  @@map("storage_boxes")
+}
+
+model BoxBarcode {
+  id          String   @id @default(uuid())
+  boxId       String   @map("box_id")
+  barcode     String   @unique
+  barcodeType String   @default("EAN13") @map("barcode_type")
+  isDefault   Boolean  @default(false) @map("is_default")
+  label       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  box StorageBox @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@map("box_barcodes")
 }
 
 model StockTransfer {
@@ -245,6 +315,8 @@ model InventoryRecord {
   skuId         String   @map("sku_id")
   batchId       String?  @map("batch_id")
   locationId    String?  @map("location_id")
+  shelfId       String?  @map("shelf_id")
+  boxId         String?  @map("box_id")
   quantity      Int
   state         String
   sourceEventId String?  @map("source_event_id")
@@ -254,9 +326,11 @@ model InventoryRecord {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  sku      SKU       @relation(fields: [skuId], references: [id])
-  location Location? @relation(fields: [locationId], references: [id])
-  user     User?     @relation(fields: [userId], references: [id])
+  sku      SKU        @relation(fields: [skuId], references: [id])
+  location Location?  @relation(fields: [locationId], references: [id])
+  shelf    Shelf?     @relation(fields: [shelfId], references: [id])
+  box      StorageBox? @relation(fields: [boxId], references: [id])
+  user     User?      @relation(fields: [userId], references: [id])
 
   @@map("inventory_records")
 }

@@ -89,6 +89,33 @@ export const locationsApi = {
   delete: (id: string) => api.delete(`/locations/${id}`),
 };
 
+// Areas
+export const areasApi = {
+  list: (params?: Record<string, string>) => api.get('/areas', { params }),
+  get: (id: string) => api.get(`/areas/${id}`),
+  create: (data: any) => api.post('/areas', data),
+  update: (id: string, data: any) => api.put(`/areas/${id}`, data),
+};
+
+// Shelves
+export const shelvesApi = {
+  list: (params?: Record<string, string>) => api.get('/shelves', { params }),
+  get: (id: string) => api.get(`/shelves/${id}`),
+  create: (data: any) => api.post('/shelves', data),
+  update: (id: string, data: any) => api.put(`/shelves/${id}`, data),
+};
+
+// Boxes
+export const boxesApi = {
+  list: (params?: Record<string, string>) => api.get('/boxes', { params }),
+  get: (id: string) => api.get(`/boxes/${id}`),
+  create: (data: any) => api.post('/boxes', data),
+  update: (id: string, data: any) => api.put(`/boxes/${id}`, data),
+  getBarcodes: (id: string) => api.get(`/boxes/${id}/barcodes`),
+  addBarcode: (id: string, data: any) => api.post(`/boxes/${id}/barcodes`, data),
+  deleteBarcode: (id: string, barcodeId: string) => api.delete(`/boxes/${id}/barcodes/${barcodeId}`),
+};
+
 // Vendors / Suppliers
 export const vendorsApi = {
   list: (params?: Record<string, string>) => api.get('/vendors', { params }),
