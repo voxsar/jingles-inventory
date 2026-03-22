@@ -24,6 +24,8 @@ import categoryRoutes from './routes/categories';
 import settingsRoutes from './routes/settings';
 import branchRoutes from './routes/branches';
 import stockTransferRoutes from './routes/stockTransfers';
+import attributeRoutes from './routes/attributes';
+import variantRoutes from './routes/variants';
 
 const app = express();
 
@@ -52,6 +54,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/skus', skuRoutes);
+app.use('/api/skus/:skuId/variants', variantRoutes);
 app.use('/api/floors', floorRoutes);
 app.use('/api/shelves', shelfRoutes);
 app.use('/api/racks', rackRoutes);
@@ -69,6 +72,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/stock-transfers', stockTransferRoutes);
+app.use('/api/attributes', attributeRoutes);
 
 app.use(errorHandler);
 

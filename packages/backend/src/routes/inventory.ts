@@ -38,6 +38,13 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         take: pageSizeNum,
         include: {
           sku: { include: { vendor: { select: { id: true, name: true } } } },
+          variant: {
+            include: {
+              attributeValues: {
+                include: { attribute: true, attributeValue: true },
+              },
+            },
+          },
           floor: true,
           shelf: true,
           box: true,
@@ -89,8 +96,9 @@ router.post(
   requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { skuId, floorId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
+      const { skuId, variantId, floorId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
         skuId: string;
+        variantId?: string;
         floorId?: string;
         shelfId?: string;
         boxId?: string;
@@ -109,6 +117,7 @@ router.post(
       const record = await prisma.inventoryRecord.create({
         data: {
           skuId,
+          variantId: variantId ?? null,
           floorId,
           shelfId,
           boxId,
@@ -119,7 +128,7 @@ router.post(
           userId: user.id,
           version: 1,
         },
-        include: { sku: true, floor: true, shelf: true, box: true },
+        include: { sku: true, variant: { include: { attributeValues: { include: { attribute: true, attributeValue: true } } } }, floor: true, shelf: true, box: true },
       });
 
       await recordEvent({

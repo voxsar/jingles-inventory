@@ -41,7 +41,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 					supplier: { select: { id: true, name: true } },
 					floor: true,
 					creator: { select: { id: true, email: true } },
-					lines: { include: { sku: { select: { id: true, skuCode: true, name: true } } } },
+				lines: { include: { sku: { select: { id: true, skuCode: true, name: true } }, variant: { include: { attributeValues: { include: { attribute: true, attributeValue: true } } } } } },
 				},
 				orderBy: { createdAt: 'desc' },
 			}),
@@ -109,6 +109,13 @@ router.get(
 					lines: {
 						include: {
 							sku: true,
+							variant: {
+								include: {
+									attributeValues: {
+										include: { attribute: true, attributeValue: true },
+									},
+								},
+							},
 							inspectionRecords: {
 								include: { inspector: { select: { id: true, email: true } } },
 							},

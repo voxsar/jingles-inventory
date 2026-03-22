@@ -132,6 +132,58 @@ export interface ISKU {
   images?: IProductImage[];
   barcodes?: IProductBarcode[];
   tags?: ITag[];
+  skuAttributes?: ISKUAttribute[];
+  variants?: ISKUVariant[];
+}
+
+// ── Global Attribute System ────────────────────────────────
+
+export interface IAttribute {
+  id: string;
+  name: string;
+  type: 'dropdown' | 'text' | 'numeric' | 'boolean';
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  values?: IAttributeValue[];
+}
+
+export interface IAttributeValue {
+  id: string;
+  attributeId: string;
+  value: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: Date;
+  attribute?: IAttribute;
+}
+
+export interface ISKUAttribute {
+  id: string;
+  skuId: string;
+  attributeId: string;
+  attribute?: IAttribute;
+  selectedValues?: IAttributeValue[];
+}
+
+export interface ISKUVariant {
+  id: string;
+  skuId: string;
+  variantCode: string;
+  name?: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  sku?: ISKU;
+  attributeValues?: ISKUVariantValue[];
+}
+
+export interface ISKUVariantValue {
+  variantId: string;
+  attributeId: string;
+  attributeValueId: string;
+  attribute?: IAttribute;
+  attributeValue?: IAttributeValue;
 }
 
 export interface IFloor {
@@ -251,6 +303,7 @@ export interface IStockTransfer {
 export interface IInventoryRecord {
   id: string;
   skuId: string;
+  variantId?: string | null;
   batchId?: string | null;
   floorId?: string | null;
   shelfId?: string | null;
@@ -298,6 +351,7 @@ export interface IGRNLine {
   id: string;
   grnId: string;
   skuId: string;
+  variantId?: string | null;
   expectedQuantity: number;
   receivedQuantity: number;
   batchReference?: string | null;
