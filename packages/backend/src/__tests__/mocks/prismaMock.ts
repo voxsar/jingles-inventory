@@ -33,6 +33,15 @@ export const prismaMock = {
     update: vi.fn(),
     count: vi.fn(),
   },
+  rack: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    createMany: vi.fn(),
+    update: vi.fn(),
+    count: vi.fn(),
+  },
   shelf: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
