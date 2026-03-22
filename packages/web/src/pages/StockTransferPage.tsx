@@ -202,14 +202,14 @@ export default function StockTransferPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">From Branch</label>
-                    <select className="input-field" value={form.fromBranchId} onChange={(e) => setForm(f => ({ ...f, fromBranchId: e.target.value }))}>
+                    <select className="input-field" value={form.fromBranchId} onChange={(e) => setForm(f => ({ ...f, fromBranchId: e.target.value, fromFloorId: '' }))}>
                       <option value="">— Select Branch —</option>
                       {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Branch</label>
-                    <select className="input-field" value={form.toBranchId} onChange={(e) => setForm(f => ({ ...f, toBranchId: e.target.value }))}>
+                    <select className="input-field" value={form.toBranchId} onChange={(e) => setForm(f => ({ ...f, toBranchId: e.target.value, toFloorId: '' }))}>
                       <option value="">— Select Branch —</option>
                       {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
@@ -220,14 +220,28 @@ export default function StockTransferPage() {
                     <label className="form-label">From Location</label>
                     <select className="input-field" value={form.fromFloorId} onChange={(e) => setForm(f => ({ ...f, fromFloorId: e.target.value }))}>
                       <option value="">— Select Location —</option>
-                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name} ({l.code})</option>)}
+                      {(form.fromBranchId
+                        ? locations.filter((l: any) => l.branchId === form.fromBranchId || l.branch?.id === form.fromBranchId)
+                        : locations
+                      ).map((l: any) => (
+                        <option key={l.id} value={l.id}>
+                          {l.branch?.name && !form.fromBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Location</label>
                     <select className="input-field" value={form.toFloorId} onChange={(e) => setForm(f => ({ ...f, toFloorId: e.target.value }))}>
                       <option value="">— Select Location —</option>
-                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name} ({l.code})</option>)}
+                      {(form.toBranchId
+                        ? locations.filter((l: any) => l.branchId === form.toBranchId || l.branch?.id === form.toBranchId)
+                        : locations
+                      ).map((l: any) => (
+                        <option key={l.id} value={l.id}>
+                          {l.branch?.name && !form.toBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

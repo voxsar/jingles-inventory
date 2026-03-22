@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { vendorsApi } from '../api/client';
+import { vendorsApi, settingsApi } from '../api/client';
 import DataTable from '../components/DataTable';
-
-const VENDOR_TYPES = ['Vendor', 'Supplier', 'Both'];
 
 const defaultForm = {
   name: '',
@@ -18,6 +16,7 @@ const defaultForm = {
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [vendorTypes, setVendorTypes] = useState<{ value: string; label: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
@@ -41,6 +40,17 @@ export default function SuppliersPage() {
     }
   };
 
+  const loadVendorTypes = async () => {
+    try {
+      const res = await settingsApi.listStatuses('vendor_type');
+      const items: any[] = res.data?.data ?? res.data ?? [];
+      setVendorTypes(items.map((s: any) => ({ value: s.value, label: s.label })));
+    } catch (err) {
+      console.error('Failed to load vendor types', err);
+    }
+  };
+
+  useEffect(() => { loadVendorTypes(); }, []);
   useEffect(() => { load(); }, [typeFilter, searchTerm, statusFilter]);
 
   const openCreate = () => {
@@ -159,7 +169,7 @@ export default function SuppliersPage() {
             onChange={(e) => setTypeFilter(e.target.value)}
           >
             <option value="">All Types</option>
-            {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+            {vendorTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           <select
             className="filter-select"
@@ -202,7 +212,10 @@ export default function SuppliersPage() {
                   <div className="form-group">
                     <label className="form-label">Type *</label>
                     <select className="input-field" value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value }))}>
-                      {VENDOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      {vendorTypes.length === 0
+                        ? <option value="">Loading…</option>
+                        : vendorTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)
+                      }
                     </select>
                   </div>
                 </div>

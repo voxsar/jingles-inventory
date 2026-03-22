@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, racksApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
+import { inventoryApi, floorsApi, branchesApi, racksApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -13,10 +13,25 @@ const defaultNewForm = { skuId: '', variantId: '', floorId: '', shelfId: '', box
 const defaultEditForm = { floorId: '', shelfId: '', boxId: '', quantity: '1', batchId: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
+const QTY_SHORTCUTS = [
+  { label: '-10', delta: -10, cls: 'bg-red-600 hover:bg-red-700' },
+  { label: '-1',  delta:  -1, cls: 'bg-red-400 hover:bg-red-500' },
+  { label: '+1',  delta:   1, cls: 'bg-green-500 hover:bg-green-600' },
+  { label: '+10', delta:  10, cls: 'bg-green-600 hover:bg-green-700' },
+  { label: '+20', delta:  20, cls: 'bg-blue-500 hover:bg-blue-600' },
+  { label: '+100', delta: 100, cls: 'bg-blue-600 hover:bg-blue-700' },
+  { label: '+500', delta: 500, cls: 'bg-indigo-600 hover:bg-indigo-700' },
+] as const;
+
+function applyQtyDelta(current: string, delta: number): string {
+  return String(Math.max(1, (parseInt(current) || 0) + delta));
+}
+
 export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stateFilter, setStateFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [rackFilter, setRackFilter] = useState('');
   const [shelfFilter, setShelfFilter] = useState('');
@@ -29,6 +44,7 @@ export default function InventoryPage() {
   const [locations, setLocations] = useState<any[]>([]);
   const [availableRacks, setAvailableRacks] = useState<any[]>([]);
   const [availableShelves, setAvailableShelves] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
   // Shelves and boxes for new-record form (cascade: floor → shelf → box)
   const [newFormShelves, setNewFormShelves] = useState<any[]>([]);
@@ -54,6 +70,7 @@ export default function InventoryPage() {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
       if (locationFilter) params.floorId = locationFilter;
+      else if (branchFilter) params.branchId = branchFilter;
       if (shelfFilter) params.shelfId = shelfFilter;
       else if (rackFilter) params.rackId = rackFilter;
       if (debouncedSearch) params.search = debouncedSearch;
@@ -73,6 +90,14 @@ export default function InventoryPage() {
     try {
       const res = await floorsApi.list();
       setLocations(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+    } catch { /* ignore */ }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const res = await branchesApi.list();
+      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+      setBranches(Array.isArray(data) ? data : []);
     } catch { /* ignore */ }
   };
 
@@ -121,8 +146,8 @@ export default function InventoryPage() {
     } catch { setAvailableShelves([]); }
   };
 
-  useEffect(() => { fetchLocations(); fetchSkus(); }, []);
-  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
+  useEffect(() => { fetchLocations(); fetchSkus(); fetchBranches(); }, []);
+  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, branchFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -241,7 +266,10 @@ export default function InventoryPage() {
 
   const formatLocation = (record: any) => {
     const parts: string[] = [];
-    if (record.floor) parts.push(`${record.floor.name} (${record.floor.code})`);
+    if (record.floor) {
+      const branchName = record.floor.branch?.name;
+      parts.push(branchName ? `🏢 ${branchName} › ${record.floor.name}` : `${record.floor.name} (${record.floor.code})`);
+    }
     if (record.shelf) parts.push(`📚 ${record.shelf.name}`);
     if (record.box) parts.push(`📦 ${record.box.name}`);
     return parts.length > 0 ? parts.join(' › ') : '—';
@@ -284,6 +312,7 @@ export default function InventoryPage() {
 
   const clearFilters = () => {
     setStateFilter('');
+    setBranchFilter('');
     setLocationFilter('');
     setRackFilter('');
     setShelfFilter('');
@@ -294,7 +323,12 @@ export default function InventoryPage() {
     setPage(1);
   };
 
-  const hasFilters = stateFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
+  const hasFilters = stateFilter || branchFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
+
+  // Floors visible in dropdowns: filter by selected branch when applicable
+  const visibleLocations = branchFilter
+    ? locations.filter((l: any) => l.branchId === branchFilter || l.branch?.id === branchFilter)
+    : locations;
 
   return (
     <div className="flex flex-col gap-4">
@@ -343,10 +377,28 @@ export default function InventoryPage() {
             <option value="">All States</option>
             {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
+          <select
+            className="filter-select"
+            value={branchFilter}
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setLocationFilter('');
+              setRackFilter('');
+              setShelfFilter('');
+              setAvailableRacks([]);
+              setAvailableShelves([]);
+              setPage(1);
+            }}
+          >
+            <option value="">All Branches</option>
+            {branches.map((b: any) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
           <SearchableSelect
             placeholder="All Floors"
             value={locationFilter}
-            options={locations.map((loc: any) => ({ value: loc.id, label: `${loc.name} (${loc.code})` }))}
+            options={visibleLocations.map((loc: any) => ({ value: loc.id, label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})` }))}
             onChange={(val) => {
               setLocationFilter(val);
               setRackFilter('');
@@ -436,6 +488,11 @@ export default function InventoryPage() {
                   <div className="form-group">
                     <label className="form-label">Quantity *</label>
                     <input className="input-field" type="number" min="1" required value={newForm.quantity} onChange={(e) => setNewForm(f => ({ ...f, quantity: e.target.value }))} />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
+                        <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setNewForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                      ))}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">State</label>
@@ -455,7 +512,9 @@ export default function InventoryPage() {
                   }}>
                     <option value="">— No Floor —</option>
                     {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                      <option key={loc.id} value={loc.id}>
+                        {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -523,7 +582,9 @@ export default function InventoryPage() {
                 }}>
                   <option value="">— No Floor —</option>
                   {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                    <option key={loc.id} value={loc.id}>
+                      {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -557,6 +618,11 @@ export default function InventoryPage() {
               <div className="form-group">
                 <label className="form-label">Quantity</label>
                 <input className="input-field" type="number" min="1" value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
+                    <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setEditForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                  ))}
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Batch ID</label>

@@ -37,10 +37,19 @@ const STATUS_SEED_DATA: StatusSeedEntry[] = [
 	{ entityType: 'stock_transfer', value: 'InTransit', label: 'In Transit', color: 'info', sortOrder: 3, isDefault: false },
 	{ entityType: 'stock_transfer', value: 'Completed', label: 'Completed', color: 'success', sortOrder: 4, isDefault: false },
 	{ entityType: 'stock_transfer', value: 'Cancelled', label: 'Cancelled', color: 'critical', sortOrder: 5, isDefault: false },
+
+	// Damage classifications (GRN inspection)
+	{ entityType: 'damage_classification', value: 'Minor', label: 'Minor', color: 'warning', sortOrder: 0, isDefault: false },
+	{ entityType: 'damage_classification', value: 'Major', label: 'Major', color: 'critical', sortOrder: 1, isDefault: false },
+	{ entityType: 'damage_classification', value: 'Totaled', label: 'Totaled', color: 'critical', sortOrder: 2, isDefault: false },
+
+	// Vendor / supplier types
+	{ entityType: 'vendor_type', value: 'Vendor', label: 'Vendor', color: undefined, sortOrder: 0, isDefault: false },
+	{ entityType: 'vendor_type', value: 'Supplier', label: 'Supplier', color: undefined, sortOrder: 1, isDefault: true },
+	{ entityType: 'vendor_type', value: 'Both', label: 'Both', color: undefined, sortOrder: 2, isDefault: false },
 ];
 
 async function main() {
-	// Admin user
 	const adminEmail = 'admin@theredsun.org';
 	const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
 	if (!existing) {
