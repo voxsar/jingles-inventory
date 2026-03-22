@@ -45,6 +45,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         images: { where: { isPrimary: true }, take: 1 },
         barcodes: { where: { isDefault: true }, take: 1 },
         tags: { include: { tag: true } },
+        _count: { select: { variants: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
