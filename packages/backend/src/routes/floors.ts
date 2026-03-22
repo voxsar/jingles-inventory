@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -13,7 +14,7 @@ router.get('/', [query('branchId').optional().isUUID()], async (req: AuthRequest
     res.status(400).json({ errors: errors.array() });
     return;
   }
-  const where: any = { isActive: true };
+  const where: Prisma.FloorWhereInput = { isActive: true };
   if (req.query?.branchId) where.branchId = req.query.branchId as string;
   const floors = await prisma.floor.findMany({
     where,

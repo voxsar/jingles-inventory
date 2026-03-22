@@ -34,6 +34,11 @@ router.post('/invoice', upload.single('invoice'), async (req: AuthRequest, res: 
 
     res.json({ success: true, data: result });
   } catch (error: any) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    if (error.message?.startsWith('Unsupported file type')) {
+      res.status(422).json({ success: false, error: error.message });
+      return;
+    }
     logger.error('OCR error', error);
     res.status(500).json({ success: false, error: error.message ?? 'OCR processing failed' });
   }

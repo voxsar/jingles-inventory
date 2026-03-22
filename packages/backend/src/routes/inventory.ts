@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole, InventoryState, InventoryEventType } from '@jingles/shared';
@@ -19,8 +20,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
 
-    const where: any = {};
-    if (state) where.state = state;
+    const where: Prisma.InventoryRecordWhereInput = {};
+    if (state) where.state = state as InventoryState;
     if (skuId) where.skuId = skuId;
     if (shelfId) {
       where.shelfId = shelfId;

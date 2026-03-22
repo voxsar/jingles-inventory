@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -19,7 +20,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
   const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
-  const where: any = {
+  const where: Prisma.SKUWhereInput = {
     ...(vendorId ? { vendorId } : {}),
     ...(categoryId ? { categoryId } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),

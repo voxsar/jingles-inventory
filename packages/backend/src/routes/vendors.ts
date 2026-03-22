@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -10,7 +11,7 @@ router.use(authenticate);
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const { type, isActive, search } = req.query as { type?: string; isActive?: string; search?: string };
 
-  const where: any = {
+  const where: Prisma.VendorWhereInput = {
     ...(type ? { type } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : { isActive: true }),
     ...(search
