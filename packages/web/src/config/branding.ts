@@ -15,13 +15,13 @@
  *                            a new instance to avoid sharing tokens between apps.
  */
 
-const appName = (import.meta.env.VITE_APP_NAME as string | undefined) ?? 'Jingles Inventory';
+const appName = (import.meta.env.VITE_APP_NAME as string | undefined) ?? 'Inventory';
 
 // `as const` makes the object readonly — values remain typed as `string` because
 // they originate from runtime env vars, not from literal assignments.
 export const branding = {
   appName,
-  appShortName: (import.meta.env.VITE_APP_SHORT_NAME as string | undefined) ?? 'Jingles',
+  appShortName: (import.meta.env.VITE_APP_SHORT_NAME as string | undefined) ?? '',
   appLogoEmoji: (import.meta.env.VITE_APP_LOGO_EMOJI as string | undefined) ?? '🎵',
   appHeaderTitle: (import.meta.env.VITE_APP_HEADER_TITLE as string | undefined) ?? `${appName} Management`,
   tokenStorageKey: (import.meta.env.VITE_TOKEN_KEY as string | undefined) ?? 'jingles_token',
