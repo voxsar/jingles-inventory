@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
+import { inventoryApi, floorsApi, racksApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
 import BarcodeInput from '../components/BarcodeInput';
+import SearchableSelect from '../components/SearchableSelect';
 
 const PAGE_SIZE = 20;
 
@@ -17,6 +18,8 @@ export default function InventoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [stateFilter, setStateFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [rackFilter, setRackFilter] = useState('');
+  const [shelfFilter, setShelfFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [total, setTotal] = useState(0);
@@ -24,6 +27,8 @@ export default function InventoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [locations, setLocations] = useState<any[]>([]);
+  const [availableRacks, setAvailableRacks] = useState<any[]>([]);
+  const [availableShelves, setAvailableShelves] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
   // Shelves and boxes for new-record form (cascade: floor → shelf → box)
   const [newFormShelves, setNewFormShelves] = useState<any[]>([]);
@@ -49,6 +54,8 @@ export default function InventoryPage() {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
       if (locationFilter) params.floorId = locationFilter;
+      if (shelfFilter) params.shelfId = shelfFilter;
+      else if (rackFilter) params.rackId = rackFilter;
       if (debouncedSearch) params.search = debouncedSearch;
       const res = await inventoryApi.list(params);
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
@@ -95,8 +102,27 @@ export default function InventoryPage() {
     } catch { setter([]); }
   };
 
+  const fetchFilterRacks = async (floorId: string) => {
+    if (!floorId) { setAvailableRacks([]); return; }
+    try {
+      const res = await racksApi.list({ floorId });
+      setAvailableRacks(Array.isArray(res.data) ? res.data : []);
+    } catch { setAvailableRacks([]); }
+  };
+
+  const fetchFilterShelves = async (opts: { floorId?: string; rackId?: string }) => {
+    const params: Record<string, string> = {};
+    if (opts.rackId) params.rackId = opts.rackId;
+    else if (opts.floorId) params.floorId = opts.floorId;
+    else { setAvailableShelves([]); return; }
+    try {
+      const res = await shelvesApi.list(params);
+      setAvailableShelves(Array.isArray(res.data) ? res.data : []);
+    } catch { setAvailableShelves([]); }
+  };
+
   useEffect(() => { fetchLocations(); fetchSkus(); }, []);
-  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, debouncedSearch]);
+  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -259,12 +285,16 @@ export default function InventoryPage() {
   const clearFilters = () => {
     setStateFilter('');
     setLocationFilter('');
+    setRackFilter('');
+    setShelfFilter('');
+    setAvailableRacks([]);
+    setAvailableShelves([]);
     setSearchTerm('');
     setDebouncedSearch('');
     setPage(1);
   };
 
-  const hasFilters = stateFilter || locationFilter || searchTerm;
+  const hasFilters = stateFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
 
   return (
     <div className="flex flex-col gap-4">
@@ -313,18 +343,44 @@ export default function InventoryPage() {
             <option value="">All States</option>
             {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select
-            className="filter-select"
+          <SearchableSelect
+            placeholder="All Floors"
             value={locationFilter}
-            onChange={(e) => { setLocationFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All Floors</option>
-            {locations.map((loc: any) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.name} ({loc.code})
-              </option>
-            ))}
-          </select>
+            options={locations.map((loc: any) => ({ value: loc.id, label: `${loc.name} (${loc.code})` }))}
+            onChange={(val) => {
+              setLocationFilter(val);
+              setRackFilter('');
+              setShelfFilter('');
+              setAvailableRacks([]);
+              setAvailableShelves([]);
+              setPage(1);
+              if (val) {
+                fetchFilterRacks(val);
+                fetchFilterShelves({ floorId: val });
+              }
+            }}
+          />
+          <SearchableSelect
+            placeholder="All Racks"
+            value={rackFilter}
+            disabled={!locationFilter}
+            options={availableRacks.map((r: any) => ({ value: r.id, label: `${r.name} (${r.code})` }))}
+            onChange={(val) => {
+              setRackFilter(val);
+              setShelfFilter('');
+              setPage(1);
+              if (val) fetchFilterShelves({ rackId: val });
+              else if (locationFilter) fetchFilterShelves({ floorId: locationFilter });
+              else setAvailableShelves([]);
+            }}
+          />
+          <SearchableSelect
+            placeholder="All Shelves"
+            value={shelfFilter}
+            disabled={!locationFilter}
+            options={availableShelves.map((s: any) => ({ value: s.id, label: `${s.name} (${s.code})${s.rack ? ` · ${s.rack.name}` : ''}` }))}
+            onChange={(val) => { setShelfFilter(val); setPage(1); }}
+          />
           {hasFilters && (
             <button className="btn-secondary text-xs" onClick={clearFilters}>
               ✕ Clear filters

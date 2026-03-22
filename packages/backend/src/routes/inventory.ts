@@ -14,7 +14,7 @@ router.use(authenticate);
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { state, skuId, floorId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+    const { state, skuId, floorId, rackId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
     const user = req.user!;
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
@@ -24,6 +24,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     if (skuId) where.skuId = skuId;
     if (floorId) where.floorId = floorId;
     if (shelfId) where.shelfId = shelfId;
+    else if (rackId) where.shelf = { rackId };
     if (boxId) where.boxId = boxId;
 
     if (user.role === UserRole.Vendor) {
