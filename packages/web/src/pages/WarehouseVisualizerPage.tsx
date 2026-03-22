@@ -230,6 +230,22 @@ export default function WarehouseVisualizerPage() {
 
   const [aframeReady,  setAframeReady]  = useState(false);
 
+  // ── Overview mode ─────────────────────────────────────────────────────────
+  const [viewMode,       setViewMode]      = useState<'single' | 'overview'>('single');
+  const [overviewData,   setOverviewData]  = useState<Array<{
+    floor: IFloor;
+    racks: IRack[];
+    rackPos: Record<string, { x: number; z: number; rotY: number }>;
+  }>>([]);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+
+  // ── Stable ref so event handlers always see latest rackPos ───────────────
+  const rackPosRef = useRef(rackPos);
+  useEffect(() => { rackPosRef.current = rackPos; }, [rackPos]);
+
+  // ── Double-click tracking ─────────────────────────────────────────────────
+  const lastClickRef = useRef<{ rackId: string | null; time: number }>({ rackId: null, time: 0 });
+
   // ── Derived camera position ───────────────────────────────────────────────
   const azRad = (camAz * Math.PI) / 180;
   const elRad = (camEl * Math.PI) / 180;
@@ -362,7 +378,7 @@ export default function WarehouseVisualizerPage() {
   }, [selectedRack]);
 
   // ── Mouse drag for orbit ──────────────────────────────────────────────────
-  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; mode: 'orbit'|'pan' }>({ active: false, lastX: 0, lastY: 0, mode: 'orbit' });
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; startX: number; startY: number; mode: 'orbit'|'pan' }>({ active: false, lastX: 0, lastY: 0, startX: 0, startY: 0, mode: 'orbit' });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -370,7 +386,9 @@ export default function WarehouseVisualizerPage() {
     if (!el) return;
 
     function onMouseDown(e: MouseEvent) {
-      dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, mode: e.button === 2 || e.altKey ? 'pan' : 'orbit' };
+      // Left (0) and middle (1) → orbit; right (2) or Alt+left → pan
+      const mode: 'orbit' | 'pan' = (e.button === 2 || (e.button === 0 && e.altKey)) ? 'pan' : 'orbit';
+      dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY, mode };
       e.preventDefault();
     }
     function onMouseMove(e: MouseEvent) {
@@ -381,6 +399,7 @@ export default function WarehouseVisualizerPage() {
       dragRef.current.lastY = e.clientY;
       if (dragRef.current.mode === 'orbit') {
         setCamAz(v => (v + dx * 0.4 + 360) % 360);
+        // Clamp elevation ≥ 5° so camera never goes below the floor
         setCamEl(v => Math.max(5, Math.min(89, v - dy * 0.3)));
       } else {
         // Pan: move target in the camera's horizontal plane
@@ -402,22 +421,26 @@ export default function WarehouseVisualizerPage() {
       setCamDist(v => Math.max(1, Math.min(80, v + e.deltaY * 0.02)));
     }
     function onContextMenu(e: Event) { e.preventDefault(); }
+    // Suppress middle-mouse "autoscroll" open-link behaviour in browsers
+    function onAuxClick(e: Event) { e.preventDefault(); }
 
     el.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('contextmenu', onContextMenu);
+    el.addEventListener('auxclick', onAuxClick);
     return () => {
       el.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('contextmenu', onContextMenu);
+      el.removeEventListener('auxclick', onAuxClick);
     };
   }, [camAz, camEl, camDist]);
 
-  // ── Click → select rack ───────────────────────────────────────────────────
+  // ── Click → select rack (single) / double-click → focus orbit ────────────
   const sceneRef = useRef<HTMLElement & EventTarget>(null);
   useEffect(() => {
     const scene = sceneRef.current;
@@ -425,14 +448,36 @@ export default function WarehouseVisualizerPage() {
     function handler(e: Event) {
       const ce = e as CustomEvent;
       const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
-      if (!el) { setSelectedRack(null); return; }
-      let node: HTMLElement | null = el;
-      while (node) {
-        const id = node.getAttribute('data-rack-id');
-        if (id) { setSelectedRack(id); return; }
-        node = node.parentElement;
+      let rackId: string | null = null;
+      if (el) {
+        let node: HTMLElement | null = el;
+        while (node) {
+          const id = node.getAttribute('data-rack-id');
+          if (id) { rackId = id; break; }
+          node = node.parentElement;
+        }
       }
-      setSelectedRack(null);
+
+      const now = Date.now();
+      const isDoubleClick =
+        rackId !== null &&
+        now - lastClickRef.current.time < 400 &&
+        lastClickRef.current.rackId === rackId;
+      lastClickRef.current = { rackId, time: now };
+
+      if (isDoubleClick && rackId) {
+        // Center orbit on this shelf/rack position; elevation stays ≥ 5°
+        const p = rackPosRef.current[rackId];
+        if (p) {
+          setCamTarget({ x: p.x, z: p.z });
+          setCamDist(5);
+          setCamEl(prev => Math.max(5, prev));
+        }
+        setSelectedRack(rackId);
+        return;
+      }
+
+      if (rackId) { setSelectedRack(rackId); } else { setSelectedRack(null); }
     }
     scene.addEventListener('click', handler);
     return () => scene.removeEventListener('click', handler);
@@ -472,6 +517,45 @@ export default function WarehouseVisualizerPage() {
     setCamEl(30);
   }, [rackPos]);
 
+  // ── Load all-floors overview data ─────────────────────────────────────────
+  const loadOverview = useCallback(async () => {
+    if (floors.length === 0) return;
+    setOverviewLoading(true);
+    try {
+      const results = await Promise.all(
+        floors.map(async (floor) => {
+          const racksRes = await racksApi.list({ floorId: floor.id });
+          const rackList: IRack[] = racksRes.data?.data?.items ?? racksRes.data?.data ?? racksRes.data ?? [];
+          const pos: Record<string, { x: number; z: number; rotY: number }> = {};
+          rackList.forEach((r, i) => {
+            pos[r.id] = {
+              x: r.posX ?? snap((i % 5) * 3),
+              z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+              rotY: r.rotY ?? 0,
+            };
+          });
+          return { floor, racks: rackList, rackPos: pos };
+        })
+      );
+      setOverviewData(results);
+    } finally {
+      setOverviewLoading(false);
+    }
+  }, [floors]);
+
+  // ── Switch to overview mode ───────────────────────────────────────────────
+  const enterOverview = useCallback(() => {
+    setViewMode('overview');
+    setSelectedRack(null);
+    loadOverview();
+    // Zoom out to see all floors
+    const spread = Math.max(1, floors.length);
+    setCamTarget({ x: (spread - 1) * (FLOOR_SIZE + 8) / 2, z: 0 });
+    setCamDist(Math.min(80, 14 + spread * 8));
+    setCamEl(55);
+    setCamAz(30);
+  }, [floors.length, loadOverview]);
+
   // ── Floor size ────────────────────────────────────────────────────────────
   const FLOOR_SIZE = 30;
   const currentFloor = floors.find(f => f.id === selectedFloor);
@@ -498,14 +582,35 @@ export default function WarehouseVisualizerPage() {
 
       {/* ── Toolbar ───────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-2 bg-gray-900 text-white text-sm flex-shrink-0 flex-wrap">
-        <label className="font-semibold text-gray-300">Zone:</label>
-        <select
-          value={selectedFloor}
-          onChange={e => setSelectedFloor(e.target.value)}
-          className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm"
-        >
-          {floors.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-        </select>
+
+        {/* View mode toggle */}
+        <div className="flex rounded overflow-hidden border border-gray-600">
+          <button
+            onClick={() => setViewMode('single')}
+            className={`px-3 py-1 text-xs ${viewMode === 'single' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+          >
+            📦 Single Floor
+          </button>
+          <button
+            onClick={enterOverview}
+            className={`px-3 py-1 text-xs ${viewMode === 'overview' ? 'bg-blue-700 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+          >
+            🏢 All Floors
+          </button>
+        </div>
+
+        {viewMode === 'single' && (
+          <>
+            <label className="font-semibold text-gray-300">Zone:</label>
+            <select
+              value={selectedFloor}
+              onChange={e => { setSelectedFloor(e.target.value); setViewMode('single'); }}
+              className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm"
+            >
+              {floors.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </>
+        )}
 
         <span className="text-gray-500">|</span>
 
@@ -521,8 +626,8 @@ export default function WarehouseVisualizerPage() {
 
         <span className="text-gray-500">|</span>
 
-        {/* Rack controls */}
-        {selectedRack ? (
+        {/* Rack controls – only in single-floor mode */}
+        {viewMode === 'single' && selectedRack ? (
           <>
             <span className="text-yellow-400 font-semibold">
               🗂 {racks.find(r => r.id === selectedRack)?.name ?? '—'}
@@ -541,13 +646,21 @@ export default function WarehouseVisualizerPage() {
           </>
         ) : (
           <span className="text-gray-400 text-xs italic">
-            Drag to orbit · Right-drag / Alt-drag to pan · Scroll to zoom · Click rack to select
+            {viewMode === 'overview'
+              ? 'All Floors overview · Drag to orbit · Middle-drag / Scroll to zoom'
+              : 'Left/Middle-drag to orbit · Right/Alt-drag to pan · Scroll to zoom · Click to select · Double-click to focus'}
           </span>
         )}
 
         {/* Reset view */}
         <button
-          onClick={() => { setCamTarget({ x: 0, z: 0 }); setCamDist(12); setCamEl(45); setCamAz(30); }}
+          onClick={() => {
+            if (viewMode === 'overview') {
+              enterOverview();
+            } else {
+              setCamTarget({ x: 0, z: 0 }); setCamDist(12); setCamEl(45); setCamAz(30);
+            }
+          }}
           className="ml-auto px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
         >
           Reset view
@@ -596,7 +709,7 @@ export default function WarehouseVisualizerPage() {
                 color="#FFD700"
                 opacity="0.8"
                 scale="0.5 0.5 0.5"
-                raycaster="objects: [data-rack-id]"
+                raycaster="objects: [data-rack-id], a-box"
               />
             </a-camera>
 
@@ -608,52 +721,115 @@ export default function WarehouseVisualizerPage() {
 
             <a-sky color="#1a1a2e" />
 
-            {/* Floor */}
-            <a-plane
-              position={`${camTarget.x} 0 ${camTarget.z}`}
-              rotation="-90 0 0"
-              width={String(FLOOR_SIZE)}
-              height={String(FLOOR_SIZE)}
-              color={FLOOR_COLOUR}
-              roughness="0.9"
-            />
-
-            {/* Grid */}
-            <GridPlane size={FLOOR_SIZE} gridSize={GRID} />
-
-            {/* Floor label */}
-            {currentFloor && (
-              <a-text
-                value={`Zone: ${currentFloor.name}`}
-                position={`${-FLOOR_SIZE / 2 + 1} 0.05 ${-FLOOR_SIZE / 2 + 1}`}
-                rotation="-90 0 0"
-                color="#333"
-                scale="0.6 0.6 0.6"
-                align="left"
-              />
-            )}
-
-            {/* Racks */}
-            {racks.map(rack => {
-              const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
-              return (
-                <RackEntity
-                  key={rack.id}
-                  rack={rack}
-                  shelves={rackShelves[rack.id] ?? []}
-                  shelfBoxes={shelfBoxes}
-                  isSelected={selectedRack === rack.id}
-                  posX={pos.x}
-                  posZ={pos.z}
-                  rotY={pos.rotY}
+            {viewMode === 'single' ? (
+              <>
+                {/* Floor */}
+                <a-plane
+                  position={`0 0 0`}
+                  rotation="-90 0 0"
+                  width={String(FLOOR_SIZE)}
+                  height={String(FLOOR_SIZE)}
+                  color={FLOOR_COLOUR}
+                  roughness="0.9"
                 />
-              );
-            })}
 
-            {/* Floor-level boxes */}
-            {floorBoxes.map((box, i) => (
-              <FloorBox key={box.id} box={box} index={i} />
-            ))}
+                {/* Grid */}
+                <GridPlane size={FLOOR_SIZE} gridSize={GRID} />
+
+                {/* Floor label */}
+                {currentFloor && (
+                  <a-text
+                    value={`Zone: ${currentFloor.name}`}
+                    position={`${-FLOOR_SIZE / 2 + 1} 0.05 ${-FLOOR_SIZE / 2 + 1}`}
+                    rotation="-90 0 0"
+                    color="#333"
+                    scale="0.6 0.6 0.6"
+                    align="left"
+                  />
+                )}
+
+                {/* Racks */}
+                {racks.map(rack => {
+                  const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+                  return (
+                    <RackEntity
+                      key={rack.id}
+                      rack={rack}
+                      shelves={rackShelves[rack.id] ?? []}
+                      shelfBoxes={shelfBoxes}
+                      isSelected={selectedRack === rack.id}
+                      posX={pos.x}
+                      posZ={pos.z}
+                      rotY={pos.rotY}
+                    />
+                  );
+                })}
+
+                {/* Floor-level boxes */}
+                {floorBoxes.map((box, i) => (
+                  <FloorBox key={box.id} box={box} index={i} />
+                ))}
+              </>
+            ) : (
+              /* ── All-floors overview ──────────────────────────────── */
+              <>
+                {overviewData.map((fd, fi) => {
+                  const offsetX = fi * (FLOOR_SIZE + 8);
+                  return (
+                    <a-entity key={fd.floor.id} position={`${offsetX} 0 0`}>
+                      {/* Floor slab */}
+                      <a-plane
+                        position="0 0 0"
+                        rotation="-90 0 0"
+                        width={String(FLOOR_SIZE)}
+                        height={String(FLOOR_SIZE)}
+                        color={FLOOR_COLOUR}
+                        roughness="0.9"
+                      />
+                      {/* Floor grid */}
+                      <GridPlane size={FLOOR_SIZE} gridSize={GRID} />
+                      {/* Floor name label (horizontal, on the slab) */}
+                      <a-text
+                        value={fd.floor.name}
+                        position={`${-FLOOR_SIZE / 2 + 1} 0.08 ${-FLOOR_SIZE / 2 + 1}`}
+                        rotation="-90 0 0"
+                        color="#333"
+                        scale="0.7 0.7 0.7"
+                        align="left"
+                      />
+                      {/* Floor name label (vertical, floating above) */}
+                      <a-text
+                        value={`Floor ${fi + 1}: ${fd.floor.name}`}
+                        position={`0 4 ${-FLOOR_SIZE / 2 - 1}`}
+                        align="center"
+                        color="#AADDFF"
+                        scale="0.6 0.6 0.6"
+                        width="10"
+                      />
+                      {/* Racks on this floor */}
+                      {fd.racks.map(rack => {
+                        const pos = fd.rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+                        return (
+                          <RackEntity
+                            key={rack.id}
+                            rack={rack}
+                            shelves={[]}
+                            shelfBoxes={{}}
+                            isSelected={false}
+                            posX={pos.x}
+                            posZ={pos.z}
+                            rotY={pos.rotY}
+                          />
+                        );
+                      })}
+                    </a-entity>
+                  );
+                })}
+                {overviewLoading && (
+                  <a-text value="Loading all floors…" position="0 2 0" align="center" color="#FFFFFF" scale="0.5 0.5 0.5" />
+                )}
+              </>
+            )}
           </a-scene>
         )}
 
@@ -664,7 +840,8 @@ export default function WarehouseVisualizerPage() {
         )}
       </div>
 
-      {/* ── Rack panel ────────────────────────────────────────────────── */}
+      {/* ── Rack panel – only in single-floor mode ───────────────────── */}
+      {viewMode === 'single' && (
       <div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '120px' }}>
         <div className="flex gap-2 px-4 py-2">
           {racks.length === 0 && (
@@ -691,6 +868,36 @@ export default function WarehouseVisualizerPage() {
           })}
         </div>
       </div>
+      )}
+
+      {/* ── Overview floor list ───────────────────────────────────────── */}
+      {viewMode === 'overview' && (
+      <div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '80px' }}>
+        <div className="flex gap-2 px-4 py-2 items-center">
+          <span className="text-gray-400 text-xs font-semibold mr-2">Floors:</span>
+          {overviewLoading && <span className="text-gray-500 text-xs italic">Loading…</span>}
+          {overviewData.map((fd, fi) => (
+            <button
+              key={fd.floor.id}
+              onClick={() => {
+                // Switch to single-floor view for this floor
+                setViewMode('single');
+                setSelectedFloor(fd.floor.id);
+                setCamTarget({ x: 0, z: 0 });
+                setCamDist(12);
+                setCamEl(45);
+                setCamAz(30);
+              }}
+              className="flex items-center gap-1 px-3 py-1 rounded text-xs border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex-shrink-0"
+            >
+              <span className="text-blue-400 font-bold">{fi + 1}.</span>
+              <span>{fd.floor.name}</span>
+              <span className="text-gray-500">({fd.racks.length} rack{fd.racks.length !== 1 ? 's' : ''})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      )}
     </div>
   );
 }
