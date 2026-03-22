@@ -305,15 +305,22 @@ export default function WarehouseVisualizerPage() {
       });
   }, [selectedFloor]);
 
-  // ── Load boxes for each shelf ────────────────────────────────────────────
+  // ── Load boxes for each shelf (parallel with error handling) ───────────
   useEffect(() => {
     if (shelves.length === 0) return;
-    shelves.forEach(s => {
-      boxesApi.list({ shelfId: s.id })
-        .then(res => {
-          const list: IStorageBox[] = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-          setShelfBoxes(prev => ({ ...prev, [s.id]: list }));
-        });
+    Promise.all(
+      shelves.map(s =>
+        boxesApi.list({ shelfId: s.id })
+          .then(res => {
+            const list: IStorageBox[] = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+            return { shelfId: s.id, boxes: list };
+          })
+          .catch(() => ({ shelfId: s.id, boxes: [] as IStorageBox[] }))
+      )
+    ).then(results => {
+      const next: Record<string, IStorageBox[]> = {};
+      results.forEach(r => { next[r.shelfId] = r.boxes; });
+      setShelfBoxes(next);
     });
   }, [shelves]);
 
@@ -365,12 +372,14 @@ export default function WarehouseVisualizerPage() {
   }, [selectedRack]);
 
   // ── A-Frame click → select rack ─────────────────────────────────────────
-  const sceneRef = useRef<HTMLElement>(null);
+  // A-Frame elements extend HTMLElement; use EventTarget for addEventListener
+  const sceneRef = useRef<HTMLElement & EventTarget>(null);
   useEffect(() => {
-    const scene = sceneRef.current as any;
+    const scene = sceneRef.current;
     if (!scene) return;
-    function handler(e: CustomEvent) {
-      const el = e.detail?.intersection?.object?.el as HTMLElement | undefined;
+    function handler(e: Event) {
+      const ce = e as CustomEvent;
+      const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
       if (!el) { setSelectedRack(null); return; }
       // Walk up to find data-rack-id
       let node: HTMLElement | null = el;
@@ -407,10 +416,6 @@ export default function WarehouseVisualizerPage() {
       return next;
     });
   }, [selectedRack]);
-
-  // ── Derive floor-level box stack positions ───────────────────────────────
-  // (real floor items would come from inventoryApi filtered to floorId, no shelfId)
-  const floorBoxStack: { id: string; label: string; posX: number; posZ: number; stack: number }[] = [];
 
   // ── Floor size ────────────────────────────────────────────────────────────
   const FLOOR_SIZE = 20;
