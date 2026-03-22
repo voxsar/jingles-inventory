@@ -12,6 +12,20 @@ const defaultNewForm = { skuId: '', variantId: '', floorId: '', shelfId: '', box
 const defaultEditForm = { floorId: '', shelfId: '', boxId: '', quantity: '1', batchId: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
+const QTY_SHORTCUTS = [
+  { label: '-10', delta: -10, cls: 'bg-red-600 hover:bg-red-700' },
+  { label: '-1',  delta:  -1, cls: 'bg-red-400 hover:bg-red-500' },
+  { label: '+1',  delta:   1, cls: 'bg-green-500 hover:bg-green-600' },
+  { label: '+10', delta:  10, cls: 'bg-green-600 hover:bg-green-700' },
+  { label: '+20', delta:  20, cls: 'bg-blue-500 hover:bg-blue-600' },
+  { label: '+100', delta: 100, cls: 'bg-blue-600 hover:bg-blue-700' },
+  { label: '+500', delta: 500, cls: 'bg-indigo-600 hover:bg-indigo-700' },
+] as const;
+
+function applyQtyDelta(current: string, delta: number): string {
+  return String(Math.max(1, (parseInt(current) || 0) + delta));
+}
+
 export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -380,6 +394,11 @@ export default function InventoryPage() {
                   <div className="form-group">
                     <label className="form-label">Quantity *</label>
                     <input className="input-field" type="number" min="1" required value={newForm.quantity} onChange={(e) => setNewForm(f => ({ ...f, quantity: e.target.value }))} />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
+                        <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setNewForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                      ))}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label">State</label>
@@ -501,6 +520,11 @@ export default function InventoryPage() {
               <div className="form-group">
                 <label className="form-label">Quantity</label>
                 <input className="input-field" type="number" min="1" value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
+                    <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setEditForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                  ))}
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Batch ID</label>
