@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 async function createAdmin() {
 	try {
-		const email = 'admin@theredsun.org';
-		const password = 'admin@theredsun.org';
+		const email = 'admin@avrinalanka.com';
+		const password = 'admin@avrinalanka.com';
 
 		const existing = await prisma.user.findUnique({ where: { email } });
 
