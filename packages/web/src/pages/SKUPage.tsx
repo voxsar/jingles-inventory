@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi } from '../api/client';
-import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 
 const PAGE_SIZE = 20;
@@ -60,6 +59,12 @@ export default function SKUPage() {
   const [variantsLoading, setVariantsLoading] = useState(false);
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>({});
 
+  // Product list expand/collapse state
+  const [expandedSkuIds, setExpandedSkuIds] = useState<Set<string>>(new Set());
+  const [variantsBySkuId, setVariantsBySkuId] = useState<Record<string, any[]>>({});
+  const [variantsLoadingIds, setVariantsLoadingIds] = useState<Set<string>>(new Set());
+  const fetchingSkuIds = useRef<Set<string>>(new Set());
+
   const load = async () => {
     setIsLoading(true);
     try {
@@ -89,6 +94,32 @@ export default function SKUPage() {
   };
 
   useEffect(() => { load(); }, [page, pageSize, debouncedSearch, categoryFilter, vendorFilter]);
+
+  const toggleSkuExpand = async (skuId: string, variantCount: number) => {
+    if (variantCount === 0) return;
+    setExpandedSkuIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(skuId)) {
+        next.delete(skuId);
+      } else {
+        next.add(skuId);
+      }
+      return next;
+    });
+    if (!variantsBySkuId[skuId] && !fetchingSkuIds.current.has(skuId)) {
+      fetchingSkuIds.current.add(skuId);
+      setVariantsLoadingIds((prev) => new Set(prev).add(skuId));
+      try {
+        const res = await variantsApi.list(skuId);
+        setVariantsBySkuId((prev) => ({ ...prev, [skuId]: res.data?.data ?? [] }));
+      } catch {
+        setVariantsBySkuId((prev) => ({ ...prev, [skuId]: [] }));
+      } finally {
+        fetchingSkuIds.current.delete(skuId);
+        setVariantsLoadingIds((prev) => { const next = new Set(prev); next.delete(skuId); return next; });
+      }
+    }
+  };
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -301,26 +332,7 @@ export default function SKUPage() {
 
   const getTagName = (id: string) => allTags.find((t: any) => t.id === id)?.name ?? id;
 
-  const columns = [
-    { key: 'skuCode', header: 'SKU Code', sortable: true, render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.skuCode}</span> },
-    { key: 'name', header: 'Product Name', sortable: true },
-    { key: 'category', header: 'Category', render: (r: any) => r.category?.name ?? <s-text>—</s-text> },
-    { key: 'vendor', header: 'Vendor', render: (r: any) => r.vendor?.name },
-    { key: 'unitOfMeasure', header: 'UoM' },
-    {
-      key: 'tags', header: 'Tags',
-      render: (r: any) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-          {r.tags?.slice(0, 3).map((t: any) => <s-badge key={t.id} tone="info">{t.tag?.name ?? t.name}</s-badge>)}
-          {r.tags?.length > 3 && <s-badge>+{r.tags.length - 3}</s-badge>}
-        </div>
-      ),
-    },
-    { key: 'lowStockThreshold', header: 'Low Stock', render: (r: any) => r.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{r.lowStockThreshold}</span> : <s-text>—</s-text> },
-    { key: 'isFragile', header: 'Fragile', render: (r: any) => r.isFragile ? <s-badge tone="warning">⚠️ Fragile</s-badge> : <s-text>No</s-text> },
-    { key: 'isActive', header: 'Status', render: (r: any) => r.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge> },
-    { key: 'actions', header: '', render: (r: any) => <s-button  onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}>Edit</s-button> },
-  ];
+  const skuTableHeaders = ['', 'SKU Code', 'Product Name', 'Category', 'Vendor', 'UoM', 'Tags', 'Low Stock', 'Fragile', 'Status', ''];
 
   return (
     <div className="flex flex-col gap-4">
@@ -366,7 +378,110 @@ export default function SKUPage() {
             </button>
           )}
         </div>
-        <DataTable columns={columns} data={skus} isLoading={isLoading} emptyMessage="No products found." emptyIcon="🏷️" onRowClick={openEdit} />
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <thead>
+              <tr style={{ background: '#f6f6f7' }}>
+                {skuTableHeaders.map((h, i) => (
+                  <th key={i} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '12px', color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    {skuTableHeaders.map((_, j) => (
+                      <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid #e1e3e5' }}>
+                        <div style={{ height: '16px', background: '#e1e3e5', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : skus.length === 0 ? (
+                <tr>
+                  <td colSpan={skuTableHeaders.length} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏷️</div>
+                    <span>No products found.</span>
+                  </td>
+                </tr>
+              ) : (
+                skus.map((sku: any, idx: number) => {
+                  const variantCount = sku._count?.variants ?? 0;
+                  const isExpanded = expandedSkuIds.has(sku.id);
+                  const isLoadingVariants = variantsLoadingIds.has(sku.id);
+                  const variants = variantsBySkuId[sku.id] ?? [];
+                  return (
+                    <Fragment key={sku.id}>
+                      <tr
+                        onClick={() => openEdit(sku)}
+                        style={{ cursor: 'pointer', background: idx % 2 === 1 ? '#fafbfb' : 'white', borderBottom: isExpanded ? 'none' : '1px solid #e1e3e5' }}
+                      >
+                        <td style={{ padding: '12px 8px 12px 16px', width: '32px' }}>
+                          {variantCount > 0 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleSkuExpand(sku.id, variantCount); }}
+                              style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#374151', padding: 0 }}
+                              title={isExpanded ? 'Collapse variants' : `Expand ${variantCount} variant${variantCount !== 1 ? 's' : ''}`}
+                            >
+                              {isExpanded ? '−' : '+'}
+                            </button>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{sku.skuCode}</span></td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                          <span>{sku.name}</span>
+                          {variantCount > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#6d7175', background: '#f3f4f6', borderRadius: '10px', padding: '1px 6px' }}>{variantCount} variant{variantCount !== 1 ? 's' : ''}</span>}
+                        </td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.category?.name ?? '—'}</td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.vendor?.name}</td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.unitOfMeasure}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {sku.tags?.slice(0, 3).map((t: any) => <s-badge key={t.id} tone="info">{t.tag?.name ?? t.name}</s-badge>)}
+                            {sku.tags?.length > 3 && <s-badge>+{sku.tags.length - 3}</s-badge>}
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <s-badge tone="warning">⚠️ Fragile</s-badge> : <s-text>No</s-text>}</td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge>}</td>
+                        <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><s-button onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</s-button></td>
+                      </tr>
+                      {isExpanded && (
+                        isLoadingVariants ? (
+                          <tr key={`${sku.id}-loading`} style={{ background: idx % 2 === 1 ? '#fafbfb' : 'white', borderBottom: '1px solid #e1e3e5' }}>
+                            <td colSpan={skuTableHeaders.length} style={{ padding: '8px 16px 8px 48px', color: '#6d7175', fontSize: '13px' }}>Loading variants…</td>
+                          </tr>
+                        ) : variants.map((variant: any, vi: number) => (
+                          <tr key={variant.id} style={{ background: idx % 2 === 1 ? '#f3f4f6' : '#f9fafb', borderBottom: vi === variants.length - 1 ? '1px solid #e1e3e5' : '1px solid #f3f4f6' }}>
+                            <td style={{ padding: '8px 8px 8px 16px' }} />
+                            <td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', color: '#6d7175', borderLeft: '2px solid #d1d5db' }}>
+                                <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{variant.variantCode}</span>
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 16px', whiteSpace: 'nowrap', color: '#374151' }}>
+                              <span style={{ paddingLeft: '4px' }}>{variant.name || variant.attributeValues?.map((av: any) => av.attributeValue?.value).join(' / ')}</span>
+                            </td>
+                            <td colSpan={6} style={{ padding: '8px 16px', color: '#6d7175', fontSize: '12px' }}>
+                              {variant.attributeValues?.map((av: any) => (
+                                <span key={av.attributeId} style={{ marginRight: '8px' }}>
+                                  <span style={{ fontWeight: 500 }}>{av.attribute?.name}:</span> {av.attributeValue?.value}
+                                </span>
+                              ))}
+                            </td>
+                            <td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>{variant.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge>}</td>
+                            <td />
+                          </tr>
+                        ))
+                      )}
+                    </Fragment>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
         <Pagination page={page} totalPages={totalPages} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
       </div>
 
