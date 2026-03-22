@@ -143,12 +143,26 @@ export interface IFloor {
   isActive: boolean;
   createdAt: Date;
   branch?: IBranch | null;
+  racks?: IRack[];
+  shelves?: IShelf[];
+}
+
+export interface IRack {
+  id: string;
+  floorId: string;
+  name: string;
+  code: string;
+  notes?: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  floor?: IFloor | null;
   shelves?: IShelf[];
 }
 
 export interface IShelf {
   id: string;
   floorId: string;
+  rackId?: string | null;
   name: string;
   code: string;
   height: number;
@@ -160,6 +174,7 @@ export interface IShelf {
   isActive: boolean;
   createdAt: Date;
   floor?: IFloor;
+  rack?: IRack | null;
   boxes?: IStorageBox[];
 }
 
