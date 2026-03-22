@@ -8,7 +8,14 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', async (_req, res: Response): Promise<void> => {
-  const locations = await prisma.location.findMany({ where: { isActive: true } });
+  const locations = await prisma.location.findMany({
+    where: { isActive: true },
+    include: {
+      branch: { select: { id: true, name: true, code: true } },
+      _count: { select: { inventoryRecords: true, areas: true } },
+    },
+    orderBy: [{ branch: { name: 'asc' } }, { floor: 'asc' }, { section: 'asc' }],
+  });
   res.json(locations);
 });
 
@@ -21,7 +28,14 @@ router.get(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const location = await prisma.location.findUnique({ where: { id: req.params!.id } });
+    const location = await prisma.location.findUnique({
+      where: { id: req.params!.id },
+      include: {
+        branch: { select: { id: true, name: true, code: true } },
+        areas: { where: { isActive: true }, include: { _count: { select: { shelves: true, boxes: true } } } },
+        _count: { select: { inventoryRecords: true, areas: true } },
+      },
+    });
     if (!location) {
       res.status(404).json({ error: 'Location not found' });
       return;

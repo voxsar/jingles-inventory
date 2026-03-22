@@ -436,3 +436,19 @@ model SyncQueue {
 
   @@map("sync_queue")
 }
+
+model StatusOption {
+  id         String   @id @default(uuid())
+  entityType String   @map("entity_type")
+  value      String
+  label      String
+  color      String?
+  sortOrder  Int      @default(0) @map("sort_order")
+  isDefault  Boolean  @default(false) @map("is_default")
+  isSystem   Boolean  @default(false) @map("is_system")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([entityType, value])
+  @@map("status_options")
+}

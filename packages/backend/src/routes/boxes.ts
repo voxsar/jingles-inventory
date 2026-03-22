@@ -54,8 +54,8 @@ router.post(
     body('height').isFloat({ gt: 0 }),
     body('width').isFloat({ gt: 0 }),
     body('length').isFloat({ gt: 0 }),
-    body('areaId').optional().isUUID(),
-    body('shelfId').optional().isUUID(),
+    body('areaId').optional({ nullable: true }).if(body('areaId').notEmpty()).isUUID(),
+    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -80,8 +80,8 @@ router.put(
     body('name').optional().notEmpty(),
     body('code').optional().notEmpty(),
     body('isActive').optional().isBoolean(),
-    body('areaId').optional().isUUID(),
-    body('shelfId').optional().isUUID(),
+    body('areaId').optional({ nullable: true }).if(body('areaId').notEmpty()).isUUID(),
+    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),
