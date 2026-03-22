@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, skusApi, floorsApi } from '../api/client';
+import { grnsApi, vendorsApi, skusApi, floorsApi, variantsApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -34,6 +34,7 @@ export default function GRNPage() {
   const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', floorId: '' });
   const [locations, setLocations] = useState<any[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
@@ -45,7 +46,7 @@ export default function GRNPage() {
     expectedDeliveryDate: getTodayString(),
     notes: '',
     floorId: '',
-    lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }],
+    lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }],
   });
 
   const loadData = async () => {
@@ -96,16 +97,29 @@ export default function GRNPage() {
     try {
       await grnsApi.create({ ...form, floorId: form.floorId || undefined });
       setShowForm(false);
-      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', floorId: '', lines: [{ skuId: '', expectedQuantity: 1, batchReference: '' }] });
+      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', floorId: '', lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] });
+      setLineVariants({});
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create GRN');
     }
   };
 
-  const addLine = () => setForm((f) => ({ ...f, lines: [...f.lines, { skuId: '', expectedQuantity: 1, batchReference: '' }] }));
-  const removeLine = (i: number) => setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
-  const updateLine = (i: number, field: string, value: any) => setForm((f) => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
+  const addLine = () => setForm((f) => ({ ...f, lines: [...f.lines, { skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] }));
+  const removeLine = (i: number) => { setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) })); setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; }); };
+  const updateLine = (i: number, field: string, value: any) => {
+    setForm((f) => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
+    if (field === 'skuId' && value) {
+      variantsApi.list(value).then(res => {
+        const variants = res.data?.data ?? [];
+        setLineVariants(prev => ({ ...prev, [i]: variants }));
+        // Reset variantId for this line
+        setForm(f => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, variantId: '' } : l) }));
+      }).catch(() => setLineVariants(prev => ({ ...prev, [i]: [] })));
+    } else if (field === 'skuId' && !value) {
+      setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; });
+    }
+  };
 
   const openEdit = (grn: any) => {
     setEditingGrn(grn);
@@ -284,34 +298,48 @@ export default function GRNPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {form.lines.map((line, i) => (
-                      <div key={i} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <select
-                          className="input-field flex-1"
-                          value={line.skuId}
-                          onChange={(e) => updateLine(i, 'skuId', e.target.value)}
-                        >
-                          <option value="">Select product</option>
-                          {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
-                        </select>
-                        <input
-                          type="number"
-                          className="input-field"
-                          style={{ width: '80px' }}
-                          value={line.expectedQuantity}
-                          placeholder="Qty"
-                          min="1"
-                          onChange={(e) => updateLine(i, 'expectedQuantity', parseInt(e.target.value))}
-                        />
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ width: '140px' }}
-                          value={line.batchReference}
-                          placeholder="Batch ref"
-                          onChange={(e) => updateLine(i, 'batchReference', e.target.value)}
-                        />
-                        {form.lines.length > 1 && (
-                          <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(i)}>✕</button>
+                      <div key={i} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex gap-2 items-center">
+                          <select
+                            className="input-field flex-1"
+                            value={line.skuId}
+                            onChange={(e) => updateLine(i, 'skuId', e.target.value)}
+                          >
+                            <option value="">Select product</option>
+                            {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
+                          </select>
+                          <input
+                            type="number"
+                            className="input-field"
+                            style={{ width: '80px' }}
+                            value={line.expectedQuantity}
+                            placeholder="Qty"
+                            min="1"
+                            onChange={(e) => updateLine(i, 'expectedQuantity', parseInt(e.target.value))}
+                          />
+                          <input
+                            type="text"
+                            className="input-field"
+                            style={{ width: '140px' }}
+                            value={line.batchReference}
+                            placeholder="Batch ref"
+                            onChange={(e) => updateLine(i, 'batchReference', e.target.value)}
+                          />
+                          {form.lines.length > 1 && (
+                            <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(i)}>✕</button>
+                          )}
+                        </div>
+                        {line.skuId && (lineVariants[i] ?? []).length > 0 && (
+                          <select
+                            className="input-field"
+                            value={line.variantId}
+                            onChange={(e) => updateLine(i, 'variantId', e.target.value)}
+                          >
+                            <option value="">— No Variant (base SKU) —</option>
+                            {(lineVariants[i] ?? []).map((v: any) => (
+                              <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     ))}

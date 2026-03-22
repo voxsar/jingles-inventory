@@ -16,8 +16,10 @@ const ENTITY_TYPES = [
 
 const defaultUnitForm = { name: '', abbreviation: '', type: 'Count', baseUnit: '', conversionFactor: '' };
 const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color: '#6366f1', sortOrder: '0', isDefault: false };
+const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
+const defaultAttrValueForm = { value: '', sortOrder: '0' };
 
-type Section = 'home' | 'units' | 'statuses';
+type Section = 'home' | 'units' | 'statuses' | 'attributes';
 
 export default function SettingsPage() {
   const [section, setSection] = useState<Section>('home');
@@ -36,6 +38,16 @@ export default function SettingsPage() {
   const [showStatusForm, setShowStatusForm] = useState(false);
   const [editingStatus, setEditingStatus] = useState<any>(null);
   const [statusForm, setStatusForm] = useState(defaultStatusForm);
+
+  // Attributes state
+  const [attributes, setAttributes] = useState<any[]>([]);
+  const [attrsLoading, setAttrsLoading] = useState(false);
+  const [showAttrForm, setShowAttrForm] = useState(false);
+  const [editingAttr, setEditingAttr] = useState<any>(null);
+  const [attrForm, setAttrForm] = useState(defaultAttrForm);
+  const [expandedAttr, setExpandedAttr] = useState<string | null>(null);
+  const [showValueForm, setShowValueForm] = useState<string | null>(null);
+  const [attrValueForm, setAttrValueForm] = useState(defaultAttrValueForm);
 
   // ── Units ─────────────────────────────────────────────────
 
@@ -170,11 +182,74 @@ export default function SettingsPage() {
     }
   };
 
+  // ── Attributes ────────────────────────────────────────────
+
+  const loadAttributes = async () => {
+    setAttrsLoading(true);
+    try {
+      const res = await attributesApi.list();
+      setAttributes(res.data.data ?? []);
+    } catch { /* ignore */ }
+    finally { setAttrsLoading(false); }
+  };
+
+  const handleAttrSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = { ...attrForm, sortOrder: parseInt(attrForm.sortOrder) || 0 };
+    try {
+      if (editingAttr) {
+        await attributesApi.update(editingAttr.id, payload);
+      } else {
+        await attributesApi.create(payload);
+      }
+      setShowAttrForm(false);
+      setEditingAttr(null);
+      setAttrForm(defaultAttrForm);
+      await loadAttributes();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to save attribute');
+    }
+  };
+
+  const handleDeleteAttr = async (attr: any) => {
+    if (!confirm(`Delete attribute "${attr.name}"? This will fail if assigned to products.`)) return;
+    try {
+      await attributesApi.delete(attr.id);
+      await loadAttributes();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to delete attribute');
+    }
+  };
+
+  const handleAddValue = async (e: React.FormEvent, attributeId: string) => {
+    e.preventDefault();
+    const payload = { ...attrValueForm, sortOrder: parseInt(attrValueForm.sortOrder) || 0 };
+    try {
+      await attributesApi.addValue(attributeId, payload);
+      setShowValueForm(null);
+      setAttrValueForm(defaultAttrValueForm);
+      await loadAttributes();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to add value');
+    }
+  };
+
+  const handleDeleteValue = async (attributeId: string, valueId: string, value: string) => {
+    if (!confirm(`Delete value "${value}"?`)) return;
+    try {
+      await attributesApi.deleteValue(attributeId, valueId);
+      await loadAttributes();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to delete value');
+    }
+  };
+
   // ── Effects ───────────────────────────────────────────────
 
   useEffect(() => {
     if (section === 'units') loadUnits();
     if (section === 'statuses') loadStatuses(statusEntityType);
+    if (section === 'attributes') loadAttributes();
   }, [section]);
 
   useEffect(() => {
@@ -182,6 +257,117 @@ export default function SettingsPage() {
   }, [statusEntityType]);
 
   // ── Render ────────────────────────────────────────────────
+
+  if (section === 'attributes') {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="page-header">
+          <div className="page-header-left">
+            <h1 className="page-title">🧩 Product Attributes</h1>
+            <p className="page-subtitle">Define global attributes and allowed values used to generate SKU variants</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
+            <button className="btn-primary" onClick={() => { setEditingAttr(null); setAttrForm(defaultAttrForm); setShowAttrForm(true); }}>+ Add Attribute</button>
+          </div>
+        </div>
+
+        {showAttrForm && (
+          <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowAttrForm(false)}>
+            <div className="modal-panel-md">
+              <div className="modal-header">
+                <h2 className="modal-title">{editingAttr ? '✏️ Edit Attribute' : '➕ New Attribute'}</h2>
+                <button className="modal-close" onClick={() => setShowAttrForm(false)}>✕</button>
+              </div>
+              <form onSubmit={handleAttrSubmit}>
+                <div className="modal-body form-stack">
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label className="form-label">Name *</label>
+                      <input className="input-field" type="text" required placeholder="e.g. Size, Color, Flavor" value={attrForm.name} onChange={(e) => setAttrForm(f => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Type *</label>
+                      <select className="input-field" value={attrForm.type} onChange={(e) => setAttrForm(f => ({ ...f, type: e.target.value }))}>
+                        {ATTRIBUTE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Sort Order</label>
+                    <input className="input-field" type="number" min="0" value={attrForm.sortOrder} onChange={(e) => setAttrForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn-secondary" onClick={() => setShowAttrForm(false)}>Cancel</button>
+                  <button type="submit" className="btn-primary">💾 Save Attribute</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="content-section">
+          {attrsLoading ? (
+            <div className="px-6 py-8 text-center text-gray-500">Loading…</div>
+          ) : attributes.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <div className="text-4xl mb-3">🧩</div>
+              <p className="text-gray-500">No attributes yet. Create your first attribute to start generating variants.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {attributes.map((attr: any) => (
+                <div key={attr.id}>
+                  <div className="flex items-center justify-between px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="text-gray-400 hover:text-gray-600 text-lg w-6 text-center"
+                        onClick={() => setExpandedAttr(expandedAttr === attr.id ? null : attr.id)}
+                      >
+                        {expandedAttr === attr.id ? '▼' : '▶'}
+                      </button>
+                      <div>
+                        <span className="font-semibold text-gray-800">{attr.name}</span>
+                        <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{attr.type}</span>
+                        <span className="ml-2 text-xs text-gray-400">{attr.values?.length ?? 0} values</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="btn-sm" onClick={() => { setEditingAttr(attr); setAttrForm({ name: attr.name, type: attr.type, sortOrder: String(attr.sortOrder ?? 0) }); setShowAttrForm(true); }}>Edit</button>
+                      <button className="btn-sm text-red-600" onClick={() => handleDeleteAttr(attr)}>Delete</button>
+                    </div>
+                  </div>
+                  {expandedAttr === attr.id && (
+                    <div className="bg-gray-50 px-12 pb-4">
+                      <div className="flex flex-col gap-2">
+                        {(attr.values ?? []).map((val: any) => (
+                          <div key={val.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                            <span className="text-sm text-gray-700">{val.value}</span>
+                            <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.value)}>Remove</button>
+                          </div>
+                        ))}
+                        {showValueForm === attr.id ? (
+                          <form onSubmit={(e) => handleAddValue(e, attr.id)} className="flex gap-2 mt-2">
+                            <input className="input-field flex-1" type="text" required placeholder="Value (e.g. Small, Red…)" value={attrValueForm.value} onChange={(e) => setAttrValueForm(f => ({ ...f, value: e.target.value }))} />
+                            <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={attrValueForm.sortOrder} onChange={(e) => setAttrValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                            <button type="submit" className="btn-primary text-sm">Add</button>
+                            <button type="button" className="btn-secondary text-sm" onClick={() => setShowValueForm(null)}>✕</button>
+                          </form>
+                        ) : (
+                          <button className="btn-sm self-start mt-2" onClick={() => { setShowValueForm(attr.id); setAttrValueForm(defaultAttrValueForm); }}>+ Add Value</button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (section === 'units') {
     return (
@@ -476,6 +662,26 @@ export default function SettingsPage() {
                   <span key={et.key} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{et.icon} {et.shortLabel}</span>
                 ))}
                 <span className="text-xs text-gray-400">+{ENTITY_TYPES.length - 4} more</span>
+              </div>
+              <span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
+            </div>
+          </div>
+        </button>
+
+        {/* Attributes card */}
+        <button
+          className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => setSection('attributes')}
+        >
+          <div className="flex items-start gap-4">
+            <div className="text-4xl">🧩</div>
+            <div>
+              <h2 className="font-semibold text-gray-800 text-lg">Product Attributes</h2>
+              <p className="text-sm text-gray-500 mt-1">Define global attributes (Size, Color, Flavor, etc.) and their allowed values for generating SKU variants</p>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {ATTRIBUTE_TYPES.map(t => (
+                  <span key={t} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{t}</span>
+                ))}
               </div>
               <span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
             </div>
