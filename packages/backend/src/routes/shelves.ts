@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', [query('floorId').optional().isUUID()], async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/', [query('floorId').optional().isUUID(), query('rackId').optional().isUUID()], async (req: AuthRequest, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -15,9 +15,10 @@ router.get('/', [query('floorId').optional().isUUID()], async (req: AuthRequest,
   }
   const where: Record<string, unknown> = { isActive: true };
   if (req.query?.floorId) where.floorId = req.query.floorId as string;
+  if (req.query?.rackId) where.rackId = req.query.rackId as string;
   const shelves = await prisma.shelf.findMany({
     where,
-    include: { floor: { include: { branch: { select: { id: true, name: true } } } }, boxes: { where: { isActive: true }, include: { barcodes: true } } },
+    include: { floor: { include: { branch: { select: { id: true, name: true } } } }, rack: true, boxes: { where: { isActive: true }, include: { barcodes: true } } },
     orderBy: { createdAt: 'asc' },
   });
   res.json(shelves);
@@ -48,6 +49,7 @@ router.post(
   requireRole('Admin', 'Manager'),
   [
     body('floorId').isUUID(),
+    body('rackId').optional({ nullable: true }).if(body('rackId').notEmpty()).isUUID(),
     body('name').notEmpty(),
     body('code').notEmpty(),
     body('height').isFloat({ gt: 0 }),
@@ -63,10 +65,11 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { floorId, name, code, height, width, length, hasFreezer, hasLock, notes } = req.body;
+    const { floorId, rackId, name, code, height, width, length, hasFreezer, hasLock, notes } = req.body;
     const shelf = await prisma.shelf.create({
       data: {
         floorId,
+        rackId: rackId ?? null,
         name,
         code,
         height,

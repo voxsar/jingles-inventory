@@ -84,9 +84,22 @@ export const grnsApi = {
 export const floorsApi = {
   list: (params?: Record<string, string>) =>
     api.get('/floors', { params }),
+  get: (id: string) => api.get(`/floors/${id}`),
   create: (data: any) => api.post('/floors', data),
   update: (id: string, data: any) => api.put(`/floors/${id}`, data),
   delete: (id: string) => api.delete(`/floors/${id}`),
+};
+
+// Racks
+export const racksApi = {
+  list: (params?: Record<string, string>) => api.get('/racks', { params }),
+  get: (id: string) => api.get(`/racks/${id}`),
+  create: (data: any) => api.post('/racks', data),
+  update: (id: string, data: any) => api.put(`/racks/${id}`, data),
+  delete: (id: string) => api.delete(`/racks/${id}`),
+  /** Save 3-D position/rotation to DB */
+  savePosition: (id: string, pos: { posX: number; posZ: number; rotY: number }) =>
+    api.put(`/racks/${id}`, pos),
 };
 
 // Shelves
@@ -106,6 +119,9 @@ export const boxesApi = {
   getBarcodes: (id: string) => api.get(`/boxes/${id}/barcodes`),
   addBarcode: (id: string, data: any) => api.post(`/boxes/${id}/barcodes`, data),
   deleteBarcode: (id: string, barcodeId: string) => api.delete(`/boxes/${id}/barcodes/${barcodeId}`),
+  /** Save 3-D position and stack order to DB */
+  savePosition: (id: string, pos: { posX?: number; posY?: number; posZ?: number; rotationAngle?: number; stackOrder?: number; parentBoxId?: string | null }) =>
+    api.put(`/boxes/${id}`, pos),
 };
 
 // Vendors / Suppliers
