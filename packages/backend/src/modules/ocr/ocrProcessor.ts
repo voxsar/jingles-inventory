@@ -45,8 +45,8 @@ export function parseInvoiceText(text: string): InvoiceFields {
 }
 
 export async function processInvoiceFile(filePath: string): Promise<InvoiceFields> {
-  // Stub: In production, integrate with a real OCR service like Tesseract or Google Vision.
-  // For text files, parse directly; for image/PDF files return a placeholder response.
+  // Only plain-text invoices are supported. For image/PDF files, integrate a real
+  // OCR service (e.g. Tesseract.js or Google Cloud Vision) before calling this function.
   const ext = path.extname(filePath).toLowerCase();
 
   if (ext === '.txt') {
@@ -54,12 +54,7 @@ export async function processInvoiceFile(filePath: string): Promise<InvoiceField
     return parseInvoiceText(text);
   }
 
-  return {
-    invoiceNumber: undefined,
-    supplierName: undefined,
-    invoiceDate: undefined,
-    totalAmount: undefined,
-    lineItems: [],
-    rawText: `[OCR processing required for ${ext} files - integrate with Tesseract.js or cloud OCR service]`,
-  };
+  throw new Error(
+    `Unsupported file type "${ext}". Only .txt invoices can be parsed without an external OCR service.`
+  );
 }
