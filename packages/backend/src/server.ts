@@ -33,19 +33,19 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-    credentials: true,
-  })
+	cors({
+		origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+		credentials: true,
+	})
 );
 app.use(express.json());
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
+	windowMs: 15 * 60 * 1000,
+	max: 1000,
+	standardHeaders: true,
+	legacyHeaders: false,
+	validate: { xForwardedForHeader: false },
 });
 app.use(limiter);
 
@@ -78,9 +78,9 @@ app.use(errorHandler);
 
 const PORT = Number(process.env.PORT ?? 3001);
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-  });
+	app.listen(PORT, () => {
+		logger.info(`Server running on port ${PORT}`);
+	});
 }
 
 export default app;

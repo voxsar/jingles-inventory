@@ -428,7 +428,7 @@ The seed script creates:
 - Vendor users are isolated to their vendor_id at the query level
 - Event ledger is append-only (no DELETE routes)
 - Audit logs capture all mutations with user, IP, and timestamp
-- Rate limiting: 200 requests per 15 minutes per IP
+- Rate limiting: 1000 requests per 15 minutes per IP
 
 ## License
 
