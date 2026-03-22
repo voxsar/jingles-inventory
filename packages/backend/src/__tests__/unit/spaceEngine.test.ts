@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 // Mock prisma/client since spaceEngine imports it (for DB-connected functions we won't test here)
 vi.mock('../../prisma/client', () => ({
   default: {
-    location: { findMany: vi.fn() },
+    floor: { findUnique: vi.fn() }, shelf: { findUnique: vi.fn() },
     sKU: { findUnique: vi.fn() },
   },
 }));

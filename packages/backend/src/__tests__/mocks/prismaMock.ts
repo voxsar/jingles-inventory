@@ -26,14 +26,7 @@ export const prismaMock = {
     update: vi.fn(),
     count: vi.fn(),
   },
-  location: {
-    findUnique: vi.fn(),
-    findMany: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    count: vi.fn(),
-  },
-  area: {
+  floor: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
@@ -67,6 +60,7 @@ export const prismaMock = {
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
     count: vi.fn(),
   },
   inventoryEvent: {

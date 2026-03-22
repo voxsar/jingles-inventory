@@ -18,61 +18,78 @@ function makeToken(role = 'Admin') {
 
 beforeEach(() => { resetPrismaMocks(); });
 
-// ── Areas ─────────────────────────────────────────────────────
-describe('GET /api/areas', () => {
+// ── Floors ─────────────────────────────────────────────────────
+describe('GET /api/floors', () => {
   it('returns 401 without token', async () => {
-    const res = await request(app).get('/api/areas');
+    const res = await request(app).get('/api/floors');
     expect(res.status).toBe(401);
   });
 
-  it('returns list of areas', async () => {
-    const areas = [
-      { id: 'area-001', locationId: 'loc-001', name: 'Zone A', code: 'ZA', isActive: true, createdAt: new Date(), location: null, shelves: [], boxes: [] },
+  it('returns list of floors', async () => {
+    const floors = [
+      { id: 'floor-001', branchId: 'branch-001', name: 'Ground Floor', code: 'GF', isActive: true, createdAt: new Date(), branch: null, _count: { inventoryRecords: 0, shelves: 0 } },
     ];
-    (prismaMock.area.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(areas);
+    (prismaMock.floor.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(floors);
 
     const res = await request(app)
-      .get('/api/areas')
+      .get('/api/floors')
       .set('Authorization', `Bearer ${makeToken()}`);
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
-
-  it('returns 400 for invalid locationId query param', async () => {
-    const res = await request(app)
-      .get('/api/areas?locationId=not-a-uuid')
-      .set('Authorization', `Bearer ${makeToken()}`);
-    expect(res.status).toBe(400);
-  });
 });
 
-describe('POST /api/areas', () => {
+describe('POST /api/floors', () => {
   it('returns 403 for Staff role', async () => {
     const res = await request(app)
-      .post('/api/areas')
+      .post('/api/floors')
       .set('Authorization', `Bearer ${makeToken('Staff')}`)
-      .send({ locationId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Area A', code: 'AA' });
+      .send({ branchId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Ground Floor', code: 'GF' });
     expect(res.status).toBe(403);
   });
 
   it('returns 400 for missing required fields', async () => {
     const res = await request(app)
-      .post('/api/areas')
+      .post('/api/floors')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ name: 'Area A' });
+      .send({ name: 'Ground Floor' });
     expect(res.status).toBe(400);
   });
 
-  it('creates an area as Admin', async () => {
-    const newArea = { id: 'area-002', locationId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Area B', code: 'AB', isActive: true, createdAt: new Date() };
-    (prismaMock.area.create as ReturnType<typeof vi.fn>).mockResolvedValue(newArea);
+  it('creates a floor as Admin', async () => {
+    const newFloor = { id: 'floor-002', branchId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Ground Floor', code: 'GF', isActive: true, createdAt: new Date(), branch: null };
+    (prismaMock.floor.create as ReturnType<typeof vi.fn>).mockResolvedValue(newFloor);
 
     const res = await request(app)
-      .post('/api/areas')
+      .post('/api/floors')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ locationId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Area B', code: 'AB' });
+      .send({ branchId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Ground Floor', code: 'GF' });
     expect(res.status).toBe(201);
-    expect(res.body.name).toBe('Area B');
+    expect(res.body.name).toBe('Ground Floor');
+  });
+});
+
+describe('DELETE /api/floors/:id', () => {
+  it('soft-deletes a floor', async () => {
+    const floor = { id: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', branchId: 'branch-001', name: 'Ground Floor', code: 'GF', isActive: true, createdAt: new Date() };
+    (prismaMock.floor.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(floor);
+    (prismaMock.inventoryRecord.updateMany as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 0 });
+    (prismaMock.floor.update as ReturnType<typeof vi.fn>).mockResolvedValue({ ...floor, isActive: false });
+
+    const res = await request(app)
+      .delete('/api/floors/aad8f10c-3b0a-4bce-b4c0-8e5400f20001')
+      .set('Authorization', `Bearer ${makeToken('Admin')}`);
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('returns 404 for non-existent floor', async () => {
+    (prismaMock.floor.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    const res = await request(app)
+      .delete('/api/floors/aad8f10c-3b0a-4bce-b4c0-8e5400f20001')
+      .set('Authorization', `Bearer ${makeToken('Admin')}`);
+    expect(res.status).toBe(404);
   });
 });
 
@@ -85,7 +102,7 @@ describe('GET /api/shelves', () => {
 
   it('returns list of shelves', async () => {
     const shelves = [
-      { id: 'shelf-001', areaId: 'area-001', name: 'Shelf 1', code: 'S1', height: 200, width: 100, length: 50, rotationAngle: 0, isActive: true, createdAt: new Date(), area: null, boxes: [] },
+      { id: 'shelf-001', floorId: 'floor-001', name: 'Shelf 1', code: 'S1', height: 200, width: 100, length: 50, hasFreezer: false, hasLock: false, notes: null, isActive: true, createdAt: new Date(), floor: null, boxes: [] },
     ];
     (prismaMock.shelf.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(shelves);
 
@@ -95,6 +112,13 @@ describe('GET /api/shelves', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
+
+  it('returns 400 for invalid floorId query param', async () => {
+    const res = await request(app)
+      .get('/api/shelves?floorId=not-a-uuid')
+      .set('Authorization', `Bearer ${makeToken()}`);
+    expect(res.status).toBe(400);
+  });
 });
 
 describe('POST /api/shelves', () => {
@@ -102,21 +126,29 @@ describe('POST /api/shelves', () => {
     const res = await request(app)
       .post('/api/shelves')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ areaId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1' });
+      .send({ floorId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1' });
     expect(res.status).toBe(400);
   });
 
-  it('creates a shelf with dimensions', async () => {
-    const newShelf = { id: 'shelf-001', areaId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1', height: 200, width: 80, length: 40, rotationAngle: 0, isActive: true, createdAt: new Date() };
+  it('creates a shelf with dimensions and special properties', async () => {
+    const newShelf = { id: 'shelf-001', floorId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1', height: 200, width: 80, length: 40, hasFreezer: true, hasLock: false, notes: null, isActive: true, createdAt: new Date() };
     (prismaMock.shelf.create as ReturnType<typeof vi.fn>).mockResolvedValue(newShelf);
 
     const res = await request(app)
       .post('/api/shelves')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ areaId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1', height: 200, width: 80, length: 40 });
+      .send({ floorId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'S1', code: 'S1', height: 200, width: 80, length: 40, hasFreezer: true });
     expect(res.status).toBe(201);
     expect(res.body.height).toBe(200);
-    expect(res.body.rotationAngle).toBe(0);
+    expect(res.body.hasFreezer).toBe(true);
+  });
+
+  it('returns 400 for missing floorId', async () => {
+    const res = await request(app)
+      .post('/api/shelves')
+      .set('Authorization', `Bearer ${makeToken('Admin')}`)
+      .send({ name: 'S1', code: 'S1', height: 200, width: 80, length: 40 });
+    expect(res.status).toBe(400);
   });
 });
 
@@ -129,7 +161,7 @@ describe('GET /api/boxes', () => {
 
   it('returns list of boxes', async () => {
     const boxes = [
-      { id: 'box-001', name: 'Box A', code: 'BA', height: 30, width: 20, length: 15, isActive: true, createdAt: new Date(), barcodes: [], area: null, shelf: null },
+      { id: 'box-001', shelfId: 'shelf-001', name: 'Box A', code: 'BA', height: 30, width: 20, length: 15, isActive: true, createdAt: new Date(), barcodes: [], shelf: null },
     ];
     (prismaMock.storageBox.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(boxes);
 
@@ -142,22 +174,30 @@ describe('GET /api/boxes', () => {
 });
 
 describe('POST /api/boxes', () => {
+  it('returns 400 for missing shelfId', async () => {
+    const res = await request(app)
+      .post('/api/boxes')
+      .set('Authorization', `Bearer ${makeToken('Admin')}`)
+      .send({ code: 'BA', height: 30, width: 20, length: 15, name: 'Box A' });
+    expect(res.status).toBe(400);
+  });
+
   it('returns 400 for missing name', async () => {
     const res = await request(app)
       .post('/api/boxes')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ code: 'BA', height: 30, width: 20, length: 15 });
+      .send({ shelfId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', code: 'BA', height: 30, width: 20, length: 15 });
     expect(res.status).toBe(400);
   });
 
-  it('creates a box', async () => {
-    const newBox = { id: 'box-002', name: 'Box B', code: 'BB', height: 30, width: 20, length: 15, isActive: true, createdAt: new Date(), barcodes: [] };
+  it('creates a box on a shelf', async () => {
+    const newBox = { id: 'box-002', shelfId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Box B', code: 'BB', height: 30, width: 20, length: 15, isActive: true, createdAt: new Date(), barcodes: [] };
     (prismaMock.storageBox.create as ReturnType<typeof vi.fn>).mockResolvedValue(newBox);
 
     const res = await request(app)
       .post('/api/boxes')
       .set('Authorization', `Bearer ${makeToken('Admin')}`)
-      .send({ name: 'Box B', code: 'BB', height: 30, width: 20, length: 15 });
+      .send({ shelfId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Box B', code: 'BB', height: 30, width: 20, length: 15 });
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('Box B');
   });

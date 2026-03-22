@@ -39,7 +39,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				take: pageSizeNum,
 				include: {
 					supplier: { select: { id: true, name: true } },
-					location: true,
+					floor: true,
 					creator: { select: { id: true, email: true } },
 					lines: { include: { sku: { select: { id: true, skuCode: true, name: true } } } },
 				},
@@ -104,7 +104,7 @@ router.get(
 				where: { id: req.params!.id },
 				include: {
 					supplier: true,
-					location: true,
+					floor: true,
 					creator: { select: { id: true, email: true } },
 					lines: {
 						include: {
@@ -149,12 +149,12 @@ router.put(
 				res.status(400).json({ success: false, error: 'Only Draft GRNs can be edited' });
 				return;
 			}
-			const { supplierId, invoiceReference, expectedDeliveryDate, notes, locationId } = req.body;
+			const { supplierId, invoiceReference, expectedDeliveryDate, notes, floorId } = req.body;
 			const updateData: any = {};
 			if (supplierId !== undefined) updateData.supplierId = supplierId;
 			if (invoiceReference !== undefined) updateData.invoiceReference = invoiceReference;
 			if (notes !== undefined) updateData.notes = notes;
-			if (locationId !== undefined) updateData.locationId = locationId || null;
+			if (floorId !== undefined) updateData.floorId = floorId || null;
 			if (expectedDeliveryDate) {
 				// Parse the date string safely; if no time component, treat as UTC midnight
 				const parsed = new Date(expectedDeliveryDate);

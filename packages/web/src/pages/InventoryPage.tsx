@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, locationsApi, skusApi } from '../api/client';
+import { inventoryApi, floorsApi, skusApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -8,8 +8,8 @@ import BarcodeInput from '../components/BarcodeInput';
 
 const PAGE_SIZE = 20;
 
-const defaultNewForm = { skuId: '', locationId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
-const defaultEditForm = { locationId: '', quantity: '1', batchId: '' };
+const defaultNewForm = { skuId: '', floorId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultEditForm = { floorId: '', quantity: '1', batchId: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
 export default function InventoryPage() {
@@ -41,7 +41,7 @@ export default function InventoryPage() {
     try {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
-      if (locationFilter) params.locationId = locationFilter;
+      if (locationFilter) params.floorId = locationFilter;
       if (debouncedSearch) params.search = debouncedSearch;
       const res = await inventoryApi.list(params);
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
@@ -57,7 +57,7 @@ export default function InventoryPage() {
 
   const fetchLocations = async () => {
     try {
-      const res = await locationsApi.list();
+      const res = await floorsApi.list();
       setLocations(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
     } catch { /* ignore */ }
   };
@@ -110,7 +110,7 @@ export default function InventoryPage() {
     try {
       await inventoryApi.create({
         skuId: newForm.skuId,
-        locationId: newForm.locationId || undefined,
+        floorId: newForm.floorId || undefined,
         quantity: qty,
         state: newForm.state,
         batchId: newForm.batchId || undefined,
@@ -127,7 +127,7 @@ export default function InventoryPage() {
 
   const openEdit = (record: any) => {
     setEditForm({
-      locationId: record.locationId ?? '',
+      floorId: record.floorId ?? '',
       quantity: String(record.quantity),
       batchId: record.batchId ?? '',
     });
@@ -141,7 +141,7 @@ export default function InventoryPage() {
     setIsSaving(true);
     try {
       await inventoryApi.update(editingRecord.id, {
-        locationId: editForm.locationId || null,
+        floorId: editForm.floorId || null,
         quantity: qty,
         batchId: editForm.batchId || null,
       });
@@ -154,9 +154,9 @@ export default function InventoryPage() {
     }
   };
 
-  const formatLocation = (location: any) => {
-    if (!location) return '—';
-    return [location.floor, location.section, location.shelf, location.zone].filter(Boolean).join(' › ');
+  const formatLocation = (floor: any) => {
+    if (!floor) return '—';
+    return `${floor.name} (${floor.code})`;
   };
 
   const columns = [
@@ -164,7 +164,7 @@ export default function InventoryPage() {
     { key: 'name', header: 'Product', render: (r: any) => <span>{r.sku?.name}</span> },
     { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
-    { key: 'location', header: 'Location', render: (r: any) => <s-text>{formatLocation(r.location)}</s-text> },
+    { key: 'floor', header: 'Floor', render: (r: any) => <s-text>{formatLocation(r.floor)}</s-text> },
     { key: 'batchId', header: 'Batch', render: (r: any) => r.batchId ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batchId}</span> : <s-text>—</s-text> },
     { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <s-text>{new Date(r.updatedAt).toLocaleDateString()}</s-text> },
     {
@@ -251,10 +251,10 @@ export default function InventoryPage() {
             value={locationFilter}
             onChange={(e) => { setLocationFilter(e.target.value); setPage(1); }}
           >
-            <option value="">All Locations</option>
+            <option value="">All Floors</option>
             {locations.map((loc: any) => (
               <option key={loc.id} value={loc.id}>
-                {[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}
+                {loc.name} ({loc.code})
               </option>
             ))}
           </select>
@@ -313,11 +313,11 @@ export default function InventoryPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Location</label>
-                  <select className="input-field" value={newForm.locationId} onChange={(e) => setNewForm(f => ({ ...f, locationId: e.target.value }))}>
-                    <option value="">— No Location —</option>
+                  <label className="form-label">Floor</label>
+                  <select className="input-field" value={newForm.floorId} onChange={(e) => setNewForm(f => ({ ...f, floorId: e.target.value }))}>
+                    <option value="">— No Floor —</option>
                     {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                      <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
                     ))}
                   </select>
                 </div>
@@ -348,11 +348,11 @@ export default function InventoryPage() {
             </div>
             <div className="modal-body form-stack">
               <div className="form-group">
-                <label className="form-label">Location</label>
-                <select className="input-field" value={editForm.locationId} onChange={(e) => setEditForm(f => ({ ...f, locationId: e.target.value }))}>
-                  <option value="">— No Location —</option>
+                <label className="form-label">Floor</label>
+                <select className="input-field" value={editForm.floorId} onChange={(e) => setEditForm(f => ({ ...f, floorId: e.target.value }))}>
+                  <option value="">— No Floor —</option>
                   {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>{[loc.floor, loc.section, loc.shelf, loc.zone].filter(Boolean).join(' › ')}</option>
+                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
                   ))}
                 </select>
               </div>

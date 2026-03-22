@@ -9,7 +9,7 @@ router.use(authenticate);
 
 router.get(
   '/',
-  [query('areaId').optional().isUUID(), query('shelfId').optional().isUUID()],
+  [query('shelfId').optional().isUUID()],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -17,11 +17,10 @@ router.get(
       return;
     }
     const where: Record<string, unknown> = { isActive: true };
-    if (req.query?.areaId) where.areaId = req.query.areaId as string;
     if (req.query?.shelfId) where.shelfId = req.query.shelfId as string;
     const boxes = await prisma.storageBox.findMany({
       where,
-      include: { barcodes: true, area: true, shelf: true },
+      include: { barcodes: true, shelf: true },
       orderBy: { createdAt: 'asc' },
     });
     res.json(boxes);
@@ -36,7 +35,7 @@ router.get('/:id', [param('id').isUUID()], async (req: AuthRequest, res: Respons
   }
   const box = await prisma.storageBox.findUnique({
     where: { id: req.params!.id },
-    include: { barcodes: true, area: true, shelf: true },
+    include: { barcodes: true, shelf: true },
   });
   if (!box) {
     res.status(404).json({ error: 'Box not found' });
@@ -49,13 +48,12 @@ router.post(
   '/',
   requireRole('Admin', 'Manager'),
   [
+    body('shelfId').isUUID(),
     body('name').notEmpty(),
     body('code').notEmpty(),
     body('height').isFloat({ gt: 0 }),
     body('width').isFloat({ gt: 0 }),
     body('length').isFloat({ gt: 0 }),
-    body('areaId').optional({ nullable: true }).if(body('areaId').notEmpty()).isUUID(),
-    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -63,9 +61,9 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, code, height, width, length, areaId, shelfId } = req.body;
+    const { shelfId, name, code, height, width, length } = req.body;
     const box = await prisma.storageBox.create({
-      data: { name, code, height, width, length, areaId: areaId ?? null, shelfId: shelfId ?? null },
+      data: { shelfId, name, code, height, width, length },
       include: { barcodes: true },
     });
     res.status(201).json(box);
@@ -80,8 +78,7 @@ router.put(
     body('name').optional().notEmpty(),
     body('code').optional().notEmpty(),
     body('isActive').optional().isBoolean(),
-    body('areaId').optional({ nullable: true }).if(body('areaId').notEmpty()).isUUID(),
-    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
+    body('shelfId').optional().isUUID(),
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),
@@ -92,10 +89,10 @@ router.put(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, code, height, width, length, areaId, shelfId, isActive } = req.body;
+    const { name, code, height, width, length, shelfId, isActive } = req.body;
     const box = await prisma.storageBox.update({
       where: { id: req.params!.id },
-      data: { name, code, height, width, length, areaId, shelfId, isActive },
+      data: { name, code, height, width, length, shelfId, isActive },
       include: { barcodes: true },
     });
     res.json(box);

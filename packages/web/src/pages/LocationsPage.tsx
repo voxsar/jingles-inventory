@@ -1,81 +1,60 @@
 import { useEffect, useState } from 'react';
-import { locationsApi, areasApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
+import { floorsApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import DataTable from '../components/DataTable';
 
-type View = 'locations' | 'areas' | 'shelves' | 'boxes';
+type View = 'floors' | 'shelves' | 'boxes';
 
-const defaultLocationForm = { floor: '', section: '', aisle: '', zone: '', capacityCubicCm: '', notes: '' };
-const defaultAreaForm = { name: '', code: '', description: '' };
-const defaultShelfForm = { name: '', code: '', height: '', width: '', length: '', rotationAngle: '0' };
+const defaultFloorForm = { branchId: '', name: '', code: '', notes: '' };
+const defaultShelfForm = { name: '', code: '', height: '', width: '', length: '', hasFreezer: false, hasLock: false, notes: '' };
 const defaultBoxForm = { name: '', code: '', height: '', width: '', length: '' };
 const defaultBarcodeForm = { barcode: '', barcodeType: 'EAN13', isDefault: false, label: '' };
 
-/** Format a location's label from its floor/section/aisle/zone fields */
-function formatZoneLabel(loc: any): string {
-  return [loc.floor, loc.section, loc.shelf ?? loc.aisle, loc.zone].filter(Boolean).join(' › ');
-}
-
 export default function LocationsPage() {
   // ── Data ─────────────────────────────────────────────────
-  const [locations, setLocations] = useState<any[]>([]);
-  const [areas, setAreas] = useState<any[]>([]);
+  const [floors, setFloors] = useState<any[]>([]);
   const [shelves, setShelves] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
-  const [locationInventory, setLocationInventory] = useState<any[]>([]);
+  const [floorInventory, setFloorInventory] = useState<any[]>([]);
 
   // ── Navigation ────────────────────────────────────────────
-  const [view, setView] = useState<View>('locations');
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
-  const [selectedArea, setSelectedArea] = useState<any>(null);
+  const [view, setView] = useState<View>('floors');
+  const [selectedFloor, setSelectedFloor] = useState<any>(null);
   const [selectedShelf, setSelectedShelf] = useState<any>(null);
   const [showInventoryPanel, setShowInventoryPanel] = useState(false);
-  const [inventoryPanelLocation, setInventoryPanelLocation] = useState<any>(null);
+  const [inventoryPanelFloor, setInventoryPanelFloor] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isInventoryLoading, setIsInventoryLoading] = useState(false);
 
   // ── Modal state ───────────────────────────────────────────
-  const [showLocationForm, setShowLocationForm] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<any>(null);
-  const [editLocationForm, setEditLocationForm] = useState(defaultLocationForm);
-  const [showAreaForm, setShowAreaForm] = useState(false);
+  const [showFloorForm, setShowFloorForm] = useState(false);
+  const [editingFloor, setEditingFloor] = useState<any>(null);
+  const [editFloorForm, setEditFloorForm] = useState(defaultFloorForm);
   const [showShelfForm, setShowShelfForm] = useState(false);
   const [showBoxForm, setShowBoxForm] = useState(false);
   const [showBarcodeForm, setShowBarcodeForm] = useState(false);
   const [selectedBox, setSelectedBox] = useState<any>(null);
 
-  const [locationForm, setLocationForm] = useState(defaultLocationForm);
-  const [areaForm, setAreaForm] = useState(defaultAreaForm);
+  const [floorForm, setFloorForm] = useState(defaultFloorForm);
   const [shelfForm, setShelfForm] = useState(defaultShelfForm);
   const [boxForm, setBoxForm] = useState(defaultBoxForm);
   const [barcodeForm, setBarcodeForm] = useState(defaultBarcodeForm);
 
   // ── Load functions ────────────────────────────────────────
-  const loadLocations = async () => {
+  const loadFloors = async () => {
     setIsLoading(true);
     try {
-      const res = await locationsApi.list();
+      const res = await floorsApi.list();
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setLocations(Array.isArray(data) ? data : []);
+      setFloors(Array.isArray(data) ? data : []);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadAreas = async (locationId: string) => {
+  const loadShelves = async (floorId: string) => {
     setIsLoading(true);
     try {
-      const res = await areasApi.list({ locationId });
-      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setAreas(Array.isArray(data) ? data : []);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadShelves = async (areaId: string) => {
-    setIsLoading(true);
-    try {
-      const res = await shelvesApi.list({ areaId });
+      const res = await shelvesApi.list({ floorId });
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
       setShelves(Array.isArray(data) ? data : []);
     } finally {
@@ -83,10 +62,10 @@ export default function LocationsPage() {
     }
   };
 
-  const loadBoxes = async (filter: Record<string, string>) => {
+  const loadBoxes = async (shelfId: string) => {
     setIsLoading(true);
     try {
-      const res = await boxesApi.list(filter);
+      const res = await boxesApi.list({ shelfId });
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
       setBoxes(Array.isArray(data) ? data : []);
     } finally {
@@ -94,139 +73,98 @@ export default function LocationsPage() {
     }
   };
 
-  const loadLocationInventory = async (locationId: string) => {
+  const loadFloorInventory = async (floorId: string) => {
     setIsInventoryLoading(true);
     try {
-      const res = await inventoryApi.list({ locationId, pageSize: '100' });
+      const res = await inventoryApi.list({ floorId, pageSize: '100' });
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setLocationInventory(Array.isArray(data) ? data : []);
+      setFloorInventory(Array.isArray(data) ? data : []);
     } finally {
       setIsInventoryLoading(false);
     }
   };
 
-  useEffect(() => { loadLocations(); }, []);
+  useEffect(() => { loadFloors(); }, []);
 
   // ── Navigation helpers ────────────────────────────────────
-  const drillToAreas = (loc: any) => {
-    setSelectedLocation(loc);
-    setView('areas');
-    loadAreas(loc.id);
-  };
-
-  const drillToShelves = (area: any) => {
-    setSelectedArea(area);
+  const drillToShelves = (floor: any) => {
+    setSelectedFloor(floor);
     setView('shelves');
-    loadShelves(area.id);
+    loadShelves(floor.id);
   };
 
   const drillToBoxes = (shelf: any) => {
     setSelectedShelf(shelf);
     setView('boxes');
-    loadBoxes({ shelfId: shelf.id });
+    loadBoxes(shelf.id);
   };
 
-  const drillToBoxesFromArea = (area: any) => {
-    setSelectedArea(area);
-    setSelectedShelf(null);
-    setView('boxes');
-    loadBoxes({ areaId: area.id });
-  };
-
-  const openInventoryPanel = (loc: any) => {
-    setInventoryPanelLocation(loc);
+  const openInventoryPanel = (floor: any) => {
+    setInventoryPanelFloor(floor);
     setShowInventoryPanel(true);
-    loadLocationInventory(loc.id);
+    loadFloorInventory(floor.id);
   };
 
   const goBack = () => {
-    if (view === 'areas') {
-      setView('locations');
-      setSelectedLocation(null);
-    } else if (view === 'shelves') {
-      setView('areas');
-      setSelectedShelf(null);
+    if (view === 'shelves') {
+      setView('floors');
+      setSelectedFloor(null);
     } else if (view === 'boxes') {
-      if (selectedShelf) {
-        setView('shelves');
-        setSelectedShelf(null);
-      } else {
-        setView('areas');
-        setSelectedArea(null);
-      }
+      setView('shelves');
+      setSelectedShelf(null);
     }
   };
 
   // ── Create / Edit / Delete handlers ──────────────────────
-  const handleCreateLocation = async (e: React.FormEvent) => {
+  const handleCreateFloor = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await locationsApi.create({
-        floor: locationForm.floor,
-        section: locationForm.section,
-        shelf: locationForm.aisle,  // "aisle" in UI maps to "shelf" field in DB
-        zone: locationForm.zone,
-        capacityCubicCm: locationForm.capacityCubicCm ? parseFloat(locationForm.capacityCubicCm) : null,
-        notes: locationForm.notes,
+      await floorsApi.create({
+        branchId: floorForm.branchId || undefined,
+        name: floorForm.name,
+        code: floorForm.code.toUpperCase(),
+        notes: floorForm.notes || undefined,
       });
-      setShowLocationForm(false);
-      setLocationForm(defaultLocationForm);
-      await loadLocations();
+      setShowFloorForm(false);
+      setFloorForm(defaultFloorForm);
+      await loadFloors();
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to create zone');
+      alert(err.response?.data?.error ?? 'Failed to create floor');
     }
   };
 
-  const openEditLocation = (loc: any) => {
-    setEditingLocation(loc);
-    setEditLocationForm({
-      floor: loc.floor ?? '',
-      section: loc.section ?? '',
-      aisle: loc.shelf ?? '',  // DB field is "shelf", UI shows as "Aisle"
-      zone: loc.zone ?? '',
-      capacityCubicCm: loc.capacityCubicCm != null ? String(loc.capacityCubicCm) : '',
-      notes: loc.notes ?? '',
+  const openEditFloor = (floor: any) => {
+    setEditingFloor(floor);
+    setEditFloorForm({
+      branchId: floor.branchId ?? '',
+      name: floor.name ?? '',
+      code: floor.code ?? '',
+      notes: floor.notes ?? '',
     });
   };
 
-  const handleSaveEditLocation = async () => {
-    if (!editingLocation) return;
+  const handleSaveEditFloor = async () => {
+    if (!editingFloor) return;
     try {
-      await locationsApi.update(editingLocation.id, {
-        floor: editLocationForm.floor,
-        section: editLocationForm.section,
-        shelf: editLocationForm.aisle,
-        zone: editLocationForm.zone,
-        capacityCubicCm: editLocationForm.capacityCubicCm ? parseFloat(editLocationForm.capacityCubicCm) : null,
-        notes: editLocationForm.notes,
+      await floorsApi.update(editingFloor.id, {
+        name: editFloorForm.name,
+        code: editFloorForm.code.toUpperCase(),
+        notes: editFloorForm.notes || undefined,
       });
-      setEditingLocation(null);
-      await loadLocations();
+      setEditingFloor(null);
+      await loadFloors();
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to update zone');
+      alert(err.response?.data?.error ?? 'Failed to update floor');
     }
   };
 
-  const handleDeleteLocation = async (loc: any) => {
-    const locLabel = formatZoneLabel(loc);
-    if (!confirm(`Delete storage zone "${locLabel}"? Inventory records here will have their zone cleared. History will be preserved.`)) return;
+  const handleDeleteFloor = async (floor: any) => {
+    if (!confirm(`Delete floor "${floor.name}"? Inventory records here will have their floor cleared. History will be preserved.`)) return;
     try {
-      await locationsApi.delete(loc.id);
-      await loadLocations();
+      await floorsApi.delete(floor.id);
+      await loadFloors();
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to delete zone');
-    }
-  };
-
-  const handleCreateArea = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await areasApi.create({ ...areaForm, locationId: selectedLocation.id });
-      setShowAreaForm(false);
-      setAreaForm(defaultAreaForm);
-      await loadAreas(selectedLocation.id);
-    } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to create area');
+      alert(err.response?.data?.error ?? 'Failed to delete floor');
     }
   };
 
@@ -234,16 +172,19 @@ export default function LocationsPage() {
     e.preventDefault();
     try {
       await shelvesApi.create({
-        ...shelfForm,
-        areaId: selectedArea.id,
+        floorId: selectedFloor.id,
+        name: shelfForm.name,
+        code: shelfForm.code.toUpperCase(),
         height: parseFloat(shelfForm.height),
         width: parseFloat(shelfForm.width),
         length: parseFloat(shelfForm.length),
-        rotationAngle: parseFloat(shelfForm.rotationAngle),
+        hasFreezer: shelfForm.hasFreezer,
+        hasLock: shelfForm.hasLock,
+        notes: shelfForm.notes || undefined,
       });
       setShowShelfForm(false);
       setShelfForm(defaultShelfForm);
-      await loadShelves(selectedArea.id);
+      await loadShelves(selectedFloor.id);
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create shelf');
     }
@@ -253,17 +194,16 @@ export default function LocationsPage() {
     e.preventDefault();
     try {
       await boxesApi.create({
-        ...boxForm,
+        shelfId: selectedShelf.id,
+        name: boxForm.name,
+        code: boxForm.code.toUpperCase(),
         height: parseFloat(boxForm.height),
         width: parseFloat(boxForm.width),
         length: parseFloat(boxForm.length),
-        shelfId: selectedShelf?.id ?? null,
-        areaId: selectedShelf ? null : selectedArea?.id ?? null,
       });
       setShowBoxForm(false);
       setBoxForm(defaultBoxForm);
-      if (selectedShelf) await loadBoxes({ shelfId: selectedShelf.id });
-      else if (selectedArea) await loadBoxes({ areaId: selectedArea.id });
+      await loadBoxes(selectedShelf.id);
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create box');
     }
@@ -275,8 +215,7 @@ export default function LocationsPage() {
       await boxesApi.addBarcode(selectedBox.id, barcodeForm);
       setShowBarcodeForm(false);
       setBarcodeForm(defaultBarcodeForm);
-      if (selectedShelf) await loadBoxes({ shelfId: selectedShelf.id });
-      else if (selectedArea) await loadBoxes({ areaId: selectedArea.id });
+      if (selectedShelf) await loadBoxes(selectedShelf.id);
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to add barcode');
     }
@@ -286,40 +225,36 @@ export default function LocationsPage() {
     if (!confirm('Remove this barcode?')) return;
     try {
       await boxesApi.deleteBarcode(boxId, barcodeId);
-      if (selectedShelf) await loadBoxes({ shelfId: selectedShelf.id });
-      else if (selectedArea) await loadBoxes({ areaId: selectedArea.id });
+      if (selectedShelf) await loadBoxes(selectedShelf.id);
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to delete barcode');
     }
   };
 
-  // ── Group locations by branch for tree view ───────────────
-  const groupedByBranch = locations.reduce<Record<string, { branch: any; zones: any[] }>>((acc, loc) => {
-    const branchKey = loc.branch?.id ?? '__none__';
-    const branchLabel = loc.branch?.name ?? 'No Branch';
-    if (!acc[branchKey]) acc[branchKey] = { branch: loc.branch ?? { name: branchLabel }, zones: [] };
-    acc[branchKey].zones.push(loc);
+  // ── Group floors by branch for overview ───────────────────
+  const groupedByBranch = floors.reduce<Record<string, { branch: any; floors: any[] }>>((acc, floor) => {
+    const branchKey = floor.branch?.id ?? '__none__';
+    const branchLabel = floor.branch?.name ?? 'No Branch';
+    if (!acc[branchKey]) acc[branchKey] = { branch: floor.branch ?? { name: branchLabel }, floors: [] };
+    acc[branchKey].floors.push(floor);
     return acc;
   }, {});
 
   // ── Columns ───────────────────────────────────────────────
-  const locationColumns = [
+  const floorColumns = [
     {
-      key: 'zone', header: 'Storage Zone', sortable: true,
+      key: 'name', header: 'Floor Name', sortable: true,
       render: (r: any) => (
         <div className="flex items-center gap-2">
-          <span className="text-lg">📁</span>
+          <span className="text-lg">🏢</span>
           <div>
-            <div className="font-medium">{formatZoneLabel(r)}</div>
+            <div className="font-medium">{r.name}</div>
             {r.branch && <div className="text-xs text-gray-400">🏪 {r.branch.name}</div>}
           </div>
         </div>
       ),
     },
-    { key: 'floor', header: 'Floor/Level', render: (r: any) => r.floor ?? '—' },
-    { key: 'section', header: 'Section', render: (r: any) => r.section ?? '—' },
-    { key: 'shelf', header: 'Aisle', render: (r: any) => r.shelf ?? '—' },
-    { key: 'zone', header: 'Zone Ref', render: (r: any) => r.zone ?? '—' },
+    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.code}</span>, sortable: true },
     {
       key: 'counts', header: 'Contents',
       render: (r: any) => (
@@ -327,57 +262,24 @@ export default function LocationsPage() {
           <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
             📦 {r._count?.inventoryRecords ?? 0} items
           </span>
-          <span className="bg-gray-50 text-gray-600 px-2 py-0.5 rounded-full">
-            🗂 {r._count?.areas ?? 0} areas
+          <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">
+            🗄 {r._count?.shelves ?? 0} shelves
           </span>
         </div>
       ),
     },
-    { key: 'capacityCubicCm', header: 'Capacity (cm³)', render: (r: any) => r.capacityCubicCm?.toLocaleString() ?? '—' },
+    { key: 'notes', header: 'Notes', render: (r: any) => r.notes ?? '—' },
     { key: 'isActive', header: 'Active', render: (r: any) => r.isActive ? '✅' : '❌' },
     {
       key: 'actions', header: '',
       render: (r: any) => (
         <div className="flex gap-1 flex-wrap">
-          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); drillToAreas(r); }}>Areas →</button>
-          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openInventoryPanel(r); }}>📦 Products</button>
-          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEditLocation(r); }}>Edit</button>
-          {r.isActive && (
-            <button className="btn-sm text-red-600" onClick={(e: any) => { e.stopPropagation(); handleDeleteLocation(r); }}>Delete</button>
-          )}
-        </div>
-      ),
-    },
-  ];
-
-  const areaColumns = [
-    {
-      key: 'name', header: 'Area Name', sortable: true,
-      render: (r: any) => (
-        <div className="flex items-center gap-2">
-          <span>📂</span>
-          <span className="font-medium">{r.name}</span>
-        </div>
-      ),
-    },
-    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code}</span>, sortable: true },
-    { key: 'description', header: 'Description', render: (r: any) => r.description ?? '—' },
-    {
-      key: 'counts', header: 'Contents',
-      render: (r: any) => (
-        <div className="flex gap-2 text-xs">
-          <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">🗄 {r.shelves?.length ?? 0} shelves</span>
-          <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full">📦 {r.boxes?.length ?? 0} boxes</span>
-        </div>
-      ),
-    },
-    { key: 'isActive', header: 'Active', render: (r: any) => r.isActive ? '✅' : '❌' },
-    {
-      key: 'actions', header: '',
-      render: (r: any) => (
-        <div className="flex gap-2">
           <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); drillToShelves(r); }}>Shelves →</button>
-          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); drillToBoxesFromArea(r); }}>Boxes →</button>
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openInventoryPanel(r); }}>📦 Products</button>
+          <button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEditFloor(r); }}>Edit</button>
+          {r.isActive && (
+            <button className="btn-sm text-red-600" onClick={(e: any) => { e.stopPropagation(); handleDeleteFloor(r); }}>Delete</button>
+          )}
         </div>
       ),
     },
@@ -390,14 +292,26 @@ export default function LocationsPage() {
         <div className="flex items-center gap-2">
           <span>🗄</span>
           <span className="font-medium">{r.name}</span>
+          <div className="flex gap-1">
+            {r.hasFreezer && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">❄️ Freezer</span>}
+            {r.hasLock && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">🔒 Locked</span>}
+          </div>
         </div>
       ),
     },
-    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code}</span>, sortable: true },
+    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.code}</span>, sortable: true },
     { key: 'height', header: 'H (cm)' },
     { key: 'width', header: 'W (cm)' },
     { key: 'length', header: 'L (cm)' },
-    { key: 'rotationAngle', header: 'Angle (°)' },
+    {
+      key: 'boxes', header: 'Boxes',
+      render: (r: any) => (
+        <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-xs">
+          📦 {r.boxes?.length ?? 0}
+        </span>
+      ),
+    },
+    { key: 'notes', header: 'Notes', render: (r: any) => r.notes ?? '—' },
     { key: 'isActive', header: 'Active', render: (r: any) => r.isActive ? '✅' : '❌' },
     {
       key: 'actions', header: '',
@@ -414,11 +328,11 @@ export default function LocationsPage() {
         <div className="flex items-center gap-2">
           <span>📦</span>
           <span className="font-medium">{r.name}</span>
-          {r.shelf && <span className="text-xs text-gray-400">(on shelf: {r.shelf.name})</span>}
+          {r.shelf && <span className="text-xs text-gray-400">(on: {r.shelf.name})</span>}
         </div>
       ),
     },
-    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code}</span>, sortable: true },
+    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.code}</span>, sortable: true },
     { key: 'height', header: 'H (cm)' },
     { key: 'width', header: 'W (cm)' },
     { key: 'length', header: 'L (cm)' },
@@ -448,37 +362,26 @@ export default function LocationsPage() {
   const renderBreadcrumb = () => (
     <div className="flex items-center gap-1 text-sm text-gray-500">
       <button
-        className={view === 'locations' ? 'font-semibold text-gray-900' : 'hover:underline cursor-pointer text-indigo-600'}
-        onClick={() => { setView('locations'); loadLocations(); }}
+        className={view === 'floors' ? 'font-semibold text-gray-900' : 'hover:underline cursor-pointer text-indigo-600'}
+        onClick={() => { setView('floors'); loadFloors(); }}
       >
-        📍 Storage Zones
+        🏢 Floors
       </button>
-      {selectedLocation && (
-        <>
-          <span>›</span>
-          <button
-            className={view === 'areas' ? 'font-semibold text-gray-900' : 'hover:underline cursor-pointer text-indigo-600'}
-            onClick={() => { setView('areas'); loadAreas(selectedLocation.id); }}
-          >
-            📂 {formatZoneLabel(selectedLocation)}
-          </button>
-        </>
-      )}
-      {selectedArea && (
+      {selectedFloor && (
         <>
           <span>›</span>
           <button
             className={view === 'shelves' ? 'font-semibold text-gray-900' : 'hover:underline cursor-pointer text-indigo-600'}
-            onClick={() => { setView('shelves'); loadShelves(selectedArea.id); }}
+            onClick={() => { setView('shelves'); loadShelves(selectedFloor.id); }}
           >
-            🗂 {selectedArea.name}
+            🗄 {selectedFloor.name}
           </button>
         </>
       )}
       {selectedShelf && (
         <>
           <span>›</span>
-          <span className="font-semibold text-gray-900">🗄 {selectedShelf.name}</span>
+          <span className="font-semibold text-gray-900">📦 {selectedShelf.name}</span>
         </>
       )}
     </div>
@@ -486,16 +389,14 @@ export default function LocationsPage() {
 
   // ── View labels ───────────────────────────────────────────
   const viewTitle: Record<View, string> = {
-    locations: '📍 Storage Zones',
-    areas: '📂 Areas',
+    floors: '🏢 Floors',
     shelves: '🗄 Shelves',
     boxes: '📦 Storage Boxes',
   };
   const viewSubtitle: Record<View, string> = {
-    locations: 'Branch → Zone (Floor/Level) → Area → Shelf → Box',
-    areas: 'Areas within a storage zone (e.g., rows or sections)',
-    shelves: 'Physical shelves in this area',
-    boxes: 'Storage boxes on this shelf or area',
+    floors: 'Branch → Floor → Shelf → Box',
+    shelves: 'Shelves on this floor (with freezer, lock and other properties)',
+    boxes: 'Storage boxes on this shelf',
   };
 
   return (
@@ -507,11 +408,10 @@ export default function LocationsPage() {
           <p className="page-subtitle">{viewSubtitle[view]}</p>
         </div>
         <div className="flex gap-2">
-          {view !== 'locations' && (
+          {view !== 'floors' && (
             <button className="btn-secondary" onClick={goBack}>← Back</button>
           )}
-          {view === 'locations' && <button className="btn-primary" onClick={() => setShowLocationForm(true)}>+ New Storage Zone</button>}
-          {view === 'areas' && <button className="btn-primary" onClick={() => setShowAreaForm(true)}>+ New Area</button>}
+          {view === 'floors' && <button className="btn-primary" onClick={() => setShowFloorForm(true)}>+ New Floor</button>}
           {view === 'shelves' && <button className="btn-primary" onClick={() => setShowShelfForm(true)}>+ New Shelf</button>}
           {view === 'boxes' && <button className="btn-primary" onClick={() => setShowBoxForm(true)}>+ New Box</button>}
         </div>
@@ -520,16 +420,16 @@ export default function LocationsPage() {
       {/* Breadcrumb */}
       <div className="px-1">{renderBreadcrumb()}</div>
 
-      {/* Tree summary at locations level */}
-      {view === 'locations' && Object.keys(groupedByBranch).length > 1 && (
+      {/* Branch grouping at floors level */}
+      {view === 'floors' && Object.keys(groupedByBranch).length > 1 && (
         <div className="content-section px-4 py-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">By Branch</p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(groupedByBranch).map(([key, { branch, zones }]) => (
+            {Object.entries(groupedByBranch).map(([key, { branch, floors: bFloors }]) => (
               <div key={key} className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
                 <span>🏪</span>
                 <span className="font-medium">{branch?.name ?? 'No Branch'}</span>
-                <span className="text-gray-400">({zones.length} zones)</span>
+                <span className="text-gray-400">({bFloors.length} floors)</span>
               </div>
             ))}
           </div>
@@ -538,34 +438,32 @@ export default function LocationsPage() {
 
       {/* Table section */}
       <div className="content-section">
-        {view === 'locations' && <DataTable columns={locationColumns} data={locations} isLoading={isLoading} emptyMessage="No storage zones found" emptyIcon="📍" />}
-        {view === 'areas' && <DataTable columns={areaColumns} data={areas} isLoading={isLoading} emptyMessage="No areas found in this zone" emptyIcon="📂" />}
-        {view === 'shelves' && <DataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelves found in this area" emptyIcon="🗄" />}
+        {view === 'floors' && <DataTable columns={floorColumns} data={floors} isLoading={isLoading} emptyMessage="No floors found" emptyIcon="🏢" />}
+        {view === 'shelves' && <DataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelves found on this floor" emptyIcon="🗄" />}
         {view === 'boxes' && <DataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes found" emptyIcon="📦" />}
       </div>
 
-      {/* Products in Zone panel (slide-in style) */}
-      {showInventoryPanel && inventoryPanelLocation && (
+      {/* Products in Floor panel */}
+      {showInventoryPanel && inventoryPanelFloor && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowInventoryPanel(false)}>
           <div className="modal-panel-lg">
             <div className="modal-header">
               <div>
-                <h2 className="modal-title">📦 Products in Zone</h2>
-                <p className="text-xs text-gray-400">📁 {formatZoneLabel(inventoryPanelLocation)}</p>
+                <h2 className="modal-title">📦 Products on Floor</h2>
+                <p className="text-xs text-gray-400">🏢 {inventoryPanelFloor.name}</p>
               </div>
               <button className="modal-close" onClick={() => setShowInventoryPanel(false)}>✕</button>
             </div>
             <div className="modal-body">
               {isInventoryLoading ? (
                 <div className="py-8 text-center text-gray-500">Loading inventory…</div>
-              ) : locationInventory.length === 0 ? (
-                <div className="py-8 text-center text-gray-400">No inventory records in this zone.</div>
+              ) : floorInventory.length === 0 ? (
+                <div className="py-8 text-center text-gray-400">No inventory records on this floor.</div>
               ) : (
                 <>
-                  {/* Summary counts by state */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {Object.entries(
-                      locationInventory.reduce<Record<string, number>>((acc, r) => {
+                      floorInventory.reduce<Record<string, number>>((acc, r) => {
                         acc[r.state] = (acc[r.state] ?? 0) + r.quantity;
                         return acc;
                       }, {})
@@ -575,10 +473,9 @@ export default function LocationsPage() {
                       </span>
                     ))}
                   </div>
-                  {/* Folder-tree by SKU */}
                   <div className="flex flex-col gap-1 text-sm">
                     {Object.entries(
-                      locationInventory.reduce<Record<string, { sku: any; records: any[] }>>((acc, r) => {
+                      floorInventory.reduce<Record<string, { sku: any; records: any[] }>>((acc, r) => {
                         const key = r.skuId;
                         if (!acc[key]) acc[key] = { sku: r.sku, records: [] };
                         acc[key].records.push(r);
@@ -618,127 +515,69 @@ export default function LocationsPage() {
         </div>
       )}
 
-      {/* Create Zone Modal */}
-      {showLocationForm && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowLocationForm(false)}>
+      {/* Create Floor Modal */}
+      {showFloorForm && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowFloorForm(false)}>
           <div className="modal-panel-md">
             <div className="modal-header">
-              <h2 className="modal-title">➕ Create Storage Zone</h2>
-              <button className="modal-close" onClick={() => setShowLocationForm(false)}>✕</button>
+              <h2 className="modal-title">➕ Create Floor</h2>
+              <button className="modal-close" onClick={() => setShowFloorForm(false)}>✕</button>
             </div>
-            <form onSubmit={handleCreateLocation}>
+            <form onSubmit={handleCreateFloor}>
               <div className="modal-body form-stack">
-                <p className="text-sm text-gray-500">A storage zone is a physical area inside a branch, like a floor or level (e.g., "Ground Floor, Row A, Aisle 1").</p>
+                <p className="text-sm text-gray-500">A floor is a physical level inside a branch building (e.g., "Ground Floor", "1st Floor", "Basement").</p>
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label className="form-label">Floor / Level *</label>
-                    <input className="input-field" type="text" required placeholder="e.g. Ground Floor, Level 2" value={locationForm.floor} onChange={(e) => setLocationForm(f => ({ ...f, floor: e.target.value }))} />
+                    <label className="form-label">Floor Name *</label>
+                    <input className="input-field" type="text" required placeholder="e.g. Ground Floor, 1st Floor" value={floorForm.name} onChange={(e) => setFloorForm(f => ({ ...f, name: e.target.value }))} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Section / Row *</label>
-                    <input className="input-field" type="text" required placeholder="e.g. Row A, Section B" value={locationForm.section} onChange={(e) => setLocationForm(f => ({ ...f, section: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Aisle *</label>
-                    <input className="input-field" type="text" required placeholder="e.g. Aisle 1, East Wing" value={locationForm.aisle} onChange={(e) => setLocationForm(f => ({ ...f, aisle: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Zone Reference</label>
-                    <input className="input-field" type="text" placeholder="e.g. Cold Storage, Bulk" value={locationForm.zone} onChange={(e) => setLocationForm(f => ({ ...f, zone: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Capacity (cm³)</label>
-                    <input className="input-field" type="number" value={locationForm.capacityCubicCm} onChange={(e) => setLocationForm(f => ({ ...f, capacityCubicCm: e.target.value }))} />
+                    <label className="form-label">Code *</label>
+                    <input className="input-field" type="text" required placeholder="e.g. GF, 1F, B1" value={floorForm.code} onChange={(e) => setFloorForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Notes</label>
-                  <input className="input-field" type="text" value={locationForm.notes} onChange={(e) => setLocationForm(f => ({ ...f, notes: e.target.value }))} />
+                  <input className="input-field" type="text" placeholder="Optional notes about this floor" value={floorForm.notes} onChange={(e) => setFloorForm(f => ({ ...f, notes: e.target.value }))} />
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowLocationForm(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Create Zone</button>
+                <button type="button" className="btn-secondary" onClick={() => setShowFloorForm(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Create Floor</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Edit Zone Modal */}
-      {editingLocation && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingLocation(null)}>
+      {/* Edit Floor Modal */}
+      {editingFloor && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingFloor(null)}>
           <div className="modal-panel-md">
             <div className="modal-header">
-              <h2 className="modal-title">✏️ Edit Storage Zone</h2>
-              <button className="modal-close" onClick={() => setEditingLocation(null)}>✕</button>
+              <h2 className="modal-title">✏️ Edit Floor</h2>
+              <button className="modal-close" onClick={() => setEditingFloor(null)}>✕</button>
             </div>
             <div className="modal-body form-stack">
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label className="form-label">Floor / Level *</label>
-                  <input className="input-field" type="text" required value={editLocationForm.floor} onChange={(e) => setEditLocationForm(f => ({ ...f, floor: e.target.value }))} />
+                  <label className="form-label">Floor Name *</label>
+                  <input className="input-field" type="text" required value={editFloorForm.name} onChange={(e) => setEditFloorForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Section / Row *</label>
-                  <input className="input-field" type="text" required value={editLocationForm.section} onChange={(e) => setEditLocationForm(f => ({ ...f, section: e.target.value }))} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Aisle *</label>
-                  <input className="input-field" type="text" required value={editLocationForm.aisle} onChange={(e) => setEditLocationForm(f => ({ ...f, aisle: e.target.value }))} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Zone Reference</label>
-                  <input className="input-field" type="text" value={editLocationForm.zone} onChange={(e) => setEditLocationForm(f => ({ ...f, zone: e.target.value }))} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Capacity (cm³)</label>
-                  <input className="input-field" type="number" value={editLocationForm.capacityCubicCm} onChange={(e) => setEditLocationForm(f => ({ ...f, capacityCubicCm: e.target.value }))} />
+                  <label className="form-label">Code *</label>
+                  <input className="input-field" type="text" required value={editFloorForm.code} onChange={(e) => setEditFloorForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
                 </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Notes</label>
-                <input className="input-field" type="text" value={editLocationForm.notes} onChange={(e) => setEditLocationForm(f => ({ ...f, notes: e.target.value }))} />
+                <input className="input-field" type="text" value={editFloorForm.notes} onChange={(e) => setEditFloorForm(f => ({ ...f, notes: e.target.value }))} />
               </div>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setEditingLocation(null)}>Cancel</button>
-              <button type="button" className="btn-primary" onClick={handleSaveEditLocation}>💾 Save Changes</button>
+              <button type="button" className="btn-secondary" onClick={() => setEditingFloor(null)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={handleSaveEditFloor}>💾 Save Changes</button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Area Modal */}
-      {showAreaForm && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowAreaForm(false)}>
-          <div className="modal-panel-md">
-            <div className="modal-header">
-              <h2 className="modal-title">➕ Create Area</h2>
-              <button className="modal-close" onClick={() => setShowAreaForm(false)}>✕</button>
-            </div>
-            <form onSubmit={handleCreateArea}>
-              <div className="modal-body form-stack">
-                <div className="form-grid-2">
-                  <div className="form-group">
-                    <label className="form-label">Name *</label>
-                    <input className="input-field" type="text" required value={areaForm.name} onChange={(e) => setAreaForm(f => ({ ...f, name: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Code *</label>
-                    <input className="input-field" type="text" required value={areaForm.code} onChange={(e) => setAreaForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Description</label>
-                  <input className="input-field" type="text" value={areaForm.description} onChange={(e) => setAreaForm(f => ({ ...f, description: e.target.value }))} />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowAreaForm(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Create Area</button>
-              </div>
-            </form>
           </div>
         </div>
       )}
@@ -753,6 +592,12 @@ export default function LocationsPage() {
             </div>
             <form onSubmit={handleCreateShelf}>
               <div className="modal-body form-stack">
+                {selectedFloor && (
+                  <div className="flex items-center gap-2 text-sm bg-indigo-50 text-indigo-700 px-3 py-2 rounded-lg">
+                    <span>🏢</span>
+                    <span>This shelf will be on floor: <strong>{selectedFloor.name}</strong></span>
+                  </div>
+                )}
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Name *</label>
@@ -778,8 +623,21 @@ export default function LocationsPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Rotation Angle (°)</label>
-                  <input className="input-field" type="number" step="0.1" min="0" max="360" value={shelfForm.rotationAngle} onChange={(e) => setShelfForm(f => ({ ...f, rotationAngle: e.target.value }))} />
+                  <p className="form-label mb-2">Special Properties</p>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                      <input type="checkbox" checked={shelfForm.hasFreezer} onChange={(e) => setShelfForm(f => ({ ...f, hasFreezer: e.target.checked }))} className="rounded" />
+                      ❄️ Freezer / Cold Storage
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                      <input type="checkbox" checked={shelfForm.hasLock} onChange={(e) => setShelfForm(f => ({ ...f, hasLock: e.target.checked }))} className="rounded" />
+                      🔒 Lockable / Secured
+                    </label>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Notes</label>
+                  <input className="input-field" type="text" value={shelfForm.notes} onChange={(e) => setShelfForm(f => ({ ...f, notes: e.target.value }))} />
                 </div>
               </div>
               <div className="modal-footer">

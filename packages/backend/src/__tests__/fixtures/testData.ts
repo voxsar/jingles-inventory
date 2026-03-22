@@ -1,4 +1,4 @@
-import { IUser, IVendor, ISKU, ILocation, IGRN, IGRNLine, IInventoryRecord, IInventoryEvent } from '@jingles/shared';
+import { IUser, IVendor, ISKU, IFloor, IGRN, IGRNLine, IInventoryRecord, IInventoryEvent } from '@jingles/shared';
 import { InventoryState, InventoryEventType, GRNStatus, UserRole, UnitOfMeasure } from '@jingles/shared';
 
 // ─── Vendors ────────────────────────────────────────────────────────────────
@@ -169,52 +169,48 @@ export const SKUS = {
   } as ISKU,
 };
 
-// ─── Locations ───────────────────────────────────────────────────────────────
+// ─── Floors ──────────────────────────────────────────────────────────────────
 
 export const LOCATIONS = {
   floorASection1Shelf1: {
     id: 'loc-A1-001',
-    floor: 'Floor-A',
-    section: 'Section-1',
-    shelf: 'Shelf-1',
-    zone: 'Zone-Alpha',
-    capacityCubicCm: 500000,
-    notes: 'Standard shelf for electronics',
+    branchId: 'branch-001',
+    name: 'Floor A',
+    code: 'FLOORA',
+    notes: 'Standard floor for electronics',
     isActive: true,
-  } as ILocation,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  } as IFloor,
 
   floorASection1Shelf2: {
     id: 'loc-A1-002',
-    floor: 'Floor-A',
-    section: 'Section-1',
-    shelf: 'Shelf-2',
-    zone: 'Zone-Alpha',
-    capacityCubicCm: 500000,
+    branchId: 'branch-001',
+    name: 'Floor A - Level 2',
+    code: 'FLOORA2',
     notes: null,
     isActive: true,
-  } as ILocation,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  } as IFloor,
 
   floorBSection2Shelf1: {
     id: 'loc-B2-001',
-    floor: 'Floor-B',
-    section: 'Section-2',
-    shelf: 'Shelf-1',
-    zone: 'Zone-Beta',
-    capacityCubicCm: 800000,
+    branchId: 'branch-001',
+    name: 'Floor B',
+    code: 'FLOORB',
     notes: 'Heavy goods storage',
     isActive: true,
-  } as ILocation,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  } as IFloor,
 
   coldStorage: {
     id: 'loc-COLD-001',
-    floor: 'Floor-C',
-    section: 'Cold-Storage',
-    shelf: 'Rack-1',
-    zone: 'Zone-Cold',
-    capacityCubicCm: 300000,
+    branchId: 'branch-001',
+    name: 'Cold Storage Floor',
+    code: 'COLD',
     notes: 'Temperature controlled',
     isActive: true,
-  } as ILocation,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  } as IFloor,
 };
 
 // ─── GRNs ────────────────────────────────────────────────────────────────────
@@ -302,7 +298,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-unopened-001',
     skuId: 'sku-widget-box-001',
     batchId: 'BATCH-2024-001',
-    locationId: 'loc-A1-001',
+    floorId: 'loc-A1-001',
     quantity: 50,
     state: InventoryState.UnopenedBox,
     sourceEventId: null,
@@ -317,7 +313,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-uninspected-001',
     skuId: 'sku-widget-box-001',
     batchId: 'BATCH-2024-003',
-    locationId: 'loc-A1-002',
+    floorId: 'loc-A1-002',
     quantity: 30,
     state: InventoryState.Uninspected,
     sourceEventId: null,
@@ -332,7 +328,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-inspected-001',
     skuId: 'sku-widget-piece-002',
     batchId: 'BATCH-2024-004',
-    locationId: 'loc-A1-001',
+    floorId: 'loc-A1-001',
     quantity: 45,
     state: InventoryState.Inspected,
     sourceEventId: null,
@@ -347,7 +343,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-shelfready-001',
     skuId: 'sku-widget-piece-002',
     batchId: 'BATCH-2024-004',
-    locationId: 'loc-A1-001',
+    floorId: 'loc-A1-001',
     quantity: 40,
     state: InventoryState.ShelfReady,
     sourceEventId: null,
@@ -362,7 +358,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-damaged-001',
     skuId: 'sku-glassware-003',
     batchId: 'BATCH-2024-005',
-    locationId: 'loc-B2-001',
+    floorId: 'loc-B2-001',
     quantity: 5,
     state: InventoryState.Damaged,
     sourceEventId: null,
@@ -377,7 +373,7 @@ export const INVENTORY_RECORDS = {
     id: 'inv-sold-001',
     skuId: 'sku-widget-piece-002',
     batchId: 'BATCH-2024-004',
-    locationId: null,
+    floorId: null,
     quantity: 10,
     state: InventoryState.Sold,
     sourceEventId: null,

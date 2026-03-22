@@ -10,7 +10,7 @@ export async function getInventoryValuation(vendorId?: string) {
       sku: {
         include: { vendor: { select: { id: true, name: true } } },
       },
-      location: true,
+      floor: true,
     },
   });
 
@@ -35,7 +35,7 @@ export async function getInventoryValuation(vendorId?: string) {
 }
 
 export async function getFloorPerformance() {
-  const locations = await prisma.location.findMany({
+  const floors = await prisma.floor.findMany({
     where: { isActive: true },
     include: {
       inventoryRecords: {
@@ -45,36 +45,25 @@ export async function getFloorPerformance() {
     },
   });
 
-  const byFloor = locations.reduce((acc: Record<string, any>, loc: any) => {
-    const floor = loc.floor;
-    if (!acc[floor]) {
-      acc[floor] = {
-        floor,
-        locationCount: 0,
-        totalItems: 0,
-        totalQuantity: 0,
-        skuCount: new Set<string>(),
-        stateBreakdown: {} as Record<string, number>,
-      };
-    }
+  return floors.map((floor: any) => {
+    const totalItems = floor.inventoryRecords.length;
+    const totalQuantity = floor.inventoryRecords.reduce((sum: number, r: any) => sum + r.quantity, 0);
+    const skuCount = new Set(floor.inventoryRecords.map((r: any) => r.skuId)).size;
+    const stateBreakdown = floor.inventoryRecords.reduce((acc: Record<string, number>, r: any) => {
+      acc[r.state] = (acc[r.state] ?? 0) + r.quantity;
+      return acc;
+    }, {} as Record<string, number>);
 
-    acc[floor].locationCount++;
-
-    for (const record of loc.inventoryRecords) {
-      acc[floor].totalItems++;
-      acc[floor].totalQuantity += record.quantity;
-      acc[floor].skuCount.add(record.skuId);
-      acc[floor].stateBreakdown[record.state] =
-        (acc[floor].stateBreakdown[record.state] ?? 0) + record.quantity;
-    }
-
-    return acc;
-  }, {} as Record<string, any>);
-
-  return (Object.values(byFloor) as Array<{ floor: string; locationCount: number; totalItems: number; totalQuantity: number; skuCount: Set<string>; stateBreakdown: Record<string, number> }>).map(f => ({
-    ...f,
-    skuCount: f.skuCount.size,
-  }));
+    return {
+      floorId: floor.id,
+      floorName: floor.name,
+      floorCode: floor.code,
+      totalItems,
+      totalQuantity,
+      skuCount,
+      stateBreakdown,
+    };
+  });
 }
 
 export async function getSalesSummary(fromDate?: Date, toDate?: Date) {
