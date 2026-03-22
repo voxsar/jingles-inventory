@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { branding } from '../config/branding';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@jingles.com');
@@ -24,8 +25,8 @@ export default function LoginPage() {
         <s-section>
           <s-stack gap="base">
             <div style={{ textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🎵</div>
-              <s-heading>Jingles Inventory</s-heading>
+              <div style={{ fontSize: '3rem', marginBottom: '8px' }}>{branding.appLogoEmoji}</div>
+              <s-heading>{branding.appName}</s-heading>
               <s-text>Sign in to your account</s-text>
             </div>
             <form onSubmit={handleSubmit}>
