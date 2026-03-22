@@ -106,6 +106,7 @@ router.get(
 				include: {
 					supplier: true,
 					floor: { include: { branch: { select: { id: true, name: true } } } },
+					shelf: { select: { id: true, name: true, code: true } },
 					creator: { select: { id: true, email: true } },
 					lines: {
 						include: {
@@ -157,12 +158,18 @@ router.put(
 				res.status(400).json({ success: false, error: 'Only Draft GRNs can be edited' });
 				return;
 			}
-			const { supplierId, invoiceReference, expectedDeliveryDate, notes, floorId } = req.body;
+			const { supplierId, invoiceReference, expectedDeliveryDate, notes, floorId, shelfId } = req.body;
 			const updateData: any = {};
 			if (supplierId !== undefined) updateData.supplierId = supplierId;
 			if (invoiceReference !== undefined) updateData.invoiceReference = invoiceReference;
 			if (notes !== undefined) updateData.notes = notes;
-			if (floorId !== undefined) updateData.floorId = floorId || null;
+			if (floorId !== undefined) {
+				const newFloorId = floorId || null;
+				updateData.floorId = newFloorId;
+				// Clear shelf whenever floor changes; if shelfId is also provided it will be set below
+				updateData.shelfId = null;
+			}
+			if (shelfId !== undefined) updateData.shelfId = shelfId || null;
 			if (expectedDeliveryDate) {
 				// Parse the date string safely; if no time component, treat as UTC midnight
 				const parsed = new Date(expectedDeliveryDate);

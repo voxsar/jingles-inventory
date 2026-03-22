@@ -760,7 +760,15 @@ export default function SKUPage() {
                                 <td className="px-3 py-2">
                                   <div className="flex flex-wrap gap-1">
                                     {(v.attributeValues ?? []).map((av: any) => (
-                                      <span key={av.attributeValueId} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{av.attribute?.name}: {av.attributeValue?.displayName}</span>
+                                      <span key={av.attributeValueId} className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
+                                        {av.attribute?.type === 'color' && av.attributeValue?.representedValue && (
+                                          <span
+                                            className="inline-block w-3 h-3 rounded-full border border-indigo-200 flex-shrink-0"
+                                            style={{ background: av.attributeValue.representedValue }}
+                                          />
+                                        )}
+                                        {av.attribute?.name}: {av.attributeValue?.displayName}
+                                      </span>
                                     ))}
                                   </div>
                                 </td>
