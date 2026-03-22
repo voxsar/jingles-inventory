@@ -10,6 +10,7 @@
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:seed": "ts-node src/prisma/seed.ts",
+		"prisma:seed-stress": "ts-node src/prisma/seed-stress.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage"

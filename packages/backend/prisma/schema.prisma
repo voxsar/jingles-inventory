@@ -191,6 +191,7 @@ model Floor {
   createdAt DateTime @default(now()) @map("created_at")
 
   branch           Branch          @relation(fields: [branchId], references: [id])
+  racks            Rack[]
   shelves          Shelf[]
   inventoryRecords InventoryRecord[]
   grns             GRN[]
@@ -200,9 +201,25 @@ model Floor {
   @@map("floors")
 }
 
+model Rack {
+  id        String   @id @default(uuid())
+  floorId   String   @map("floor_id")
+  name      String
+  code      String
+  notes     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  floor   Floor   @relation(fields: [floorId], references: [id])
+  shelves Shelf[]
+
+  @@map("racks")
+}
+
 model Shelf {
   id            String   @id @default(uuid())
   floorId       String   @map("floor_id")
+  rackId        String?  @map("rack_id")
   name          String
   code          String
   height        Float
@@ -215,6 +232,7 @@ model Shelf {
   createdAt     DateTime @default(now()) @map("created_at")
 
   floor            Floor            @relation(fields: [floorId], references: [id])
+  rack             Rack?            @relation(fields: [rackId], references: [id])
   boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
 
