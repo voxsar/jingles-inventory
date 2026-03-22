@@ -94,6 +94,12 @@ ALTER TABLE "grns" ADD CONSTRAINT "grns_floor_id_fkey" FOREIGN KEY ("floor_id") 
 ALTER TABLE "stock_transfers" ADD CONSTRAINT "stock_transfers_from_floor_id_fkey" FOREIGN KEY ("from_floor_id") REFERENCES "floors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "stock_transfers" ADD CONSTRAINT "stock_transfers_to_floor_id_fkey" FOREIGN KEY ("to_floor_id") REFERENCES "floors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+-- Step 9.5: Drop old foreign key constraints that depend on locations table
+ALTER TABLE "inventory_records" DROP CONSTRAINT IF EXISTS "inventory_records_location_id_fkey";
+ALTER TABLE "grns" DROP CONSTRAINT IF EXISTS "grns_location_id_fkey";
+ALTER TABLE "stock_transfers" DROP CONSTRAINT IF EXISTS "stock_transfers_from_location_id_fkey";
+ALTER TABLE "stock_transfers" DROP CONSTRAINT IF EXISTS "stock_transfers_to_location_id_fkey";
+
 -- Step 10: Drop old tables and constraints
-DROP TABLE IF EXISTS "areas";
-DROP TABLE IF EXISTS "locations";
+DROP TABLE IF EXISTS "areas" CASCADE;
+DROP TABLE IF EXISTS "locations" CASCADE;
