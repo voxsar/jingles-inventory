@@ -53,20 +53,35 @@ describe('Global Attribute System', () => {
       prismaMock.attributeValue.create.mockResolvedValue(ATTRIBUTE_VALUES.small);
 
       const result = await prismaMock.attributeValue.create({
-        data: { attributeId: ATTRIBUTES.size.id, value: 'Small', sortOrder: 0 },
+        data: { attributeId: ATTRIBUTES.size.id, displayName: 'Small', representedValue: 'S', sortOrder: 0 },
       });
 
-      expect(result.value).toBe('Small');
+      expect(result.displayName).toBe('Small');
+      expect(result.representedValue).toBe('S');
       expect(result.attributeId).toBe(ATTRIBUTES.size.id);
     });
 
-    it('prevents duplicate values within the same attribute', async () => {
+    it('prevents duplicate represented values within the same attribute', async () => {
       prismaMock.attributeValue.findUnique.mockResolvedValue(ATTRIBUTE_VALUES.small);
 
       const existing = await prismaMock.attributeValue.findUnique({
-        where: { attributeId_value: { attributeId: ATTRIBUTES.size.id, value: 'Small' } },
+        where: { attributeId_representedValue: { attributeId: ATTRIBUTES.size.id, representedValue: 'S' } },
       });
       expect(existing).not.toBeNull();
+    });
+
+    it('creates a color attribute value with hex represented value', async () => {
+      prismaMock.attribute.findUnique.mockResolvedValue(ATTRIBUTES.color);
+      prismaMock.attributeValue.findUnique.mockResolvedValue(null);
+      prismaMock.attributeValue.create.mockResolvedValue(ATTRIBUTE_VALUES.red);
+
+      const result = await prismaMock.attributeValue.create({
+        data: { attributeId: ATTRIBUTES.color.id, displayName: 'Red', representedValue: '#FF0000', sortOrder: 0 },
+      });
+
+      expect(result.displayName).toBe('Red');
+      expect(result.representedValue).toBe('#FF0000');
+      expect(result.attributeId).toBe(ATTRIBUTES.color.id);
     });
 
     it('prevents deletion of value used by variants', async () => {

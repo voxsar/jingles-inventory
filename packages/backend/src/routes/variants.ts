@@ -104,7 +104,7 @@ router.post(
           where: { id: { in: sel.valueIds }, attributeId: sel.attributeId },
           orderBy: { sortOrder: 'asc' },
         });
-        return vals.map((v: { id: string; value: string }) => ({ attributeId: sel.attributeId, attributeValueId: v.id, valueLabel: v.value }));
+        return vals.map((v: { id: string; displayName: string }) => ({ attributeId: sel.attributeId, attributeValueId: v.id, valueLabel: v.displayName }));
       })
     );
 

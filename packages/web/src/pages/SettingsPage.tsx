@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { settingsApi, attributesApi } from '../api/client';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
-const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean'];
+const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
 
 const ENTITY_TYPES = [
   { key: 'inventory', label: 'Inventory States', shortLabel: 'Inventory', icon: '📦', description: 'States for inventory records' },
@@ -17,7 +17,7 @@ const ENTITY_TYPES = [
 const defaultUnitForm = { name: '', abbreviation: '', type: 'Count', baseUnit: '', conversionFactor: '' };
 const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color: '#6366f1', sortOrder: '0', isDefault: false };
 const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
-const defaultAttrValueForm = { value: '', sortOrder: '0' };
+const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder: '0' };
 
 type Section = 'home' | 'units' | 'statuses' | 'attributes';
 
@@ -223,7 +223,11 @@ export default function SettingsPage() {
 
   const handleAddValue = async (e: React.FormEvent, attributeId: string) => {
     e.preventDefault();
-    const payload = { ...attrValueForm, sortOrder: parseInt(attrValueForm.sortOrder) || 0 };
+    const payload = {
+      displayName: attrValueForm.displayName,
+      representedValue: attrValueForm.representedValue,
+      sortOrder: parseInt(attrValueForm.sortOrder) || 0,
+    };
     try {
       await attributesApi.addValue(attributeId, payload);
       setShowValueForm(null);
@@ -234,8 +238,8 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteValue = async (attributeId: string, valueId: string, value: string) => {
-    if (!confirm(`Delete value "${value}"?`)) return;
+  const handleDeleteValue = async (attributeId: string, valueId: string, displayName: string) => {
+    if (!confirm(`Delete value "${displayName}"?`)) return;
     try {
       await attributesApi.deleteValue(attributeId, valueId);
       await loadAttributes();
@@ -343,16 +347,67 @@ export default function SettingsPage() {
                       <div className="flex flex-col gap-2">
                         {(attr.values ?? []).map((val: any) => (
                           <div key={val.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-                            <span className="text-sm text-gray-700">{val.value}</span>
-                            <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.value)}>Remove</button>
+                            <div className="flex items-center gap-2">
+                              {attr.type === 'color' && (
+                                <span
+                                  className="inline-block w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                                  style={{ background: val.representedValue }}
+                                />
+                              )}
+                              <span className="text-sm font-medium text-gray-800">{val.displayName}</span>
+                              {attr.type !== 'color' && (
+                                <span className="text-xs text-gray-400 font-mono">{val.representedValue}</span>
+                              )}
+                            </div>
+                            <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.displayName)}>Remove</button>
                           </div>
                         ))}
                         {showValueForm === attr.id ? (
-                          <form onSubmit={(e) => handleAddValue(e, attr.id)} className="flex gap-2 mt-2">
-                            <input className="input-field flex-1" type="text" required placeholder="Value (e.g. Small, Red…)" value={attrValueForm.value} onChange={(e) => setAttrValueForm(f => ({ ...f, value: e.target.value }))} />
-                            <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={attrValueForm.sortOrder} onChange={(e) => setAttrValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
-                            <button type="submit" className="btn-primary text-sm">Add</button>
-                            <button type="button" className="btn-secondary text-sm" onClick={() => setShowValueForm(null)}>✕</button>
+                          <form onSubmit={(e) => handleAddValue(e, attr.id)} className="flex flex-col gap-2 mt-2">
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <input
+                                  className="input-field w-full"
+                                  type="text"
+                                  required
+                                  placeholder="Display name (e.g. Small, Crimson Red)"
+                                  value={attrValueForm.displayName}
+                                  onChange={(e) => setAttrValueForm(f => ({ ...f, displayName: e.target.value }))}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                {attr.type === 'color' ? (
+                                  <div className="flex gap-1">
+                                    <input
+                                      type="color"
+                                      className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+                                      value={attrValueForm.representedValue || '#000000'}
+                                      onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                    />
+                                    <input
+                                      className="input-field flex-1"
+                                      type="text"
+                                      required
+                                      placeholder="#hex"
+                                      value={attrValueForm.representedValue}
+                                      onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                    />
+                                  </div>
+                                ) : (
+                                  <input
+                                    className="input-field w-full"
+                                    type="text"
+                                    required
+                                    placeholder="Represented value (e.g. S, #FF0000)"
+                                    value={attrValueForm.representedValue}
+                                    onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                  />
+                                )}
+                              </div>
+                              <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={attrValueForm.sortOrder} onChange={(e) => setAttrValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                              <button type="submit" className="btn-primary text-sm">Add</button>
+                              <button type="button" className="btn-secondary text-sm" onClick={() => setShowValueForm(null)}>✕</button>
+                            </div>
                           </form>
                         ) : (
                           <button className="btn-sm self-start mt-2" onClick={() => { setShowValueForm(attr.id); setAttrValueForm(defaultAttrValueForm); }}>+ Add Value</button>

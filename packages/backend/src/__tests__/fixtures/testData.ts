@@ -544,7 +544,7 @@ export const ATTRIBUTES = {
   color: {
     id: 'attr-color-002',
     name: 'Color',
-    type: 'dropdown',
+    type: 'color',
     isActive: true,
     sortOrder: 1,
     createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -555,7 +555,8 @@ export const ATTRIBUTE_VALUES = {
   small: {
     id: 'av-small-001',
     attributeId: 'attr-size-001',
-    value: 'Small',
+    displayName: 'Small',
+    representedValue: 'S',
     sortOrder: 0,
     isActive: true,
     createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -563,7 +564,8 @@ export const ATTRIBUTE_VALUES = {
   large: {
     id: 'av-large-002',
     attributeId: 'attr-size-001',
-    value: 'Large',
+    displayName: 'Large',
+    representedValue: 'L',
     sortOrder: 1,
     isActive: true,
     createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -571,7 +573,8 @@ export const ATTRIBUTE_VALUES = {
   red: {
     id: 'av-red-003',
     attributeId: 'attr-color-002',
-    value: 'Red',
+    displayName: 'Red',
+    representedValue: '#FF0000',
     sortOrder: 0,
     isActive: true,
     createdAt: new Date('2024-01-01T00:00:00Z'),
@@ -579,7 +582,8 @@ export const ATTRIBUTE_VALUES = {
   blue: {
     id: 'av-blue-004',
     attributeId: 'attr-color-002',
-    value: 'Blue',
+    displayName: 'Blue',
+    representedValue: '#0000FF',
     sortOrder: 1,
     isActive: true,
     createdAt: new Date('2024-01-01T00:00:00Z'),
