@@ -88,7 +88,7 @@ ALTER TABLE "stock_transfers" RENAME COLUMN "to_location_id" TO "to_floor_id";
 -- Step 9: Add foreign key constraints
 ALTER TABLE "floors" ADD CONSTRAINT "floors_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "branches"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "shelves" ADD CONSTRAINT "shelves_floor_id_fkey" FOREIGN KEY ("floor_id") REFERENCES "floors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "storage_boxes" ADD CONSTRAINT "storage_boxes_shelf_id_fkey" FOREIGN KEY ("shelf_id") REFERENCES "floors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "storage_boxes" ADD CONSTRAINT "storage_boxes_shelf_id_fkey" FOREIGN KEY ("shelf_id") REFERENCES "shelves"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "inventory_records" ADD CONSTRAINT "inventory_records_floor_id_fkey" FOREIGN KEY ("floor_id") REFERENCES "floors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "grns" ADD CONSTRAINT "grns_floor_id_fkey" FOREIGN KEY ("floor_id") REFERENCES "floors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "stock_transfers" ADD CONSTRAINT "stock_transfers_from_floor_id_fkey" FOREIGN KEY ("from_floor_id") REFERENCES "floors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
