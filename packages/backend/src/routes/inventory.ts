@@ -14,7 +14,7 @@ router.use(authenticate);
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { state, skuId, locationId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+    const { state, skuId, floorId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
     const user = req.user!;
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
@@ -22,7 +22,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const where: any = {};
     if (state) where.state = state;
     if (skuId) where.skuId = skuId;
-    if (locationId) where.locationId = locationId;
+    if (floorId) where.floorId = floorId;
     if (shelfId) where.shelfId = shelfId;
     if (boxId) where.boxId = boxId;
 
@@ -38,7 +38,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         take: pageSizeNum,
         include: {
           sku: { include: { vendor: { select: { id: true, name: true } } } },
-          location: true,
+          floor: true,
           shelf: true,
           box: true,
           user: { select: { email: true } },
@@ -89,9 +89,9 @@ router.post(
   requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { skuId, locationId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
+      const { skuId, floorId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
         skuId: string;
-        locationId?: string;
+        floorId?: string;
         shelfId?: string;
         boxId?: string;
         quantity: number;
@@ -109,7 +109,7 @@ router.post(
       const record = await prisma.inventoryRecord.create({
         data: {
           skuId,
-          locationId,
+          floorId,
           shelfId,
           boxId,
           quantity,
@@ -119,7 +119,7 @@ router.post(
           userId: user.id,
           version: 1,
         },
-        include: { sku: true, location: true, shelf: true, box: true },
+        include: { sku: true, floor: true, shelf: true, box: true },
       });
 
       await recordEvent({
@@ -146,10 +146,10 @@ router.post(
   requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { inventoryRecordId, quantityToOpen, targetLocationId } = req.body as {
+      const { inventoryRecordId, quantityToOpen, targetFloorId } = req.body as {
         inventoryRecordId: string;
         quantityToOpen: number;
-        targetLocationId?: string;
+        targetFloorId?: string;
       };
       const user = req.user!;
 
@@ -199,7 +199,7 @@ router.post(
           data: {
             skuId: boxRecord.skuId,
             batchId: boxRecord.batchId,
-            locationId: targetLocationId ?? boxRecord.locationId,
+            floorId: targetFloorId ?? boxRecord.floorId,
             quantity: totalPieces,
             state: InventoryState.Uninspected,
             userId: user.id,
@@ -233,8 +233,8 @@ router.put(
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params as { id: string };
-      const { locationId, quantity, batchId } = req.body as {
-        locationId?: string | null;
+      const { floorId, quantity, batchId } = req.body as {
+        floorId?: string | null;
         quantity?: number;
         batchId?: string | null;
       };
@@ -247,7 +247,7 @@ router.put(
       }
 
       const updateData: any = { version: { increment: 1 }, updatedAt: new Date() };
-      if (locationId !== undefined) updateData.locationId = locationId || null;
+      if (floorId !== undefined) updateData.floorId = floorId || null;
       if (quantity !== undefined) {
         if (quantity < 1) {
           res.status(400).json({ success: false, error: 'quantity must be at least 1' });
@@ -260,7 +260,7 @@ router.put(
       const record = await prisma.inventoryRecord.update({
         where: { id },
         data: updateData,
-        include: { sku: true, location: true },
+        include: { sku: true, floor: true },
       });
 
       if (quantity !== undefined && quantity !== existing.quantity) {

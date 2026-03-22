@@ -45,9 +45,9 @@ export function validateStacking(
   return { canStack: true };
 }
 
-export async function calculateFloorUsage(floor: string) {
-  const locations = await prisma.location.findMany({
-    where: { floor, isActive: true },
+export async function calculateShelfUsage(shelfId: string) {
+  const shelf = await prisma.shelf.findUnique({
+    where: { id: shelfId, isActive: true },
     include: {
       inventoryRecords: {
         where: { quantity: { gt: 0 } },
@@ -56,36 +56,33 @@ export async function calculateFloorUsage(floor: string) {
     },
   });
 
-  let totalCapacity = 0;
+  if (!shelf) {
+    return { shelfId, totalCapacity: 0, usedVolume: 0, usagePercentage: 0 };
+  }
+
+  const totalCapacity = shelf.height * shelf.width * shelf.length;
   let usedVolume = 0;
 
-  for (const location of locations) {
-    if (location.capacityCubicCm) {
-      totalCapacity += location.capacityCubicCm;
-    }
-
-    for (const record of location.inventoryRecords) {
-      const dims = record.sku.dimensions as IDimensions | null;
-      if (dims) {
-        usedVolume += calculateVolume(dims) * record.quantity;
-      }
+  for (const record of shelf.inventoryRecords) {
+    const dims = record.sku.dimensions as IDimensions | null;
+    if (dims) {
+      usedVolume += calculateVolume(dims) * record.quantity;
     }
   }
 
   return {
-    floor,
+    shelfId,
     totalCapacity,
     usedVolume,
     usagePercentage: calculateCapacityUsage(usedVolume, totalCapacity),
-    locationCount: locations.length,
   };
 }
 
-export async function getStackingSuggestions(skuId: string, locationId: string) {
-  const [sku, location] = await Promise.all([
+export async function getStackingSuggestions(skuId: string, floorId: string) {
+  const [sku, floor] = await Promise.all([
     prisma.sKU.findUnique({ where: { id: skuId } }),
-    prisma.location.findUnique({
-      where: { id: locationId },
+    prisma.floor.findUnique({
+      where: { id: floorId },
       include: {
         inventoryRecords: {
           where: { quantity: { gt: 0 } },
@@ -95,11 +92,11 @@ export async function getStackingSuggestions(skuId: string, locationId: string) 
     }),
   ]);
 
-  if (!sku || !location) {
-    return { canPlace: false, reason: 'SKU or Location not found' };
+  if (!sku || !floor) {
+    return { canPlace: false, reason: 'SKU or Floor not found' };
   }
 
-  const existingItems = location.inventoryRecords.map((r: any) => ({
+  const existingItems = floor.inventoryRecords.map((r: any) => ({
     isFragile: r.sku.isFragile,
     maxStackHeight: r.sku.maxStackHeight,
     dimensions: r.sku.dimensions as IDimensions | null,
@@ -115,6 +112,6 @@ export async function getStackingSuggestions(skuId: string, locationId: string) 
     canPlace: validation.canStack,
     reason: validation.reason,
     currentItems: existingItems.length,
-    suggestedLocation: validation.canStack ? locationId : null,
+    suggestedFloor: validation.canStack ? floorId : null,
   };
 }

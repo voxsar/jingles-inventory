@@ -8,15 +8,15 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', async (_req, res: Response): Promise<void> => {
-  const locations = await prisma.location.findMany({
+  const floors = await prisma.floor.findMany({
     where: { isActive: true },
     include: {
       branch: { select: { id: true, name: true, code: true } },
-      _count: { select: { inventoryRecords: true, areas: true } },
+      _count: { select: { inventoryRecords: true, shelves: true } },
     },
-    orderBy: [{ branch: { name: 'asc' } }, { floor: 'asc' }, { section: 'asc' }],
+    orderBy: [{ branch: { name: 'asc' } }, { name: 'asc' }],
   });
-  res.json(locations);
+  res.json(floors);
 });
 
 router.get(
@@ -28,19 +28,22 @@ router.get(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const location = await prisma.location.findUnique({
+    const floor = await prisma.floor.findUnique({
       where: { id: req.params!.id },
       include: {
         branch: { select: { id: true, name: true, code: true } },
-        areas: { where: { isActive: true }, include: { _count: { select: { shelves: true, boxes: true } } } },
-        _count: { select: { inventoryRecords: true, areas: true } },
+        shelves: {
+          where: { isActive: true },
+          include: { _count: { select: { boxes: true } } },
+        },
+        _count: { select: { inventoryRecords: true, shelves: true } },
       },
     });
-    if (!location) {
-      res.status(404).json({ error: 'Location not found' });
+    if (!floor) {
+      res.status(404).json({ error: 'Floor not found' });
       return;
     }
-    res.json(location);
+    res.json(floor);
   }
 );
 
@@ -48,9 +51,9 @@ router.post(
   '/',
   requireRole('Admin', 'Manager'),
   [
-    body('floor').notEmpty(),
-    body('section').notEmpty(),
-    body('shelf').notEmpty(),
+    body('branchId').isUUID(),
+    body('name').notEmpty(),
+    body('code').notEmpty(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -58,36 +61,43 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { floor, section, shelf, zone, capacityCubicCm, notes } = req.body as {
-      floor: string;
-      section: string;
-      shelf: string;
-      zone?: string;
-      capacityCubicCm?: number;
+    const { branchId, name, code, notes } = req.body as {
+      branchId: string;
+      name: string;
+      code: string;
       notes?: string;
     };
-    const location = await prisma.location.create({
-      data: { floor, section, shelf, zone, capacityCubicCm, notes },
+    const floor = await prisma.floor.create({
+      data: { branchId, name, code, notes },
+      include: { branch: { select: { id: true, name: true, code: true } } },
     });
-    res.status(201).json(location);
+    res.status(201).json(floor);
   }
 );
 
 router.put(
   '/:id',
   requireRole('Admin', 'Manager'),
-  [param('id').isUUID()],
+  [
+    param('id').isUUID(),
+    body('name').optional().notEmpty(),
+    body('code').optional().notEmpty(),
+    body('notes').optional().isString(),
+    body('isActive').optional().isBoolean(),
+  ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const location = await prisma.location.update({
+    const { name, code, notes, isActive } = req.body;
+    const floor = await prisma.floor.update({
       where: { id: req.params!.id },
-      data: req.body,
+      data: { name, code, notes, isActive },
+      include: { branch: { select: { id: true, name: true, code: true } } },
     });
-    res.json(location);
+    res.json(floor);
   }
 );
 
@@ -101,18 +111,16 @@ router.delete(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const location = await prisma.location.findUnique({ where: { id: req.params!.id } });
-    if (!location) {
-      res.status(404).json({ error: 'Location not found' });
+    const floor = await prisma.floor.findUnique({ where: { id: req.params!.id } });
+    if (!floor) {
+      res.status(404).json({ error: 'Floor not found' });
       return;
     }
-    // Null out locationId on inventory records (preserve history events)
     await prisma.inventoryRecord.updateMany({
-      where: { locationId: req.params!.id },
-      data: { locationId: null },
+      where: { floorId: req.params!.id },
+      data: { floorId: null },
     });
-    // Soft-delete the location
-    const updated = await prisma.location.update({
+    const updated = await prisma.floor.update({
       where: { id: req.params!.id },
       data: { isActive: false },
     });

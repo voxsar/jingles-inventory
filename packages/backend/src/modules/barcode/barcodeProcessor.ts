@@ -26,7 +26,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
   const inventoryRecords = await prisma.inventoryRecord.findMany({
     where: { skuId: sku.id, quantity: { gt: 0 } },
     include: {
-      location: true,
+      floor: true,
       user: { select: { email: true } },
     },
     orderBy: { updatedAt: 'desc' },

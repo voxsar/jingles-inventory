@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { branchesApi, locationsApi, skusApi, stockTransfersApi } from '../api/client';
+import { branchesApi, floorsApi, skusApi, stockTransfersApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 
@@ -34,8 +34,8 @@ export default function StockTransferPage() {
   const [form, setForm] = useState({
     fromBranchId: '',
     toBranchId: '',
-    fromLocationId: '',
-    toLocationId: '',
+    fromFloorId: '',
+    toFloorId: '',
     notes: '',
     lines: [{ skuId: '', requestedQty: '1', notes: '' }],
   });
@@ -48,7 +48,7 @@ export default function StockTransferPage() {
       const [transferRes, branchRes, locationRes, skuRes] = await Promise.all([
         stockTransfersApi.list(params),
         branchesApi.list(),
-        locationsApi.list(),
+        floorsApi.list(),
         skusApi.list({ pageSize: '100' }),
       ]);
       setTransfers(transferRes.data.data?.items ?? []);
@@ -87,8 +87,8 @@ export default function StockTransferPage() {
       await stockTransfersApi.create({
         fromBranchId: form.fromBranchId || undefined,
         toBranchId: form.toBranchId || undefined,
-        fromLocationId: form.fromLocationId || undefined,
-        toLocationId: form.toLocationId || undefined,
+        fromFloorId: form.fromFloorId || undefined,
+        toFloorId: form.toFloorId || undefined,
         notes: form.notes || undefined,
         lines: form.lines.map(l => ({
           skuId: l.skuId,
@@ -98,7 +98,7 @@ export default function StockTransferPage() {
       });
       setShowForm(false);
       setForm({
-        fromBranchId: '', toBranchId: '', fromLocationId: '', toLocationId: '',
+        fromBranchId: '', toBranchId: '', fromFloorId: '', toFloorId: '',
         notes: '', lines: [{ skuId: '', requestedQty: '1', notes: '' }],
       });
       await loadData();
@@ -120,8 +120,8 @@ export default function StockTransferPage() {
 
   const columns = [
     { key: 'referenceNumber', header: 'Reference', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 500 }}>{r.referenceNumber}</span>, sortable: true },
-    { key: 'fromBranch', header: 'From', render: (r: any) => r.fromBranch?.name ?? r.fromLocation ? `${r.fromLocation?.floor}-${r.fromLocation?.section}` : '—' },
-    { key: 'toBranch', header: 'To', render: (r: any) => r.toBranch?.name ?? r.toLocation ? `${r.toLocation?.floor}-${r.toLocation?.section}` : '—' },
+    { key: 'fromBranch', header: 'From', render: (r: any) => r.fromBranch?.name ?? r.fromFloor?.name ?? '—' },
+    { key: 'toBranch', header: 'To', render: (r: any) => r.toBranch?.name ?? r.toFloor?.name ?? '—' },
     { key: 'lines', header: 'Lines', render: (r: any) => r.lines?.length ?? 0 },
     { key: 'status', header: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
     { key: 'requestedAt', header: 'Requested', render: (r: any) => new Date(r.requestedAt).toLocaleDateString(), sortable: true },
@@ -218,16 +218,16 @@ export default function StockTransferPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">From Location</label>
-                    <select className="input-field" value={form.fromLocationId} onChange={(e) => setForm(f => ({ ...f, fromLocationId: e.target.value }))}>
+                    <select className="input-field" value={form.fromFloorId} onChange={(e) => setForm(f => ({ ...f, fromFloorId: e.target.value }))}>
                       <option value="">— Select Location —</option>
-                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</option>)}
+                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name} ({l.code})</option>)}
                     </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Location</label>
-                    <select className="input-field" value={form.toLocationId} onChange={(e) => setForm(f => ({ ...f, toLocationId: e.target.value }))}>
+                    <select className="input-field" value={form.toFloorId} onChange={(e) => setForm(f => ({ ...f, toFloorId: e.target.value }))}>
                       <option value="">— Select Location —</option>
-                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.floor}-{l.section}-{l.shelf}</option>)}
+                      {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name} ({l.code})</option>)}
                     </select>
                   </div>
                 </div>

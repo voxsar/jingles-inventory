@@ -27,8 +27,8 @@ router.get(
         include: {
           fromBranch: true,
           toBranch: true,
-          fromLocation: true,
-          toLocation: true,
+          fromFloor: true,
+          toFloor: true,
           requester: { select: { id: true, email: true } },
           lines: true,
         },
@@ -57,8 +57,8 @@ router.get(
       include: {
         fromBranch: true,
         toBranch: true,
-        fromLocation: true,
-        toLocation: true,
+        fromFloor: true,
+        toFloor: true,
         requester: { select: { id: true, email: true } },
         approver: { select: { id: true, email: true } },
         lines: true,
@@ -85,11 +85,11 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { fromBranchId, toBranchId, fromLocationId, toLocationId, notes, lines } = req.body as {
+    const { fromBranchId, toBranchId, fromFloorId, toFloorId, notes, lines } = req.body as {
       fromBranchId?: string;
       toBranchId?: string;
-      fromLocationId?: string;
-      toLocationId?: string;
+      fromFloorId?: string;
+      toFloorId?: string;
       notes?: string;
       lines: { skuId: string; requestedQty: number; notes?: string }[];
     };
@@ -101,8 +101,8 @@ router.post(
         referenceNumber,
         fromBranchId,
         toBranchId,
-        fromLocationId,
-        toLocationId,
+        fromFloorId,
+        toFloorId,
         notes,
         requestedBy: req.user!.id,
         lines: {

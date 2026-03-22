@@ -104,7 +104,7 @@ model Branch {
   isDefault   Boolean  @default(false) @map("is_default")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  locations             Location[]
+  floors                Floor[]
   stockTransfersFrom    StockTransfer[] @relation("StockTransferFrom")
   stockTransfersTo      StockTransfer[] @relation("StockTransferTo")
 
@@ -181,56 +181,40 @@ model ProductBarcode {
   @@map("product_barcodes")
 }
 
-model Location {
-  id              String  @id @default(uuid())
-  branchId        String? @map("branch_id")
-  floor           String
-  section         String
-  shelf           String
-  zone            String?
-  capacityCubicCm Float?  @map("capacity_cubic_cm")
-  notes           String?
-  isActive        Boolean @default(true) @map("is_active")
+model Floor {
+  id        String   @id @default(uuid())
+  branchId  String   @map("branch_id")
+  name      String
+  code      String
+  notes     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  branch           Branch?         @relation(fields: [branchId], references: [id])
+  branch           Branch          @relation(fields: [branchId], references: [id])
+  shelves          Shelf[]
   inventoryRecords InventoryRecord[]
   grns             GRN[]
-  transfersFrom    StockTransfer[] @relation("StockTransferFromLocation")
-  transfersTo      StockTransfer[] @relation("StockTransferToLocation")
-  areas            Area[]
+  transfersFrom    StockTransfer[] @relation("StockTransferFromFloor")
+  transfersTo      StockTransfer[] @relation("StockTransferToFloor")
 
-  @@map("locations")
-}
-
-model Area {
-  id          String   @id @default(uuid())
-  locationId  String   @map("location_id")
-  name        String
-  code        String
-  description String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  location Location      @relation(fields: [locationId], references: [id])
-  shelves  Shelf[]
-  boxes    StorageBox[]
-
-  @@map("areas")
+  @@map("floors")
 }
 
 model Shelf {
   id            String   @id @default(uuid())
-  areaId        String   @map("area_id")
+  floorId       String   @map("floor_id")
   name          String
   code          String
   height        Float
   width         Float
   length        Float
-  rotationAngle Float    @default(0) @map("rotation_angle")
+  hasFreezer    Boolean  @default(false) @map("has_freezer")
+  hasLock       Boolean  @default(false) @map("has_lock")
+  notes         String?
   isActive      Boolean  @default(true) @map("is_active")
   createdAt     DateTime @default(now()) @map("created_at")
 
-  area             Area             @relation(fields: [areaId], references: [id])
+  floor            Floor            @relation(fields: [floorId], references: [id])
   boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
 
@@ -239,8 +223,7 @@ model Shelf {
 
 model StorageBox {
   id        String   @id @default(uuid())
-  areaId    String?  @map("area_id")
-  shelfId   String?  @map("shelf_id")
+  shelfId   String   @map("shelf_id")
   name      String
   code      String
   height    Float
@@ -249,8 +232,7 @@ model StorageBox {
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
-  area             Area?            @relation(fields: [areaId], references: [id])
-  shelf            Shelf?           @relation(fields: [shelfId], references: [id])
+  shelf            Shelf            @relation(fields: [shelfId], references: [id])
   barcodes         BoxBarcode[]
   inventoryRecords InventoryRecord[]
 
@@ -276,8 +258,8 @@ model StockTransfer {
   referenceNumber  String    @unique @map("reference_number")
   fromBranchId     String?   @map("from_branch_id")
   toBranchId       String?   @map("to_branch_id")
-  fromLocationId   String?   @map("from_location_id")
-  toLocationId     String?   @map("to_location_id")
+  fromFloorId      String?   @map("from_floor_id")
+  toFloorId        String?   @map("to_floor_id")
   status           String    @default("Draft")
   notes            String?
   requestedBy      String    @map("requested_by")
@@ -288,8 +270,8 @@ model StockTransfer {
 
   fromBranch   Branch?   @relation("StockTransferFrom", fields: [fromBranchId], references: [id])
   toBranch     Branch?   @relation("StockTransferTo", fields: [toBranchId], references: [id])
-  fromLocation Location? @relation("StockTransferFromLocation", fields: [fromLocationId], references: [id])
-  toLocation   Location? @relation("StockTransferToLocation", fields: [toLocationId], references: [id])
+  fromFloor    Floor?    @relation("StockTransferFromFloor", fields: [fromFloorId], references: [id])
+  toFloor      Floor?    @relation("StockTransferToFloor", fields: [toFloorId], references: [id])
   requester    User      @relation("StockTransferCreator", fields: [requestedBy], references: [id])
   approver     User?     @relation("StockTransferApprover", fields: [approvedBy], references: [id])
   lines        StockTransferLine[]
@@ -314,7 +296,7 @@ model InventoryRecord {
   id            String   @id @default(uuid())
   skuId         String   @map("sku_id")
   batchId       String?  @map("batch_id")
-  locationId    String?  @map("location_id")
+  floorId       String?  @map("floor_id")
   shelfId       String?  @map("shelf_id")
   boxId         String?  @map("box_id")
   quantity      Int
@@ -327,7 +309,7 @@ model InventoryRecord {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   sku      SKU        @relation(fields: [skuId], references: [id])
-  location Location?  @relation(fields: [locationId], references: [id])
+  floor    Floor?     @relation(fields: [floorId], references: [id])
   shelf    Shelf?     @relation(fields: [shelfId], references: [id])
   box      StorageBox? @relation(fields: [boxId], references: [id])
   user     User?      @relation(fields: [userId], references: [id])
@@ -357,7 +339,7 @@ model InventoryEvent {
 model GRN {
   id                   String    @id @default(uuid())
   supplierId           String    @map("supplier_id")
-  locationId           String?   @map("location_id")
+  floorId              String?   @map("floor_id")
   invoiceReference     String?   @map("invoice_reference")
   supplierInvoiceDate  DateTime? @map("supplier_invoice_date")
   expectedDeliveryDate DateTime? @map("expected_delivery_date")
@@ -369,7 +351,7 @@ model GRN {
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
   supplier Vendor    @relation(fields: [supplierId], references: [id])
-  location Location? @relation(fields: [locationId], references: [id])
+  floor    Floor?    @relation(fields: [floorId], references: [id])
   creator  User      @relation(fields: [createdBy], references: [id])
   lines    GRNLine[]
 

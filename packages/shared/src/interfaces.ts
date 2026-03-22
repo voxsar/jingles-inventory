@@ -134,45 +134,32 @@ export interface ISKU {
   tags?: ITag[];
 }
 
-export interface ILocation {
+export interface IFloor {
   id: string;
-  branchId?: string | null;
-  floor: string;
-  section: string;
-  shelf: string;
-  zone?: string | null;
-  capacityCubicCm?: number | null;
-  notes?: string | null;
-  isActive: boolean;
-  branch?: IBranch | null;
-  areas?: IArea[];
-}
-
-export interface IArea {
-  id: string;
-  locationId: string;
+  branchId: string;
   name: string;
   code: string;
-  description?: string | null;
+  notes?: string | null;
   isActive: boolean;
   createdAt: Date;
-  location?: ILocation;
+  branch?: IBranch | null;
   shelves?: IShelf[];
-  boxes?: IStorageBox[];
 }
 
 export interface IShelf {
   id: string;
-  areaId: string;
+  floorId: string;
   name: string;
   code: string;
   height: number;
   width: number;
   length: number;
-  rotationAngle: number;
+  hasFreezer: boolean;
+  hasLock: boolean;
+  notes?: string | null;
   isActive: boolean;
   createdAt: Date;
-  area?: IArea;
+  floor?: IFloor;
   boxes?: IStorageBox[];
 }
 
@@ -188,8 +175,7 @@ export interface IBoxBarcode {
 
 export interface IStorageBox {
   id: string;
-  areaId?: string | null;
-  shelfId?: string | null;
+  shelfId: string;
   name: string;
   code: string;
   height: number;
@@ -197,7 +183,6 @@ export interface IStorageBox {
   length: number;
   isActive: boolean;
   createdAt: Date;
-  area?: IArea | null;
   shelf?: IShelf | null;
   barcodes?: IBoxBarcode[];
 }
@@ -216,8 +201,8 @@ export interface IStockTransfer {
   referenceNumber: string;
   fromBranchId?: string | null;
   toBranchId?: string | null;
-  fromLocationId?: string | null;
-  toLocationId?: string | null;
+  fromFloorId?: string | null;
+  toFloorId?: string | null;
   status: StockTransferStatus;
   notes?: string | null;
   requestedBy: string;
@@ -232,7 +217,7 @@ export interface IInventoryRecord {
   id: string;
   skuId: string;
   batchId?: string | null;
-  locationId?: string | null;
+  floorId?: string | null;
   shelfId?: string | null;
   boxId?: string | null;
   quantity: number;

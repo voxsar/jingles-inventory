@@ -81,20 +81,12 @@ export const grnsApi = {
 };
 
 // Locations
-export const locationsApi = {
+export const floorsApi = {
   list: (params?: Record<string, string>) =>
-    api.get('/locations', { params }),
-  create: (data: any) => api.post('/locations', data),
-  update: (id: string, data: any) => api.put(`/locations/${id}`, data),
-  delete: (id: string) => api.delete(`/locations/${id}`),
-};
-
-// Areas
-export const areasApi = {
-  list: (params?: Record<string, string>) => api.get('/areas', { params }),
-  get: (id: string) => api.get(`/areas/${id}`),
-  create: (data: any) => api.post('/areas', data),
-  update: (id: string, data: any) => api.put(`/areas/${id}`, data),
+    api.get('/floors', { params }),
+  create: (data: any) => api.post('/floors', data),
+  update: (id: string, data: any) => api.put(`/floors/${id}`, data),
+  delete: (id: string) => api.delete(`/floors/${id}`),
 };
 
 // Shelves
@@ -183,8 +175,8 @@ export const barcodeApi = {
 // Space
 export const spaceApi = {
   calculate: (floor: string) => api.get('/space/calculate', { params: { floor } }),
-  stackingSuggestions: (skuId: string, locationId: string) =>
-    api.get('/space/stacking-suggestions', { params: { skuId, locationId } }),
+  stackingSuggestions: (skuId: string, floorId: string) =>
+    api.get('/space/stacking-suggestions', { params: { skuId, floorId } }),
 };
 
 // OCR

@@ -10,7 +10,7 @@ router.use(authenticate);
 router.get('/', async (_req, res: Response): Promise<void> => {
   const branches = await prisma.branch.findMany({
     orderBy: { name: 'asc' },
-    include: { _count: { select: { locations: true } } },
+    include: { _count: { select: { floors: true } } },
   });
   res.json({ success: true, data: branches });
 });
@@ -26,7 +26,7 @@ router.get(
     }
     const branch = await prisma.branch.findUnique({
       where: { id: req.params!.id },
-      include: { locations: true },
+      include: { floors: true },
     });
     if (!branch) {
       res.status(404).json({ error: 'Branch not found' });
