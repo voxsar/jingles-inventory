@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi } from '../api/client';
+import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi, racksApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -32,6 +32,8 @@ export default function InventoryPage() {
   const [stateFilter, setStateFilter] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [rackFilter, setRackFilter] = useState('');
+  const [shelfFilter, setShelfFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [total, setTotal] = useState(0);
@@ -40,6 +42,8 @@ export default function InventoryPage() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [locations, setLocations] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [filterRacks, setFilterRacks] = useState<any[]>([]);
+  const [filterShelves, setFilterShelves] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
   // Shelves and boxes for new-record form (cascade: floor → shelf → box)
   const [newFormShelves, setNewFormShelves] = useState<any[]>([]);
@@ -64,7 +68,9 @@ export default function InventoryPage() {
     try {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
-      if (locationFilter) params.floorId = locationFilter;
+      if (shelfFilter) params.shelfId = shelfFilter;
+      else if (rackFilter) params.rackId = rackFilter;
+      else if (locationFilter) params.floorId = locationFilter;
       else if (branchFilter) params.branchId = branchFilter;
       if (debouncedSearch) params.search = debouncedSearch;
       const res = await inventoryApi.list(params);
@@ -121,7 +127,7 @@ export default function InventoryPage() {
   };
 
   useEffect(() => { fetchLocations(); fetchSkus(); fetchBranches(); }, []);
-  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, branchFilter, locationFilter, debouncedSearch]);
+  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, branchFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -288,12 +294,16 @@ export default function InventoryPage() {
     setStateFilter('');
     setBranchFilter('');
     setLocationFilter('');
+    setRackFilter('');
+    setShelfFilter('');
+    setFilterRacks([]);
+    setFilterShelves([]);
     setSearchTerm('');
     setDebouncedSearch('');
     setPage(1);
   };
 
-  const hasFilters = stateFilter || branchFilter || locationFilter || searchTerm;
+  const hasFilters = stateFilter || branchFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
 
   // Floors visible in dropdowns: filter by selected branch when applicable
   const visibleLocations = branchFilter
@@ -350,7 +360,7 @@ export default function InventoryPage() {
           <select
             className="filter-select"
             value={branchFilter}
-            onChange={(e) => { setBranchFilter(e.target.value); setLocationFilter(''); setPage(1); }}
+            onChange={(e) => { setBranchFilter(e.target.value); setLocationFilter(''); setRackFilter(''); setShelfFilter(''); setFilterRacks([]); setFilterShelves([]); setPage(1); }}
           >
             <option value="">All Branches</option>
             {branches.map((b: any) => (
@@ -360,15 +370,68 @@ export default function InventoryPage() {
           <select
             className="filter-select"
             value={locationFilter}
-            onChange={(e) => { setLocationFilter(e.target.value); setPage(1); }}
+            onChange={async (e) => {
+              const floorId = e.target.value;
+              setLocationFilter(floorId);
+              setRackFilter('');
+              setShelfFilter('');
+              setFilterShelves([]);
+              setPage(1);
+              if (floorId) {
+                try {
+                  const res = await racksApi.list({ floorId });
+                  setFilterRacks(Array.isArray(res.data?.data?.items ?? res.data?.data ?? res.data) ? (res.data?.data?.items ?? res.data?.data ?? res.data) : []);
+                } catch { setFilterRacks([]); }
+              } else {
+                setFilterRacks([]);
+              }
+            }}
           >
-            <option value="">All Locations</option>
+            <option value="">All Floors</option>
             {visibleLocations.map((loc: any) => (
               <option key={loc.id} value={loc.id}>
                 {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
               </option>
             ))}
           </select>
+          {filterRacks.length > 0 && (
+            <select
+              className="filter-select"
+              value={rackFilter}
+              onChange={async (e) => {
+                const rackId = e.target.value;
+                setRackFilter(rackId);
+                setShelfFilter('');
+                setPage(1);
+                if (rackId) {
+                  try {
+                    const res = await shelvesApi.list({ rackId });
+                    const data = res.data?.data?.items ?? res.data?.data ?? res.data;
+                    setFilterShelves(Array.isArray(data) ? data : []);
+                  } catch { setFilterShelves([]); }
+                } else {
+                  setFilterShelves([]);
+                }
+              }}
+            >
+              <option value="">All Racks</option>
+              {filterRacks.map((r: any) => (
+                <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
+              ))}
+            </select>
+          )}
+          {filterShelves.length > 0 && (
+            <select
+              className="filter-select"
+              value={shelfFilter}
+              onChange={(e) => { setShelfFilter(e.target.value); setPage(1); }}
+            >
+              <option value="">All Shelves</option>
+              {filterShelves.map((s: any) => (
+                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
+              ))}
+            </select>
+          )}
           {hasFilters && (
             <button className="btn-secondary text-xs" onClick={clearFilters}>
               ✕ Clear filters
