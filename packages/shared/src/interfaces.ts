@@ -145,6 +145,7 @@ export interface IFloor {
   branch?: IBranch | null;
   racks?: IRack[];
   shelves?: IShelf[];
+  boxes?: IStorageBox[];
 }
 
 export interface IRack {
@@ -155,6 +156,14 @@ export interface IRack {
   notes?: string | null;
   isActive: boolean;
   createdAt: Date;
+  // 3D position (metres) and rotation (degrees around Y axis)
+  posX?: number | null;
+  posZ?: number | null;
+  rotY?: number | null;
+  // Physical dimensions in cm
+  widthCm?: number | null;
+  heightCm?: number | null;
+  depthCm?: number | null;
   floor?: IFloor | null;
   shelves?: IShelf[];
 }
@@ -190,7 +199,8 @@ export interface IBoxBarcode {
 
 export interface IStorageBox {
   id: string;
-  shelfId: string;
+  shelfId?: string | null;
+  floorId?: string | null;
   name: string;
   code: string;
   height: number;
@@ -198,7 +208,17 @@ export interface IStorageBox {
   length: number;
   isActive: boolean;
   createdAt: Date;
+  // 3D position/orientation
+  posX?: number | null;
+  posY?: number | null;
+  posZ?: number | null;
+  rotationAngle?: number | null;
+  // Stacking
+  stackOrder?: number | null;
+  parentBoxId?: string | null;
   shelf?: IShelf | null;
+  floor?: IFloor | null;
+  stackedBoxes?: IStorageBox[];
   barcodes?: IBoxBarcode[];
 }
 

@@ -193,6 +193,7 @@ model Floor {
   branch           Branch          @relation(fields: [branchId], references: [id])
   racks            Rack[]
   shelves          Shelf[]
+  boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
   grns             GRN[]
   transfersFrom    StockTransfer[] @relation("StockTransferFromFloor")
@@ -209,6 +210,16 @@ model Rack {
   notes     String?
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
+
+  // 3D layout position (metres) and rotation (degrees around Y axis)
+  posX      Float?   @map("pos_x")
+  posZ      Float?   @map("pos_z")
+  rotY      Float?   @default(0) @map("rot_y")
+
+  // Physical dimensions in cm
+  widthCm   Float?   @map("width_cm")
+  heightCm  Float?   @map("height_cm")
+  depthCm   Float?   @map("depth_cm")
 
   floor   Floor   @relation(fields: [floorId], references: [id])
   shelves Shelf[]
@@ -240,17 +251,31 @@ model Shelf {
 }
 
 model StorageBox {
-  id        String   @id @default(uuid())
-  shelfId   String   @map("shelf_id")
-  name      String
-  code      String
-  height    Float
-  width     Float
-  length    Float
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  shelfId        String?  @map("shelf_id")
+  floorId        String?  @map("floor_id")
+  name           String
+  code           String
+  height         Float
+  width          Float
+  length         Float
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  shelf            Shelf            @relation(fields: [shelfId], references: [id])
+  // 3D position/orientation within its parent space (metres / degrees)
+  posX           Float?   @map("pos_x")
+  posY           Float?   @map("pos_y")
+  posZ           Float?   @map("pos_z")
+  rotationAngle  Float?   @default(0) @map("rotation_angle")
+
+  // Stacking support
+  stackOrder     Int?     @default(0) @map("stack_order")
+  parentBoxId    String?  @map("parent_box_id")
+
+  shelf            Shelf?           @relation(fields: [shelfId], references: [id])
+  floor            Floor?           @relation(fields: [floorId], references: [id])
+  parentBox        StorageBox?      @relation("BoxStacking", fields: [parentBoxId], references: [id])
+  stackedBoxes     StorageBox[]     @relation("BoxStacking")
   barcodes         BoxBarcode[]
   inventoryRecords InventoryRecord[]
 

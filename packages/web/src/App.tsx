@@ -9,7 +9,6 @@ import InventoryPage from './pages/InventoryPage';
 import GRNPage from './pages/GRNPage';
 import GRNDetailPage from './pages/GRNDetailPage';
 import SKUPage from './pages/SKUPage';
-import LocationsPage from './pages/LocationsPage';
 import ReportsPage from './pages/ReportsPage';
 import VendorPortalPage from './pages/VendorPortalPage';
 import CategoriesPage from './pages/CategoriesPage';
@@ -43,7 +42,7 @@ function AppRoutes() {
         <Route path="grns" element={<GRNPage />} />
         <Route path="grns/:id" element={<GRNDetailPage />} />
         <Route path="skus" element={<SKUPage />} />
-        <Route path="locations" element={<LocationsPage />} />
+        <Route path="locations" element={<Navigate to="/branches" replace />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="settings" element={<SettingsPage />} />

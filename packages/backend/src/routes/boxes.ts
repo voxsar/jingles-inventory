@@ -9,7 +9,11 @@ router.use(authenticate);
 
 router.get(
   '/',
-  [query('shelfId').optional().isUUID()],
+  [
+    query('shelfId').optional().isUUID(),
+    query('floorId').optional().isUUID(),
+    query('rackId').optional().isUUID(),
+  ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -18,10 +22,11 @@ router.get(
     }
     const where: Record<string, unknown> = { isActive: true };
     if (req.query?.shelfId) where.shelfId = req.query.shelfId as string;
+    if (req.query?.floorId) where.floorId = req.query.floorId as string;
     const boxes = await prisma.storageBox.findMany({
       where,
-      include: { barcodes: true, shelf: true },
-      orderBy: { createdAt: 'asc' },
+      include: { barcodes: true, shelf: true, floor: true },
+      orderBy: [{ stackOrder: 'asc' }, { createdAt: 'asc' }],
     });
     res.json(boxes);
   }
@@ -35,7 +40,12 @@ router.get('/:id', [param('id').isUUID()], async (req: AuthRequest, res: Respons
   }
   const box = await prisma.storageBox.findUnique({
     where: { id: req.params!.id },
-    include: { barcodes: true, shelf: true },
+    include: {
+      barcodes: true,
+      shelf: true,
+      floor: true,
+      stackedBoxes: { where: { isActive: true }, orderBy: { stackOrder: 'asc' } },
+    },
   });
   if (!box) {
     res.status(404).json({ error: 'Box not found' });
@@ -48,12 +58,20 @@ router.post(
   '/',
   requireRole('Admin', 'Manager'),
   [
-    body('shelfId').isUUID(),
+    // Either shelfId OR floorId is required
+    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
+    body('floorId').optional({ nullable: true }).if(body('floorId').notEmpty()).isUUID(),
     body('name').notEmpty(),
     body('code').notEmpty(),
     body('height').isFloat({ gt: 0 }),
     body('width').isFloat({ gt: 0 }),
     body('length').isFloat({ gt: 0 }),
+    body('posX').optional().isFloat(),
+    body('posY').optional().isFloat(),
+    body('posZ').optional().isFloat(),
+    body('rotationAngle').optional().isFloat(),
+    body('stackOrder').optional().isInt({ min: 0 }),
+    body('parentBoxId').optional({ nullable: true }).if(body('parentBoxId').notEmpty()).isUUID(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -61,9 +79,32 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { shelfId, name, code, height, width, length } = req.body;
+    const {
+      shelfId, floorId, name, code, height, width, length,
+      posX, posY, posZ, rotationAngle, stackOrder, parentBoxId,
+    } = req.body;
+
+    if (!shelfId && !floorId) {
+      res.status(400).json({ error: 'Either shelfId or floorId must be provided' });
+      return;
+    }
+
     const box = await prisma.storageBox.create({
-      data: { shelfId, name, code, height, width, length },
+      data: {
+        shelfId: shelfId ?? null,
+        floorId: floorId ?? null,
+        name,
+        code,
+        height,
+        width,
+        length,
+        posX: posX ?? null,
+        posY: posY ?? null,
+        posZ: posZ ?? null,
+        rotationAngle: rotationAngle ?? 0,
+        stackOrder: stackOrder ?? 0,
+        parentBoxId: parentBoxId ?? null,
+      },
       include: { barcodes: true },
     });
     res.status(201).json(box);
@@ -78,10 +119,17 @@ router.put(
     body('name').optional().notEmpty(),
     body('code').optional().notEmpty(),
     body('isActive').optional().isBoolean(),
-    body('shelfId').optional().isUUID(),
+    body('shelfId').optional({ nullable: true }).if(body('shelfId').notEmpty()).isUUID(),
+    body('floorId').optional({ nullable: true }).if(body('floorId').notEmpty()).isUUID(),
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),
+    body('posX').optional().isFloat(),
+    body('posY').optional().isFloat(),
+    body('posZ').optional().isFloat(),
+    body('rotationAngle').optional().isFloat(),
+    body('stackOrder').optional().isInt({ min: 0 }),
+    body('parentBoxId').optional({ nullable: true }).if(body('parentBoxId').notEmpty()).isUUID(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -89,10 +137,28 @@ router.put(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, code, height, width, length, shelfId, isActive } = req.body;
+    const {
+      name, code, height, width, length, shelfId, floorId, isActive,
+      posX, posY, posZ, rotationAngle, stackOrder, parentBoxId,
+    } = req.body;
     const box = await prisma.storageBox.update({
       where: { id: req.params!.id },
-      data: { name, code, height, width, length, shelfId, isActive },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(code !== undefined && { code }),
+        ...(height !== undefined && { height }),
+        ...(width !== undefined && { width }),
+        ...(length !== undefined && { length }),
+        ...(shelfId !== undefined && { shelfId }),
+        ...(floorId !== undefined && { floorId }),
+        ...(isActive !== undefined && { isActive }),
+        ...(posX !== undefined && { posX }),
+        ...(posY !== undefined && { posY }),
+        ...(posZ !== undefined && { posZ }),
+        ...(rotationAngle !== undefined && { rotationAngle }),
+        ...(stackOrder !== undefined && { stackOrder }),
+        ...(parentBoxId !== undefined && { parentBoxId }),
+      },
       include: { barcodes: true },
     });
     res.json(box);
