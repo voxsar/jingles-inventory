@@ -32,11 +32,54 @@ npm run dev:web             # Port 5173
 
 # Database
 cd packages/backend
-npx prisma migrate dev      # Run migrations
+npx prisma migrate deploy   # Deploy migrations (production)
+npx prisma generate         # Regenerate Prisma Client after schema changes
 npm run prisma:seed         # Seed test data
 ```
 
 **TDD-first:** Write tests before implementation. See [README.md](../README.md#testing) for 202+ test examples.
+
+## Database Migrations
+
+**Laravel-style migration tracking:** Prisma migrations are tracked in `_prisma_migrations` table. Each migration has a timestamp and is applied once.
+
+**Creating new migrations:**
+1. Update `schema.prisma` with your schema changes
+2. Generate migration SQL (review before applying):
+   ```bash
+   cd packages/backend
+   npx prisma migrate diff \
+     --from-schema-datasource prisma/schema.prisma \
+     --to-schema-datamodel prisma/schema.prisma \
+     --script > new_migration.sql
+   ```
+3. Create migration folder:
+   ```bash
+   TIMESTAMP=$(date +%Y%m%d%H%M%S)
+   mkdir -p prisma/migrations/${TIMESTAMP}_your_description
+   mv new_migration.sql prisma/migrations/${TIMESTAMP}_your_description/migration.sql
+   ```
+4. Apply migration:
+   ```bash
+   npx prisma migrate deploy    # Production (no shadow DB)
+   # OR
+   npx prisma migrate dev        # Development (requires shadow DB permissions)
+   ```
+5. Regenerate Prisma Client:
+   ```bash
+   npx prisma generate
+   ```
+6. Restart server:
+   ```bash
+   pm2 restart jingles-backend
+   ```
+
+**Production constraint:** No shadow database permissions, so always use `prisma migrate deploy` (not `migrate dev`).
+
+**Checking migration status:**
+```bash
+npx prisma migrate status     # Shows pending/applied migrations
+```
 
 ## Code Conventions
 
@@ -115,7 +158,7 @@ import { InventoryState, UserRole, IInventoryRecord } from '@jingles/shared';
 ## Project Specifics
 
 - **Database:** PostgreSQL 14+ required for backend
-- **Deployment:** Docker Compose with `docker-compose.yml` for dev
-- **Migrations:** Prisma migrations in `packages/backend/prisma/migrations/`
+- **Deployment:** Docker Compose with `docker-compose.yml` for dev; production uses PM2
+- **Migrations:** Laravel-style tracking via `_prisma_migrations` table in `packages/backend/prisma/migrations/`. Use `migrate deploy` in production (no shadow DB access).
 - **Logging:** Winston logger in `packages/backend/src/utils/logger.ts`
 - **Authentication:** JWT with 7-day expiry, bcrypt password hashing
