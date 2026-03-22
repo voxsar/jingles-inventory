@@ -35,6 +35,11 @@ cd packages/backend
 npx prisma migrate deploy   # Deploy migrations (production)
 npx prisma generate         # Regenerate Prisma Client after schema changes
 npm run prisma:seed         # Seed test data
+
+# Quick deploy (migrations + build + restart)
+npm run deploy:backend      # From root
+# OR
+cd packages/backend && npm run deploy
 ```
 
 **TDD-first:** Write tests before implementation. See [README.md](../README.md#testing) for 202+ test examples.
@@ -73,6 +78,8 @@ npm run prisma:seed         # Seed test data
    ```bash
    pm2 restart jingles-backend
    ```
+
+**Quick deploy:** Use `npm run deploy` (from backend folder) or `npm run deploy:backend` (from root) to run steps 4-6 automatically.
 
 **Production constraint:** No shadow database permissions, so always use `prisma migrate deploy` (not `migrate dev`).
 
