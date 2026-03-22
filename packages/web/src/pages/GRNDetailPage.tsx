@@ -108,9 +108,14 @@ export default function GRNDetailPage() {
           </div>
         </div>
         {grn.status === GRNStatus.Draft && (
-          <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? '⏳ Submitting…' : '📤 Submit GRN'}
-          </button>
+          <div className="flex items-center gap-3">
+            {!grn.shelfId && (
+              <span className="text-xs text-amber-600 font-medium">⚠️ A shelf must be assigned before submitting</span>
+            )}
+            <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting || !grn.shelfId}>
+              {isSubmitting ? '⏳ Submitting…' : '📤 Submit GRN'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -149,6 +154,16 @@ export default function GRNDetailPage() {
             <div className="col-span-full">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Notes</p>
               <p className="text-gray-700">{grn.notes}</p>
+            </div>
+          )}
+          {(grn.floor || grn.shelf) && (
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">Receive Location</p>
+              <p className="font-semibold text-gray-900">
+                {grn.floor?.branch?.name && <span>{grn.floor.branch.name} › </span>}
+                {grn.floor?.name && <span>{grn.floor.name}</span>}
+                {grn.shelf && <span className="text-gray-600"> › {grn.shelf.name} ({grn.shelf.code})</span>}
+              </p>
             </div>
           )}
         </div>

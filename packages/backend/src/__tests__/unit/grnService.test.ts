@@ -120,8 +120,14 @@ describe('submitGRN', () => {
     await expect(submitGRN(GRNS.submittedGRN.id, USERS.admin.id)).rejects.toThrow('Only Draft GRNs');
   });
 
+  it('throws if GRN does not have a shelf assigned', async () => {
+    const grnWithoutShelf = { ...GRNS.draftGRN, shelfId: null, lines: [GRN_LINES.draftLine1] };
+    prismaMock.gRN.findUnique.mockResolvedValue(grnWithoutShelf);
+    await expect(submitGRN(GRNS.draftGRN.id, USERS.admin.id)).rejects.toThrow('shelf location must be assigned');
+  });
+
   it('transitions GRN status to Submitted', async () => {
-    const grnWithLines = { ...GRNS.draftGRN, lines: [GRN_LINES.draftLine1] };
+    const grnWithLines = { ...GRNS.draftGRN, shelfId: 'shelf-test-001', lines: [GRN_LINES.draftLine1] };
     prismaMock.gRN.findUnique.mockResolvedValue(grnWithLines);
 
     const mockTx = {
@@ -142,7 +148,7 @@ describe('submitGRN', () => {
   });
 
   it('creates inventory records in Uninspected state on submission', async () => {
-    const grnWithLines = { ...GRNS.draftGRN, lines: [GRN_LINES.draftLine1] };
+    const grnWithLines = { ...GRNS.draftGRN, shelfId: 'shelf-test-001', lines: [GRN_LINES.draftLine1] };
     prismaMock.gRN.findUnique.mockResolvedValue(grnWithLines);
 
     const createdRecord = { id: 'inv-new-001', state: InventoryState.Uninspected, quantity: 50 };
