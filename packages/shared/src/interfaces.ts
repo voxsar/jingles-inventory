@@ -141,7 +141,7 @@ export interface ISKU {
 export interface IAttribute {
   id: string;
   name: string;
-  type: 'dropdown' | 'text' | 'numeric' | 'boolean';
+  type: 'dropdown' | 'text' | 'numeric' | 'boolean' | 'color';
   isActive: boolean;
   sortOrder: number;
   createdAt: Date;
@@ -151,7 +151,8 @@ export interface IAttribute {
 export interface IAttributeValue {
   id: string;
   attributeId: string;
-  value: string;
+  displayName: string;
+  representedValue: string;
   sortOrder: number;
   isActive: boolean;
   createdAt: Date;

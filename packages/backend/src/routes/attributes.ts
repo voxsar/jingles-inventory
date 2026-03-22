@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(authenticate);
 
-const VALID_TYPES = ['dropdown', 'text', 'numeric', 'boolean'];
+const VALID_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
 
 // ── Attributes CRUD ──────────────────────────────────────────────────────────
 
@@ -123,7 +123,7 @@ router.get('/:id/values', [param('id').isUUID()], async (req: AuthRequest, res: 
   }
   const values = await prisma.attributeValue.findMany({
     where: { attributeId: req.params!.id, isActive: true },
-    orderBy: [{ sortOrder: 'asc' }, { value: 'asc' }],
+    orderBy: [{ sortOrder: 'asc' }, { displayName: 'asc' }],
   });
   res.json({ success: true, data: values });
 });
@@ -131,7 +131,12 @@ router.get('/:id/values', [param('id').isUUID()], async (req: AuthRequest, res: 
 router.post(
   '/:id/values',
   requireRole('Admin', 'Manager'),
-  [param('id').isUUID(), body('value').notEmpty().trim(), body('sortOrder').optional({ nullable: true }).isInt({ min: 0 })],
+  [
+    param('id').isUUID(),
+    body('displayName').notEmpty().trim(),
+    body('representedValue').notEmpty().trim(),
+    body('sortOrder').optional({ nullable: true }).isInt({ min: 0 }),
+  ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -143,16 +148,20 @@ router.post(
       res.status(404).json({ error: 'Attribute not found' });
       return;
     }
-    const { value, sortOrder } = req.body as { value: string; sortOrder?: number };
+    const { displayName, representedValue, sortOrder } = req.body as {
+      displayName: string;
+      representedValue: string;
+      sortOrder?: number;
+    };
     const existing = await prisma.attributeValue.findUnique({
-      where: { attributeId_value: { attributeId: req.params!.id, value } },
+      where: { attributeId_representedValue: { attributeId: req.params!.id, representedValue } },
     });
     if (existing) {
-      res.status(409).json({ error: 'This value already exists for this attribute' });
+      res.status(409).json({ error: 'This represented value already exists for this attribute' });
       return;
     }
     const attrValue = await prisma.attributeValue.create({
-      data: { attributeId: req.params!.id, value, sortOrder: sortOrder ?? 0 },
+      data: { attributeId: req.params!.id, displayName, representedValue, sortOrder: sortOrder ?? 0 },
     });
     res.status(201).json({ success: true, data: attrValue });
   }
@@ -175,14 +184,15 @@ router.put(
       res.status(404).json({ error: 'Attribute value not found' });
       return;
     }
-    const { value, sortOrder, isActive } = req.body as {
-      value?: string;
+    const { displayName, representedValue, sortOrder, isActive } = req.body as {
+      displayName?: string;
+      representedValue?: string;
       sortOrder?: number;
       isActive?: boolean;
     };
     const attrValue = await prisma.attributeValue.update({
       where: { id: req.params!.valueId },
-      data: { value, sortOrder, isActive },
+      data: { displayName, representedValue, sortOrder, isActive },
     });
     res.json({ success: true, data: attrValue });
   }

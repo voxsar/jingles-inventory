@@ -160,7 +160,7 @@ model SKUTag {
 model Attribute {
   id            String   @id @default(uuid())
   name          String   @unique
-  type          String   @default("dropdown") // dropdown | text | numeric | boolean
+  type          String   @default("dropdown") // dropdown | text | numeric | boolean | color
   isActive      Boolean  @default(true) @map("is_active")
   sortOrder     Int      @default(0) @map("sort_order")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -173,18 +173,19 @@ model Attribute {
 }
 
 model AttributeValue {
-  id          String   @id @default(uuid())
-  attributeId String   @map("attribute_id")
-  value       String
-  sortOrder   Int      @default(0) @map("sort_order")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  attributeId      String   @map("attribute_id")
+  displayName      String   @map("display_name")
+  representedValue String   @map("represented_value")
+  sortOrder        Int      @default(0) @map("sort_order")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
 
-  attribute     Attribute         @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  variantValues SKUVariantValue[]
+  attribute          Attribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  variantValues      SKUVariantValue[]
   skuAttributeValues SKUAttributeValue[]
 
-  @@unique([attributeId, value])
+  @@unique([attributeId, representedValue])
   @@map("attribute_values")
 }
 

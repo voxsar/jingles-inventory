@@ -726,7 +726,7 @@ export default function SKUPage() {
                                             });
                                           }}
                                         />
-                                        {val.value}
+                                        {attr.type === 'color' ? (<span className="flex items-center gap-1"><span className="inline-block w-4 h-4 rounded-full border border-gray-300" style={{ background: val.representedValue }} />{val.displayName}</span>) : val.displayName}
                                       </label>
                                     );
                                   })}
@@ -760,7 +760,7 @@ export default function SKUPage() {
                                 <td className="px-3 py-2">
                                   <div className="flex flex-wrap gap-1">
                                     {(v.attributeValues ?? []).map((av: any) => (
-                                      <span key={av.attributeValueId} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{av.attribute?.name}: {av.attributeValue?.value}</span>
+                                      <span key={av.attributeValueId} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{av.attribute?.name}: {av.attributeValue?.displayName}</span>
                                     ))}
                                   </div>
                                 </td>
