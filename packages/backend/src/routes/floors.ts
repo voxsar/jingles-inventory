@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { body, param, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -7,9 +7,16 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/', async (_req, res: Response): Promise<void> => {
+router.get('/', [query('branchId').optional().isUUID()], async (req: AuthRequest, res: Response): Promise<void> => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+  const where: any = { isActive: true };
+  if (req.query?.branchId) where.branchId = req.query.branchId as string;
   const floors = await prisma.floor.findMany({
-    where: { isActive: true },
+    where,
     include: {
       branch: { select: { id: true, name: true, code: true } },
       _count: { select: { inventoryRecords: true, shelves: true } },

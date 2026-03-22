@@ -334,6 +334,7 @@ export default function BranchesPage() {
     },
     { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.code}</span> },
     { key: 'notes', header: 'Notes', render: (r: any) => r.notes ?? '—' },
+    { key: 'inventory', header: 'Inventory', render: (r: any) => <span className="text-xs text-gray-600">{r._count?.inventoryRecords ?? 0} records</span> },
     { key: 'isActive', header: 'Active', render: (r: any) => r.isActive ? '✅' : '❌' },
     {
       key: 'actions', header: '',

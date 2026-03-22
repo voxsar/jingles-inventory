@@ -14,7 +14,7 @@ router.use(authenticate);
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { state, skuId, floorId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+    const { state, skuId, branchId, floorId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
     const user = req.user!;
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
@@ -22,7 +22,11 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const where: any = {};
     if (state) where.state = state;
     if (skuId) where.skuId = skuId;
-    if (floorId) where.floorId = floorId;
+    if (floorId) {
+      where.floorId = floorId;
+    } else if (branchId) {
+      where.floor = { branchId };
+    }
     if (shelfId) where.shelfId = shelfId;
     if (boxId) where.boxId = boxId;
 
@@ -45,7 +49,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
               },
             },
           },
-          floor: true,
+          floor: { include: { branch: { select: { id: true, name: true } } } },
           shelf: true,
           box: true,
           user: { select: { email: true } },

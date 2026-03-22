@@ -39,7 +39,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				take: pageSizeNum,
 				include: {
 					supplier: { select: { id: true, name: true } },
-					floor: true,
+					floor: { include: { branch: { select: { id: true, name: true } } } },
 					creator: { select: { id: true, email: true } },
 				lines: { include: { sku: { select: { id: true, skuCode: true, name: true } }, variant: { include: { attributeValues: { include: { attribute: true, attributeValue: true } } } } } },
 				},
@@ -104,7 +104,7 @@ router.get(
 				where: { id: req.params!.id },
 				include: {
 					supplier: true,
-					floor: true,
+					floor: { include: { branch: { select: { id: true, name: true } } } },
 					creator: { select: { id: true, email: true } },
 					lines: {
 						include: {
