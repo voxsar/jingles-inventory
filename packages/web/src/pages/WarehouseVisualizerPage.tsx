@@ -222,11 +222,10 @@ export default function WarehouseVisualizerPage() {
   const [selectedRack, setSelectedRack] = useState<string | null>(null);
   const [loading,      setLoading]      = useState(true);
 
-  // Camera state: focal target in world space, distance (orbit radius), azimuth, elevation
-  const [camTarget,  setCamTarget]  = useState<{ x: number; z: number }>({ x: 0, z: 0 });
-  const [camDist,    setCamDist]    = useState(12);
-  const [camAz,      setCamAz]      = useState(30);   // degrees around Y
-  const [camEl,      setCamEl]      = useState(45);   // degrees up from horizon
+  // Camera state: free-fly position + look direction
+  const [camPos,   setCamPos]   = useState<{ x: number; y: number; z: number }>({ x: 4, y: 8, z: 7 });
+  const [camYaw,   setCamYaw]   = useState(30);    // horizontal rotation, degrees (0 = -Z, 90 = +X)
+  const [camPitch, setCamPitch] = useState(-45);   // vertical tilt, degrees (negative = look down)
 
   const [aframeReady,  setAframeReady]  = useState(false);
 
@@ -239,22 +238,44 @@ export default function WarehouseVisualizerPage() {
   }>>([]);
   const [overviewLoading, setOverviewLoading] = useState(false);
 
-  // ── Stable ref so event handlers always see latest rackPos ───────────────
+  // ── Stable refs so event handlers always see latest state ───────────────
   const rackPosRef = useRef(rackPos);
   useEffect(() => { rackPosRef.current = rackPos; }, [rackPos]);
+
+  const camRef = useRef({ camPos, camYaw, camPitch });
+  useEffect(() => { camRef.current = { camPos, camYaw, camPitch }; }, [camPos, camYaw, camPitch]);
+
+  const viewModeRef  = useRef(viewMode);
+  useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
+
+  const floorsCountRef = useRef(floors.length);
+  useEffect(() => { floorsCountRef.current = floors.length; }, [floors.length]);
+
+  // ── Bounding-box clamp (20 % beyond furthest floor edge in x/y/z) ─────────
+  const clampCamPos = useCallback((pos: { x: number; y: number; z: number }): { x: number; y: number; z: number } => {
+    const FS = 30; // FLOOR_SIZE
+    const GAP = 8;
+    const n = viewModeRef.current === 'overview' ? Math.max(1, floorsCountRef.current) : 1;
+    const floorMinX = -(FS / 2);
+    const floorMaxX = (n - 1) * (FS + GAP) + FS / 2;
+    const floorMinZ = -(FS / 2);
+    const floorMaxZ =  FS / 2;
+    const padX = (floorMaxX - floorMinX) * 0.2;
+    const padZ = (floorMaxZ - floorMinZ) * 0.2;
+    const maxH = Math.max(floorMaxX - floorMinX, FS) * 1.2;
+    return {
+      x: Math.max(floorMinX - padX, Math.min(floorMaxX + padX, pos.x)),
+      y: Math.max(0.5, Math.min(maxH, pos.y)),
+      z: Math.max(floorMinZ - padZ, Math.min(floorMaxZ + padZ, pos.z)),
+    };
+  }, []); // reads only from refs – stable forever
 
   // ── Double-click tracking ─────────────────────────────────────────────────
   const lastClickRef = useRef<{ rackId: string | null; time: number }>({ rackId: null, time: 0 });
 
-  // ── Derived camera position ───────────────────────────────────────────────
-  const azRad = (camAz * Math.PI) / 180;
-  const elRad = (camEl * Math.PI) / 180;
-  const camX  = camTarget.x + camDist * Math.sin(azRad) * Math.cos(elRad);
-  const camY  = camDist * Math.sin(elRad);
-  const camZ  = camTarget.z + camDist * Math.cos(azRad) * Math.cos(elRad);
-  const camPosStr = `${camX.toFixed(2)} ${camY.toFixed(2)} ${camZ.toFixed(2)}`;
-  // Camera looks back toward the orbit target: tilt down by elevation, turn by azimuth
-  const camRotStr = `${(-camEl).toFixed(1)} ${camAz.toFixed(1)} 0`;
+  // ── Derived camera position & rotation strings ────────────────────────────
+  const camPosStr = `${camPos.x.toFixed(2)} ${camPos.y.toFixed(2)} ${camPos.z.toFixed(2)}`;
+  const camRotStr = `${camPitch.toFixed(1)} ${camYaw.toFixed(1)} 0`;
 
   // ── Load floors ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -359,24 +380,31 @@ export default function WarehouseVisualizerPage() {
           return next;
         });
       }
-      // Camera orbit with IJKL (no interference with WASD which A-Frame might use)
+      // Camera free-fly with IJKL (rotate) and = / - (move forward/back)
       if (['KeyI','KeyK','KeyJ','KeyL','Equal','Minus'].includes(e.code) && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
-        const step = 5;
-        if (e.code === 'KeyI') setCamEl(v => Math.min(89, v + step));
-        if (e.code === 'KeyK') setCamEl(v => Math.max(5, v - step));
-        if (e.code === 'KeyJ') setCamAz(v => (v - step + 360) % 360);
-        if (e.code === 'KeyL') setCamAz(v => (v + step) % 360);
-        if (e.code === 'Equal') setCamDist(v => Math.max(1, v - 1));
-        if (e.code === 'Minus') setCamDist(v => Math.min(50, v + 1));
+        const rotStep = 5;
+        const moveStep = 1.5;
+        if (e.code === 'KeyI') setCamPitch(v => Math.min(85, v + rotStep));
+        if (e.code === 'KeyK') setCamPitch(v => Math.max(-85, v - rotStep));
+        if (e.code === 'KeyJ') setCamYaw(v => (v - rotStep + 360) % 360);
+        if (e.code === 'KeyL') setCamYaw(v => (v + rotStep) % 360);
+        if (e.code === 'Equal' || e.code === 'Minus') {
+          const sign = e.code === 'Equal' ? 1 : -1;
+          const { camYaw: yaw } = camRef.current;
+          const yr = (yaw * Math.PI) / 180;
+          const hfx = -Math.sin(yr);
+          const hfz = -Math.cos(yr);
+          setCamPos(v => clampCamPos({ x: v.x + hfx * moveStep * sign, y: v.y, z: v.z + hfz * moveStep * sign }));
+        }
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [selectedRack]);
+  }, [selectedRack, clampCamPos]);
 
-  // ── Mouse drag for orbit ──────────────────────────────────────────────────
-  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; startX: number; startY: number; mode: 'orbit'|'pan' }>({ active: false, lastX: 0, lastY: 0, startX: 0, startY: 0, mode: 'orbit' });
+  // ── Mouse drag: look around (left/middle) or pan (right/Alt) ─────────────
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; mode: 'look'|'pan' }>({ active: false, lastX: 0, lastY: 0, mode: 'look' });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -384,9 +412,9 @@ export default function WarehouseVisualizerPage() {
     if (!el) return;
 
     function onMouseDown(e: MouseEvent) {
-      // Left (0) and middle (1) → orbit; right (2) or Alt+left → pan
-      const mode: 'orbit' | 'pan' = (e.button === 2 || (e.button === 0 && e.altKey)) ? 'pan' : 'orbit';
-      dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, startX: e.clientX, startY: e.clientY, mode };
+      // Left (0) and middle (1) → look around; right (2) or Alt+left → pan
+      const mode: 'look' | 'pan' = (e.button === 2 || (e.button === 0 && e.altKey)) ? 'pan' : 'look';
+      dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, mode };
       e.preventDefault();
     }
     function onMouseMove(e: MouseEvent) {
@@ -395,28 +423,34 @@ export default function WarehouseVisualizerPage() {
       const dy = e.clientY - dragRef.current.lastY;
       dragRef.current.lastX = e.clientX;
       dragRef.current.lastY = e.clientY;
-      if (dragRef.current.mode === 'orbit') {
-        setCamAz(v => (v + dx * 0.4 + 360) % 360);
-        // Clamp elevation ≥ 5° so camera never goes below the floor
-        setCamEl(v => Math.max(5, Math.min(89, v - dy * 0.3)));
+      if (dragRef.current.mode === 'look') {
+        // Rotate camera in place: horizontal drag = yaw, vertical drag = pitch
+        setCamYaw(v => (v + dx * 0.4 + 360) % 360);
+        setCamPitch(v => Math.max(-85, Math.min(85, v - dy * 0.3)));
       } else {
-        // Pan: move target in the camera's horizontal plane
-        const azRad2 = (camAz * Math.PI) / 180;
-        const rightX = Math.cos(azRad2);
-        const rightZ = -Math.sin(azRad2);
-        const fwdX = -Math.sin(azRad2) * Math.cos((camEl * Math.PI) / 180);
-        const fwdZ = -Math.cos(azRad2) * Math.cos((camEl * Math.PI) / 180);
-        const speed = camDist * 0.003;
-        setCamTarget(v => ({
-          x: v.x - dx * rightX * speed + dy * fwdX * speed,
-          z: v.z - dx * rightZ * speed + dy * fwdZ * speed,
+        // Pan: translate camera position using right + world-up vectors
+        const { camYaw: yaw } = camRef.current;
+        const yr = (yaw * Math.PI) / 180;
+        const rx = Math.cos(yr);
+        const rz = -Math.sin(yr);
+        const speed = 0.04;
+        setCamPos(v => clampCamPos({
+          x: v.x - dx * rx * speed,
+          y: v.y + dy * speed,   // drag up → camera moves up
+          z: v.z - dx * rz * speed,
         }));
       }
     }
     function onMouseUp() { dragRef.current.active = false; }
     function onWheel(e: WheelEvent) {
       e.preventDefault();
-      setCamDist(v => Math.max(1, Math.min(80, v + e.deltaY * 0.02)));
+      // Move forward/backward along horizontal look direction
+      const { camYaw: yaw } = camRef.current;
+      const yr = (yaw * Math.PI) / 180;
+      const hfx = -Math.sin(yr);
+      const hfz = -Math.cos(yr);
+      const delta = e.deltaY * 0.03;
+      setCamPos(v => clampCamPos({ x: v.x + hfx * delta, y: v.y, z: v.z + hfz * delta }));
     }
     function onContextMenu(e: Event) { e.preventDefault(); }
     // Suppress middle-mouse "autoscroll" open-link behaviour in browsers
@@ -436,9 +470,9 @@ export default function WarehouseVisualizerPage() {
       el.removeEventListener('contextmenu', onContextMenu);
       el.removeEventListener('auxclick', onAuxClick);
     };
-  }, [camAz, camEl, camDist]);
+  }, [clampCamPos]);
 
-  // ── Click → select rack (single) / double-click → focus orbit ────────────
+  // ── Click → select rack (single) / double-click → center view on rack ──────
   const sceneRef = useRef<HTMLElement & EventTarget>(null);
   useEffect(() => {
     const scene = sceneRef.current;
@@ -464,12 +498,28 @@ export default function WarehouseVisualizerPage() {
       lastClickRef.current = { rackId, time: now };
 
       if (isDoubleClick && rackId) {
-        // Center orbit on this shelf/rack position; elevation stays ≥ 5°
+        // Center view on rack: look at it and move closer – no orbit anchor
         const p = rackPosRef.current[rackId];
         if (p) {
-          setCamTarget({ x: p.x, z: p.z });
-          setCamDist(5);
-          setCamEl(prev => Math.max(5, prev));
+          const cam = camRef.current;
+          const rackH = 1.0; // approximate rack centre height
+          const dx = p.x - cam.camPos.x;
+          const dy = rackH - cam.camPos.y;
+          const dz = p.z - cam.camPos.z;
+          const hDist = Math.sqrt(dx * dx + dz * dz);
+          const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          const newYaw   = ((Math.atan2(dx, dz) * 180) / Math.PI + 360) % 360;
+          const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
+          // Move camera to 5 m away from the rack
+          const moveDist = Math.max(0, totalDist - 5);
+          const newPos = {
+            x: cam.camPos.x + (dx / totalDist) * moveDist,
+            y: Math.max(1.5, cam.camPos.y + (dy / totalDist) * moveDist),
+            z: cam.camPos.z + (dz / totalDist) * moveDist,
+          };
+          setCamPos(clampCamPos(newPos));
+          setCamYaw(newYaw);
+          setCamPitch(Math.max(-85, Math.min(85, newPitch)));
         }
         setSelectedRack(rackId);
         return;
@@ -506,14 +556,29 @@ export default function WarehouseVisualizerPage() {
     });
   }, [selectedRack]);
 
-  // ── Focus on selected rack (zoom in) ─────────────────────────────────────
+  // ── Focus on selected rack (position camera to look at it) ──────────────
   const focusOnRack = useCallback((rackId: string) => {
     const p = rackPos[rackId];
     if (!p) return;
-    setCamTarget({ x: p.x, z: p.z });
-    setCamDist(4);
-    setCamEl(30);
-  }, [rackPos]);
+    const cam = camRef.current;
+    const rackH = 1.0;
+    const dx = p.x - cam.camPos.x;
+    const dy = rackH - cam.camPos.y;
+    const dz = p.z - cam.camPos.z;
+    const hDist = Math.sqrt(dx * dx + dz * dz);
+    const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const newYaw   = ((Math.atan2(dx, dz) * 180) / Math.PI + 360) % 360;
+    const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
+    const moveDist = Math.max(0, totalDist - 4);
+    const newPos = {
+      x: cam.camPos.x + (dx / (totalDist || 1)) * moveDist,
+      y: Math.max(1.5, cam.camPos.y + (dy / (totalDist || 1)) * moveDist),
+      z: cam.camPos.z + (dz / (totalDist || 1)) * moveDist,
+    };
+    setCamPos(clampCamPos(newPos));
+    setCamYaw(newYaw);
+    setCamPitch(Math.max(-85, Math.min(85, newPitch)));
+  }, [rackPos, clampCamPos]);
 
   // ── Load all-floors overview data ─────────────────────────────────────────
   const loadOverview = useCallback(async () => {
@@ -546,12 +611,14 @@ export default function WarehouseVisualizerPage() {
     setViewMode('overview');
     setSelectedRack(null);
     loadOverview();
-    // Zoom out to see all floors
+    // Position camera above centre of all floors, looking down
+    const FS = 30; // FLOOR_SIZE
     const spread = Math.max(1, floors.length);
-    setCamTarget({ x: (spread - 1) * (FLOOR_SIZE + 8) / 2, z: 0 });
-    setCamDist(Math.min(80, 14 + spread * 8));
-    setCamEl(55);
-    setCamAz(30);
+    const centerX = (spread - 1) * (FS + 8) / 2;
+    const height = Math.min(60, 10 + spread * 8);
+    setCamPos({ x: centerX, y: height, z: height * 0.6 });
+    setCamYaw(0);     // face north (−Z)
+    setCamPitch(-55); // look steeply down
   }, [floors.length, loadOverview]);
 
   // ── Floor size ────────────────────────────────────────────────────────────
@@ -612,15 +679,10 @@ export default function WarehouseVisualizerPage() {
 
         <span className="text-gray-500">|</span>
 
-        {/* Camera controls */}
-        <label className="font-semibold text-gray-300 text-xs">Zoom:</label>
-        <input type="range" min={1} max={80} value={camDist} onChange={e => setCamDist(Number(e.target.value))} className="w-20" />
-        <span className="text-gray-400 text-xs">{camDist.toFixed(0)}m</span>
-
-        <span className="text-gray-500">|</span>
-
-        <label className="font-semibold text-gray-300 text-xs">Elevation:</label>
-        <input type="range" min={5} max={89} value={camEl} onChange={e => setCamEl(Number(e.target.value))} className="w-16" />
+        {/* Camera height quick-adjust */}
+        <label className="font-semibold text-gray-300 text-xs">Height:</label>
+        <input type="range" min={0.5} max={40} step={0.5} value={camPos.y} onChange={e => setCamPos(v => clampCamPos({ ...v, y: Number(e.target.value) }))} className="w-20" />
+        <span className="text-gray-400 text-xs">{camPos.y.toFixed(1)}m</span>
 
         <span className="text-gray-500">|</span>
 
@@ -645,8 +707,8 @@ export default function WarehouseVisualizerPage() {
         ) : (
           <span className="text-gray-400 text-xs italic">
             {viewMode === 'overview'
-              ? 'All Floors overview · Drag to orbit · Middle-drag / Scroll to zoom'
-              : 'Left/Middle-drag to orbit · Right/Alt-drag to pan · Scroll to zoom · Click to select · Double-click to focus'}
+              ? 'Free-fly · Drag to look · Right/Alt-drag to pan · Scroll to move forward/back'
+              : 'Drag to look · Right/Alt-drag to pan · Scroll to move · Double-click rack to centre'}
           </span>
         )}
 
@@ -656,7 +718,7 @@ export default function WarehouseVisualizerPage() {
             if (viewMode === 'overview') {
               enterOverview();
             } else {
-              setCamTarget({ x: 0, z: 0 }); setCamDist(12); setCamEl(45); setCamAz(30);
+              setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
             }
           }}
           className="ml-auto px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
@@ -876,10 +938,7 @@ export default function WarehouseVisualizerPage() {
                 // Switch to single-floor view for this floor
                 setViewMode('single');
                 setSelectedFloor(fd.floor.id);
-                setCamTarget({ x: 0, z: 0 });
-                setCamDist(12);
-                setCamEl(45);
-                setCamAz(30);
+                setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
               }}
               className="flex items-center gap-1 px-3 py-1 rounded text-xs border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex-shrink-0"
             >
