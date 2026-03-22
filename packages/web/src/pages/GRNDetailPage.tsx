@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { grnsApi } from '../api/client';
-import { GRNStatus, DamageClassification } from '@jingles/shared';
+import { grnsApi, settingsApi } from '../api/client';
+import { GRNStatus } from '@jingles/shared';
 
 const STATUS_TONES: Record<string, string> = {
   [GRNStatus.Draft]: '',
@@ -16,6 +16,7 @@ export default function GRNDetailPage() {
   const navigate = useNavigate();
   const [grn, setGrn] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [damageClassifications, setDamageClassifications] = useState<{ value: string; label: string }[]>([]);
   const [inspectingLineId, setInspectingLineId] = useState<string | null>(null);
   const [inspectionForm, setInspectionForm] = useState({
     approvedQuantity: 0,
@@ -38,7 +39,17 @@ export default function GRNDetailPage() {
     }
   };
 
-  useEffect(() => { loadGRN(); }, [id]);
+  const loadDamageClassifications = async () => {
+    try {
+      const res = await settingsApi.listStatuses('damage_classification');
+      const items: any[] = res.data?.data ?? res.data ?? [];
+      setDamageClassifications(items.map((s: any) => ({ value: s.value, label: s.label })));
+    } catch (err) {
+      console.error('Failed to load damage classifications', err);
+    }
+  };
+
+  useEffect(() => { loadGRN(); loadDamageClassifications(); }, [id]);
 
   const handleSubmit = async () => {
     if (!id || !confirm('Submit this GRN? This will create Uninspected inventory records.')) return;
@@ -222,7 +233,7 @@ export default function GRNDetailPage() {
                       <label className="form-label">Damage Classification</label>
                       <select className="input-field" value={inspectionForm.damageClassification} onChange={(e) => setInspectionForm((f) => ({ ...f, damageClassification: e.target.value }))}>
                         <option value="">None</option>
-                        {Object.values(DamageClassification).map((d) => <option key={d} value={d}>{d}</option>)}
+                        {damageClassifications.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                       </select>
                     </div>
                     <div className="form-group">

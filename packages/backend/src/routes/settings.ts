@@ -100,7 +100,7 @@ router.delete(
 
 // ── Status Options ────────────────────────────────────────
 
-const VALID_ENTITY_TYPES = ['inventory', 'product', 'location', 'branch', 'supplier', 'grn', 'stock_transfer'];
+const VALID_ENTITY_TYPES = ['inventory', 'product', 'location', 'branch', 'supplier', 'grn', 'stock_transfer', 'damage_classification', 'vendor_type'];
 
 router.get('/statuses', async (req: AuthRequest, res: Response): Promise<void> => {
   const { entityType } = req.query as { entityType?: string };

@@ -7,10 +7,12 @@ const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
 const ENTITY_TYPES = [
   { key: 'inventory', label: 'Inventory States', shortLabel: 'Inventory', icon: '📦', description: 'States for inventory records' },
   { key: 'grn', label: 'GRN Statuses', shortLabel: 'GRN', icon: '📋', description: 'Statuses for Goods Received Notes' },
+  { key: 'damage_classification', label: 'Damage Classifications', shortLabel: 'Damage', icon: '⚠️', description: 'Damage classifications for GRN inspections' },
   { key: 'product', label: 'Product Statuses', shortLabel: 'Product', icon: '🎵', description: 'Statuses for products/SKUs' },
   { key: 'location', label: 'Location Statuses', shortLabel: 'Location', icon: '📍', description: 'Statuses for warehouse locations' },
   { key: 'branch', label: 'Branch Statuses', shortLabel: 'Branch', icon: '🏪', description: 'Statuses for branches' },
   { key: 'supplier', label: 'Supplier Statuses', shortLabel: 'Supplier', icon: '🏭', description: 'Statuses for suppliers/vendors' },
+  { key: 'vendor_type', label: 'Vendor Types', shortLabel: 'Vendor Type', icon: '🏷️', description: 'Classification types for vendors/suppliers' },
   { key: 'stock_transfer', label: 'Transfer Statuses', shortLabel: 'Transfer', icon: '🔄', description: 'Statuses for stock transfers' },
 ];
 
