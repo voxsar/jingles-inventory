@@ -3,6 +3,42 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+type StatusSeedEntry = {
+	entityType: string;
+	value: string;
+	label: string;
+	color?: string;
+	sortOrder: number;
+	isDefault: boolean;
+};
+
+const STATUS_SEED_DATA: StatusSeedEntry[] = [
+	// Inventory states
+	{ entityType: 'inventory', value: 'UnopenedBox', label: 'Unopened Box', color: 'gray', sortOrder: 0, isDefault: true },
+	{ entityType: 'inventory', value: 'Uninspected', label: 'Uninspected', color: 'warning', sortOrder: 1, isDefault: false },
+	{ entityType: 'inventory', value: 'Inspected', label: 'Inspected', color: 'info', sortOrder: 2, isDefault: false },
+	{ entityType: 'inventory', value: 'ShelfReady', label: 'Shelf Ready', color: 'success', sortOrder: 3, isDefault: false },
+	{ entityType: 'inventory', value: 'Damaged', label: 'Damaged', color: 'critical', sortOrder: 4, isDefault: false },
+	{ entityType: 'inventory', value: 'Returned', label: 'Returned', color: 'warning', sortOrder: 5, isDefault: false },
+	{ entityType: 'inventory', value: 'Reserved', label: 'Reserved', color: 'info', sortOrder: 6, isDefault: false },
+	{ entityType: 'inventory', value: 'Sold', label: 'Sold', color: 'gray', sortOrder: 7, isDefault: false },
+
+	// GRN statuses
+	{ entityType: 'grn', value: 'Draft', label: 'Draft', color: 'gray', sortOrder: 0, isDefault: true },
+	{ entityType: 'grn', value: 'Submitted', label: 'Submitted', color: 'info', sortOrder: 1, isDefault: false },
+	{ entityType: 'grn', value: 'PartiallyInspected', label: 'Partially Inspected', color: 'warning', sortOrder: 2, isDefault: false },
+	{ entityType: 'grn', value: 'FullyInspected', label: 'Fully Inspected', color: 'success', sortOrder: 3, isDefault: false },
+	{ entityType: 'grn', value: 'Closed', label: 'Closed', color: 'gray', sortOrder: 4, isDefault: false },
+
+	// Stock transfer statuses
+	{ entityType: 'stock_transfer', value: 'Draft', label: 'Draft', color: 'gray', sortOrder: 0, isDefault: true },
+	{ entityType: 'stock_transfer', value: 'Pending', label: 'Pending', color: 'warning', sortOrder: 1, isDefault: false },
+	{ entityType: 'stock_transfer', value: 'Approved', label: 'Approved', color: 'info', sortOrder: 2, isDefault: false },
+	{ entityType: 'stock_transfer', value: 'InTransit', label: 'In Transit', color: 'info', sortOrder: 3, isDefault: false },
+	{ entityType: 'stock_transfer', value: 'Completed', label: 'Completed', color: 'success', sortOrder: 4, isDefault: false },
+	{ entityType: 'stock_transfer', value: 'Cancelled', label: 'Cancelled', color: 'critical', sortOrder: 5, isDefault: false },
+];
+
 async function main() {
 	// Admin user
 	const adminEmail = 'admin@theredsun.org';
@@ -47,6 +83,24 @@ async function main() {
 		});
 		console.log('Seed: created sample SKU');
 	}
+
+	// System status options (inventory, grn, stock_transfer)
+	let statusesCreated = 0;
+	let statusesSkipped = 0;
+	for (const entry of STATUS_SEED_DATA) {
+		const existing = await prisma.statusOption.findUnique({
+			where: { entityType_value: { entityType: entry.entityType, value: entry.value } },
+		});
+		if (!existing) {
+			await prisma.statusOption.create({
+				data: { ...entry, isSystem: true, isActive: true },
+			});
+			statusesCreated++;
+		} else {
+			statusesSkipped++;
+		}
+	}
+	console.log(`Seed: status options — ${statusesCreated} created, ${statusesSkipped} already exist`);
 }
 
 main()
