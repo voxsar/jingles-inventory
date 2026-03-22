@@ -340,6 +340,7 @@ model Shelf {
   rack             Rack?            @relation(fields: [rackId], references: [id])
   boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
+  grns             GRN[]
 
   @@map("shelves")
 }
@@ -479,6 +480,7 @@ model GRN {
   id                   String    @id @default(uuid())
   supplierId           String    @map("supplier_id")
   floorId              String?   @map("floor_id")
+  shelfId              String?   @map("shelf_id")
   invoiceReference     String?   @map("invoice_reference")
   supplierInvoiceDate  DateTime? @map("supplier_invoice_date")
   expectedDeliveryDate DateTime? @map("expected_delivery_date")
@@ -491,6 +493,7 @@ model GRN {
 
   supplier Vendor    @relation(fields: [supplierId], references: [id])
   floor    Floor?    @relation(fields: [floorId], references: [id])
+  shelf    Shelf?    @relation(fields: [shelfId], references: [id])
   creator  User      @relation(fields: [createdBy], references: [id])
   lines    GRNLine[]
 

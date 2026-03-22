@@ -40,6 +40,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				include: {
 					supplier: { select: { id: true, name: true } },
 					floor: { include: { branch: { select: { id: true, name: true } } } },
+					shelf: { select: { id: true, name: true, code: true } },
 					creator: { select: { id: true, email: true } },
 				lines: { include: { sku: { select: { id: true, skuCode: true, name: true } }, variant: { include: { attributeValues: { include: { attribute: true, attributeValue: true } } } } } },
 				},
