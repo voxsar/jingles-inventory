@@ -7,7 +7,7 @@ const navItems = [
   { to: '/grns', label: '📋 GRNs' },
   { to: '/skus', label: '🎵 Products (SKUs)' },
   { to: '/categories', label: '🗂️ Categories' },
-  { to: '/locations', label: '📍 Locations' },
+  { to: '/locations', label: '📍 Storage Zones' },
   { to: '/branches', label: '🏢 Branches' },
   { to: '/stock-transfers', label: '🔄 Stock Transfers' },
   { to: '/suppliers', label: '🤝 Suppliers' },

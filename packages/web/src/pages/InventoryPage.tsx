@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { inventoryApi, locationsApi, skusApi } from '../api/client';
-import { InventoryState } from '@jingles/shared';
+import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
@@ -10,6 +10,7 @@ const PAGE_SIZE = 20;
 
 const defaultNewForm = { skuId: '', locationId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
 const defaultEditForm = { locationId: '', quantity: '1', batchId: '' };
+const defaultTransitionForm = { toState: '', reason: '' };
 
 export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
@@ -26,6 +27,8 @@ export default function InventoryPage() {
   const [skus, setSkus] = useState<any[]>([]);
   const [barcodeScanResult, setBarcodeScanResult] = useState<any>(null);
   const [transitioning, setTransitioning] = useState<string | null>(null);
+  const [transitionRecord, setTransitionRecord] = useState<any>(null);
+  const [transitionForm, setTransitionForm] = useState(defaultTransitionForm);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState(defaultNewForm);
   const [editingRecord, setEditingRecord] = useState<any>(null);
@@ -75,13 +78,22 @@ export default function InventoryPage() {
     searchDebounceRef.current = setTimeout(() => { setDebouncedSearch(value); setPage(1); }, 300);
   };
 
-  const handleTransition = async (record: any) => {
-    const newState = prompt(`Transition "${record.sku?.name}" to new state:`);
-    if (!newState) return;
-    const reason = prompt('Reason (optional):') ?? undefined;
-    setTransitioning(record.id);
+  const openTransition = (record: any) => {
+    const currentState = record.state as InventoryState;
+    const allowedNext = ALLOWED_TRANSITIONS[currentState] ?? [];
+    const firstNext = allowedNext.length > 0 ? allowedNext[0] : '';
+    setTransitionRecord(record);
+    setTransitionForm({ toState: firstNext, reason: '' });
+  };
+
+  const handleTransition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transitionRecord || !transitionForm.toState) return;
+    setTransitioning(transitionRecord.id);
     try {
-      await inventoryApi.transition(record.id, newState, reason);
+      await inventoryApi.transition(transitionRecord.id, transitionForm.toState, transitionForm.reason || undefined);
+      setTransitionRecord(null);
+      setTransitionForm(defaultTransitionForm);
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Transition failed');
@@ -167,7 +179,7 @@ export default function InventoryPage() {
           </button>
           <button
             className="btn-sm"
-            onClick={(e: any) => { e.stopPropagation(); handleTransition(r); }}
+            onClick={(e: any) => { e.stopPropagation(); openTransition(r); }}
             disabled={transitioning === r.id}
           >
             {transitioning === r.id ? '…' : 'Transition'}
@@ -369,6 +381,74 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      {/* Transition Modal */}
+      {transitionRecord && (() => {
+        const currentState = transitionRecord.state as InventoryState;
+        const allowedNext = (ALLOWED_TRANSITIONS[currentState] ?? []) as InventoryState[];
+        const allStates = Object.values(InventoryState);
+        return (
+          <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setTransitionRecord(null)}>
+            <div className="modal-panel-md">
+              <div className="modal-header">
+                <div>
+                  <h2 className="modal-title">🔄 State Transition</h2>
+                  <p className="text-xs text-gray-400 font-mono">{transitionRecord.sku?.skuCode} — {transitionRecord.sku?.name}</p>
+                </div>
+                <button className="modal-close" onClick={() => setTransitionRecord(null)}>✕</button>
+              </div>
+              <form onSubmit={handleTransition}>
+                <div className="modal-body form-stack">
+                  <div className="form-group">
+                    <label className="form-label">Current State</label>
+                    <StateBadge state={transitionRecord.state} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Transition To *</label>
+                    <select
+                      className="input-field"
+                      required
+                      value={transitionForm.toState}
+                      onChange={(e) => setTransitionForm(f => ({ ...f, toState: e.target.value }))}
+                    >
+                      <option value="">— Select new state —</option>
+                      {allowedNext.length > 0 && (
+                        <optgroup label="✅ Valid transitions">
+                          {allowedNext.map(s => <option key={s} value={s}>{s}</option>)}
+                        </optgroup>
+                      )}
+                      <optgroup label="⚠️ Override (Manager/Admin only)">
+                        {allStates.filter(s => s !== currentState && !allowedNext.includes(s as InventoryState)).map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </optgroup>
+                    </select>
+                    {allowedNext.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1">⚠️ No valid transitions from "{currentState}". Override requires Manager or Admin role.</p>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Reason</label>
+                    <input
+                      className="input-field"
+                      type="text"
+                      placeholder="Optional reason for this transition"
+                      value={transitionForm.reason}
+                      onChange={(e) => setTransitionForm(f => ({ ...f, reason: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn-secondary" onClick={() => setTransitionRecord(null)}>Cancel</button>
+                  <button type="submit" className="btn-primary" disabled={!transitionForm.toState || transitioning === transitionRecord.id}>
+                    {transitioning === transitionRecord.id ? '⏳ Transitioning…' : '🔄 Apply Transition'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

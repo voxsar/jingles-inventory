@@ -135,12 +135,16 @@ export const categoriesApi = {
   delete: (id: string) => api.delete(`/categories/${id}`),
 };
 
-// Settings (Units of Measure)
+// Settings (Units of Measure + Status Options)
 export const settingsApi = {
   listUnits: () => api.get('/settings/units'),
   createUnit: (data: any) => api.post('/settings/units', data),
   updateUnit: (id: string, data: any) => api.put(`/settings/units/${id}`, data),
   deleteUnit: (id: string) => api.delete(`/settings/units/${id}`),
+  listStatuses: (entityType?: string) => api.get('/settings/statuses', { params: entityType ? { entityType } : undefined }),
+  createStatus: (data: any) => api.post('/settings/statuses', data),
+  updateStatus: (id: string, data: any) => api.put(`/settings/statuses/${id}`, data),
+  deleteStatus: (id: string) => api.delete(`/settings/statuses/${id}`),
 };
 
 // Branches
