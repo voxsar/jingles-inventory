@@ -253,10 +253,8 @@ export default function WarehouseVisualizerPage() {
   const camY  = camDist * Math.sin(elRad);
   const camZ  = camTarget.z + camDist * Math.cos(azRad) * Math.cos(elRad);
   const camPosStr = `${camX.toFixed(2)} ${camY.toFixed(2)} ${camZ.toFixed(2)}`;
-  // Look-at target
-  const camRotX = -Math.atan2(camY - 0, camDist * Math.cos(elRad)) * (180 / Math.PI);
-  const camRotY = camAz;
-  const camRotStr = `${camRotX.toFixed(1)} ${camRotY.toFixed(1)} 0`;
+  // Camera looks back toward the orbit target: tilt down by elevation, turn by azimuth
+  const camRotStr = `${(-camEl).toFixed(1)} ${camAz.toFixed(1)} 0`;
 
   // ── Load floors ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -698,9 +696,10 @@ export default function WarehouseVisualizerPage() {
             <a-light type="directional" color="#ffffff" intensity="0.8" position="5 10 5" />
             <a-light type="hemisphere"  color="#87CEEB" ground-color="#B8D4A8" intensity="0.3" />
 
-            {/* Static camera – we control position via state */}
+            {/* Orbit camera – position and rotation fully driven by React state */}
             <a-camera
               position={camPosStr}
+              rotation={camRotStr}
               look-controls="enabled: false"
               wasd-controls="enabled: false"
               fov="60"
@@ -709,15 +708,9 @@ export default function WarehouseVisualizerPage() {
                 color="#FFD700"
                 opacity="0.8"
                 scale="0.5 0.5 0.5"
-                raycaster="objects: [data-rack-id], a-box"
+                raycaster="objects: [data-rack-id]"
               />
             </a-camera>
-
-            {/* Manually point camera toward target */}
-            <a-entity
-              position={camPosStr}
-              rotation={camRotStr}
-            />
 
             <a-sky color="#1a1a2e" />
 
