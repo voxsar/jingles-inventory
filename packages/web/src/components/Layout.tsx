@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { branding } from '../config/branding';
 
 const navItems = [
   { to: '/dashboard', label: '📊 Dashboard' },
@@ -38,7 +39,7 @@ export default function Layout() {
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <span className="text-xl font-bold text-primary-600">🎵 Jingles</span>
+          <span className="text-xl font-bold text-primary-600">{branding.appLogoEmoji} {branding.appShortName}</span>
         </div>
 
         {/* Navigation */}
@@ -85,7 +86,7 @@ export default function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 flex-shrink-0">
-          <h1 className="text-lg font-semibold text-gray-800">Jingles Inventory Management</h1>
+          <h1 className="text-lg font-semibold text-gray-800">{branding.appHeaderTitle}</h1>
         </header>
 
         {/* Page content */}
