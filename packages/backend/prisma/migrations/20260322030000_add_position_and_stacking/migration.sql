@@ -19,7 +19,7 @@ ALTER TABLE storage_boxes
 
 -- 3. Add floor_id to storage_boxes (for floor-level boxes)
 ALTER TABLE storage_boxes
-  ADD COLUMN IF NOT EXISTS floor_id UUID REFERENCES floors(id);
+  ADD COLUMN IF NOT EXISTS floor_id TEXT REFERENCES floors(id);
 
 -- 4. Add 3D position and stacking fields to storage_boxes
 ALTER TABLE storage_boxes
@@ -28,4 +28,4 @@ ALTER TABLE storage_boxes
   ADD COLUMN IF NOT EXISTS pos_z          DOUBLE PRECISION,
   ADD COLUMN IF NOT EXISTS rotation_angle DOUBLE PRECISION DEFAULT 0,
   ADD COLUMN IF NOT EXISTS stack_order    INTEGER DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS parent_box_id  UUID REFERENCES storage_boxes(id);
+  ADD COLUMN IF NOT EXISTS parent_box_id  TEXT REFERENCES storage_boxes(id);
