@@ -6,6 +6,7 @@ import { recordEvent } from '../inventory/eventLedger';
 export async function createGRN(data: {
   supplierId: string;
   floorId?: string;
+  shelfId?: string;
   invoiceReference?: string;
   supplierInvoiceDate?: Date;
   expectedDeliveryDate?: Date;
@@ -39,6 +40,7 @@ export async function createGRN(data: {
     data: {
       supplierId: data.supplierId,
       floorId: data.floorId,
+      shelfId: data.shelfId,
       invoiceReference: data.invoiceReference,
       supplierInvoiceDate: data.supplierInvoiceDate,
       expectedDeliveryDate: data.expectedDeliveryDate,
@@ -93,6 +95,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
           variantId: line.variantId ?? null,
           batchId: line.batchReference,
           floorId: grn.floorId,
+          shelfId: grn.shelfId,
           quantity: line.expectedQuantity,
           state: InventoryState.Uninspected,
           userId,
