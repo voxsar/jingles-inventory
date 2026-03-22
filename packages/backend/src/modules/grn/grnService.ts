@@ -79,6 +79,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
 
   if (!grn) throw new Error('GRN not found');
   if (grn.status !== GRNStatus.Draft) throw new Error('Only Draft GRNs can be submitted');
+  if (!grn.shelfId) throw new Error('A shelf location must be assigned to the GRN before it can be submitted');
 
   const inventoryRecords = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const records = [];

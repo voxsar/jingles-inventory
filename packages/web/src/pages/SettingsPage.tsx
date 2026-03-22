@@ -47,8 +47,8 @@ export default function SettingsPage() {
   const [showAttrForm, setShowAttrForm] = useState(false);
   const [editingAttr, setEditingAttr] = useState<any>(null);
   const [attrForm, setAttrForm] = useState(defaultAttrForm);
-  const [expandedAttr, setExpandedAttr] = useState<string | null>(null);
-  const [showValueForm, setShowValueForm] = useState<string | null>(null);
+  const [managingValuesAttrId, setManagingValuesAttrId] = useState<string | null>(null);
+  const [showValueForm, setShowValueForm] = useState(false);
   const [attrValueForm, setAttrValueForm] = useState(defaultAttrValueForm);
   // editing an existing attribute value
   const [editingValue, setEditingValue] = useState<{ attrId: string; value: any } | null>(null);
@@ -230,16 +230,17 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAddValue = async (e: React.FormEvent, attributeId: string) => {
+  const handleAddValue = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!managingValuesAttrId) return;
     const payload = {
       displayName: attrValueForm.displayName,
       representedValue: attrValueForm.representedValue,
       sortOrder: parseInt(attrValueForm.sortOrder) || 0,
     };
     try {
-      await attributesApi.addValue(attributeId, payload);
-      setShowValueForm(null);
+      await attributesApi.addValue(managingValuesAttrId, payload);
+      setShowValueForm(false);
       setAttrValueForm(defaultAttrValueForm);
       await loadAttributes();
     } catch (err: any) {
@@ -260,13 +261,21 @@ export default function SettingsPage() {
   const openEditValue = (attrId: string, val: any) => {
     setEditingValue({ attrId, value: val });
     setEditValueForm({ displayName: val.displayName, representedValue: val.representedValue, sortOrder: String(val.sortOrder ?? 0) });
-    setShowValueForm(null);
+    setShowValueForm(false);
   };
 
-  const openAddValueForm = (attrId: string) => {
+  const openAddValueForm = () => {
     setEditingValue(null);
-    setShowValueForm(attrId);
+    setShowValueForm(true);
     setAttrValueForm(defaultAttrValueForm);
+  };
+
+  const closeValuesModal = () => {
+    setManagingValuesAttrId(null);
+    setShowValueForm(false);
+    setEditingValue(null);
+    setAttrValueForm(defaultAttrValueForm);
+    setEditValueForm(defaultAttrValueForm);
   };
 
   const handleUpdateValue = async (e: React.FormEvent) => {
@@ -376,156 +385,191 @@ export default function SettingsPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {attributes.map((attr: any) => (
-                <div key={attr.id}>
-                  <div className="flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        className="text-gray-400 hover:text-gray-600 text-lg w-6 text-center"
-                        onClick={() => setExpandedAttr(expandedAttr === attr.id ? null : attr.id)}
-                      >
-                        {expandedAttr === attr.id ? '▼' : '▶'}
-                      </button>
-                      <div>
-                        <span className="font-semibold text-gray-800">{attr.name}</span>
-                        <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{attr.type}</span>
-                        <span className="ml-2 text-xs text-gray-400">{attr.values?.length ?? 0} values</span>
-                      </div>
+                <div key={attr.id} className="flex items-center justify-between px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <span className="font-semibold text-gray-800">{attr.name}</span>
+                      <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{attr.type}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="btn-sm" onClick={() => { setEditingAttr(attr); setAttrForm({ name: attr.name, type: attr.type, sortOrder: String(attr.sortOrder ?? 0) }); setShowAttrForm(true); }}>Edit</button>
-                      <button className="btn-sm text-red-600" onClick={() => handleDeleteAttr(attr)}>Delete</button>
-                    </div>
-                  </div>
-                  {expandedAttr === attr.id && (
-                    <div className="bg-gray-50 px-12 pb-4">
-                      <div className="flex flex-col gap-2">
-                        {(attr.values ?? []).map((val: any) => (
-                          <div key={val.id}>
-                            {editingValue?.value.id === val.id ? (
-                              <form onSubmit={handleUpdateValue} className="flex gap-2 py-2 border-b border-gray-100">
-                                <div className="flex-1">
-                                  <input
-                                    className="input-field w-full"
-                                    type="text"
-                                    required
-                                    placeholder="Display name"
-                                    value={editValueForm.displayName}
-                                    onChange={(e) => setEditValueForm(f => ({ ...f, displayName: e.target.value }))}
-                                  />
-                                </div>
-                                <div className="flex-1">
-                                  {attr.type === 'color' ? (
-                                    <div className="flex gap-1">
-                                      <input
-                                        type="color"
-                                        className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
-                                        value={editValueForm.representedValue || '#000000'}
-                                        onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                      />
-                                      <input
-                                        className="input-field flex-1"
-                                        type="text"
-                                        required
-                                        placeholder="#hex"
-                                        value={editValueForm.representedValue}
-                                        onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <input
-                                      className="input-field w-full"
-                                      type="text"
-                                      required
-                                      placeholder="Represented value"
-                                      value={editValueForm.representedValue}
-                                      onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                    />
-                                  )}
-                                </div>
-                                <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={editValueForm.sortOrder} onChange={(e) => setEditValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
-                                <button type="submit" className="btn-primary text-sm">💾 Save</button>
-                                <button type="button" className="btn-secondary text-sm" onClick={() => setEditingValue(null)}>✕</button>
-                              </form>
-                            ) : (
-                              <div className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-                                <div className="flex items-center gap-2">
-                                  {attr.type === 'color' && (
-                                    <span
-                                      className="inline-block w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                                      style={{ background: val.representedValue }}
-                                    />
-                                  )}
-                                  <span className="text-sm font-medium text-gray-800">{val.displayName}</span>
-                                  {attr.type !== 'color' && (
-                                    <span className="text-xs text-gray-400 font-mono">{val.representedValue}</span>
-                                  )}
-                                </div>
-                                <div className="flex gap-2">
-                                  <button className="btn-sm text-xs" onClick={() => openEditValue(attr.id, val)}>Edit</button>
-                                  <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.displayName)}>Remove</button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                    {attr.type === 'color' && (attr.values ?? []).length > 0 && (
+                      <div className="flex items-center gap-1 ml-1">
+                        {(attr.values ?? []).slice(0, 6).map((val: any) => (
+                          <span
+                            key={val.id}
+                            className="inline-block w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                            style={{ background: val.representedValue }}
+                            title={val.displayName}
+                          />
                         ))}
-                        {showValueForm === attr.id ? (
-                          <form onSubmit={(e) => handleAddValue(e, attr.id)} className="flex flex-col gap-2 mt-2">
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <input
-                                  className="input-field w-full"
-                                  type="text"
-                                  required
-                                  placeholder="Display name (e.g. Small, Crimson Red)"
-                                  value={attrValueForm.displayName}
-                                  onChange={(e) => setAttrValueForm(f => ({ ...f, displayName: e.target.value }))}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                {attr.type === 'color' ? (
-                                  <div className="flex gap-1">
-                                    <input
-                                      type="color"
-                                      className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
-                                      value={attrValueForm.representedValue || '#000000'}
-                                      onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                    />
-                                    <input
-                                      className="input-field flex-1"
-                                      type="text"
-                                      required
-                                      placeholder="#hex"
-                                      value={attrValueForm.representedValue}
-                                      onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                    />
-                                  </div>
-                                ) : (
-                                  <input
-                                    className="input-field w-full"
-                                    type="text"
-                                    required
-                                    placeholder="Represented value (e.g. S, #FF0000)"
-                                    value={attrValueForm.representedValue}
-                                    onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
-                                  />
-                                )}
-                              </div>
-                              <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={attrValueForm.sortOrder} onChange={(e) => setAttrValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
-                              <button type="submit" className="btn-primary text-sm">Add</button>
-                              <button type="button" className="btn-secondary text-sm" onClick={() => setShowValueForm(null)}>✕</button>
-                            </div>
-                          </form>
-                        ) : (
-                          <button className="btn-sm self-start mt-2" onClick={() => openAddValueForm(attr.id)}>+ Add Value</button>
+                        {(attr.values ?? []).length > 6 && (
+                          <span className="text-xs text-gray-400">+{(attr.values ?? []).length - 6}</span>
                         )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="btn-sm text-indigo-600 font-medium"
+                      onClick={() => { setManagingValuesAttrId(attr.id); setShowValueForm(false); setEditingValue(null); }}
+                    >
+                      🏷️ Values ({attr.values?.length ?? 0})
+                    </button>
+                    <button className="btn-sm" onClick={() => { setEditingAttr(attr); setAttrForm({ name: attr.name, type: attr.type, sortOrder: String(attr.sortOrder ?? 0) }); setShowAttrForm(true); }}>Edit</button>
+                    <button className="btn-sm text-red-600" onClick={() => handleDeleteAttr(attr)}>Delete</button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Values management modal */}
+        {managingValuesAttrId && (() => {
+          const attr = attributes.find((a: any) => a.id === managingValuesAttrId);
+          if (!attr) return null;
+          return (
+            <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeValuesModal()}>
+              <div className="modal-panel-md" style={{ maxWidth: '560px' }}>
+                <div className="modal-header">
+                  <div className="flex items-center gap-2">
+                    <h2 className="modal-title">🏷️ {attr.name} Values</h2>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{attr.type}</span>
+                  </div>
+                  <button className="modal-close" onClick={closeValuesModal}>✕</button>
+                </div>
+                <div className="modal-body">
+                  {(attr.values ?? []).length === 0 && !showValueForm && (
+                    <div className="text-center py-6 text-gray-400 text-sm">No values yet. Add the first value below.</div>
+                  )}
+                  <div className="flex flex-col gap-1 mb-3">
+                    {(attr.values ?? []).map((val: any) => (
+                      <div key={val.id}>
+                        {editingValue?.value.id === val.id ? (
+                          <form onSubmit={handleUpdateValue} className="flex gap-2 py-2 border-b border-gray-100 items-center">
+                            <div className="flex-1">
+                              <input
+                                className="input-field w-full"
+                                type="text"
+                                required
+                                placeholder="Display name"
+                                value={editValueForm.displayName}
+                                onChange={(e) => setEditValueForm(f => ({ ...f, displayName: e.target.value }))}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              {attr.type === 'color' ? (
+                                <div className="flex gap-1">
+                                  <input
+                                    type="color"
+                                    className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+                                    value={editValueForm.representedValue || '#000000'}
+                                    onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                  />
+                                  <input
+                                    className="input-field flex-1"
+                                    type="text"
+                                    required
+                                    placeholder="#hex"
+                                    value={editValueForm.representedValue}
+                                    onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                  />
+                                </div>
+                              ) : (
+                                <input
+                                  className="input-field w-full"
+                                  type="text"
+                                  required
+                                  placeholder="Value"
+                                  value={editValueForm.representedValue}
+                                  onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                />
+                              )}
+                            </div>
+                            <input className="input-field" style={{ width: '72px' }} type="number" min="0" placeholder="Order" value={editValueForm.sortOrder} onChange={(e) => setEditValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                            <button type="submit" className="btn-primary text-sm">💾</button>
+                            <button type="button" className="btn-secondary text-sm" onClick={() => setEditingValue(null)}>✕</button>
+                          </form>
+                        ) : (
+                          <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                            <div className="flex items-center gap-2">
+                              {attr.type === 'color' && (
+                                <span
+                                  className="inline-block w-6 h-6 rounded-full border border-gray-300 flex-shrink-0"
+                                  style={{ background: val.representedValue }}
+                                />
+                              )}
+                              <span className="text-sm font-medium text-gray-800">{val.displayName}</span>
+                              <span className="text-xs text-gray-400 font-mono">{val.representedValue}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button className="btn-sm text-xs" onClick={() => openEditValue(attr.id, val)}>Edit</button>
+                              <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.displayName)}>Remove</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {showValueForm ? (
+                    <form onSubmit={handleAddValue} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <p className="text-xs font-semibold text-gray-600 mb-2">New Value</p>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <input
+                            className="input-field w-full"
+                            type="text"
+                            required
+                            placeholder={attr.type === 'color' ? 'e.g. Crimson Red' : 'Display name'}
+                            value={attrValueForm.displayName}
+                            onChange={(e) => setAttrValueForm(f => ({ ...f, displayName: e.target.value }))}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          {attr.type === 'color' ? (
+                            <div className="flex gap-1">
+                              <input
+                                type="color"
+                                className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+                                value={attrValueForm.representedValue || '#000000'}
+                                onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                              />
+                              <input
+                                className="input-field flex-1"
+                                type="text"
+                                required
+                                placeholder="#hex"
+                                value={attrValueForm.representedValue}
+                                onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                              />
+                            </div>
+                          ) : (
+                            <input
+                              className="input-field w-full"
+                              type="text"
+                              required
+                              placeholder={attr.type === 'numeric' ? 'e.g. 12' : attr.type === 'boolean' ? 'true / false' : 'e.g. S, M, L'}
+                              value={attrValueForm.representedValue}
+                              onChange={(e) => setAttrValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                            />
+                          )}
+                        </div>
+                        <input className="input-field" style={{ width: '72px' }} type="number" min="0" placeholder="Order" value={attrValueForm.sortOrder} onChange={(e) => setAttrValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                        <button type="submit" className="btn-primary text-sm">Add</button>
+                        <button type="button" className="btn-secondary text-sm" onClick={() => setShowValueForm(false)}>✕</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <button className="btn-sm self-start" onClick={openAddValueForm}>+ Add Value</button>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-secondary" onClick={closeValuesModal}>Close</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -773,12 +817,10 @@ export default function SettingsPage() {
                     <td className="px-4 py-2">{status.isDefault && <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">Default</span>}</td>
                     <td className="px-4 py-2">{status.isSystem && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>}</td>
                     <td className="px-4 py-2">
-                      {!status.isSystem && (
-                        <div className="flex gap-2">
-                          <button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
-                          <button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        <button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
+                        <button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}

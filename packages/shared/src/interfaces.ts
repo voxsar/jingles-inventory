@@ -337,6 +337,8 @@ export interface IInventoryEvent {
 export interface IGRN {
   id: string;
   supplierId: string;
+  floorId?: string | null;
+  shelfId?: string | null;
   invoiceReference?: string | null;
   supplierInvoiceDate?: Date | null;
   expectedDeliveryDate?: Date | null;
