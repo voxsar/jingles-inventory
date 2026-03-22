@@ -19,7 +19,7 @@ const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color
 const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
 const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder: '0' };
 
-type Section = 'home' | 'units' | 'statuses' | 'attributes';
+type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes';
 
 export default function SettingsPage() {
   const [section, setSection] = useState<Section>('home');
@@ -48,6 +48,13 @@ export default function SettingsPage() {
   const [expandedAttr, setExpandedAttr] = useState<string | null>(null);
   const [showValueForm, setShowValueForm] = useState<string | null>(null);
   const [attrValueForm, setAttrValueForm] = useState(defaultAttrValueForm);
+  // editing an existing attribute value
+  const [editingValue, setEditingValue] = useState<{ attrId: string; value: any } | null>(null);
+  const [editValueForm, setEditValueForm] = useState(defaultAttrValueForm);
+
+  // All statuses (for the card-grid counts)
+  const [allStatuses, setAllStatuses] = useState<any[]>([]);
+  const [allStatusesLoading, setAllStatusesLoading] = useState(false);
 
   // ── Units ─────────────────────────────────────────────────
 
@@ -248,16 +255,61 @@ export default function SettingsPage() {
     }
   };
 
+  const openEditValue = (attrId: string, val: any) => {
+    setEditingValue({ attrId, value: val });
+    setEditValueForm({ displayName: val.displayName, representedValue: val.representedValue, sortOrder: String(val.sortOrder ?? 0) });
+    setShowValueForm(null);
+  };
+
+  const openAddValueForm = (attrId: string) => {
+    setEditingValue(null);
+    setShowValueForm(attrId);
+    setAttrValueForm(defaultAttrValueForm);
+  };
+
+  const handleUpdateValue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingValue) return;
+    const payload = {
+      displayName: editValueForm.displayName,
+      representedValue: editValueForm.representedValue,
+      sortOrder: parseInt(editValueForm.sortOrder) || 0,
+    };
+    try {
+      await attributesApi.updateValue(editingValue.attrId, editingValue.value.id, payload);
+      setEditingValue(null);
+      setEditValueForm(defaultAttrValueForm);
+      await loadAttributes();
+    } catch (err: any) {
+      alert(err.response?.data?.error ?? 'Failed to update value');
+    }
+  };
+
+  // ── All-statuses (card-grid counts) ───────────────────────
+
+  const loadAllStatuses = async () => {
+    setAllStatusesLoading(true);
+    try {
+      const res = await settingsApi.listStatuses();
+      setAllStatuses(res.data.data ?? []);
+    } catch (err) {
+      console.error('Failed to load statuses', err);
+    } finally {
+      setAllStatusesLoading(false);
+    }
+  };
+
   // ── Effects ───────────────────────────────────────────────
 
   useEffect(() => {
     if (section === 'units') loadUnits();
-    if (section === 'statuses') loadStatuses(statusEntityType);
+    if (section === 'statuses') loadAllStatuses();
+    if (section === 'status-detail') loadStatuses(statusEntityType);
     if (section === 'attributes') loadAttributes();
   }, [section]);
 
   useEffect(() => {
-    if (section === 'statuses') loadStatuses(statusEntityType);
+    if (section === 'status-detail') loadStatuses(statusEntityType);
   }, [statusEntityType]);
 
   // ── Render ────────────────────────────────────────────────
@@ -346,20 +398,72 @@ export default function SettingsPage() {
                     <div className="bg-gray-50 px-12 pb-4">
                       <div className="flex flex-col gap-2">
                         {(attr.values ?? []).map((val: any) => (
-                          <div key={val.id} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
-                            <div className="flex items-center gap-2">
-                              {attr.type === 'color' && (
-                                <span
-                                  className="inline-block w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
-                                  style={{ background: val.representedValue }}
-                                />
-                              )}
-                              <span className="text-sm font-medium text-gray-800">{val.displayName}</span>
-                              {attr.type !== 'color' && (
-                                <span className="text-xs text-gray-400 font-mono">{val.representedValue}</span>
-                              )}
-                            </div>
-                            <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.displayName)}>Remove</button>
+                          <div key={val.id}>
+                            {editingValue?.value.id === val.id ? (
+                              <form onSubmit={handleUpdateValue} className="flex gap-2 py-2 border-b border-gray-100">
+                                <div className="flex-1">
+                                  <input
+                                    className="input-field w-full"
+                                    type="text"
+                                    required
+                                    placeholder="Display name"
+                                    value={editValueForm.displayName}
+                                    onChange={(e) => setEditValueForm(f => ({ ...f, displayName: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  {attr.type === 'color' ? (
+                                    <div className="flex gap-1">
+                                      <input
+                                        type="color"
+                                        className="h-9 w-12 rounded border border-gray-300 cursor-pointer"
+                                        value={editValueForm.representedValue || '#000000'}
+                                        onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                      />
+                                      <input
+                                        className="input-field flex-1"
+                                        type="text"
+                                        required
+                                        placeholder="#hex"
+                                        value={editValueForm.representedValue}
+                                        onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <input
+                                      className="input-field w-full"
+                                      type="text"
+                                      required
+                                      placeholder="Represented value"
+                                      value={editValueForm.representedValue}
+                                      onChange={(e) => setEditValueForm(f => ({ ...f, representedValue: e.target.value }))}
+                                    />
+                                  )}
+                                </div>
+                                <input className="input-field" style={{ width: '80px' }} type="number" min="0" placeholder="Order" value={editValueForm.sortOrder} onChange={(e) => setEditValueForm(f => ({ ...f, sortOrder: e.target.value }))} />
+                                <button type="submit" className="btn-primary text-sm">💾 Save</button>
+                                <button type="button" className="btn-secondary text-sm" onClick={() => setEditingValue(null)}>✕</button>
+                              </form>
+                            ) : (
+                              <div className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                                <div className="flex items-center gap-2">
+                                  {attr.type === 'color' && (
+                                    <span
+                                      className="inline-block w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                                      style={{ background: val.representedValue }}
+                                    />
+                                  )}
+                                  <span className="text-sm font-medium text-gray-800">{val.displayName}</span>
+                                  {attr.type !== 'color' && (
+                                    <span className="text-xs text-gray-400 font-mono">{val.representedValue}</span>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button className="btn-sm text-xs" onClick={() => openEditValue(attr.id, val)}>Edit</button>
+                                  <button className="btn-sm text-red-500 text-xs" onClick={() => handleDeleteValue(attr.id, val.id, val.displayName)}>Remove</button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                         {showValueForm === attr.id ? (
@@ -410,7 +514,7 @@ export default function SettingsPage() {
                             </div>
                           </form>
                         ) : (
-                          <button className="btn-sm self-start mt-2" onClick={() => { setShowValueForm(attr.id); setAttrValueForm(defaultAttrValueForm); }}>+ Add Value</button>
+                          <button className="btn-sm self-start mt-2" onClick={() => openAddValueForm(attr.id)}>+ Add Value</button>
                         )}
                       </div>
                     </div>
@@ -542,32 +646,58 @@ export default function SettingsPage() {
   }
 
   if (section === 'statuses') {
-    const entityInfo = ENTITY_TYPES.find(e => e.key === statusEntityType);
     return (
       <div className="flex flex-col gap-4">
         <div className="page-header">
           <div className="page-header-left">
             <h1 className="page-title">🏷️ Status Management</h1>
-            <p className="page-subtitle">Manage status options for each data type</p>
+            <p className="page-subtitle">Select an entity type to manage its status options</p>
           </div>
-          <div className="flex gap-2">
-            <button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
-            <button className="btn-primary" onClick={openCreateStatus}>+ Add Status</button>
-          </div>
+          <button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
         </div>
 
-        {/* Entity Type Tabs */}
-        <div className="content-section px-4 py-3">
-          <div className="flex flex-wrap gap-2">
-            {ENTITY_TYPES.map(et => (
-              <button
-                key={et.key}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${statusEntityType === et.key ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                onClick={() => setStatusEntityType(et.key)}
-              >
-                {et.icon} {et.label}
-              </button>
-            ))}
+        {allStatusesLoading ? (
+          <div className="px-6 py-8 text-center text-gray-500">Loading…</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ENTITY_TYPES.map(et => {
+              const count = allStatuses.filter((s: any) => s.entityType === et.key).length;
+              return (
+                <button
+                  key={et.key}
+                  className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => { setStatusEntityType(et.key); setSection('status-detail'); }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="text-4xl">{et.icon}</div>
+                    <div>
+                      <h2 className="font-semibold text-gray-800 text-lg">{et.label}</h2>
+                      <p className="text-sm text-gray-500 mt-1">{et.description}</p>
+                      <span className="inline-block mt-2 text-xs text-gray-400">{count} status{count !== 1 ? 'es' : ''} configured</span>
+                      <span className="block mt-2 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full w-fit">Manage →</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (section === 'status-detail') {
+    const entityInfo = ENTITY_TYPES.find(e => e.key === statusEntityType);
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="page-header">
+          <div className="page-header-left">
+            <h1 className="page-title">{entityInfo?.icon} {entityInfo?.label}</h1>
+            <p className="page-subtitle">{entityInfo?.description}</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="btn-secondary" onClick={() => setSection('statuses')}>← Statuses</button>
+            <button className="btn-primary" onClick={openCreateStatus}>+ Add Status</button>
           </div>
         </div>
 
@@ -580,12 +710,6 @@ export default function SettingsPage() {
               </div>
               <form onSubmit={handleStatusSubmit}>
                 <div className="modal-body form-stack">
-                  <div className="form-group">
-                    <label className="form-label">Entity Type *</label>
-                    <select className="input-field" value={statusForm.entityType} disabled={!!editingStatus} onChange={(e) => setStatusForm(f => ({ ...f, entityType: e.target.value }))}>
-                      {ENTITY_TYPES.map(et => <option key={et.key} value={et.key}>{et.icon} {et.label}</option>)}
-                    </select>
-                  </div>
                   <div className="form-grid-2">
                     <div className="form-group">
                       <label className="form-label">Value (code) *</label>
@@ -624,15 +748,6 @@ export default function SettingsPage() {
         )}
 
         <div className="content-section">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{entityInfo?.icon}</span>
-              <div>
-                <h2 className="font-semibold text-gray-800">{entityInfo?.label}</h2>
-                <p className="text-sm text-gray-500">{entityInfo?.description}</p>
-              </div>
-            </div>
-          </div>
           {statusesLoading ? (
             <div className="px-6 py-8 text-center text-gray-500">Loading...</div>
           ) : (
