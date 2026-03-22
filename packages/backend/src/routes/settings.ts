@@ -165,10 +165,6 @@ router.put(
       res.status(404).json({ error: 'Status option not found' });
       return;
     }
-    if (existing.isSystem) {
-      res.status(403).json({ error: 'Cannot modify system status options' });
-      return;
-    }
     const { label, color, sortOrder, isDefault, isActive } = req.body as {
       label?: string;
       color?: string;
@@ -197,10 +193,6 @@ router.delete(
     const existing = await prisma.statusOption.findUnique({ where: { id: req.params!.id } });
     if (!existing) {
       res.status(404).json({ error: 'Status option not found' });
-      return;
-    }
-    if (existing.isSystem) {
-      res.status(403).json({ error: 'Cannot delete system status options' });
       return;
     }
     await prisma.statusOption.delete({ where: { id: req.params!.id } });

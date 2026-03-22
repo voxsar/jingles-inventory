@@ -773,12 +773,10 @@ export default function SettingsPage() {
                     <td className="px-4 py-2">{status.isDefault && <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">Default</span>}</td>
                     <td className="px-4 py-2">{status.isSystem && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>}</td>
                     <td className="px-4 py-2">
-                      {!status.isSystem && (
-                        <div className="flex gap-2">
-                          <button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
-                          <button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        <button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
+                        <button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
