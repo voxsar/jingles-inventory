@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { settingsApi } from '../api/client';
+import { settingsApi, attributesApi } from '../api/client';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
+const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean'];
 
 const ENTITY_TYPES = [
   { key: 'inventory', label: 'Inventory States', shortLabel: 'Inventory', icon: '📦', description: 'States for inventory records' },

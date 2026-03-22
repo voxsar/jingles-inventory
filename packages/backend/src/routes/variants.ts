@@ -8,8 +8,10 @@ const router = Router({ mergeParams: true });
 router.use(authenticate);
 
 // Helper: cartesian product of arrays
-function cartesian<T>(arrays: T[][]): T[][] {
-  return arrays.reduce<T[][]>(
+type ComboItem = { attributeId: string; attributeValueId: string; valueLabel: string };
+
+function cartesian(arrays: ComboItem[][]): ComboItem[][] {
+  return arrays.reduce<ComboItem[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((item) => [...combo, item])),
     [[]]
   );
@@ -102,7 +104,7 @@ router.post(
           where: { id: { in: sel.valueIds }, attributeId: sel.attributeId },
           orderBy: { sortOrder: 'asc' },
         });
-        return vals.map((v) => ({ attributeId: sel.attributeId, attributeValueId: v.id, valueLabel: v.value }));
+        return vals.map((v: { id: string; value: string }) => ({ attributeId: sel.attributeId, attributeValueId: v.id, valueLabel: v.value }));
       })
     );
 
@@ -119,7 +121,7 @@ router.post(
         where: { id: { in: sel.valueIds } },
       });
       await prisma.sKUAttributeValue.createMany({
-        data: attrValues.map((av) => ({ skuAttributeId: skuAttr.id, attributeValueId: av.id })),
+        data: attrValues.map((av: { id: string }) => ({ skuAttributeId: skuAttr.id, attributeValueId: av.id })),
         skipDuplicates: true,
       });
     }
@@ -141,9 +143,9 @@ router.post(
         include: { attributeValues: true },
       });
 
-      const alreadyExists = existingVariants.some((v) => {
+      const alreadyExists = existingVariants.some((v: { attributeValues: Array<{ attributeId: string; attributeValueId: string }> }) => {
         const vKey = v.attributeValues
-          .map((av) => `${av.attributeId}:${av.attributeValueId}`)
+          .map((av: { attributeId: string; attributeValueId: string }) => `${av.attributeId}:${av.attributeValueId}`)
           .sort()
           .join('|');
         return vKey === comboKey;

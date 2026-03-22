@@ -155,6 +155,32 @@ export const settingsApi = {
   deleteStatus: (id: string) => api.delete(`/settings/statuses/${id}`),
 };
 
+// Attributes (Global Attribute System)
+export const attributesApi = {
+  list: () => api.get('/attributes'),
+  create: (data: any) => api.post('/attributes', data),
+  update: (id: string, data: any) => api.put(`/attributes/${id}`, data),
+  delete: (id: string) => api.delete(`/attributes/${id}`),
+  // Attribute Values
+  listValues: (attributeId: string) => api.get(`/attributes/${attributeId}/values`),
+  addValue: (attributeId: string, data: any) => api.post(`/attributes/${attributeId}/values`, data),
+  updateValue: (attributeId: string, valueId: string, data: any) => api.put(`/attributes/${attributeId}/values/${valueId}`, data),
+  deleteValue: (attributeId: string, valueId: string) => api.delete(`/attributes/${attributeId}/values/${valueId}`),
+};
+
+// SKU Variants
+export const variantsApi = {
+  list: (skuId: string) => api.get(`/skus/${skuId}/variants`),
+  generate: (skuId: string, attributeSelections: any[]) =>
+    api.post(`/skus/${skuId}/variants/generate`, { attributeSelections }),
+  update: (skuId: string, variantId: string, data: any) =>
+    api.put(`/skus/${skuId}/variants/${variantId}`, data),
+  delete: (skuId: string, variantId: string) =>
+    api.delete(`/skus/${skuId}/variants/${variantId}`),
+  bulkUpdate: (skuId: string, variantIds: string[], isActive: boolean) =>
+    api.put(`/skus/${skuId}/variants`, { variantIds, isActive }),
+};
+
 // Branches
 export const branchesApi = {
   list: () => api.get('/branches'),
