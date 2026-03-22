@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, skusApi, floorsApi, variantsApi } from '../api/client';
+import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -31,8 +31,10 @@ export default function GRNPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [editingGrn, setEditingGrn] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', floorId: '' });
+  const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', floorId: '', shelfId: '' });
   const [locations, setLocations] = useState<any[]>([]);
+  const [formShelves, setFormShelves] = useState<any[]>([]);
+  const [editFormShelves, setEditFormShelves] = useState<any[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,6 +48,7 @@ export default function GRNPage() {
     expectedDeliveryDate: getTodayString(),
     notes: '',
     floorId: '',
+    shelfId: '',
     lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }],
   });
 
@@ -95,9 +98,10 @@ export default function GRNPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await grnsApi.create({ ...form, floorId: form.floorId || undefined });
+      await grnsApi.create({ ...form, floorId: form.floorId || undefined, shelfId: form.shelfId || undefined });
       setShowForm(false);
-      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', floorId: '', lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] });
+      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', floorId: '', shelfId: '', lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] });
+      setFormShelves([]);
       setLineVariants({});
       await loadData();
     } catch (err: any) {
@@ -129,7 +133,15 @@ export default function GRNPage() {
       expectedDeliveryDate: grn.expectedDeliveryDate ? grn.expectedDeliveryDate.split('T')[0] : getTodayString(),
       notes: grn.notes ?? '',
       floorId: grn.floorId ?? '',
+      shelfId: grn.shelfId ?? '',
     });
+    if (grn.floorId) {
+      shelvesApi.list({ floorId: grn.floorId }).then((res) => {
+        setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+      }).catch(() => setEditFormShelves([]));
+    } else {
+      setEditFormShelves([]);
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -138,6 +150,7 @@ export default function GRNPage() {
     try {
       await grnsApi.update(editingGrn.id, editForm);
       setEditingGrn(null);
+      setEditFormShelves([]);
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to update GRN');
@@ -150,7 +163,16 @@ export default function GRNPage() {
     { key: 'id', header: 'GRN ID', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.id.slice(0, 8)}…</span> },
     { key: 'supplier', header: 'Supplier', sortable: true, render: (r: any) => r.supplier?.name },
     { key: 'invoiceReference', header: 'Invoice Ref', render: (r: any) => r.invoiceReference ?? <s-text>—</s-text> },
-    { key: 'floor', header: 'Location', render: (r: any) => r.floor ? <span className="text-xs">{r.floor.branch?.name ? `🏢 ${r.floor.branch.name} › ` : ''}{r.floor.name} <span className="text-gray-400">({r.floor.code})</span></span> : <s-text>—</s-text> },
+    { key: 'floor', header: 'Location', render: (r: any) => {
+      if (!r.floor) return <s-text>—</s-text>;
+      const floorLabel = r.floor.branch?.name ? `🏢 ${r.floor.branch.name} › ${r.floor.name}` : r.floor.name;
+      return (
+        <span className="text-xs">
+          {floorLabel} <span className="text-gray-400">({r.floor.code})</span>
+          {r.shelf && <span className="text-gray-500"> › {r.shelf.name}</span>}
+        </span>
+      );
+    }},
     {
       key: 'status', header: 'Status', render: (r: any) => {
         const tone = STATUS_TONES[r.status] ?? '';
@@ -272,9 +294,18 @@ export default function GRNPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Receive Location</label>
-                  <select className="input-field" value={form.floorId} onChange={(e) => setForm((f) => ({ ...f, floorId: e.target.value }))}>
-                    <option value="">— No Location (assign later) —</option>
+                  <label className="form-label">Receive Location — Floor</label>
+                  <select className="input-field" value={form.floorId} onChange={(e) => {
+                    const floorId = e.target.value;
+                    setForm((f) => ({ ...f, floorId, shelfId: '' }));
+                    setFormShelves([]);
+                    if (floorId) {
+                      shelvesApi.list({ floorId }).then((res) => {
+                        setFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+                      }).catch(() => setFormShelves([]));
+                    }
+                  }}>
+                    <option value="">— No Floor —</option>
                     {locations.map((loc: any) => (
                       <option key={loc.id} value={loc.id}>
                         {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
@@ -282,6 +313,17 @@ export default function GRNPage() {
                     ))}
                   </select>
                 </div>
+                {form.floorId && (
+                  <div className="form-group">
+                    <label className="form-label">Receive Location — Shelf</label>
+                    <select className="input-field" value={form.shelfId} onChange={(e) => setForm((f) => ({ ...f, shelfId: e.target.value }))}>
+                      <option value="">— Select Shelf —</option>
+                      {formShelves.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Line items */}
                 <div>
@@ -389,9 +431,18 @@ export default function GRNPage() {
                 <input className="input-field" type="text" value={editForm.notes} onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))} />
               </div>
               <div className="form-group">
-                <label className="form-label">Receive Location</label>
-                <select className="input-field" value={editForm.floorId} onChange={(e) => setEditForm((f) => ({ ...f, floorId: e.target.value }))}>
-                  <option value="">— No Location —</option>
+                <label className="form-label">Receive Location — Floor</label>
+                <select className="input-field" value={editForm.floorId} onChange={(e) => {
+                  const floorId = e.target.value;
+                  setEditForm((f) => ({ ...f, floorId, shelfId: '' }));
+                  setEditFormShelves([]);
+                  if (floorId) {
+                    shelvesApi.list({ floorId }).then((res) => {
+                      setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+                    }).catch(() => setEditFormShelves([]));
+                  }
+                }}>
+                  <option value="">— No Floor —</option>
                   {locations.map((loc: any) => (
                     <option key={loc.id} value={loc.id}>
                       {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
@@ -399,6 +450,17 @@ export default function GRNPage() {
                   ))}
                 </select>
               </div>
+              {editForm.floorId && (
+                <div className="form-group">
+                  <label className="form-label">Receive Location — Shelf</label>
+                  <select className="input-field" value={editForm.shelfId} onChange={(e) => setEditForm((f) => ({ ...f, shelfId: e.target.value }))}>
+                    <option value="">— Select Shelf —</option>
+                    {editFormShelves.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button type="button" className="btn-secondary" onClick={() => setEditingGrn(null)}>Cancel</button>
