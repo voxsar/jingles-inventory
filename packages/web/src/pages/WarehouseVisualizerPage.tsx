@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useDebugValue } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
 import { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 
