@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { IUser } from '@jingles/shared';
 import { authApi } from '../api/client';
-import { branding } from '../config/branding';
 
 interface AuthState {
 	user: IUser | null;
@@ -15,7 +14,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
 	user: null,
-	token: localStorage.getItem(branding.tokenStorageKey),
+	token: localStorage.getItem('jingles_token'),
 	isLoading: false,
 	error: null,
 
@@ -26,7 +25,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 			// Handle potential response structure variations
 			const responseData = res.data?.data ?? res.data;
 			const { token, user } = responseData;
-			localStorage.setItem(branding.tokenStorageKey, token);
+			localStorage.setItem('jingles_token', token);
 			set({ token, user, isLoading: false });
 		} catch (err: any) {
 			set({
@@ -38,12 +37,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 	},
 
 	logout: () => {
-		localStorage.removeItem(branding.tokenStorageKey);
+		localStorage.removeItem('jingles_token');
 		set({ user: null, token: null });
 	},
 
 	loadUser: async () => {
-		const token = localStorage.getItem(branding.tokenStorageKey);
+		const token = localStorage.getItem('jingles_token');
 		if (!token) return;
 		set({ isLoading: true });
 		try {
@@ -52,7 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 			const user = res.data?.data ?? res.data;
 			set({ user, isLoading: false });
 		} catch {
-			localStorage.removeItem(branding.tokenStorageKey);
+			localStorage.removeItem('jingles_token');
 			set({ user: null, token: null, isLoading: false });
 		}
 	},
