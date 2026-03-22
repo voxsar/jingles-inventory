@@ -71,6 +71,20 @@ router.get(
         images: { orderBy: { sortOrder: 'asc' } },
         barcodes: { orderBy: { isDefault: 'desc' } },
         tags: { include: { tag: true } },
+        skuAttributes: {
+          include: {
+            attribute: { include: { values: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } } },
+            selectedValues: { include: { attributeValue: true } },
+          },
+        },
+        variants: {
+          include: {
+            attributeValues: {
+              include: { attribute: true, attributeValue: true },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
     if (!sku) {

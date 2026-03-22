@@ -529,3 +529,80 @@ export const STORAGE_GEOMETRIES = {
   largeFragile: { height: 50, width: 40, depth: 30, weight: 8.0, volume: 60000 },
   heavyEquipment: { height: 60, width: 50, depth: 40, weight: 25.0, volume: 120000 },
 };
+
+// ─── Attribute Fixtures ───────────────────────────────────────────────────────
+
+export const ATTRIBUTES = {
+  size: {
+    id: 'attr-size-001',
+    name: 'Size',
+    type: 'dropdown',
+    isActive: true,
+    sortOrder: 0,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+  color: {
+    id: 'attr-color-002',
+    name: 'Color',
+    type: 'dropdown',
+    isActive: true,
+    sortOrder: 1,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+};
+
+export const ATTRIBUTE_VALUES = {
+  small: {
+    id: 'av-small-001',
+    attributeId: 'attr-size-001',
+    value: 'Small',
+    sortOrder: 0,
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+  large: {
+    id: 'av-large-002',
+    attributeId: 'attr-size-001',
+    value: 'Large',
+    sortOrder: 1,
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+  red: {
+    id: 'av-red-003',
+    attributeId: 'attr-color-002',
+    value: 'Red',
+    sortOrder: 0,
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+  blue: {
+    id: 'av-blue-004',
+    attributeId: 'attr-color-002',
+    value: 'Blue',
+    sortOrder: 1,
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+  },
+};
+
+export const SKU_VARIANTS = {
+  smallRed: {
+    id: 'variant-small-red-001',
+    skuId: 'sku-widget-box-001',
+    variantCode: 'WDG-BOX-Small-Red',
+    name: 'Small / Red',
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+  },
+  largeBlue: {
+    id: 'variant-large-blue-002',
+    skuId: 'sku-widget-box-001',
+    variantCode: 'WDG-BOX-Large-Blue',
+    name: 'Large / Blue',
+    isActive: true,
+    createdAt: new Date('2024-01-01T00:00:00Z'),
+    updatedAt: new Date('2024-01-01T00:00:00Z'),
+  },
+};

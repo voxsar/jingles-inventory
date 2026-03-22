@@ -13,6 +13,7 @@ export async function createGRN(data: {
   createdBy: string;
   lines: Array<{
     skuId: string;
+    variantId?: string;
     expectedQuantity: number;
     batchReference?: string;
     notes?: string;
@@ -27,10 +28,11 @@ export async function createGRN(data: {
     }
   }
 
-  const skuIds = data.lines.map(l => l.skuId);
-  const uniqueSkuIds = new Set(skuIds);
-  if (uniqueSkuIds.size !== skuIds.length) {
-    throw new Error('Duplicate SKUs in GRN lines detected');
+  // For duplicate detection consider variantId when present
+  const lineKeys = data.lines.map(l => `${l.skuId}:${l.variantId ?? ''}`);
+  const uniqueKeys = new Set(lineKeys);
+  if (uniqueKeys.size !== lineKeys.length) {
+    throw new Error('Duplicate SKUs (or SKU+variant combinations) in GRN lines detected');
   }
 
   const grn = await prisma.gRN.create({
@@ -46,6 +48,7 @@ export async function createGRN(data: {
       lines: {
         create: data.lines.map(line => ({
           skuId: line.skuId,
+          variantId: line.variantId,
           expectedQuantity: line.expectedQuantity,
           receivedQuantity: 0,
           batchReference: line.batchReference,
@@ -87,6 +90,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
       const record = await tx.inventoryRecord.create({
         data: {
           skuId: line.skuId,
+          variantId: line.variantId ?? null,
           batchId: line.batchReference,
           floorId: grn.floorId,
           quantity: line.expectedQuantity,
@@ -157,6 +161,7 @@ export async function submitInspection(data: {
       const approvedRecord = await tx.inventoryRecord.create({
         data: {
           skuId: grnLine.skuId,
+          variantId: grnLine.variantId ?? null,
           batchId: grnLine.batchReference,
           quantity: data.approvedQuantity,
           state: InventoryState.Inspected,
@@ -182,6 +187,7 @@ export async function submitInspection(data: {
       const damagedRecord = await tx.inventoryRecord.create({
         data: {
           skuId: grnLine.skuId,
+          variantId: grnLine.variantId ?? null,
           batchId: grnLine.batchReference,
           quantity: data.rejectedQuantity,
           state: InventoryState.Damaged,

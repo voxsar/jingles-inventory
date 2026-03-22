@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi } from '../api/client';
+import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 
@@ -19,7 +19,7 @@ const defaultForm = {
   lowStockThreshold: '',
 };
 
-type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations';
+type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants';
 
 export default function SKUPage() {
   const [skus, setSkus] = useState<any[]>([]);
@@ -53,6 +53,12 @@ export default function SKUPage() {
   const [locationsLoading, setLocationsLoading] = useState(false);
   const [transitioningInv, setTransitioningInv] = useState<string | null>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Variants tab state
+  const [skuVariants, setSkuVariants] = useState<any[]>([]);
+  const [allAttributes, setAllAttributes] = useState<any[]>([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>({});
 
   const load = async () => {
     setIsLoading(true);
@@ -222,10 +228,60 @@ export default function SKUPage() {
     finally { setLocationsLoading(false); }
   };
 
+  const loadVariants = async () => {
+    if (!editingSku) return;
+    setVariantsLoading(true);
+    try {
+      const [varRes, attrRes] = await Promise.all([
+        variantsApi.list(editingSku.id),
+        attributesApi.list(),
+      ]);
+      setSkuVariants(varRes.data?.data ?? []);
+      setAllAttributes(attrRes.data?.data ?? []);
+      // Pre-populate selected attrs from existing sku attributes
+      const existingAttrs = editingSku.skuAttributes ?? [];
+      const sel: Record<string, string[]> = {};
+      existingAttrs.forEach((sa: any) => {
+        sel[sa.attributeId] = sa.values?.map((v: any) => v.attributeValueId) ?? [];
+      });
+      setSelectedAttrs(sel);
+    } catch { setSkuVariants([]); setAllAttributes([]); }
+    finally { setVariantsLoading(false); }
+  };
+
+  const handleGenerateVariants = async () => {
+    const attributeSelections = Object.entries(selectedAttrs)
+      .filter(([, vals]) => vals.length > 0)
+      .map(([attributeId, valueIds]) => ({ attributeId, valueIds }));
+    if (attributeSelections.length === 0) { alert('Select at least one attribute with values.'); return; }
+    try {
+      const res = await variantsApi.generate(editingSku.id, attributeSelections);
+      const meta = res.data?.meta;
+      alert(`Generated ${meta?.created ?? 0} new variants. ${meta?.skipped ?? 0} already existed.`);
+      await loadVariants();
+    } catch (err: any) { alert(err.response?.data?.error ?? 'Failed to generate variants'); }
+  };
+
+  const handleToggleVariant = async (variantId: string, isActive: boolean) => {
+    try {
+      await variantsApi.update(editingSku.id, variantId, { isActive });
+      await loadVariants();
+    } catch (err: any) { alert(err.response?.data?.error ?? 'Failed to update variant'); }
+  };
+
+  const handleDeleteVariant = async (variantId: string, name: string) => {
+    if (!confirm(`Delete variant "${name}"? This will fail if inventory records exist.`)) return;
+    try {
+      await variantsApi.delete(editingSku.id, variantId);
+      await loadVariants();
+    } catch (err: any) { alert(err.response?.data?.error ?? 'Failed to delete variant'); }
+  };
+
   const handleTabChange = (tab: ModalTab) => {
     setModalTab(tab);
     if (tab === 'barcodes') loadBarcodes();
     if (tab === 'locations') loadLocations();
+    if (tab === 'variants') loadVariants();
   };
 
   const handleTransitionInv = async (record: any) => {
@@ -423,7 +479,7 @@ export default function SKUPage() {
             </div>
             {/* Tab nav */}
             <div className="flex gap-1 px-6 pt-3 pb-0 border-b border-gray-200 bg-white">
-              {(['details', 'tags', 'barcodes', 'locations'] as ModalTab[]).map((tab) => (
+              {(['details', 'tags', 'barcodes', 'locations', 'variants'] as ModalTab[]).map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -438,6 +494,7 @@ export default function SKUPage() {
                   {tab === 'tags' && '🏷️ '}
                   {tab === 'barcodes' && '📊 '}
                   {tab === 'locations' && '📍 '}
+                  {tab === 'variants' && '🧩 '}
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
@@ -632,6 +689,93 @@ export default function SKUPage() {
                         );
                       })}
                     </div>
+                  )}
+                </div>
+              )}
+              {modalTab === 'variants' && (
+                <div className="flex flex-col gap-4">
+                  {variantsLoading ? (
+                    <p className="text-sm text-gray-400">Loading…</p>
+                  ) : (
+                    <>
+                      {/* Attribute selector */}
+                      {allAttributes.length > 0 && (
+                        <div className="border border-gray-200 rounded-lg p-4">
+                          <p className="text-sm font-semibold text-gray-700 mb-3">Generate Variants from Attributes</p>
+                          <div className="flex flex-col gap-3">
+                            {allAttributes.map((attr: any) => (
+                              <div key={attr.id}>
+                                <p className="text-xs font-medium text-gray-600 mb-1">{attr.name}</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {(attr.values ?? []).map((val: any) => {
+                                    const checked = (selectedAttrs[attr.id] ?? []).includes(val.id);
+                                    return (
+                                      <label key={val.id} className="flex items-center gap-1 cursor-pointer text-sm">
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={(e) => {
+                                            setSelectedAttrs(prev => {
+                                              const cur = prev[attr.id] ?? [];
+                                              return {
+                                                ...prev,
+                                                [attr.id]: e.target.checked
+                                                  ? [...cur, val.id]
+                                                  : cur.filter((id: string) => id !== val.id),
+                                              };
+                                            });
+                                          }}
+                                        />
+                                        {val.value}
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <button className="btn-primary mt-3" onClick={handleGenerateVariants}>⚡ Generate Variants</button>
+                        </div>
+                      )}
+                      {allAttributes.length === 0 && (
+                        <p className="text-sm text-gray-400">No global attributes defined. Go to Settings → Product Attributes to create some.</p>
+                      )}
+                      {/* Variants list */}
+                      {skuVariants.length === 0 ? (
+                        <div className="text-center py-6 text-gray-400">No variants yet. Select attributes above and click Generate.</div>
+                      ) : (
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              {['Code', 'Variant', 'Attributes', 'Active', ''].map(h => (
+                                <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {skuVariants.map((v: any) => (
+                              <tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                <td className="px-3 py-2 font-mono text-xs text-gray-600">{v.variantCode}</td>
+                                <td className="px-3 py-2 font-medium">{v.name}</td>
+                                <td className="px-3 py-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    {(v.attributeValues ?? []).map((av: any) => (
+                                      <span key={av.attributeValueId} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">{av.attribute?.name}: {av.attributeValue?.value}</span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <input type="checkbox" checked={v.isActive} onChange={(e) => handleToggleVariant(v.id, e.target.checked)} />
+                                </td>
+                                <td className="px-3 py-2">
+                                  <button className="btn-sm text-red-600 text-xs" onClick={() => handleDeleteVariant(v.id, v.name)}>Delete</button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </>
                   )}
                 </div>
               )}

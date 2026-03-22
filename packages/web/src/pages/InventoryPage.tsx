@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, skusApi } from '../api/client';
+import { inventoryApi, floorsApi, skusApi, variantsApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -8,7 +8,7 @@ import BarcodeInput from '../components/BarcodeInput';
 
 const PAGE_SIZE = 20;
 
-const defaultNewForm = { skuId: '', floorId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultNewForm = { skuId: '', variantId: '', floorId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
 const defaultEditForm = { floorId: '', quantity: '1', batchId: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
@@ -34,6 +34,7 @@ export default function InventoryPage() {
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [editForm, setEditForm] = useState(defaultEditForm);
   const [isSaving, setIsSaving] = useState(false);
+  const [skuVariants, setSkuVariants] = useState<any[]>([]);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchInventory = async () => {
@@ -110,6 +111,7 @@ export default function InventoryPage() {
     try {
       await inventoryApi.create({
         skuId: newForm.skuId,
+        variantId: newForm.variantId || undefined,
         floorId: newForm.floorId || undefined,
         quantity: qty,
         state: newForm.state,
@@ -117,11 +119,24 @@ export default function InventoryPage() {
       });
       setShowNewForm(false);
       setNewForm(defaultNewForm);
+      setSkuVariants([]);
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create record');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleNewFormSkuChange = async (skuId: string) => {
+    setNewForm(f => ({ ...f, skuId, variantId: '' }));
+    if (skuId) {
+      try {
+        const res = await variantsApi.list(skuId);
+        setSkuVariants(res.data?.data ?? []);
+      } catch { setSkuVariants([]); }
+    } else {
+      setSkuVariants([]);
     }
   };
 
@@ -161,7 +176,12 @@ export default function InventoryPage() {
 
   const columns = [
     { key: 'sku', header: 'SKU Code', sortable: true, render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.sku?.skuCode}</span> },
-    { key: 'name', header: 'Product', render: (r: any) => <span>{r.sku?.name}</span> },
+    { key: 'name', header: 'Product', render: (r: any) => (
+      <div>
+        <span>{r.sku?.name}</span>
+        {r.variant && <div className="text-xs text-indigo-600 mt-0.5">🧩 {r.variant.name}</div>}
+      </div>
+    )},
     { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
     { key: 'floor', header: 'Floor', render: (r: any) => <s-text>{formatLocation(r.floor)}</s-text> },
@@ -295,11 +315,20 @@ export default function InventoryPage() {
               <div className="modal-body form-stack">
                 <div className="form-group">
                   <label className="form-label">Product (SKU) *</label>
-                  <select className="input-field" value={newForm.skuId} required onChange={(e) => setNewForm(f => ({ ...f, skuId: e.target.value }))}>
+                  <select className="input-field" value={newForm.skuId} required onChange={(e) => handleNewFormSkuChange(e.target.value)}>
                     <option value="">— Select Product —</option>
                     {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
                   </select>
                 </div>
+                {skuVariants.length > 0 && (
+                  <div className="form-group">
+                    <label className="form-label">Variant</label>
+                    <select className="input-field" value={newForm.variantId} onChange={(e) => setNewForm(f => ({ ...f, variantId: e.target.value }))}>
+                      <option value="">— No Variant (base SKU) —</option>
+                      {skuVariants.map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>)}
+                    </select>
+                  </div>
+                )}
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Quantity *</label>
