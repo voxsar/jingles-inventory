@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
+import path from 'path';
+// import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
@@ -26,6 +27,8 @@ import branchRoutes from './routes/branches';
 import stockTransferRoutes from './routes/stockTransfers';
 import attributeRoutes from './routes/attributes';
 import variantRoutes from './routes/variants';
+import uploadRoutes from './routes/uploads';
+import { preloadStatusCache } from './modules/statuses/statusLookup';
 
 const app = express();
 
@@ -40,14 +43,18 @@ app.use(
 );
 app.use(express.json());
 
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
-	max: 1000,
-	standardHeaders: true,
-	legacyHeaders: false,
-	validate: { xForwardedForHeader: false },
-});
-app.use(limiter);
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Rate limiting disabled
+// const limiter = rateLimit({
+// 	windowMs: 15 * 60 * 1000,
+// 	max: 1000,
+// 	standardHeaders: true,
+// 	legacyHeaders: false,
+// 	validate: { xForwardedForHeader: false },
+// });
+// app.use(limiter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
@@ -73,13 +80,20 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/stock-transfers', stockTransferRoutes);
 app.use('/api/attributes', attributeRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 app.use(errorHandler);
 
 const PORT = Number(process.env.PORT ?? 3001);
 if (process.env.NODE_ENV !== 'test') {
-	app.listen(PORT, () => {
+	app.listen(PORT, async () => {
 		logger.info(`Server running on port ${PORT}`);
+		// Preload status cache for performance
+		try {
+			await preloadStatusCache();
+		} catch (err) {
+			logger.error('Failed to preload status cache', err);
+		}
 	});
 }
 
