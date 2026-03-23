@@ -966,6 +966,67 @@ function getSkuName(baseName: string, edition: number): string {
 async function main() {
 	console.log('🚀 Starting stress test seed (200,000 realistic products)...');
 
+	// ── Units of Measure ──────────────────────────────────────────────────────
+	const unitsToCreate = [
+		// Count units (base)
+		{ name: 'Piece', abbreviation: 'pc', type: 'Count', isSystem: true },
+		{ name: 'Pair', abbreviation: 'pr', type: 'Count', baseUnit: 'Piece', conversionFactor: 2, isSystem: true },
+		{ name: 'Pack', abbreviation: 'pk', type: 'Count', baseUnit: 'Piece', conversionFactor: 6, isSystem: true },
+		{ name: 'Box', abbreviation: 'box', type: 'Count', baseUnit: 'Piece', conversionFactor: 12, isSystem: true },
+		{ name: 'Set', abbreviation: 'set', type: 'Count', isSystem: true },
+		{ name: 'Unit', abbreviation: 'unit', type: 'Count', isSystem: true },
+
+		// Weight units (base: Gram)
+		{ name: 'Gram', abbreviation: 'g', type: 'Weight', isSystem: true },
+		{ name: 'Kilogram', abbreviation: 'kg', type: 'Weight', baseUnit: 'Gram', conversionFactor: 1000, isSystem: true },
+		{ name: 'Milligram', abbreviation: 'mg', type: 'Weight', baseUnit: 'Gram', conversionFactor: 0.001, isSystem: true },
+		{ name: 'Pound', abbreviation: 'lb', type: 'Weight', baseUnit: 'Gram', conversionFactor: 453.592, isSystem: true },
+		{ name: 'Ounce', abbreviation: 'oz', type: 'Weight', baseUnit: 'Gram', conversionFactor: 28.3495, isSystem: true },
+
+		// Volume units (base: Milliliter)
+		{ name: 'Milliliter', abbreviation: 'ml', type: 'Volume', isSystem: true },
+		{ name: 'Liter', abbreviation: 'L', type: 'Volume', baseUnit: 'Milliliter', conversionFactor: 1000, isSystem: true },
+		{ name: 'Gallon', abbreviation: 'gal', type: 'Volume', baseUnit: 'Milliliter', conversionFactor: 3785.41, isSystem: true },
+		{ name: 'Fluid Ounce', abbreviation: 'fl oz', type: 'Volume', baseUnit: 'Milliliter', conversionFactor: 29.5735, isSystem: true },
+		{ name: 'Cup', abbreviation: 'cup', type: 'Volume', baseUnit: 'Milliliter', conversionFactor: 236.588, isSystem: true },
+		{ name: 'Bottle', abbreviation: 'btl', type: 'Volume', isSystem: true },
+		{ name: 'Jar', abbreviation: 'jar', type: 'Volume', isSystem: true },
+		{ name: 'Bag', abbreviation: 'bag', type: 'Volume', isSystem: true },
+
+		// Length units (base: Centimeter)
+		{ name: 'Centimeter', abbreviation: 'cm', type: 'Length', isSystem: true },
+		{ name: 'Meter', abbreviation: 'm', type: 'Length', baseUnit: 'Centimeter', conversionFactor: 100, isSystem: true },
+		{ name: 'Millimeter', abbreviation: 'mm', type: 'Length', baseUnit: 'Centimeter', conversionFactor: 0.1, isSystem: true },
+		{ name: 'Kilometer', abbreviation: 'km', type: 'Length', baseUnit: 'Centimeter', conversionFactor: 100000, isSystem: true },
+		{ name: 'Inch', abbreviation: 'in', type: 'Length', baseUnit: 'Centimeter', conversionFactor: 2.54, isSystem: true },
+		{ name: 'Foot', abbreviation: 'ft', type: 'Length', baseUnit: 'Centimeter', conversionFactor: 30.48, isSystem: true },
+
+		// Area units (base: Square Meter)
+		{ name: 'Square Meter', abbreviation: 'm²', type: 'Area', isSystem: true },
+		{ name: 'Square Centimeter', abbreviation: 'cm²', type: 'Area', baseUnit: 'Square Meter', conversionFactor: 0.0001, isSystem: true },
+		{ name: 'Square Foot', abbreviation: 'ft²', type: 'Area', baseUnit: 'Square Meter', conversionFactor: 0.092903, isSystem: true },
+	];
+
+	let unitsCreated = 0;
+	for (const unitEntry of unitsToCreate) {
+		const existing = await prisma.unitOfMeasureModel.findUnique({ where: { name: unitEntry.name } });
+		if (!existing) {
+			await prisma.unitOfMeasureModel.create({
+				data: {
+					name: unitEntry.name,
+					abbreviation: unitEntry.abbreviation,
+					type: unitEntry.type,
+					baseUnit: unitEntry.baseUnit || null,
+					conversionFactor: unitEntry.conversionFactor || null,
+					isSystem: unitEntry.isSystem,
+					isActive: true,
+				},
+			});
+			unitsCreated++;
+		}
+	}
+	console.log(`✅ Ensured ${unitsToCreate.length} units of measure (${unitsCreated} created)`);
+
 	// ── Vendors ───────────────────────────────────────────────────────────────
 	const vendorMap = new Map<string, string>();
 	for (const vd of VENDOR_DATA) {
@@ -1040,7 +1101,7 @@ async function main() {
 		const code = `ST-F${f}`;
 		let floor = await prisma.floor.findFirst({ where: { branchId: branch.id, code } });
 		if (!floor) {
-			floor = await prisma.floor.create({ data: { branchId: branch.id, name: `Warehouse Floor ${f}`, code } });
+			floor = await prisma.floor.create({ data: { branchId: branch.id, name: `Warehouse Floor ${f}`, code, floorNumber: f } });
 		}
 		floorIds.push(floor.id);
 	}
