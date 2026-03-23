@@ -376,7 +376,7 @@ export default function WarehouseVisualizerPage() {
           if (e.code === 'Escape')     { setSelectedRack(null); return prev; }
           const next = { ...prev, [selectedRack]: { x, z, rotY } };
           // Debounce-save to DB
-          racksApi.savePosition(selectedRack, { posX: x, posZ: z, rotY }).catch(() => {});
+          racksApi.savePosition(selectedRack, { posX: x, posZ: z, rotY }).catch((err) => { console.error('Failed to save rack position', err); });
           return next;
         });
       }
@@ -539,7 +539,7 @@ export default function WarehouseVisualizerPage() {
       if (!p) return prev;
       const nx = snap(p.x + dx), nz = snap(p.z + dz);
       const next = { ...prev, [selectedRack]: { ...p, x: nx, z: nz } };
-      racksApi.savePosition(selectedRack, { posX: nx, posZ: nz, rotY: p.rotY }).catch(() => {});
+      racksApi.savePosition(selectedRack, { posX: nx, posZ: nz, rotY: p.rotY }).catch((err) => { console.error('Failed to save rack position', err); });
       return next;
     });
   }, [selectedRack]);
@@ -551,7 +551,7 @@ export default function WarehouseVisualizerPage() {
       if (!p) return prev;
       const rotY = (p.rotY + delta + 360) % 360;
       const next = { ...prev, [selectedRack]: { ...p, rotY } };
-      racksApi.savePosition(selectedRack, { posX: p.x, posZ: p.z, rotY }).catch(() => {});
+      racksApi.savePosition(selectedRack, { posX: p.x, posZ: p.z, rotY }).catch((err) => { console.error('Failed to save rack position', err); });
       return next;
     });
   }, [selectedRack]);

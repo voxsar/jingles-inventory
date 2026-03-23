@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { param, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@jingles/shared';
 import { createGRN, submitGRN, submitInspection } from '../modules/grn/grnService';
@@ -17,7 +18,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		const pageNum = parseInt(page);
 		const pageSizeNum = parseInt(pageSize);
 
-		const where: any = {};
+		const where: Prisma.GRNWhereInput = {};
 		if (status) where.status = status;
 		if (supplierId) where.supplierId = supplierId;
 		if (search) {

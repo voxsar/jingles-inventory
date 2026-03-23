@@ -70,8 +70,9 @@ export default function GRNPage() {
       setTotalPages(grnRes.data?.data?.totalPages ?? 1);
       setVendors(vendorRes.data?.data?.items ?? vendorRes.data?.data ?? vendorRes.data ?? []);
       setLocations(locationRes.data?.data?.items ?? locationRes.data?.data ?? locationRes.data ?? []);
-    } catch { /* ignore */ }
-    finally { setIsLoading(false); }
+    } catch (err) {
+      console.error('Failed to load GRN data', err);
+    } finally { setIsLoading(false); }
   };
 
   useEffect(() => { loadData(); }, [page, pageSize, debouncedSearch, statusFilter, supplierFilter]);
@@ -82,7 +83,7 @@ export default function GRNPage() {
     if (skuSearch) params.search = skuSearch;
     skusApi.list(params).then((res) => {
       setSkus(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
-    }).catch(() => {});
+    }).catch((err) => { console.error('Failed to load SKUs', err); });
   }, [showForm, skuSearch]);
 
   const handleSkuSearchChange = (value: string) => {
