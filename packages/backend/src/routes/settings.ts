@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
@@ -104,7 +105,7 @@ const VALID_ENTITY_TYPES = ['inventory', 'product', 'location', 'branch', 'suppl
 
 router.get('/statuses', async (req: AuthRequest, res: Response): Promise<void> => {
   const { entityType } = req.query as { entityType?: string };
-  const where: any = { isActive: true };
+  const where: Prisma.StatusOptionWhereInput = { isActive: true };
   if (entityType) where.entityType = entityType;
   const statuses = await prisma.statusOption.findMany({
     where,

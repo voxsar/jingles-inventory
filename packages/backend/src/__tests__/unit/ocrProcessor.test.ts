@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { parseInvoiceText } from '../../modules/ocr/ocrProcessor';
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
+import { parseInvoiceText, processInvoiceFile } from '../../modules/ocr/ocrProcessor';
 import { MOCK_OCR_PAYLOADS } from '../mocks/hardwareMocks';
 
 describe('parseInvoiceText', () => {
@@ -86,5 +89,26 @@ describe('parseInvoiceText', () => {
     expect(result.invoiceDate).toBe('12/01/2024');
     expect(result.lineItems.length).toBeGreaterThan(0);
     expect(result.totalAmount).toBe('1500.00');
+  });
+});
+
+describe('processInvoiceFile', () => {
+  it('parses a .txt file and returns invoice fields', async () => {
+    const tmpPath = path.join(os.tmpdir(), 'test-invoice.txt');
+    fs.writeFileSync(tmpPath, 'Invoice No: INV-TEST-001\nDate: 01/01/2024\nTotal: 100.00');
+    const result = await processInvoiceFile(tmpPath);
+    fs.unlinkSync(tmpPath);
+    expect(result.invoiceNumber).toBe('INV-TEST-001');
+    expect(result.invoiceDate).toBe('01/01/2024');
+    expect(result.totalAmount).toBe('100.00');
+  });
+
+  it('throws for unsupported file types', async () => {
+    await expect(processInvoiceFile('/some/invoice.pdf')).rejects.toThrow(
+      'Unsupported file type ".pdf"'
+    );
+    await expect(processInvoiceFile('/some/scan.png')).rejects.toThrow(
+      'Unsupported file type ".png"'
+    );
   });
 });
