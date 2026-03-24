@@ -4,6 +4,9 @@ import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
+import MediaUpload from '../components/MediaUpload';
+import ImageGalleryManager from '../components/ImageGalleryManager';
+import { branding } from '../config/branding';
 
 const PAGE_SIZE = 20;
 const defaultTransitionForm = { toState: '', reason: '' };
@@ -22,7 +25,7 @@ const defaultForm = {
 	lowStockThreshold: '',
 };
 
-type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants';
+type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images';
 
 export default function SKUPage() {
 	const [skus, setSkus] = useState<any[]>([]);
@@ -64,6 +67,11 @@ export default function SKUPage() {
 	const [allAttributes, setAllAttributes] = useState<any[]>([]);
 	const [variantsLoading, setVariantsLoading] = useState(false);
 	const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>({});
+
+	// Images tab state
+	const [skuImages, setSkuImages] = useState<any[]>([]);
+	const [skuVideoUrl, setSkuVideoUrl] = useState<string | null>(null);
+	const [imagesLoading, setImagesLoading] = useState(false);
 
 	// Create form attributes state
 	const [createFormSelectedAttrs, setCreateFormSelectedAttrs] = useState<Record<string, string[]>>({});
@@ -373,11 +381,25 @@ export default function SKUPage() {
 		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to delete variant'); }
 	};
 
+	const loadImages = async () => {
+		if (!editingSku) return;
+		setImagesLoading(true);
+		try {
+			const res = await skusApi.getImages(editingSku.id);
+			setSkuImages(res.data?.data ?? []);
+			// Also refresh video URL from latest SKU data
+			const skuRes = await skusApi.get(editingSku.id);
+			setSkuVideoUrl(skuRes.data?.data?.videoUrl ?? null);
+		} catch { setSkuImages([]); }
+		finally { setImagesLoading(false); }
+	};
+
 	const handleTabChange = (tab: ModalTab) => {
 		setModalTab(tab);
 		if (tab === 'barcodes') loadBarcodes();
 		if (tab === 'locations') loadLocations();
 		if (tab === 'variants') loadVariants();
+		if (tab === 'images') loadImages();
 	};
 
 	const openTransitionModal = (record: any) => {
@@ -405,6 +427,7 @@ export default function SKUPage() {
 	};
 
 	const getTagName = (id: string) => allTags.find((t: any) => t.id === id)?.name ?? id;
+	const authToken = localStorage.getItem(branding.tokenStorageKey) ?? '';
 
 	const skuTableHeaders = ['', 'SKU Code', 'Product Name', 'Category', 'Vendor', 'UoM', 'Tags', 'Low Stock', 'Fragile', 'Status', ''];
 
@@ -419,6 +442,9 @@ export default function SKUPage() {
 				<button className="btn-primary" onClick={openCreateForm}>+ New Product</button>
 			</div>
 
+							<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+								🖼️ You can upload product images and video right after creating this product (Edit → Images tab).
+							</div>
 			{/* Table section */}
 			<div className="content-section">
 				{/* Filter bar */}
@@ -757,7 +783,7 @@ export default function SKUPage() {
 						</div>
 						{/* Tab nav */}
 						<div className="flex gap-1 px-6 pt-3 pb-0 border-b border-gray-200 bg-white">
-							{(['details', 'tags', 'barcodes', 'locations', 'variants'] as ModalTab[]).map((tab) => (
+							{(['details', 'tags', 'barcodes', 'locations', 'variants', 'images'] as ModalTab[]).map((tab) => (
 								<button
 									key={tab}
 									type="button"
@@ -772,6 +798,7 @@ export default function SKUPage() {
 									{tab === 'barcodes' && '📊 '}
 									{tab === 'locations' && '📍 '}
 									{tab === 'variants' && '🧩 '}
+									{tab === 'images' && '🖼️ '}
 									{tab.charAt(0).toUpperCase() + tab.slice(1)}
 								</button>
 							))}
@@ -1062,6 +1089,37 @@ export default function SKUPage() {
 											)}
 										</>
 									)}
+								</div>
+							)}
+							{modalTab === 'images' && (
+								<div className="flex flex-col gap-6">
+									<div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+										<p className="text-sm font-semibold text-gray-700 mb-2">Upload Images / Video</p>
+										<MediaUpload
+											skuId={editingSku.id}
+											onUploadComplete={loadImages}
+											apiBaseUrl=""
+											authToken={authToken}
+										/>
+									</div>
+									<div className="border border-gray-200 rounded-lg p-4">
+										<p className="text-sm font-semibold text-gray-700 mb-3">Gallery</p>
+										{imagesLoading ? (
+											<p className="text-sm text-gray-400">Loading images…</p>
+										) : (
+											<ImageGalleryManager
+												skuId={editingSku.id}
+												images={skuImages}
+												videoUrl={skuVideoUrl}
+												apiBaseUrl=""
+												authToken={authToken}
+												onUpdate={loadImages}
+											/>
+										)}
+									</div>
+									<div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+										Variant-specific images are not available yet in backend schema. Current uploads apply at the product level.
+									</div>
 								</div>
 							)}
 						</div>

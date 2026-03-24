@@ -59,6 +59,112 @@ const EDITION_SUFFIXES = [
 type VariantType = 'none' | 'colour' | 'size' | 'colour-size';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PRODUCT DIMENSIONS  (L3 category slug → realistic packaged box size in cm)
+// Dimensions represent the outer carton/packaging, not the raw product.
+// These ensure products fit on realistically-sized warehouse shelves.
+// ─────────────────────────────────────────────────────────────────────────────
+const CATEGORY_DIMENSIONS: Record<string, { lengthCm: number; widthCm: number; heightCm: number; isFragile: boolean }> = {
+	// Electronics ─────────────────────────────────────────────────────────────
+	'smartphones': { lengthCm: 18, widthCm: 10, heightCm: 3, isFragile: true },
+	'tablets': { lengthCm: 28, widthCm: 20, heightCm: 3, isFragile: true },
+	'phone-accessories': { lengthCm: 16, widthCm: 12, heightCm: 4, isFragile: false },
+	'laptops': { lengthCm: 40, widthCm: 28, heightCm: 5, isFragile: true },
+	'desktops': { lengthCm: 48, widthCm: 42, heightCm: 22, isFragile: true },
+	'computer-peripherals': { lengthCm: 46, widthCm: 22, heightCm: 8, isFragile: false },
+	'headphones-earbuds': { lengthCm: 24, widthCm: 20, heightCm: 12, isFragile: true },
+	'speakers-soundbars': { lengthCm: 32, widthCm: 14, heightCm: 14, isFragile: true },
+	'tvs-displays': { lengthCm: 140, widthCm: 85, heightCm: 12, isFragile: true },
+	'digital-cameras': { lengthCm: 16, widthCm: 14, heightCm: 10, isFragile: true },
+	'action-cameras': { lengthCm: 10, widthCm: 8, heightCm: 6, isFragile: true },
+	'drones': { lengthCm: 34, widthCm: 32, heightCm: 12, isFragile: true },
+	// Clothing ────────────────────────────────────────────────────────────────
+	'mens-tops': { lengthCm: 32, widthCm: 25, heightCm: 4, isFragile: false },
+	'mens-bottoms': { lengthCm: 36, widthCm: 28, heightCm: 5, isFragile: false },
+	'mens-outerwear': { lengthCm: 46, widthCm: 36, heightCm: 7, isFragile: false },
+	'womens-tops': { lengthCm: 30, widthCm: 24, heightCm: 4, isFragile: false },
+	'womens-bottoms': { lengthCm: 34, widthCm: 26, heightCm: 5, isFragile: false },
+	'womens-dresses': { lengthCm: 40, widthCm: 32, heightCm: 5, isFragile: false },
+	'athletic-footwear': { lengthCm: 34, widthCm: 22, heightCm: 14, isFragile: false },
+	'casual-footwear': { lengthCm: 32, widthCm: 20, heightCm: 13, isFragile: false },
+	'boots-hiking': { lengthCm: 36, widthCm: 24, heightCm: 22, isFragile: false },
+	'bags-backpacks': { lengthCm: 46, widthCm: 36, heightCm: 22, isFragile: false },
+	'hats-caps': { lengthCm: 28, widthCm: 24, heightCm: 14, isFragile: false },
+	'belts-wallets': { lengthCm: 14, widthCm: 11, heightCm: 3, isFragile: false },
+	// Food & Beverages ────────────────────────────────────────────────────────
+	'hot-drinks': { lengthCm: 16, widthCm: 11, heightCm: 11, isFragile: false },
+	'cold-drinks': { lengthCm: 11, widthCm: 11, heightCm: 30, isFragile: false },
+	'juices-smoothies': { lengthCm: 9, widthCm: 9, heightCm: 28, isFragile: false },
+	'snack-bars': { lengthCm: 23, widthCm: 16, heightCm: 9, isFragile: false },
+	'chips-crisps': { lengthCm: 28, widthCm: 18, heightCm: 8, isFragile: false },
+	'confectionery': { lengthCm: 22, widthCm: 13, heightCm: 6, isFragile: false },
+	'grains-pasta': { lengthCm: 26, widthCm: 9, heightCm: 32, isFragile: false },
+	'oils-condiments': { lengthCm: 9, widthCm: 9, heightCm: 30, isFragile: false },
+	'spreads-preserves': { lengthCm: 11, widthCm: 11, heightCm: 13, isFragile: false },
+	// Home & Kitchen ──────────────────────────────────────────────────────────
+	'cooking-appliances': { lengthCm: 40, widthCm: 38, heightCm: 40, isFragile: false },
+	'coffee-tea-makers': { lengthCm: 32, widthCm: 28, heightCm: 40, isFragile: true },
+	'food-preparation': { lengthCm: 26, widthCm: 26, heightCm: 42, isFragile: false },
+	'pots-pans': { lengthCm: 52, widthCm: 32, heightCm: 18, isFragile: false },
+	'baking-acc': { lengthCm: 46, widthCm: 34, heightCm: 6, isFragile: false },
+	'kitchen-tools': { lengthCm: 36, widthCm: 26, heightCm: 9, isFragile: false },
+	'storage-boxes': { lengthCm: 42, widthCm: 32, heightCm: 28, isFragile: false },
+	'shelving-racks': { lengthCm: 82, widthCm: 42, heightCm: 20, isFragile: false },
+	'desk-organisers': { lengthCm: 30, widthCm: 20, heightCm: 14, isFragile: false },
+	// Sports & Outdoors ───────────────────────────────────────────────────────
+	'strength-training': { lengthCm: 46, widthCm: 26, heightCm: 22, isFragile: false },
+	'cardio-equipment': { lengthCm: 175, widthCm: 60, heightCm: 45, isFragile: false },
+	'yoga-pilates': { lengthCm: 65, widthCm: 18, heightCm: 18, isFragile: false },
+	'hiking-camping': { lengthCm: 62, widthCm: 38, heightCm: 28, isFragile: false },
+	'cycling': { lengthCm: 34, widthCm: 24, heightCm: 14, isFragile: false },
+	'water-sports': { lengthCm: 26, widthCm: 22, heightCm: 12, isFragile: false },
+	'ball-sports': { lengthCm: 30, widthCm: 30, heightCm: 30, isFragile: false },
+	'racket-sports': { lengthCm: 72, widthCm: 32, heightCm: 6, isFragile: false },
+	'golf': { lengthCm: 125, widthCm: 12, heightCm: 12, isFragile: false },
+	// Beauty & Personal Care ───────────────────────────────────────────────────
+	'face-care': { lengthCm: 13, widthCm: 9, heightCm: 9, isFragile: false },
+	'body-care': { lengthCm: 9, widthCm: 9, heightCm: 24, isFragile: false },
+	'sun-care': { lengthCm: 9, widthCm: 7, heightCm: 22, isFragile: false },
+	'shampoo-conditioner': { lengthCm: 9, widthCm: 9, heightCm: 26, isFragile: false },
+	'styling-products': { lengthCm: 9, widthCm: 7, heightCm: 20, isFragile: false },
+	'hair-treatments': { lengthCm: 11, widthCm: 9, heightCm: 18, isFragile: false },
+	'face-makeup': { lengthCm: 13, widthCm: 9, heightCm: 5, isFragile: false },
+	'eye-makeup': { lengthCm: 15, widthCm: 9, heightCm: 6, isFragile: false },
+	'lip-products': { lengthCm: 5, widthCm: 5, heightCm: 16, isFragile: false },
+	// Toys & Games ────────────────────────────────────────────────────────────
+	'building-blocks': { lengthCm: 42, widthCm: 32, heightCm: 22, isFragile: false },
+	'model-kits': { lengthCm: 36, widthCm: 26, heightCm: 9, isFragile: false },
+	'stem-toys': { lengthCm: 32, widthCm: 26, heightCm: 16, isFragile: false },
+	'ride-on-toys': { lengthCm: 85, widthCm: 45, heightCm: 65, isFragile: false },
+	'sports-toys': { lengthCm: 42, widthCm: 32, heightCm: 16, isFragile: false },
+	'garden-sand-play': { lengthCm: 58, widthCm: 44, heightCm: 24, isFragile: false },
+	'board-games': { lengthCm: 42, widthCm: 32, heightCm: 9, isFragile: false },
+	'card-games': { lengthCm: 16, widthCm: 11, heightCm: 5, isFragile: false },
+	'jigsaw-puzzles': { lengthCm: 37, widthCm: 27, heightCm: 8, isFragile: false },
+	// Automotive ──────────────────────────────────────────────────────────────
+	'engine-oil': { lengthCm: 16, widthCm: 11, heightCm: 26, isFragile: false },
+	'brakes-tyres': { lengthCm: 36, widthCm: 36, heightCm: 6, isFragile: false },
+	'car-care': { lengthCm: 13, widthCm: 9, heightCm: 22, isFragile: false },
+	'interior-accessories': { lengthCm: 52, widthCm: 42, heightCm: 6, isFragile: false },
+	'exterior-accessories': { lengthCm: 62, widthCm: 48, heightCm: 12, isFragile: false },
+	'car-electronics': { lengthCm: 20, widthCm: 14, heightCm: 10, isFragile: false },
+	// Office & Stationery ─────────────────────────────────────────────────────
+	'writing-instruments': { lengthCm: 22, widthCm: 14, heightCm: 6, isFragile: false },
+	'paper-products': { lengthCm: 23, widthCm: 17, heightCm: 4, isFragile: false },
+	'desk-accessories': { lengthCm: 26, widthCm: 22, heightCm: 12, isFragile: false },
+	'printers-scanners': { lengthCm: 50, widthCm: 40, heightCm: 30, isFragile: true },
+	'storage-devices': { lengthCm: 13, widthCm: 9, heightCm: 3, isFragile: false },
+	'office-electronics': { lengthCm: 22, widthCm: 16, heightCm: 6, isFragile: false },
+	// Health & Wellness ───────────────────────────────────────────────────────
+	'vitamins-minerals': { lengthCm: 9, widthCm: 9, heightCm: 14, isFragile: false },
+	'protein-supplements': { lengthCm: 19, widthCm: 19, heightCm: 30, isFragile: false },
+	'herbal-supplements': { lengthCm: 8, widthCm: 8, heightCm: 16, isFragile: false },
+	'monitoring-devices': { lengthCm: 15, widthCm: 12, heightCm: 10, isFragile: false },
+	'first-aid': { lengthCm: 26, widthCm: 20, heightCm: 12, isFragile: false },
+	'mobility-aids': { lengthCm: 110, widthCm: 14, heightCm: 14, isFragile: false },
+};
+const DEFAULT_DIMENSIONS = { lengthCm: 30, widthCm: 20, heightCm: 15, isFragile: false };
+
+// ─────────────────────────────────────────────────────────────────────────────
 // VENDORS  (60 vendors across all industries)
 // ─────────────────────────────────────────────────────────────────────────────
 const VENDOR_DATA: Array<{ name: string; contactEmail: string; type: string }> = [
@@ -931,8 +1037,11 @@ interface Combo {
 	name: string;
 	vendorId: string;
 	categoryId: string;
+	categorySlug: string;
 	unit: string;
 	variantType: VariantType;
+	dimensions: { lengthCm: number; widthCm: number; heightCm: number };
+	isFragile: boolean;
 }
 
 function buildCombos(
@@ -945,9 +1054,19 @@ function buildCombos(
 		const categoryId = categoryMap.get(tmpl.categorySlug);
 		if (!vendorId) throw new Error(`Vendor not found: ${tmpl.vendorName}`);
 		if (!categoryId) throw new Error(`Category slug not found: ${tmpl.categorySlug}`);
+		const dim = CATEGORY_DIMENSIONS[tmpl.categorySlug] ?? DEFAULT_DIMENSIONS;
 		for (const brand of tmpl.brands) {
 			for (const type of tmpl.types) {
-				combos.push({ name: `${brand} ${type}`, vendorId, categoryId, unit: tmpl.unit, variantType: tmpl.variantType });
+				combos.push({
+					name: `${brand} ${type}`,
+					vendorId,
+					categoryId,
+					categorySlug: tmpl.categorySlug,
+					unit: tmpl.unit,
+					variantType: tmpl.variantType,
+					dimensions: { lengthCm: dim.lengthCm, widthCm: dim.widthCm, heightCm: dim.heightCm },
+					isFragile: dim.isFragile,
+				});
 			}
 		}
 	}
@@ -1101,7 +1220,17 @@ async function main() {
 		const code = `ST-F${f}`;
 		let floor = await prisma.floor.findFirst({ where: { branchId: branch.id, code } });
 		if (!floor) {
-			floor = await prisma.floor.create({ data: { branchId: branch.id, name: `Warehouse Floor ${f}`, code, floorNumber: f } });
+			floor = await prisma.floor.create({
+				data: {
+					branchId: branch.id,
+					name: `Warehouse Floor ${f}`,
+					code,
+					floorNumber: f,
+					// 60 m × 40 m per floor  → renders as ~183 × 122 scene units in the 3D visualiser
+					length: 60,
+					width: 40,
+				},
+			});
 		}
 		floorIds.push(floor.id);
 	}
@@ -1114,7 +1243,16 @@ async function main() {
 			const code = `ST-F${f + 1}-R${String(r).padStart(2, '0')}`;
 			let rack = await prisma.rack.findFirst({ where: { floorId: floorIds[f], code } });
 			if (!rack) {
-				rack = await prisma.rack.create({ data: { floorId: floorIds[f], name: `Floor ${f + 1} Rack ${r}`, code } });
+				rack = await prisma.rack.create({
+					data: {
+						floorId: floorIds[f],
+						name: `Floor ${f + 1} Rack ${r}`,
+						code,
+						widthCm: 120,
+						heightCm: 220,
+						depthCm: 50,
+					},
+				});
 			}
 			rackIds.push(rack.id);
 		}
@@ -1136,9 +1274,11 @@ async function main() {
 						rackId: rackIds[ri],
 						name: `Floor ${floorIndex + 1} Rack ${rackNum} Shelf ${s}`,
 						code,
-						height: 2.4,
-						width: 1.5,
-						length: 0.8,
+						// Standard industrial shelf level: 1.2 m wide × 0.5 m deep × 0.5 m clear height
+						// Fits nearly all consumer-goods packaging (up to 45 cm height/depth)
+						height: 0.5,
+						width: 1.2,
+						length: 0.5,
 					},
 				});
 			}
@@ -1151,23 +1291,67 @@ async function main() {
 	const combos = buildCombos(vendorMap, categoryMap);
 	console.log(`📋 Built ${combos.length} unique brand×type combinations`);
 
-	// ── SKUs + Variants + SKUVariantValues + Inventory ────────────────────────
+	// ── Admin user (required for GRN.createdBy / InventoryEvent.userId) ───────
+	const seederUser = await prisma.user.findFirst({ where: { role: 'Admin' } });
+	if (!seederUser) {
+		throw new Error('No Admin user found. Run the main seeder first: npm run prisma:seed');
+	}
+	const vendorIds = Array.from(vendorMap.values());
+
+	// ── SKUs + Variants + SKUVariantValues + GRNs + Inventory ─────────────────
 	const existingCount = await prisma.sKU.count({ where: { skuCode: { startsWith: 'PROD-' } } });
 	const toCreate = TOTAL_SKUS - existingCount;
 
 	if (toCreate <= 0) {
 		console.log(`⏭️  ${existingCount} product SKUs already exist, skipping`);
 	} else {
-		console.log(`📦 Creating ${toCreate} SKUs in batches of ${BATCH_SIZE}...`);
+		console.log(`📦 Creating ${toCreate} SKUs in batches of ${BATCH_SIZE} (1 GRN per batch)...`);
 
 		// Capture attribute IDs for variant value rows
 		const colourAttrId = colourAttr.id;
 		const sizeAttrId = sizeAttr.id;
 
 		let created = 0;
+		let batchNum = Math.floor(existingCount / BATCH_SIZE); // continue numbering if partial re-run
 		while (created < toCreate) {
 			const batchCount = Math.min(BATCH_SIZE, toCreate - created);
 			const startIndex = existingCount + created;
+			batchNum++;
+
+			// ── GRN for this batch delivery ───────────────────────────────────
+			const grnRef = `GRN-STRESS-${String(batchNum).padStart(5, '0')}`;
+			const supplierId = vendorIds[batchNum % vendorIds.length];
+			const deliveryDate = new Date(Date.now() - batchNum * 24 * 60 * 60 * 1000);
+			let grn = await prisma.gRN.findFirst({ where: { invoiceReference: grnRef } });
+			if (!grn) {
+				grn = await prisma.gRN.create({
+					data: {
+						supplierId,
+						invoiceReference: grnRef,
+						status: 'Closed',
+						deliveryDate,
+						supplierInvoiceDate: deliveryDate,
+						expectedDeliveryDate: deliveryDate,
+						notes: `Stress-test batch delivery ${batchNum}`,
+						createdBy: seederUser.id,
+						createdAt: deliveryDate,
+					},
+				});
+			}
+
+			// ── Inventory event (one per GRN / batch) ─────────────────────────
+			const invEvent = await prisma.inventoryEvent.create({
+				data: {
+					eventType: 'GRN_CREATED',
+					parentEntityId: grn.id,
+					quantityDelta: batchCount * 50,
+					beforeQuantity: 0,
+					afterQuantity: batchCount * 50,
+					userId: seederUser.id,
+					timestamp: deliveryDate,
+					metadata: { batchNum, grnRef, batchSize: batchCount },
+				},
+			});
 
 			// ── Build SKU metadata for this batch ────────────────────────────
 			interface BatchMeta {
@@ -1177,6 +1361,8 @@ async function main() {
 				categoryId: string;
 				unitOfMeasure: string;
 				variantType: VariantType;
+				dimensions: { lengthCm: number; widthCm: number; heightCm: number };
+				isFragile: boolean;
 			}
 			const batchMeta: BatchMeta[] = Array.from({ length: batchCount }, (_, i) => {
 				const globalIndex = startIndex + i;
@@ -1190,11 +1376,13 @@ async function main() {
 					categoryId: combo.categoryId,
 					unitOfMeasure: combo.unit,
 					variantType: combo.variantType,
+					dimensions: combo.dimensions,
+					isFragile: combo.isFragile,
 				};
 			});
 
 			// ── Insert SKUs ───────────────────────────────────────────────────
-			const skuRows = batchMeta.map(({ variantType: _, ...rest }) => rest);
+			const skuRows = batchMeta.map(({ variantType: _vt, ...rest }) => rest);
 			await prisma.sKU.createMany({ data: skuRows, skipDuplicates: true });
 
 			// ── Fetch newly inserted SKU IDs ──────────────────────────────────
@@ -1203,6 +1391,17 @@ async function main() {
 				select: { id: true, skuCode: true },
 			});
 			const skuByCode = new Map(skus.map((s: { id: string; skuCode: string }) => [s.skuCode, s.id]));
+
+			// ── GRN lines — one per SKU in this batch (received = expected) ───
+			await prisma.gRNLine.createMany({
+				data: skus.map(sku => ({
+					grnId: grn!.id,
+					skuId: sku.id,
+					expectedQuantity: 50,
+					receivedQuantity: 50,
+				})),
+				skipDuplicates: true,
+			});
 
 			// ── Build variant rows (in-memory) ────────────────────────────────
 			interface VariantMeta {
@@ -1286,7 +1485,7 @@ async function main() {
 				}
 			}
 
-			// ── Inventory records (one per SKU) ───────────────────────────────
+			// ── Inventory records (one per SKU, linked to GRN event) ──────────
 			const inventoryBatch = skus.map((sku, idx) => {
 				const globalIdx = startIndex + idx;
 				const shelfIdx = globalIdx % shelfIds.length;
@@ -1300,6 +1499,8 @@ async function main() {
 					shelfId: shelfIds[shelfIdx],
 					quantity: Math.floor(Math.random() * 200) + 1,
 					state: INVENTORY_STATES[globalIdx % INVENTORY_STATES.length],
+					sourceEventId: invEvent.id,
+					userId: seederUser.id,
 				};
 			});
 			await prisma.inventoryRecord.createMany({ data: inventoryBatch, skipDuplicates: true });
@@ -1307,10 +1508,11 @@ async function main() {
 			created += batchCount;
 			process.stdout.write(
 				`\r  Progress: ${existingCount + created}/${TOTAL_SKUS} SKUs` +
-				`  (${variantMetas.length} variants this batch)`,
+				`  (batch ${batchNum} | ${variantMetas.length} variants this batch)`,
 			);
 		}
-		console.log('\n✅ SKUs, variants, SKUVariantValues, and inventory records created');
+		console.log(`\n✅ ${batchNum} GRNs created — every inventory record is backed by a GRN`);
+		console.log('✅ SKUs (with dimensions), variants, SKUVariantValues, GRN lines, and inventory records created');
 	}
 
 	console.log('\n🎉 Stress test seed complete!');
@@ -1320,9 +1522,11 @@ async function main() {
 	console.log(`   Floors     : ${FLOORS}`);
 	console.log(`   Racks      : ${rackIds.length} (${RACKS_PER_FLOOR}/floor)`);
 	console.log(`   Shelves    : ${shelfIds.length} (${SHELVES_PER_RACK}/rack)`);
-	console.log(`   SKUs       : ${TOTAL_SKUS.toLocaleString()}`);
+	console.log(`   SKUs       : ${TOTAL_SKUS.toLocaleString()} (with realistic category dimensions)`);
 	console.log(`   Variant types: colour-only (${ALL_COLOURS.length} variants/SKU), size-only (${ALL_SIZES.length} variants/SKU), colour+size (${MULTI_COLOURS.length}×${MULTI_SIZES.length} variants/SKU)`);
-	console.log(`   Inv. Records : ${TOTAL_SKUS.toLocaleString()}`);
+	console.log(`   GRNs       : 1 per batch of ${BATCH_SIZE} SKUs — all inventory backed by a GRN`);
+	console.log(`   GRN lines  : ${TOTAL_SKUS.toLocaleString()} (1 per SKU)`);
+	console.log(`   Inv. Records : ${TOTAL_SKUS.toLocaleString()} (each linked to a GRN_CREATED event)`);
 }
 
 main()
