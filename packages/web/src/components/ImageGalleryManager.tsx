@@ -30,6 +30,22 @@ export default function ImageGalleryManager({
 	const [videoUrl, setVideoUrl] = useState<string | null>(initialVideoUrl);
 	const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
+	const resolveMediaUrl = (rawUrl: string) => {
+		if (!rawUrl) return rawUrl;
+		if (rawUrl.startsWith('/uploads/')) return `${window.location.origin}${rawUrl}`;
+		if (/^https?:\/\//i.test(rawUrl)) {
+			try {
+				const parsed = new URL(rawUrl);
+				if (parsed.pathname.startsWith('/uploads/')) {
+					return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+				}
+			} catch {
+				return rawUrl;
+			}
+		}
+		return `${apiBaseUrl}${rawUrl}`;
+	};
+
 	useEffect(() => {
 		setImages(initialImages.sort((a, b) => a.sortOrder - b.sortOrder));
 	}, [initialImages]);
@@ -138,7 +154,7 @@ export default function ImageGalleryManager({
 								className="relative group border rounded-lg overflow-hidden bg-gray-50"
 							>
 								<img
-									src={`${apiBaseUrl}${image.url}`}
+									src={resolveMediaUrl(image.url)}
 									alt={image.altText || 'Product image'}
 									className="w-full h-48 object-cover"
 								/>
@@ -210,7 +226,7 @@ export default function ImageGalleryManager({
 					<h4 className="font-medium text-gray-700 mb-3">Product Video</h4>
 					<div className="relative inline-block">
 						<video
-							src={`${apiBaseUrl}${videoUrl}`}
+							src={resolveMediaUrl(videoUrl)}
 							controls
 							className="w-full max-w-md rounded-lg border"
 						/>

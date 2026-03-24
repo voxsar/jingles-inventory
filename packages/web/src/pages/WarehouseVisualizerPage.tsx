@@ -3,7 +3,15 @@ import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
 import { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 
 // ── Grid helper ─────────────────────────────────────────────────────────────
-const GRID = 0.5; // metres per grid cell
+const GRID = 0.5; // scene units per grid cell
+
+/**
+ * Scene unit system: 1 scene unit ≈ 1 foot (0.3048 m).
+ * Floors are stored in metres and rendered as `metres × M2S` scene units.
+ * Physical dimensions (cm fields on racks/boxes) are converted via CM2S.
+ */
+const M2S = 3.048;            // metres → scene units
+const CM2S = M2S / 100;       // centimetres → scene units  (≈ 0.03048)
 
 function snap(v: number): number {
 	return Math.round(v / GRID) * GRID;
@@ -66,14 +74,15 @@ function RackEntity({
 	posZ: number;
 	rotY: number;
 }) {
-	// Use rack dimensions if available, else derive from shelves
-	const w = Math.max((rack.widthCm || 100) / 100, 0.4);
-	const h = Math.max((rack.heightCm || 200) / 100, 0.5);
-	const d = Math.max((rack.depthCm || 60) / 100, 0.3);
+	// Convert rack physical dimensions (cm) to scene units (1 unit ≈ 1 ft)
+	const w = Math.max((rack.widthCm || 100) * CM2S, 40 * CM2S);
+	const h = Math.max((rack.heightCm || 200) * CM2S, 50 * CM2S);
+	const d = Math.max((rack.depthCm || 60) * CM2S, 30 * CM2S);
 	const hw = w / 2 - 0.02;
 	const hd = d / 2 - 0.02;
 
-	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / 0.5));
+	// One shelf level every ~50 cm
+	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / (50 * CM2S)));
 	const levelH = h / levels;
 	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH);
 
@@ -133,7 +142,7 @@ function RackEntity({
 			{/* Name label */}
 			<a-text
 				value={rack.name}
-				position={`0 ${h + 0.15} 0`}
+				position={`0 ${h + 0.5} 0`}
 				align="center"
 				color="#FFFFFF"
 				scale="0.4 0.4 0.4"
@@ -143,9 +152,9 @@ function RackEntity({
 			{/* Boxes on shelves */}
 			{allBoxes.map(({ box, shelfIdx, boxIdx }) => {
 				const levelY = (shelfIdx + 0.5) * levelH;
-				const bw = Math.max((box.width || 30) / 100, 0.08);
-				const bh = Math.max((box.height || 30) / 100, 0.08);
-				const bd = Math.max((box.length || 30) / 100, 0.08);
+				const bw = Math.max((box.width || 30) * CM2S, 8 * CM2S);
+				const bh = Math.max((box.height || 30) * CM2S, 8 * CM2S);
+				const bd = Math.max((box.length || 30) * CM2S, 8 * CM2S);
 				const boxesInShelf = (shelfBoxes[shelves[shelfIdx]?.id ?? ''] ?? []).length;
 				const offsetX = (boxIdx - boxesInShelf / 2 + 0.5) * (bw + 0.02);
 				const baseY = (shelfIdx * levelH) + 0.03 + bh / 2;
@@ -172,9 +181,9 @@ function RackEntity({
 
 /** Floor-level box (sitting directly on floor) */
 function FloorBox({ box, index }: { box: IStorageBox; index: number }) {
-	const bw = Math.max((box.width || 40) / 100, 0.1);
-	const bh = Math.max((box.height || 40) / 100, 0.1);
-	const bd = Math.max((box.length || 40) / 100, 0.1);
+	const bw = Math.max((box.width || 40) * CM2S, 10 * CM2S);
+	const bh = Math.max((box.height || 40) * CM2S, 10 * CM2S);
+	const bd = Math.max((box.length || 40) * CM2S, 10 * CM2S);
 	const posX = box.posX ?? snap(index * (bw + 0.1));
 	const posY = box.posY ?? (bh / 2 + (box.stackOrder ?? 0) * bh);
 	const posZ = box.posZ ?? 0;
