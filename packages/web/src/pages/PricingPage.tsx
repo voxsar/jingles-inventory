@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { batchesApi, skusApi } from '../api/client';
+import { batchesApi, skusApi, pricingOverlaysApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import EffectivePricePreview from '../components/EffectivePricePreview';
 
 const PAGE_SIZE = 20;
 
@@ -19,6 +20,7 @@ export default function PricingPage() {
   const [bulkPriceField, setBulkPriceField] = useState<'costPrice' | 'sellingPrice' | 'wholesalePrice' | 'bulkPrice'>('sellingPrice');
   const [bulkValue, setBulkValue] = useState('');
   const [editingBatch, setEditingBatch] = useState<any>(null);
+  const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     costPrice: '',
     sellingPrice: '',
@@ -167,6 +169,13 @@ export default function PricingPage() {
       header: '',
       render: (b: any) => (
         <div className="flex items-center gap-2">
+          <button
+            className="btn-sm text-xs"
+            onClick={() => setExpandedBatchId(expandedBatchId === b.id ? null : b.id)}
+            title="View effective price with overlays"
+          >
+            {expandedBatchId === b.id ? '▼' : '🎯'}
+          </button>
           <button className="btn-sm" onClick={() => handleEditBatch(b)}>Edit</button>
           {b.marginType && b.marginValue && b.costPrice && (
             <button className="btn-sm" onClick={() => handleApplyMargin(b.id)}>Apply Margin</button>
@@ -214,7 +223,55 @@ export default function PricingPage() {
           <div className="px-6 py-8 text-center text-sm text-gray-500">No batches found</div>
         ) : (
           <>
-            <DataTable columns={columns} data={batches} />
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col.key}
+                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                          col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
+                        }`}
+                      >
+                        {col.header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {batches.map((batch) => (
+                    <>
+                      <tr key={batch.id}>
+                        {columns.map((col) => (
+                          <td
+                            key={col.key}
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
+                            }`}
+                          >
+                            {col.render(batch)}
+                          </td>
+                        ))}
+                      </tr>
+                      {expandedBatchId === batch.id && batch.sellingPrice && (
+                        <tr key={`${batch.id}-preview`}>
+                          <td colSpan={columns.length} className="px-6 py-4 bg-gray-50">
+                            <EffectivePricePreview
+                              skuId={batch.skuId}
+                              variantId={batch.variantId}
+                              batchId={batch.id}
+                              basePrice={batch.sellingPrice}
+                              priceType="selling"
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {totalPages > 1 && (
               <div className="px-6 py-4 border-t border-gray-100">
                 <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
