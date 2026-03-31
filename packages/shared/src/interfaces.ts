@@ -124,6 +124,13 @@ export interface IBatchPricingTier {
 	currency?: string;
 }
 
+export interface IBatchReferencePricing {
+	batchReference: string;
+	unitPrice: number;
+	currency?: string;
+	notes?: string | null;
+}
+
 export interface ISKU {
 	id: string;
 	skuCode: string;
@@ -139,6 +146,7 @@ export interface ISKU {
 	isFragile: boolean;
 	maxStackHeight?: number | null;
 	batchPricing?: IBatchPricingTier[] | null;
+	batchReferencePricing?: IBatchReferencePricing[] | null;
 	lowStockThreshold?: number | null;
 	isActive: boolean;
 	createdAt: Date;
