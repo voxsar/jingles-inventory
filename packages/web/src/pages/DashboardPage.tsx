@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { inventoryApi, grnsApi } from '../api/client';
+import { dashboardApi } from '../api/client';
 import { InventoryState, GRNStatus } from '@jingles/shared';
 
 interface StatCard {
@@ -9,41 +9,55 @@ interface StatCard {
   icon: string;
 }
 
+interface DashboardStats {
+  totalItems: number;
+  shelfReadyItems: number;
+  damagedItems: number;
+  openGRNs: number;
+  inventoryByState: {
+    [state: string]: {
+      count: number;
+      quantity: number;
+    };
+  };
+  lastUpdated: string;
+}
+
 export default function DashboardPage() {
-  const [inventorySummary, setInventorySummary] = useState<any[]>([]);
-  const [grnSummary, setGrnSummary] = useState<any[]>([]);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      inventoryApi.list({ pageSize: '1000' }),
-      grnsApi.list({ pageSize: '100' }),
-    ]).then(([invRes, grnRes]) => {
-      const invData = invRes.data?.data?.items ?? invRes.data?.data ?? invRes.data ?? [];
-      const grnData = grnRes.data?.data?.items ?? grnRes.data?.data ?? grnRes.data ?? [];
-      setInventorySummary(Array.isArray(invData) ? invData : []);
-      setGrnSummary(Array.isArray(grnData) ? grnData : []);
-      setIsLoading(false);
-    }).catch(() => setIsLoading(false));
+    dashboardApi.getStats()
+      .then((res) => {
+        const data = res.data?.data;
+        if (data) {
+          setStats(data);
+        }
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
   }, []);
 
-  const statsByState = Object.values(InventoryState).map(state => ({
-    state,
-    count: inventorySummary.filter(r => r.state === state).length,
-    quantity: inventorySummary.filter(r => r.state === state).reduce((s: number, r: any) => s + r.quantity, 0),
-  }));
+  const cards: StatCard[] = stats ? [
+    { label: 'Total Items', value: stats.totalItems.toLocaleString(), color: 'bg-blue-500', icon: '📦' },
+    { label: 'Shelf Ready', value: stats.shelfReadyItems.toLocaleString(), color: 'bg-green-500', icon: '✅' },
+    { label: 'Open GRNs', value: stats.openGRNs, color: 'bg-yellow-500', icon: '📋' },
+    { label: 'Damaged Items', value: stats.damagedItems.toLocaleString(), color: 'bg-red-500', icon: '⚠️' },
+  ] : [];
 
-  const totalItems = inventorySummary.reduce((s: number, r: any) => s + r.quantity, 0);
-  const openGRNs = grnSummary.filter(g => [GRNStatus.Draft, GRNStatus.Submitted, GRNStatus.PartiallyInspected].includes(g.status)).length;
-  const damagedItems = inventorySummary.filter(r => r.state === InventoryState.Damaged).reduce((s: number, r: any) => s + r.quantity, 0);
-  const shelfReadyItems = inventorySummary.filter(r => r.state === InventoryState.ShelfReady).reduce((s: number, r: any) => s + r.quantity, 0);
+  // Build inventory by state array from stats
+  const statsByState = stats ? 
+    Object.entries(stats.inventoryByState)
+      .map(([state, data]) => ({
+        state,
+        count: data.count,
+        quantity: data.quantity,
+      }))
+      .filter(({ quantity }) => quantity > 0)
+    : [];
 
-  const cards: StatCard[] = [
-    { label: 'Total Items', value: totalItems.toLocaleString(), color: 'bg-blue-500', icon: '📦' },
-    { label: 'Shelf Ready', value: shelfReadyItems.toLocaleString(), color: 'bg-green-500', icon: '✅' },
-    { label: 'Open GRNs', value: openGRNs, color: 'bg-yellow-500', icon: '📋' },
-    { label: 'Damaged Items', value: damagedItems.toLocaleString(), color: 'bg-red-500', icon: '⚠️' },
-  ];
+  const totalItems = stats?.totalItems ?? 0;
 
   if (isLoading) {
     return (
@@ -84,7 +98,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-semibold text-gray-900">Inventory by State</h2>
         </div>
         <div className="px-6 py-4 flex flex-col gap-3">
-          {statsByState.filter(({ quantity }) => quantity > 0).map(({ state, quantity }) => (
+          {statsByState.map(({ state, quantity }) => (
             <div key={state} className="flex items-center gap-4">
               <span className="text-sm text-gray-600 w-36 flex-shrink-0">{state}</span>
               <div className="flex-1 bg-gray-100 rounded-full h-2">
@@ -96,7 +110,7 @@ export default function DashboardPage() {
               <span className="text-sm font-medium text-gray-700 w-16 text-right">{quantity.toLocaleString()}</span>
             </div>
           ))}
-          {statsByState.filter(({ quantity }) => quantity > 0).length === 0 && (
+          {statsByState.length === 0 && (
             <p className="text-sm text-gray-500">No inventory data yet.</p>
           )}
         </div>

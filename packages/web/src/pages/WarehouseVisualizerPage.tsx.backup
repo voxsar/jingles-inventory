@@ -3,15 +3,7 @@ import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
 import { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 
 // ── Grid helper ─────────────────────────────────────────────────────────────
-const GRID = 0.5; // scene units per grid cell
-
-/**
- * Scene unit system: 1 scene unit ≈ 1 foot (0.3048 m).
- * Floors are stored in metres and rendered as `metres × M2S` scene units.
- * Physical dimensions (cm fields on racks/boxes) are converted via CM2S.
- */
-const M2S = 3.048;            // metres → scene units
-const CM2S = M2S / 100;       // centimetres → scene units  (≈ 0.03048)
+const GRID = 0.5; // metres per grid cell
 
 function snap(v: number): number {
 	return Math.round(v / GRID) * GRID;
@@ -26,14 +18,12 @@ const GRID_COLOUR = '#8EBE7E';
 let aframeLoaded = false;
 function ensureAframe(): Promise<void> {
 	if (aframeLoaded) return Promise.resolve();
-	return import('aframe').then(() => {
-		aframeLoaded = true;
-	});
+	return import('aframe').then(() => { aframeLoaded = true; });
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-function ShelfBoard({ w, d, y, shelfId }: { w: number; d: number; y: number; shelfId?: string }) {
+function ShelfBoard({ w, d, y }: { w: number; d: number; y: number }) {
 	return (
 		<a-box
 			position={`0 ${y} 0`}
@@ -42,7 +32,6 @@ function ShelfBoard({ w, d, y, shelfId }: { w: number; d: number; y: number; she
 			depth={String(d)}
 			color="#8B7355"
 			roughness="0.9"
-			data-shelf-id={shelfId || ''}
 		/>
 	);
 }
@@ -77,19 +66,16 @@ function RackEntity({
 	posZ: number;
 	rotY: number;
 }) {
-	// Convert rack physical dimensions (cm) to scene units (1 unit ≈ 1 ft) - scaled to 37.5%
-	const w = Math.max((rack.widthCm || 100) * CM2S, 40 * CM2S) * 0.375;
-	const h = Math.max((rack.heightCm || 200) * CM2S, 50 * CM2S) * 0.375;
-	const d = Math.max((rack.depthCm || 60) * CM2S, 30 * CM2S) * 0.375;
+	// Use rack dimensions if available, else derive from shelves
+	const w = Math.max((rack.widthCm || 100) / 100, 0.4);
+	const h = Math.max((rack.heightCm || 200) / 100, 0.5);
+	const d = Math.max((rack.depthCm || 60) / 100, 0.3);
 	const hw = w / 2 - 0.02;
 	const hd = d / 2 - 0.02;
 
-	// One shelf level every ~60 cm (increased spacing to prevent overlap)
-	// Calculate on the scaled height
-	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / (60 * CM2S * 0.375)));
+	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / 0.5));
 	const levelH = h / levels;
-	// Add extra spacing between shelves - multiply by 1.15 to create gaps
-	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH * 1.15);
+	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH);
 
 	const highlightColour = isSelected ? '#FFD700' : 'transparent';
 
@@ -115,7 +101,7 @@ function RackEntity({
 
 			{/* Shelf boards */}
 			{shelfBoardYs.map((y, i) => (
-				<ShelfBoard key={i} w={w} d={d} y={y} shelfId={shelves[i - 1]?.id} />
+				<ShelfBoard key={i} w={w} d={d} y={y} />
 			))}
 
 			{/* Back brace */}
@@ -141,13 +127,13 @@ function RackEntity({
 
 			{/* Shelf indicators */}
 			{shelves.map((shelf, si) => shelf.hasFreezer ? (
-				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.05} ${(si + 1) * levelH * 1.15 + 0.1} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
+				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.05} ${(si + 1) * levelH + 0.1} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
 			) : null)}
 
 			{/* Name label */}
 			<a-text
 				value={rack.name}
-				position={`0 ${h + 0.5} 0`}
+				position={`0 ${h + 0.15} 0`}
 				align="center"
 				color="#FFFFFF"
 				scale="0.4 0.4 0.4"
@@ -156,13 +142,13 @@ function RackEntity({
 
 			{/* Boxes on shelves */}
 			{allBoxes.map(({ box, shelfIdx, boxIdx }) => {
-				const bw = Math.max((box.width || 30) * CM2S, 8 * CM2S) * 0.375;
-				const bh = Math.max((box.height || 30) * CM2S, 8 * CM2S) * 0.375;
-				const bd = Math.max((box.length || 30) * CM2S, 8 * CM2S) * 0.375;
+				const levelY = (shelfIdx + 0.5) * levelH;
+				const bw = Math.max((box.width || 30) / 100, 0.08);
+				const bh = Math.max((box.height || 30) / 100, 0.08);
+				const bd = Math.max((box.length || 30) / 100, 0.08);
 				const boxesInShelf = (shelfBoxes[shelves[shelfIdx]?.id ?? ''] ?? []).length;
 				const offsetX = (boxIdx - boxesInShelf / 2 + 0.5) * (bw + 0.02);
-				// Match the 1.15 spacing multiplier for shelf boards
-				const baseY = (shelfIdx * levelH * 1.15) + 0.03 + bh / 2;
+				const baseY = (shelfIdx * levelH) + 0.03 + bh / 2;
 				const stackY = baseY + (box.stackOrder ?? 0) * bh;
 				const colour = BOX_COLOURS[boxIdx % BOX_COLOURS.length];
 				return (
@@ -186,9 +172,9 @@ function RackEntity({
 
 /** Floor-level box (sitting directly on floor) */
 function FloorBox({ box, index }: { box: IStorageBox; index: number }) {
-	const bw = Math.max((box.width || 40) * CM2S, 10 * CM2S) * 0.375;
-	const bh = Math.max((box.height || 40) * CM2S, 10 * CM2S) * 0.375;
-	const bd = Math.max((box.length || 40) * CM2S, 10 * CM2S) * 0.375;
+	const bw = Math.max((box.width || 40) / 100, 0.1);
+	const bh = Math.max((box.height || 40) / 100, 0.1);
+	const bd = Math.max((box.length || 40) / 100, 0.1);
 	const posX = box.posX ?? snap(index * (bw + 0.1));
 	const posY = box.posY ?? (bh / 2 + (box.stackOrder ?? 0) * bh);
 	const posZ = box.posZ ?? 0;
@@ -240,7 +226,7 @@ export default function WarehouseVisualizerPage() {
 	const [camPos, setCamPos] = useState<{ x: number; y: number; z: number }>({ x: 4, y: 8, z: 7 });
 	const [camYaw, setCamYaw] = useState(30);    // horizontal rotation, degrees (0 = -Z, 90 = +X)
 	const [camPitch, setCamPitch] = useState(-45);   // vertical tilt, degrees (negative = look down)
-	const [camZoom, setCamZoom] = useState(1);    // orthographic zoom (higher = more zoomed in)
+	const [camFov, setCamFov] = useState(60);    // field of view for zoom
 
 	const [aframeReady, setAframeReady] = useState(false);
 
@@ -557,9 +543,9 @@ export default function WarehouseVisualizerPage() {
 
 			function onWheel(e: WheelEvent) {
 				e.preventDefault();
-				// Zoom orthographic camera
-				const delta = e.deltaY * 0.001;
-				setCamZoom(v => Math.max(0.3, Math.min(3, v - delta)));
+				// Zoom only - change FOV instead of moving camera
+				const delta = e.deltaY * 0.1;
+				setCamFov(v => Math.max(30, Math.min(100, v + delta)));
 			}
 
 			function onContextMenu(e: Event) { e.preventDefault(); }
@@ -593,7 +579,7 @@ export default function WarehouseVisualizerPage() {
 		};
 	}, [clampCamPos, aframeReady]);
 
-	// ── Click → select rack (single) / double-click → center view on rack/shelf ──
+	// ── Click → select rack (single) / double-click → center view on rack ──────
 	const sceneRef = useRef<HTMLElement & EventTarget>(null);
 	useEffect(() => {
 		const scene = sceneRef.current;
@@ -602,37 +588,21 @@ export default function WarehouseVisualizerPage() {
 			const ce = e as CustomEvent;
 			const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
 			let rackId: string | null = null;
-			let shelfId: string | null = null;
 			if (el) {
 				let node: HTMLElement | null = el;
 				while (node) {
-					// Check for shelf first (more specific)
-					const sid = node.getAttribute('data-shelf-id');
-					if (sid && sid !== '') { shelfId = sid; }
-					// Then check for rack
-					const rid = node.getAttribute('data-rack-id');
-					if (rid) { rackId = rid; break; }
+					const id = node.getAttribute('data-rack-id');
+					if (id) { rackId = id; break; }
 					node = node.parentElement;
 				}
 			}
 
 			const now = Date.now();
 			const isDoubleClick =
-				(rackId !== null || shelfId !== null) &&
+				rackId !== null &&
 				now - lastClickRef.current.time < 400 &&
-				(lastClickRef.current.rackId === rackId || lastClickRef.current.rackId === shelfId);
-			lastClickRef.current = { rackId: shelfId || rackId, time: now };
-
-			if (isDoubleClick && shelfId) {
-				// Find the parent rack to select it (no camera movement)
-				for (const [rid, rshelves] of Object.entries(rackShelves)) {
-					if (rshelves.findIndex(s => s.id === shelfId) !== -1) {
-						setSelectedRack(rid);
-						break;
-					}
-				}
-				return;
-			}
+				lastClickRef.current.rackId === rackId;
+			lastClickRef.current = { rackId, time: now };
 
 			if (isDoubleClick && rackId) {
 				// Center view on rack: look at it and move closer – no orbit anchor
@@ -667,7 +637,7 @@ export default function WarehouseVisualizerPage() {
 		}
 		scene.addEventListener('click', handler);
 		return () => scene.removeEventListener('click', handler);
-	}, [aframeReady, clampCamPos, rackShelves]);
+	}, [aframeReady, clampCamPos]);
 
 	// ── Move rack helper (saves to DB) ────────────────────────────────────────
 	const moveRack = useCallback((dx: number, dz: number) => {
@@ -757,7 +727,6 @@ export default function WarehouseVisualizerPage() {
 		setCamPos({ x: centerX, y: height, z: height * 0.6 });
 		setCamYaw(0);     // face north (−Z)
 		setCamPitch(-55); // look steeply down
-		setCamZoom(0.6);  // zoom out for overview
 	}, [floors.length, loadOverview]);
 
 	// ── Floor size ────────────────────────────────────────────────────────────
@@ -857,7 +826,7 @@ export default function WarehouseVisualizerPage() {
 						if (viewMode === 'overview') {
 							enterOverview();
 						} else {
-							setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45); setCamZoom(1);
+							setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
 						}
 					}}
 					className="ml-auto px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
@@ -897,214 +866,195 @@ export default function WarehouseVisualizerPage() {
 						<a-light type="directional" color="#ffffff" intensity="0.8" position="5 10 5" />
 						<a-light type="hemisphere" color="#87CEEB" ground-color="#B8D4A8" intensity="0.3" />
 
-						{/* Orthographic camera – position and rotation fully driven by React state */}
-						{/* Note: orthographic component applied dynamically via useEffect to avoid initialization race */}
+						{/* Orbit camera – position and rotation fully driven by React state */}
 						<a-camera
 							position={camPosStr}
 							rotation={camRotStr}
 							look-controls="enabled: false"
 							wasd-controls="enabled: false"
-						>
-							<a-cursor
-								color="#FFD700"
-								opacity="0.8"
-								scale="0.5 0.5 0.5"
-								raycaster="objects: [data-rack-id]"
+						fov={String(camFov)}
+					>
+						<a-cursor
+							color="#FFD700"
+							opacity="0.8"
+							scale="0.5 0.5 0.5"
+							raycaster="objects: [data-rack-id]"
+					<>
+						{/* Floor */}
+						<a-plane
+							position={`0 0 0`}
+							rotation="-90 0 0"
+							width={String(FLOOR_SIZE)}
+							height={String(FLOOR_SIZE)}
+							color={FLOOR_COLOUR}
+							roughness="0.9"
+						/>
+
+						{/* Grid */}
+						<GridPlane size={FLOOR_SIZE} gridSize={GRID} />
+
+						{/* Floor label */}
+						{currentFloor && (
+							<a-text
+								value={`Zone: ${currentFloor.name}`}
+								position={`${-FLOOR_SIZE / 2 + 1} 0.05 ${-FLOOR_SIZE / 2 + 1}`}
+								rotation="-90 0 0"
+								color="#333"
+								scale="0.6 0.6 0.6"
+								align="left"
 							/>
-						</a-camera>
+						)}
 
-						<a-sky color="#1a1a2e" />
+						{/* Racks */}
+						{racks.map(rack => {
+							const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+							return (
+								<RackEntity
+									key={rack.id}
+									rack={rack}
+									shelves={rackShelves[rack.id] ?? []}
+									shelfBoxes={shelfBoxes}
+									isSelected={selectedRack === rack.id}
+									posX={pos.x}
+									posZ={pos.z}
+									rotY={pos.rotY}
+								/>
+							);
+						})}
 
-						{viewMode === 'single' ? (
-							<>
-								{/* Floor */}
-								{currentFloor && (
+						{/* Floor-level boxes */}
+						{floorBoxes.map((box, i) => (
+							<FloorBox key={box.id} box={box} index={i} />
+						))}
+					</>
+				) : (
+					/* ── All-floors overview ──────────────────────────────── */
+					<>
+						{overviewData.map((fd, fi) => {
+							const offsetX = fi * (FLOOR_SIZE + 8);
+							return (
+								<a-entity key={fd.floor.id} position={`${offsetX} 0 0`}>
+									{/* Floor slab */}
 									<a-plane
-										position={`0 0 0`}
-										rotation="-90 0 0"
-										width={String((currentFloor.length || FLOOR_SIZE / 3.048) * 3.048)}
-										height={String((currentFloor.width || FLOOR_SIZE / 3.048) * 3.048)}
-										color={FLOOR_COLOUR}
-										roughness="0.9"
-									/>
-								)}
-								{!currentFloor && (
-									<a-plane
-										position={`0 0 0`}
+										position="0 0 0"
 										rotation="-90 0 0"
 										width={String(FLOOR_SIZE)}
 										height={String(FLOOR_SIZE)}
 										color={FLOOR_COLOUR}
 										roughness="0.9"
 									/>
-								)}
-
-								{/* Grid */}
-								<GridPlane size={FLOOR_SIZE} gridSize={GRID} />
-
-								{/* Floor label */}
-								{currentFloor && (
+									{/* Floor grid */}
+									<GridPlane size={FLOOR_SIZE} gridSize={GRID} />
+									{/* Floor name label (horizontal, on the slab) */}
 									<a-text
-										value={`Zone: ${currentFloor.name}`}
-										position={`${-FLOOR_SIZE / 2 + 1} 0.05 ${-FLOOR_SIZE / 2 + 1}`}
+										value={fd.floor.name}
+										position={`${-FLOOR_SIZE / 2 + 1} 0.08 ${-FLOOR_SIZE / 2 + 1}`}
 										rotation="-90 0 0"
 										color="#333"
-										scale="0.6 0.6 0.6"
+										scale="0.7 0.7 0.7"
 										align="left"
 									/>
-								)}
-
-								{/* Racks */}
-								{racks.map(rack => {
-									const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
-									return (
-										<RackEntity
-											key={rack.id}
-											rack={rack}
-											shelves={rackShelves[rack.id] ?? []}
-											shelfBoxes={shelfBoxes}
-											isSelected={selectedRack === rack.id}
-											posX={pos.x}
-											posZ={pos.z}
-											rotY={pos.rotY}
-										/>
-									);
-								})}
-
-								{/* Floor-level boxes */}
-								{floorBoxes.map((box, i) => (
-									<FloorBox key={box.id} box={box} index={i} />
-								))}
-							</>
-						) : (
-							/* ── All-floors overview ──────────────────────────────── */
-							<>
-								{overviewData.map((fd, fi) => {
-									const offsetX = fi * (FLOOR_SIZE + 8);
-									const offsetY = (fd.floor.floorNumber - 1) * 5; // 5 meters per floor level
-									return (
-										<a-entity key={fd.floor.id} position={`${offsetX} ${offsetY} 0`}>
-											{/* Floor slab */}
-											<a-plane
-												position="0 0 0"
-												rotation="-90 0 0"
-												width={String((fd.floor.length || FLOOR_SIZE / 3.048) * 3.048)}
-												height={String((fd.floor.width || FLOOR_SIZE / 3.048) * 3.048)}
-												color={FLOOR_COLOUR}
-												roughness="0.9"
+									{/* Floor name label (vertical, floating above) */}
+									<a-text
+										value={`Floor ${fi + 1}: ${fd.floor.name}`}
+										position={`0 4 ${-FLOOR_SIZE / 2 - 1}`}
+										align="center"
+										color="#AADDFF"
+										scale="0.6 0.6 0.6"
+										width="10"
+									/>
+									{/* Racks on this floor */}
+									{fd.racks.map(rack => {
+										const pos = fd.rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+										return (
+											<RackEntity
+												key={rack.id}
+												rack={rack}
+												shelves={[]}
+												shelfBoxes={{}}
+												isSelected={false}
+												posX={pos.x}
+												posZ={pos.z}
+												rotY={pos.rotY}
 											/>
-											{/* Floor grid */}
-											<GridPlane size={(fd.floor.length || FLOOR_SIZE / 3.048) * 3.048} gridSize={GRID} />
-											{/* Floor name label (horizontal, on the slab) */}
-											<a-text
-												value={fd.floor.name}
-												position={`${-FLOOR_SIZE / 2 + 1} 0.08 ${-FLOOR_SIZE / 2 + 1}`}
-												rotation="-90 0 0"
-												color="#333"
-												scale="0.7 0.7 0.7"
-												align="left"
-											/>
-											{/* Floor name label (vertical, floating above) */}
-											<a-text
-												value={`Floor ${fi + 1}: ${fd.floor.name}`}
-												position={`0 4 ${-FLOOR_SIZE / 2 - 1}`}
-												align="center"
-												color="#AADDFF"
-												scale="0.6 0.6 0.6"
-												width="10"
-											/>
-											{/* Racks on this floor */}
-											{fd.racks.map(rack => {
-												const pos = fd.rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
-												return (
-													<RackEntity
-														key={rack.id}
-														rack={rack}
-														shelves={[]}
-														shelfBoxes={{}}
-														isSelected={false}
-														posX={pos.x}
-														posZ={pos.z}
-														rotY={pos.rotY}
-													/>
-												);
-											})}
-										</a-entity>
-									);
-								})}
-								{overviewLoading && (
-									<a-text value="Loading all floors…" position="0 2 0" align="center" color="#FFFFFF" scale="0.5 0.5 0.5" />
-								)}
-							</>
+										);
+									})}
+								</a-entity>
+							);
+						})}
+						{overviewLoading && (
+							<a-text value="Loading all floors…" position="0 2 0" align="center" color="#FFFFFF" scale="0.5 0.5 0.5" />
 						)}
-					</a-scene>
+					</>
+				)}
+			</a-scene>
 				)}
 
-				{!aframeReady && (
-					<div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
-						Initialising 3D engine…
-					</div>
-				)}
+			{!aframeReady && (
+				<div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
+					Initialising 3D engine…
+				</div>
+			)}
+		</div>
+
+			{/* ── Rack panel – only in single-floor mode ───────────────────── */ }
+	{
+		viewMode === 'single' && (
+			<div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '120px' }}>
+				<div className="flex gap-2 px-4 py-2">
+					{racks.length === 0 && (
+						<span className="text-gray-500 text-sm italic">No racks on this zone. Add racks in Branches & Storage.</span>
+					)}
+					{racks.map(rack => {
+						const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+						const shCount = (rackShelves[rack.id] ?? []).length;
+						const isSel = selectedRack === rack.id;
+						return (
+							<button
+								key={rack.id}
+								onClick={() => { setSelectedRack(isSel ? null : rack.id); if (!isSel) focusOnRack(rack.id); }}
+								className={`flex flex-col items-start px-3 py-2 rounded text-xs border transition-colors flex-shrink-0 ${isSel ? 'border-yellow-400 bg-yellow-900/40 text-yellow-300' : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+									}`}
+							>
+								<span className="font-semibold">🗂 {rack.name}</span>
+								<span className="text-gray-400">{shCount} shelf level{shCount !== 1 ? 's' : ''}</span>
+								<span className="text-gray-500">({pos.x.toFixed(1)}, {pos.z.toFixed(1)}) {pos.rotY}°</span>
+								{rack.widthCm && <span className="text-gray-500">{rack.widthCm}×{rack.heightCm}×{rack.depthCm} cm</span>}
+							</button>
+						);
+					})}
+				</div>
 			</div>
+		)
+	}
 
-			{/* ── Rack panel – only in single-floor mode ───────────────────── */}
-			{
-				viewMode === 'single' && (
-					<div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '120px' }}>
-						<div className="flex gap-2 px-4 py-2">
-							{racks.length === 0 && (
-								<span className="text-gray-500 text-sm italic">No racks on this zone. Add racks in Branches & Storage.</span>
-							)}
-							{racks.map(rack => {
-								const pos = rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
-								const shCount = (rackShelves[rack.id] ?? []).length;
-								const isSel = selectedRack === rack.id;
-								return (
-									<button
-										key={rack.id}
-										onClick={() => { setSelectedRack(isSel ? null : rack.id); if (!isSel) focusOnRack(rack.id); }}
-										className={`flex flex-col items-start px-3 py-2 rounded text-xs border transition-colors flex-shrink-0 ${isSel ? 'border-yellow-400 bg-yellow-900/40 text-yellow-300' : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
-											}`}
-									>
-										<span className="font-semibold">🗂 {rack.name}</span>
-										<span className="text-gray-400">{shCount} shelf level{shCount !== 1 ? 's' : ''}</span>
-										<span className="text-gray-500">({pos.x.toFixed(1)}, {pos.z.toFixed(1)}) {pos.rotY}°</span>
-										{rack.widthCm && <span className="text-gray-500">{rack.widthCm}×{rack.heightCm}×{rack.depthCm} cm</span>}
-									</button>
-								);
-							})}
-						</div>
-					</div>
-				)
-			}
-
-			{/* ── Overview floor list ───────────────────────────────────────── */}
-			{
-				viewMode === 'overview' && (
-					<div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '80px' }}>
-						<div className="flex gap-2 px-4 py-2 items-center">
-							<span className="text-gray-400 text-xs font-semibold mr-2">Floors:</span>
-							{overviewLoading && <span className="text-gray-500 text-xs italic">Loading…</span>}
-							{overviewData.map((fd, fi) => (
-								<button
-									key={fd.floor.id}
-									onClick={() => {
-										// Switch to single-floor view for this floor
-										setViewMode('single');
-										setSelectedFloor(fd.floor.id);
-										setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
-									}}
-									className="flex items-center gap-1 px-3 py-1 rounded text-xs border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex-shrink-0"
-								>
-									<span className="text-blue-400 font-bold">{fi + 1}.</span>
-									<span>{fd.floor.name}</span>
-									<span className="text-gray-500">({fd.racks.length} rack{fd.racks.length !== 1 ? 's' : ''})</span>
-								</button>
-							))}
-						</div>
-					</div>
-				)
-			}
+	{/* ── Overview floor list ───────────────────────────────────────── */ }
+	{
+		viewMode === 'overview' && (
+			<div className="flex-shrink-0 bg-gray-900 text-white border-t border-gray-700 overflow-x-auto" style={{ maxHeight: '80px' }}>
+				<div className="flex gap-2 px-4 py-2 items-center">
+					<span className="text-gray-400 text-xs font-semibold mr-2">Floors:</span>
+					{overviewLoading && <span className="text-gray-500 text-xs italic">Loading…</span>}
+					{overviewData.map((fd, fi) => (
+						<button
+							key={fd.floor.id}
+							onClick={() => {
+								// Switch to single-floor view for this floor
+								setViewMode('single');
+								setSelectedFloor(fd.floor.id);
+								setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
+							}}
+							className="flex items-center gap-1 px-3 py-1 rounded text-xs border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex-shrink-0"
+						>
+							<span className="text-blue-400 font-bold">{fi + 1}.</span>
+							<span>{fd.floor.name}</span>
+							<span className="text-gray-500">({fd.racks.length} rack{fd.racks.length !== 1 ? 's' : ''})</span>
+						</button>
+					))}
+				</div>
+			</div>
+		)
+	}
 		</div >
 	);
 }
