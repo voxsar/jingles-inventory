@@ -131,6 +131,30 @@ export interface IBatchReferencePricing {
 	notes?: string | null;
 }
 
+export interface IBatch {
+	id: string;
+	batchNumber: string;
+	skuId: string;
+	variantId?: string | null;
+	sequenceNumber: number;
+	costPrice?: number | null;
+	sellingPrice?: number | null;
+	wholesalePrice?: number | null;
+	bulkPrice?: number | null;
+	currency: string;
+	marginType?: 'fixed' | 'percentage' | null;
+	marginValue?: number | null;
+	supplier?: string | null;
+	expiryDate?: Date | null;
+	manufacturingDate?: Date | null;
+	notes?: string | null;
+	isActive: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+	sku?: ISKU;
+	variant?: ISKUVariant | null;
+}
+
 export interface ISKU {
 	id: string;
 	skuCode: string;
@@ -332,6 +356,7 @@ export interface IInventoryRecord {
 	skuId: string;
 	variantId?: string | null;
 	batchId?: string | null;
+	batchReference?: string | null;
 	floorId?: string | null;
 	shelfId?: string | null;
 	boxId?: string | null;
@@ -343,6 +368,7 @@ export interface IInventoryRecord {
 	version: number;
 	createdAt: Date;
 	updatedAt: Date;
+	batch?: IBatch | null;
 }
 
 export interface IInventoryEvent {
@@ -381,10 +407,16 @@ export interface IGRNLine {
 	grnId: string;
 	skuId: string;
 	variantId?: string | null;
+	batchId?: string | null;
+	batchReference?: string | null;
 	expectedQuantity: number;
 	receivedQuantity: number;
-	batchReference?: string | null;
+	costPrice?: number | null;
+	sellingPrice?: number | null;
+	wholesalePrice?: number | null;
+	bulkPrice?: number | null;
 	notes?: string | null;
+	batch?: IBatch | null;
 }
 
 export interface IInspectionRecord {

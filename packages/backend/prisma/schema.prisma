@@ -142,6 +142,7 @@ model SKU {
   tags             SKUTag[]
   skuAttributes    SKUAttribute[]
   variants         SKUVariant[]
+  batches          Batch[]
 
   @@map("skus")
 }
@@ -231,6 +232,7 @@ model SKUVariant {
   attributeValues  SKUVariantValue[]
   inventoryRecords InventoryRecord[]
   grnLines         GRNLine[]
+  batches          Batch[]
 
   @@map("sku_variants")
 }
@@ -439,7 +441,8 @@ model InventoryRecord {
   id            String   @id @default(uuid())
   skuId         String   @map("sku_id")
   variantId     String?  @map("variant_id")
-  batchId       String?  @map("batch_id")
+  batchId       String?  @map("batch_id")             // Link to Batch table (preferred)
+  batchReference String? @map("batch_reference")      // Legacy batch string support
   floorId       String?  @map("floor_id")
   shelfId       String?  @map("shelf_id")
   boxId         String?  @map("box_id")
@@ -454,6 +457,7 @@ model InventoryRecord {
 
   sku      SKU         @relation(fields: [skuId], references: [id])
   variant  SKUVariant? @relation(fields: [variantId], references: [id])
+  batch    Batch?      @relation(fields: [batchId], references: [id])
   floor    Floor?      @relation(fields: [floorId], references: [id])
   shelf    Shelf?      @relation(fields: [shelfId], references: [id])
   box      StorageBox? @relation(fields: [boxId], references: [id])
@@ -505,19 +509,65 @@ model GRN {
   @@map("grns")
 }
 
+model Batch {
+  id              String   @id @default(uuid())
+  batchNumber     String   @unique @map("batch_number")  // e.g., PROD001-B001, VAR001-B001
+  skuId           String   @map("sku_id")
+  variantId       String?  @map("variant_id")
+  sequenceNumber  Int      @map("sequence_number")       // Auto-incremented per SKU/Variant
+
+  // Pricing fields
+  costPrice       Float?   @map("cost_price")            // Cost per unit
+  sellingPrice    Float?   @map("selling_price")         // Retail price
+  wholesalePrice  Float?   @map("wholesale_price")       // Wholesale price
+  bulkPrice       Float?   @map("bulk_price")            // Bulk/distributor price
+  currency        String   @default("LKR")
+
+  // Margin-based pricing support
+  marginType      String?  @map("margin_type")           // 'fixed' or 'percentage'
+  marginValue     Float?   @map("margin_value")          // Amount or %
+
+  // Batch metadata
+  supplier        String?                                // Optional supplier name
+  expiryDate      DateTime? @map("expiry_date")
+  manufacturingDate DateTime? @map("manufacturing_date")
+  notes           String?
+
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sku              SKU                @relation(fields: [skuId], references: [id])
+  variant          SKUVariant?        @relation(fields: [variantId], references: [id])
+  grnLines         GRNLine[]
+  inventoryRecords InventoryRecord[]
+
+  @@unique([skuId, variantId, sequenceNumber])
+  @@map("batches")
+}
+
 model GRNLine {
   id               String  @id @default(uuid())
   grnId            String  @map("grn_id")
   skuId            String  @map("sku_id")
   variantId        String? @map("variant_id")
+  batchId          String? @map("batch_id")              // Link to Batch table
+  batchReference   String? @map("batch_reference")       // Legacy support
   expectedQuantity Int     @map("expected_quantity")
   receivedQuantity Int     @default(0) @map("received_quantity")
-  batchReference   String? @map("batch_reference")
+
+  // Pricing at GRN line level (can override batch defaults)
+  costPrice        Float?  @map("cost_price")
+  sellingPrice     Float?  @map("selling_price")
+  wholesalePrice   Float?  @map("wholesale_price")
+  bulkPrice        Float?  @map("bulk_price")
+
   notes            String?
 
   grn               GRN                @relation(fields: [grnId], references: [id])
   sku               SKU                @relation(fields: [skuId], references: [id])
   variant           SKUVariant?        @relation(fields: [variantId], references: [id])
+  batch             Batch?             @relation(fields: [batchId], references: [id])
   inspectionRecords InspectionRecord[]
 
   @@map("grn_lines")
