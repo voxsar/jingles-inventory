@@ -17,6 +17,7 @@ import BranchesPage from './pages/BranchesPage';
 import StockTransferPage from './pages/StockTransferPage';
 import SuppliersPage from './pages/SuppliersPage';
 import WarehouseVisualizerPage from './pages/WarehouseVisualizerPage';
+import PricingPage from './pages/PricingPage';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
@@ -49,6 +50,7 @@ function AppRoutes() {
         <Route path="branches" element={<BranchesPage />} />
         <Route path="stock-transfers" element={<StockTransferPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />
+        <Route path="pricing" element={<PricingPage />} />
         <Route path="warehouse-3d" element={<WarehouseVisualizerPage />} />
         <Route
           path="vendor-portal"

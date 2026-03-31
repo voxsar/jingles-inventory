@@ -251,3 +251,20 @@ export const syncApi = {
     api.get('/sync/pull', { params: { clientId, since } }),
 };
 
+// Batches
+export const batchesApi = {
+  list: (params?: Record<string, string>) =>
+    api.get('/batches', { params }),
+  get: (id: string) => api.get(`/batches/${id}`),
+  getByNumber: (batchNumber: string) => api.get(`/batches/by-number/${batchNumber}`),
+  create: (data: any) => api.post('/batches', data),
+  update: (id: string, data: any) => api.put(`/batches/${id}`, data),
+  applyMargin: (id: string) => api.post(`/batches/${id}/apply-margin`),
+  bulkUpdatePricing: (data: any) => api.post('/batches/bulk/update-pricing', data),
+  bulkApplyMargin: (batchIds: string[]) => api.post('/batches/bulk/apply-margin', { batchIds }),
+  // Pricing queries
+  getPrice: (params: Record<string, string>) => api.get('/batches/pricing/get', { params }),
+  getPricingSummary: (batchId: string) => api.get(`/batches/pricing/summary/${batchId}`),
+  getAveragePrices: (params: Record<string, string>) => api.get('/batches/pricing/average', { params }),
+};
+

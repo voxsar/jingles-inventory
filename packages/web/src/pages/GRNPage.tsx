@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi } from '../api/client';
+import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -37,6 +37,8 @@ export default function GRNPage() {
   const [editFormShelves, setEditFormShelves] = useState<any[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
+  const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
+  const [nextBatchNumbers, setNextBatchNumbers] = useState<Record<number, string>>({});
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
@@ -49,7 +51,20 @@ export default function GRNPage() {
     notes: '',
     floorId: '',
     shelfId: '',
-    lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }],
+    lines: [{
+      skuId: '',
+      variantId: '',
+      expectedQuantity: 1,
+      batchId: '',
+      createNewBatch: false,
+      costPrice: '',
+      sellingPrice: '',
+      wholesalePrice: '',
+      bulkPrice: '',
+      marginType: '',
+      marginValue: '',
+      notes: '',
+    }],
   });
 
   const loadData = async () => {
@@ -99,30 +114,168 @@ export default function GRNPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await grnsApi.create({ ...form, floorId: form.floorId || undefined, shelfId: form.shelfId || undefined });
+      // Transform form data to match backend API expectations
+      const payload = {
+        ...form,
+        floorId: form.floorId || undefined,
+        shelfId: form.shelfId || undefined,
+        lines: form.lines.map(line => ({
+          skuId: line.skuId,
+          variantId: line.variantId || undefined,
+          expectedQuantity: line.expectedQuantity,
+          batchId: line.createNewBatch ? undefined : (line.batchId || undefined),
+          createNewBatch: line.createNewBatch,
+          costPrice: line.costPrice ? parseFloat(line.costPrice) : undefined,
+          sellingPrice: line.sellingPrice ? parseFloat(line.sellingPrice) : undefined,
+          wholesalePrice: line.wholesalePrice ? parseFloat(line.wholesalePrice) : undefined,
+          bulkPrice: line.bulkPrice ? parseFloat(line.bulkPrice) : undefined,
+          marginType: line.marginType || undefined,
+          marginValue: line.marginValue ? parseFloat(line.marginValue) : undefined,
+          notes: line.notes || undefined,
+        })),
+      };
+
+      await grnsApi.create(payload);
       setShowForm(false);
-      setForm({ supplierId: '', invoiceReference: '', expectedDeliveryDate: getTodayString(), notes: '', floorId: '', shelfId: '', lines: [{ skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] });
+      setForm({
+        supplierId: '',
+        invoiceReference: '',
+        expectedDeliveryDate: getTodayString(),
+        notes: '',
+        floorId: '',
+        shelfId: '',
+        lines: [{
+          skuId: '',
+          variantId: '',
+          expectedQuantity: 1,
+          batchId: '',
+          createNewBatch: false,
+          costPrice: '',
+          sellingPrice: '',
+          wholesalePrice: '',
+          bulkPrice: '',
+          marginType: '',
+          marginValue: '',
+          notes: '',
+        }],
+      });
       setFormShelves([]);
       setLineVariants({});
+      setLineBatches({});
+      setNextBatchNumbers({});
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create GRN');
     }
   };
 
-  const addLine = () => setForm((f) => ({ ...f, lines: [...f.lines, { skuId: '', variantId: '', expectedQuantity: 1, batchReference: '' }] }));
-  const removeLine = (i: number) => { setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) })); setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; }); };
+  const addLine = () => setForm((f) => ({
+    ...f,
+    lines: [...f.lines, {
+      skuId: '',
+      variantId: '',
+      expectedQuantity: 1,
+      batchId: '',
+      createNewBatch: false,
+      costPrice: '',
+      sellingPrice: '',
+      wholesalePrice: '',
+      bulkPrice: '',
+      marginType: '',
+      marginValue: '',
+      notes: '',
+    }]
+  }));
+
+  const removeLine = (i: number) => {
+    setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
+    setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; });
+    setLineBatches(prev => { const n = { ...prev }; delete n[i]; return n; });
+    setNextBatchNumbers(prev => { const n = { ...prev }; delete n[i]; return n; });
+  };
+
   const updateLine = (i: number, field: string, value: any) => {
     setForm((f) => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
+
     if (field === 'skuId' && value) {
+      // Load variants for this SKU
       variantsApi.list(value).then(res => {
         const variants = res.data?.data ?? [];
         setLineVariants(prev => ({ ...prev, [i]: variants }));
-        // Reset variantId for this line
         setForm(f => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, variantId: '' } : l) }));
       }).catch(() => setLineVariants(prev => ({ ...prev, [i]: [] })));
+
+      // Load existing batches for this SKU
+      batchesApi.list({ skuId: value, isActive: 'true' }).then(res => {
+        const batches = res.data?.data?.items ?? res.data?.data ?? [];
+        setLineBatches(prev => ({ ...prev, [i]: batches }));
+      }).catch(() => setLineBatches(prev => ({ ...prev, [i]: [] })));
+
+      // Generate next batch number preview
+      batchesApi.list({ skuId: value }).then(res => {
+        const batches = res.data?.data?.items ?? res.data?.data ?? [];
+        const skuCode = skus.find(s => s.id === value)?.skuCode ?? 'SKU';
+        const maxSeq = batches.length > 0 ? Math.max(...batches.map((b: any) => b.sequenceNumber ?? 0)) : 0;
+        const nextSeq = maxSeq + 1;
+        const nextBatchNum = `${skuCode}-B${String(nextSeq).padStart(3, '0')}`;
+        setNextBatchNumbers(prev => ({ ...prev, [i]: nextBatchNum }));
+      }).catch(() => {
+        const skuCode = skus.find(s => s.id === value)?.skuCode ?? 'SKU';
+        setNextBatchNumbers(prev => ({ ...prev, [i]: `${skuCode}-B001` }));
+      });
     } else if (field === 'skuId' && !value) {
       setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; });
+      setLineBatches(prev => { const n = { ...prev }; delete n[i]; return n; });
+      setNextBatchNumbers(prev => { const n = { ...prev }; delete n[i]; return n; });
+    } else if (field === 'variantId' && value) {
+      // Reload batches filtered by variant
+      const line = form.lines[i];
+      if (line.skuId) {
+        batchesApi.list({ skuId: line.skuId, variantId: value, isActive: 'true' }).then(res => {
+          const batches = res.data?.data?.items ?? res.data?.data ?? [];
+          setLineBatches(prev => ({ ...prev, [i]: batches }));
+        }).catch(() => setLineBatches(prev => ({ ...prev, [i]: [] })));
+
+        // Update next batch number for variant
+        batchesApi.list({ skuId: line.skuId, variantId: value }).then(res => {
+          const batches = res.data?.data?.items ?? res.data?.data ?? [];
+          const variant = (lineVariants[i] ?? []).find(v => v.id === value);
+          const variantCode = variant?.variantCode ?? 'VAR';
+          const maxSeq = batches.length > 0 ? Math.max(...batches.map((b: any) => b.sequenceNumber ?? 0)) : 0;
+          const nextSeq = maxSeq + 1;
+          const nextBatchNum = `${variantCode}-B${String(nextSeq).padStart(3, '0')}`;
+          setNextBatchNumbers(prev => ({ ...prev, [i]: nextBatchNum }));
+        }).catch(() => {
+          const variant = (lineVariants[i] ?? []).find(v => v.id === value);
+          const variantCode = variant?.variantCode ?? 'VAR';
+          setNextBatchNumbers(prev => ({ ...prev, [i]: `${variantCode}-B001` }));
+        });
+      }
+    } else if (field === 'batchId' && value && !form.lines[i].createNewBatch) {
+      // Pre-fill pricing from selected batch
+      const batch = (lineBatches[i] ?? []).find((b: any) => b.id === value);
+      if (batch) {
+        setForm(f => ({
+          ...f,
+          lines: f.lines.map((l, idx) => idx === i ? {
+            ...l,
+            costPrice: batch.costPrice?.toString() ?? '',
+            sellingPrice: batch.sellingPrice?.toString() ?? '',
+            wholesalePrice: batch.wholesalePrice?.toString() ?? '',
+            bulkPrice: batch.bulkPrice?.toString() ?? '',
+            marginType: batch.marginType ?? '',
+            marginValue: batch.marginValue?.toString() ?? '',
+          } : l)
+        }));
+      }
+    } else if (field === 'createNewBatch') {
+      // Clear batchId when switching to create new batch
+      if (value) {
+        setForm(f => ({
+          ...f,
+          lines: f.lines.map((l, idx) => idx === i ? { ...l, batchId: '' } : l)
+        }));
+      }
     }
   };
 
@@ -341,50 +494,183 @@ export default function GRNPage() {
                       onChange={(e) => handleSkuSearchChange(e.target.value)}
                     />
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     {form.lines.map((line, i) => (
-                      <div key={i} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex gap-2 items-center">
-                          <select
-                            className="input-field flex-1"
-                            value={line.skuId}
-                            onChange={(e) => updateLine(i, 'skuId', e.target.value)}
-                          >
-                            <option value="">Select product</option>
-                            {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
-                          </select>
-                          <input
-                            type="number"
-                            className="input-field"
-                            style={{ width: '80px' }}
-                            value={line.expectedQuantity}
-                            placeholder="Qty"
-                            min="1"
-                            onChange={(e) => updateLine(i, 'expectedQuantity', parseInt(e.target.value))}
-                          />
-                          <input
-                            type="text"
-                            className="input-field"
-                            style={{ width: '140px' }}
-                            value={line.batchReference}
-                            placeholder="Batch ref"
-                            onChange={(e) => updateLine(i, 'batchReference', e.target.value)}
-                          />
+                      <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        {/* Product Selection Row */}
+                        <div className="flex gap-2 items-start mb-3">
+                          <div className="flex-1">
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Product *</label>
+                            <select
+                              className="input-field"
+                              value={line.skuId}
+                              onChange={(e) => updateLine(i, 'skuId', e.target.value)}
+                              required
+                            >
+                              <option value="">Select product</option>
+                              {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
+                            </select>
+                          </div>
+                          <div style={{ width: '100px' }}>
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Quantity *</label>
+                            <input
+                              type="number"
+                              className="input-field"
+                              value={line.expectedQuantity}
+                              placeholder="Qty"
+                              min="1"
+                              onChange={(e) => updateLine(i, 'expectedQuantity', parseInt(e.target.value))}
+                              required
+                            />
+                          </div>
                           {form.lines.length > 1 && (
-                            <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(i)}>✕</button>
+                            <button type="button" className="btn-icon text-red-500 mt-6" onClick={() => removeLine(i)}>✕</button>
                           )}
                         </div>
+
+                        {/* Variant Selection (if available) */}
                         {line.skuId && (lineVariants[i] ?? []).length > 0 && (
-                          <select
-                            className="input-field"
-                            value={line.variantId}
-                            onChange={(e) => updateLine(i, 'variantId', e.target.value)}
-                          >
-                            <option value="">— No Variant (base SKU) —</option>
-                            {(lineVariants[i] ?? []).map((v: any) => (
-                              <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>
-                            ))}
-                          </select>
+                          <div className="mb-3">
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Variant</label>
+                            <select
+                              className="input-field"
+                              value={line.variantId}
+                              onChange={(e) => updateLine(i, 'variantId', e.target.value)}
+                            >
+                              <option value="">— No Variant (base SKU) —</option>
+                              {(lineVariants[i] ?? []).map((v: any) => (
+                                <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Batch Selection */}
+                        {line.skuId && (
+                          <div className="mb-3 p-3 bg-white rounded border border-gray-200">
+                            <div className="flex items-center gap-3 mb-2">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`batch-mode-${i}`}
+                                  checked={!line.createNewBatch}
+                                  onChange={() => updateLine(i, 'createNewBatch', false)}
+                                />
+                                <span className="text-sm font-medium">Use Existing Batch</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`batch-mode-${i}`}
+                                  checked={line.createNewBatch}
+                                  onChange={() => updateLine(i, 'createNewBatch', true)}
+                                />
+                                <span className="text-sm font-medium">Create New Batch</span>
+                              </label>
+                            </div>
+
+                            {!line.createNewBatch ? (
+                              <select
+                                className="input-field"
+                                value={line.batchId}
+                                onChange={(e) => updateLine(i, 'batchId', e.target.value)}
+                              >
+                                <option value="">— Select Batch (optional) —</option>
+                                {(lineBatches[i] ?? []).map((b: any) => (
+                                  <option key={b.id} value={b.id}>
+                                    {b.batchNumber} {b.costPrice && `— Cost: ${b.costPrice}`}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded border border-blue-200">
+                                📦 New batch will be created: <span className="font-mono font-semibold">{nextBatchNumbers[i] ?? '...'}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Pricing Fields (only if creating new batch or no batch selected) */}
+                        {line.skuId && (line.createNewBatch || !line.batchId) && (
+                          <div className="border-t pt-3">
+                            <div className="text-sm font-semibold text-gray-700 mb-2">💰 Batch Pricing</div>
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                              <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Cost Price</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  className="input-field"
+                                  value={line.costPrice}
+                                  placeholder="0.00"
+                                  onChange={(e) => updateLine(i, 'costPrice', e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Selling Price</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  className="input-field"
+                                  value={line.sellingPrice}
+                                  placeholder="0.00"
+                                  onChange={(e) => updateLine(i, 'sellingPrice', e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Wholesale Price</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  className="input-field"
+                                  value={line.wholesalePrice}
+                                  placeholder="0.00"
+                                  onChange={(e) => updateLine(i, 'wholesalePrice', e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Bulk Price</label>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  className="input-field"
+                                  value={line.bulkPrice}
+                                  placeholder="0.00"
+                                  onChange={(e) => updateLine(i, 'bulkPrice', e.target.value)}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Margin Settings */}
+                            <div className="bg-purple-50 border border-purple-200 rounded p-3">
+                              <div className="text-xs font-semibold text-purple-700 mb-2">🧮 Margin Calculator</div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-xs font-medium text-gray-600 block mb-1">Margin Type</label>
+                                  <select
+                                    className="input-field text-sm"
+                                    value={line.marginType}
+                                    onChange={(e) => updateLine(i, 'marginType', e.target.value)}
+                                  >
+                                    <option value="">None</option>
+                                    <option value="fixed">Fixed Amount</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="text-xs font-medium text-gray-600 block mb-1">Margin Value</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    className="input-field text-sm"
+                                    value={line.marginValue}
+                                    placeholder={line.marginType === 'percentage' ? '25' : '50.00'}
+                                    onChange={(e) => updateLine(i, 'marginValue', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     ))}
