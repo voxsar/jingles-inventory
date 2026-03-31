@@ -126,6 +126,7 @@ model SKU {
   isFragile       Boolean  @default(false) @map("is_fragile")
   maxStackHeight  Float?   @map("max_stack_height")
   batchPricing    Json?    @map("batch_pricing")
+  batchReferencePricing Json? @map("batch_reference_pricing")
   lowStockThreshold Int?   @map("low_stock_threshold")
   isActive        Boolean  @default(true) @map("is_active")
   createdAt       DateTime @default(now()) @map("created_at")

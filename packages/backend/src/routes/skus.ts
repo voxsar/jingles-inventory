@@ -125,6 +125,7 @@ router.post(
 			isFragile,
 			maxStackHeight,
 			batchPricing,
+			batchReferencePricing,
 			lowStockThreshold,
 			attributeSelections,
 		} = req.body as {
@@ -140,6 +141,7 @@ router.post(
 			isFragile?: boolean;
 			maxStackHeight?: number;
 			batchPricing?: object;
+			batchReferencePricing?: object;
 			lowStockThreshold?: number;
 			attributeSelections?: { attributeId: string; valueIds: string[] }[];
 		};
@@ -159,6 +161,7 @@ router.post(
 				isFragile: isFragile ?? false,
 				maxStackHeight,
 				batchPricing,
+				batchReferencePricing,
 				lowStockThreshold,
 			},
 		});

@@ -25,7 +25,7 @@ const defaultForm = {
 	lowStockThreshold: '',
 };
 
-type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images';
+type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images' | 'pricing';
 
 export default function SKUPage() {
 	const [skus, setSkus] = useState<any[]>([]);
@@ -72,6 +72,12 @@ export default function SKUPage() {
 	const [skuImages, setSkuImages] = useState<any[]>([]);
 	const [skuVideoUrl, setSkuVideoUrl] = useState<string | null>(null);
 	const [imagesLoading, setImagesLoading] = useState(false);
+
+	// Pricing tab state
+	const [batchPrices, setBatchPrices] = useState<any[]>([]);
+	const [newBatchPrice, setNewBatchPrice] = useState({ batchReference: '', unitPrice: '', currency: 'USD', notes: '' });
+	const [quantityTiers, setQuantityTiers] = useState<any[]>([]);
+	const [newQtyTier, setNewQtyTier] = useState({ minQty: '', maxQty: '', price: '', currency: 'USD' });
 
 	// Create form attributes state
 	const [createFormSelectedAttrs, setCreateFormSelectedAttrs] = useState<Record<string, string[]>>({});
@@ -394,12 +400,94 @@ export default function SKUPage() {
 		finally { setImagesLoading(false); }
 	};
 
+	const loadPricing = async () => {
+		if (!editingSku) return;
+		try {
+			const res = await skusApi.get(editingSku.id);
+			const sku = res.data?.data;
+			// Load batch reference prices
+			setBatchPrices(sku?.batchReferencePricing ?? []);
+			// Load quantity tiers
+			setQuantityTiers(sku?.batchPricing ?? []);
+		} catch {
+			setBatchPrices([]);
+			setQuantityTiers([]);
+		}
+	};
+
+	const handleAddBatchPrice = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!newBatchPrice.batchReference || !newBatchPrice.unitPrice) return;
+		const updated = [...batchPrices, {
+			batchReference: newBatchPrice.batchReference,
+			unitPrice: parseFloat(newBatchPrice.unitPrice),
+			currency: newBatchPrice.currency,
+			notes: newBatchPrice.notes || null,
+		}];
+		try {
+			await skusApi.update(editingSku.id, { batchReferencePricing: updated });
+			setBatchPrices(updated);
+			setNewBatchPrice({ batchReference: '', unitPrice: '', currency: 'USD', notes: '' });
+			setSaveSuccess(true);
+			setTimeout(() => setSaveSuccess(false), 2000);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to add batch price');
+		}
+	};
+
+	const handleRemoveBatchPrice = async (index: number) => {
+		if (!confirm('Remove this batch price?')) return;
+		const updated = batchPrices.filter((_, i) => i !== index);
+		try {
+			await skusApi.update(editingSku.id, { batchReferencePricing: updated });
+			setBatchPrices(updated);
+			setSaveSuccess(true);
+			setTimeout(() => setSaveSuccess(false), 2000);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to remove batch price');
+		}
+	};
+
+	const handleAddQtyTier = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!newQtyTier.minQty || !newQtyTier.price) return;
+		const updated = [...quantityTiers, {
+			minQty: parseInt(newQtyTier.minQty),
+			maxQty: newQtyTier.maxQty ? parseInt(newQtyTier.maxQty) : null,
+			price: parseFloat(newQtyTier.price),
+			currency: newQtyTier.currency,
+		}];
+		try {
+			await skusApi.update(editingSku.id, { batchPricing: updated });
+			setQuantityTiers(updated);
+			setNewQtyTier({ minQty: '', maxQty: '', price: '', currency: 'USD' });
+			setSaveSuccess(true);
+			setTimeout(() => setSaveSuccess(false), 2000);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to add quantity tier');
+		}
+	};
+
+	const handleRemoveQtyTier = async (index: number) => {
+		if (!confirm('Remove this quantity tier?')) return;
+		const updated = quantityTiers.filter((_, i) => i !== index);
+		try {
+			await skusApi.update(editingSku.id, { batchPricing: updated });
+			setQuantityTiers(updated);
+			setSaveSuccess(true);
+			setTimeout(() => setSaveSuccess(false), 2000);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to remove quantity tier');
+		}
+	};
+
 	const handleTabChange = (tab: ModalTab) => {
 		setModalTab(tab);
 		if (tab === 'barcodes') loadBarcodes();
 		if (tab === 'locations') loadLocations();
 		if (tab === 'variants') loadVariants();
 		if (tab === 'images') loadImages();
+		if (tab === 'pricing') loadPricing();
 	};
 
 	const openTransitionModal = (record: any) => {
@@ -442,9 +530,9 @@ export default function SKUPage() {
 				<button className="btn-primary" onClick={openCreateForm}>+ New Product</button>
 			</div>
 
-							<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-								🖼️ You can upload product images and video right after creating this product (Edit → Images tab).
-							</div>
+			<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+				🖼️ You can upload product images and video right after creating this product (Edit → Images tab).
+			</div>
 			{/* Table section */}
 			<div className="content-section">
 				{/* Filter bar */}
@@ -783,7 +871,7 @@ export default function SKUPage() {
 						</div>
 						{/* Tab nav */}
 						<div className="flex gap-1 px-6 pt-3 pb-0 border-b border-gray-200 bg-white">
-							{(['details', 'tags', 'barcodes', 'locations', 'variants', 'images'] as ModalTab[]).map((tab) => (
+							{(['details', 'tags', 'barcodes', 'locations', 'variants', 'images', 'pricing'] as ModalTab[]).map((tab) => (
 								<button
 									key={tab}
 									type="button"
@@ -799,6 +887,7 @@ export default function SKUPage() {
 									{tab === 'locations' && '📍 '}
 									{tab === 'variants' && '🧩 '}
 									{tab === 'images' && '🖼️ '}
+									{tab === 'pricing' && '💲 '}
 									{tab.charAt(0).toUpperCase() + tab.slice(1)}
 								</button>
 							))}
@@ -1119,6 +1208,108 @@ export default function SKUPage() {
 									</div>
 									<div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
 										Variant-specific images are not available yet in backend schema. Current uploads apply at the product level.
+									</div>
+								</div>
+							)}
+							{modalTab === 'pricing' && (
+								<div className="flex flex-col gap-6">
+									{/* Batch Reference Pricing */}
+									<div className="border border-gray-200 rounded-lg p-4">
+										<p className="text-sm font-semibold text-gray-700 mb-3">Batch Reference Pricing</p>
+										{batchPrices.length === 0 ? (
+											<p className="text-sm text-gray-400 mb-3">No batch reference prices set.</p>
+										) : (
+											<table className="w-full text-sm border-collapse mb-3">
+												<thead>
+													<tr className="bg-gray-50">
+														{['Batch Reference', 'Unit Price', 'Currency', 'Notes', ''].map(h => (
+															<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+														))}
+													</tr>
+												</thead>
+												<tbody>
+													{batchPrices.map((bp: any, i: number) => (
+														<tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+															<td className="px-3 py-2 font-mono text-xs">{bp.batchReference}</td>
+															<td className="px-3 py-2">{bp.unitPrice}</td>
+															<td className="px-3 py-2">{bp.currency}</td>
+															<td className="px-3 py-2 text-gray-500">{bp.notes ?? '—'}</td>
+															<td className="px-3 py-2">
+																<button className="btn-sm text-red-600 text-xs" onClick={() => handleRemoveBatchPrice(i)}>Remove</button>
+															</td>
+														</tr>
+													))}
+												</tbody>
+											</table>
+										)}
+										<form onSubmit={handleAddBatchPrice} className="flex flex-wrap gap-2 items-end">
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Batch Reference *</label>
+												<input className="input-field text-sm" placeholder="e.g. BATCH-001" value={newBatchPrice.batchReference} onChange={e => setNewBatchPrice(p => ({ ...p, batchReference: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Unit Price *</label>
+												<input className="input-field text-sm" type="number" step="0.01" placeholder="0.00" value={newBatchPrice.unitPrice} onChange={e => setNewBatchPrice(p => ({ ...p, unitPrice: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Currency</label>
+												<input className="input-field text-sm" placeholder="USD" value={newBatchPrice.currency} onChange={e => setNewBatchPrice(p => ({ ...p, currency: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Notes</label>
+												<input className="input-field text-sm" placeholder="Optional" value={newBatchPrice.notes} onChange={e => setNewBatchPrice(p => ({ ...p, notes: e.target.value }))} />
+											</div>
+											<button type="submit" className="btn-primary text-sm">+ Add</button>
+										</form>
+									</div>
+									{/* Quantity Tier Pricing */}
+									<div className="border border-gray-200 rounded-lg p-4">
+										<p className="text-sm font-semibold text-gray-700 mb-3">Quantity Tier Pricing</p>
+										{quantityTiers.length === 0 ? (
+											<p className="text-sm text-gray-400 mb-3">No quantity tiers set.</p>
+										) : (
+											<table className="w-full text-sm border-collapse mb-3">
+												<thead>
+													<tr className="bg-gray-50">
+														{['Min Qty', 'Max Qty', 'Price', 'Currency', ''].map(h => (
+															<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+														))}
+													</tr>
+												</thead>
+												<tbody>
+													{quantityTiers.map((tier: any, i: number) => (
+														<tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+															<td className="px-3 py-2">{tier.minQty}</td>
+															<td className="px-3 py-2">{tier.maxQty ?? '∞'}</td>
+															<td className="px-3 py-2">{tier.price}</td>
+															<td className="px-3 py-2">{tier.currency}</td>
+															<td className="px-3 py-2">
+																<button className="btn-sm text-red-600 text-xs" onClick={() => handleRemoveQtyTier(i)}>Remove</button>
+															</td>
+														</tr>
+													))}
+												</tbody>
+											</table>
+										)}
+										<form onSubmit={handleAddQtyTier} className="flex flex-wrap gap-2 items-end">
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Min Qty *</label>
+												<input className="input-field text-sm" type="number" min="0" placeholder="0" value={newQtyTier.minQty} onChange={e => setNewQtyTier(p => ({ ...p, minQty: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Max Qty</label>
+												<input className="input-field text-sm" type="number" min="0" placeholder="Leave blank for unlimited" value={newQtyTier.maxQty} onChange={e => setNewQtyTier(p => ({ ...p, maxQty: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Price *</label>
+												<input className="input-field text-sm" type="number" step="0.01" placeholder="0.00" value={newQtyTier.price} onChange={e => setNewQtyTier(p => ({ ...p, price: e.target.value }))} />
+											</div>
+											<div className="flex flex-col gap-1">
+												<label className="text-xs text-gray-500">Currency</label>
+												<input className="input-field text-sm" placeholder="USD" value={newQtyTier.currency} onChange={e => setNewQtyTier(p => ({ ...p, currency: e.target.value }))} />
+											</div>
+											<button type="submit" className="btn-primary text-sm">+ Add</button>
+										</form>
 									</div>
 								</div>
 							)}
