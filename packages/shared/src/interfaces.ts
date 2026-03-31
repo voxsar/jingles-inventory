@@ -477,3 +477,73 @@ export interface IPaginatedResponse<T> {
 	pageSize: number;
 	totalPages: number;
 }
+
+// ── Pricing Overlay System ────────────────────────────────
+
+export interface IPricingOverlayAppliesTo {
+	skuIds?: string[];
+	variantIds?: string[];
+	batchIds?: string[];
+	categoryIds?: string[];
+}
+
+export interface IPricingOverlayConditions {
+	minQty?: number;
+	maxQty?: number;
+	customerGroups?: string[];
+	dateRange?: {
+		start: string;
+		end: string;
+	};
+	branches?: string[];
+	customerType?: string;  // 'retail', 'wholesale', 'bulk'
+}
+
+export interface IPricingOverlay {
+	id: string;
+	name: string;
+	description?: string | null;
+	type: string;  // PricingOverlayType enum values
+	value: number;
+	appliesTo: IPricingOverlayAppliesTo;
+	conditions?: IPricingOverlayConditions | null;
+	priority: number;
+	stackable: boolean;
+	status: string;  // PricingOverlayStatus enum values
+	validFrom?: Date | null;
+	validTo?: Date | null;
+	createdBy?: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface IPricingContext {
+	skuId: string;
+	variantId?: string | null;
+	batchId?: string | null;
+	quantity?: number;
+	customerGroup?: string;
+	customerType?: string;
+	branchId?: string;
+	date?: Date;
+	priceType?: 'selling' | 'wholesale' | 'bulk' | 'cost';
+}
+
+export interface IAppliedOverlay {
+	overlayId: string;
+	overlayName: string;
+	type: string;
+	value: number;
+	adjustment: number;  // The actual amount adjusted
+}
+
+export interface IResolvedPrice {
+	basePrice: number;
+	finalPrice: number;
+	currency: string;
+	priceType: string;
+	batchNumber?: string;
+	source: 'batch' | 'sku_default' | 'calculated';
+	appliedOverlays: IAppliedOverlay[];
+	warnings?: string[];
+}

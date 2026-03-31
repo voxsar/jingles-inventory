@@ -94,3 +94,17 @@ export enum UnitType {
   Area = 'Area',
   Other = 'Other',
 }
+
+export enum PricingOverlayType {
+  PercentageDiscount = 'percentage_discount',
+  FixedDiscount = 'fixed_discount',
+  PercentageMarkup = 'percentage_markup',
+  FixedMarkup = 'fixed_markup',
+}
+
+export enum PricingOverlayStatus {
+  Active = 'active',
+  Inactive = 'inactive',
+  Scheduled = 'scheduled',
+  Expired = 'expired',
+}
