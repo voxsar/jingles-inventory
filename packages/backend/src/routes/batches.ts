@@ -1,25 +1,30 @@
-import { Router } from 'express';
-import { body, query, param } from 'express-validator';
-import { authenticate, requireRole } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import { Router, Response } from 'express';
+import { body, query, param, validationResult } from 'express-validator';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import * as batchService from '../modules/batch/batchService';
 import * as pricingService from '../modules/pricing/pricingService';
 import { UserRole } from '@jingles/shared';
 
 const router = Router();
 
+router.use(authenticate);
+
 // List batches
 router.get(
 	'/',
-	authenticate(),
-	validate([
+	[
 		query('skuId').optional().isUUID(),
 		query('variantId').optional().isUUID(),
 		query('isActive').optional().isBoolean(),
 		query('page').optional().isInt({ min: 1 }).toInt(),
 		query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const result = await batchService.listBatches({
 				skuId: req.query.skuId as string,
@@ -38,9 +43,13 @@ router.get(
 // Get single batch
 router.get(
 	'/:id',
-	authenticate(),
-	validate([param('id').isUUID()]),
-	async (req, res) => {
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const batch = await batchService.getBatch(req.params.id);
 			res.json({ success: true, data: batch });
@@ -53,9 +62,13 @@ router.get(
 // Get batch by batch number
 router.get(
 	'/by-number/:batchNumber',
-	authenticate(),
-	validate([param('batchNumber').notEmpty()]),
-	async (req, res) => {
+	[param('batchNumber').notEmpty()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const batch = await batchService.getBatchByNumber(req.params.batchNumber);
 			res.json({ success: true, data: batch });
@@ -68,9 +81,8 @@ router.get(
 // Create batch
 router.post(
 	'/',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole('Admin', 'Manager'),
+	[
 		body('skuId').isUUID(),
 		body('variantId').optional({ nullable: true }).isUUID(),
 		body('costPrice').optional({ nullable: true }).isFloat({ min: 0 }),
@@ -84,8 +96,13 @@ router.post(
 		body('expiryDate').optional({ nullable: true }).isISO8601().toDate(),
 		body('manufacturingDate').optional({ nullable: true }).isISO8601().toDate(),
 		body('notes').optional({ nullable: true }).isString(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const batch = await batchService.createBatch(req.body);
 			res.status(201).json({ success: true, data: batch });
@@ -98,9 +115,8 @@ router.post(
 // Update batch
 router.put(
 	'/:id',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole('Admin', 'Manager'),
+	[
 		param('id').isUUID(),
 		body('costPrice').optional({ nullable: true }).isFloat({ min: 0 }),
 		body('sellingPrice').optional({ nullable: true }).isFloat({ min: 0 }),
@@ -114,8 +130,13 @@ router.put(
 		body('manufacturingDate').optional({ nullable: true }).isISO8601().toDate(),
 		body('notes').optional({ nullable: true }).isString(),
 		body('isActive').optional().isBoolean(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const batch = await batchService.updateBatch(req.params.id, req.body);
 			res.json({ success: true, data: batch });
@@ -128,10 +149,14 @@ router.put(
 // Apply margin to calculate selling price
 router.post(
 	'/:id/apply-margin',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([param('id').isUUID()]),
-	async (req, res) => {
+	requireRole('Admin', 'Manager'),
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const batch = await batchService.applyMargin(req.params.id);
 			res.json({ success: true, data: batch });
@@ -144,16 +169,20 @@ router.post(
 // Bulk operations
 router.post(
 	'/bulk/update-pricing',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole('Admin', 'Manager'),
+	[
 		body('batchIds').isArray({ min: 1 }),
 		body('batchIds.*').isUUID(),
 		body('operation').isIn(['set', 'increase_fixed', 'increase_percentage']),
 		body('priceField').isIn(['costPrice', 'sellingPrice', 'wholesalePrice', 'bulkPrice']),
 		body('value').isFloat(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const result = await batchService.bulkUpdateBatchPricing(req.body);
 			res.json({ success: true, data: result });
@@ -165,13 +194,17 @@ router.post(
 
 router.post(
 	'/bulk/apply-margin',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole('Admin', 'Manager'),
+	[
 		body('batchIds').isArray({ min: 1 }),
 		body('batchIds.*').isUUID(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const result = await batchService.bulkApplyMargin(req.body.batchIds);
 			res.json({ success: true, data: result });
@@ -184,15 +217,19 @@ router.post(
 // Get pricing for a product
 router.get(
 	'/pricing/get',
-	authenticate(),
-	validate([
+	[
 		query('skuId').isUUID(),
 		query('variantId').optional().isUUID(),
 		query('batchId').optional().isUUID(),
 		query('quantity').optional().isInt({ min: 1 }).toInt(),
 		query('priceType').optional().isIn(['cost', 'selling', 'wholesale', 'bulk']),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const price = await pricingService.getPrice({
 				skuId: req.query.skuId as string,
@@ -211,9 +248,13 @@ router.get(
 // Get pricing summary for a batch
 router.get(
 	'/pricing/summary/:batchId',
-	authenticate(),
-	validate([param('batchId').isUUID()]),
-	async (req, res) => {
+	[param('batchId').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const summary = await pricingService.getBatchPricingSummary(req.params.batchId);
 			res.json({ success: true, data: summary });
@@ -226,12 +267,16 @@ router.get(
 // Get average prices for SKU/Variant
 router.get(
 	'/pricing/average',
-	authenticate(),
-	validate([
+	[
 		query('skuId').isUUID(),
 		query('variantId').optional().isUUID(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const averages = await pricingService.getAveragePrices(
 				req.query.skuId as string,

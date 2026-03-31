@@ -262,7 +262,6 @@ export async function bulkUpdateBatchPricing(params: {
 		// Note: Prisma doesn't support increment on updateMany, so we need to do it in a transaction
 		const batches = await prisma.batch.findMany({
 			where: { id: { in: batchIds } },
-			select: { id: true, [priceField]: true },
 		});
 
 		await prisma.$transaction(
@@ -278,7 +277,6 @@ export async function bulkUpdateBatchPricing(params: {
 		// Increase by a percentage
 		const batches = await prisma.batch.findMany({
 			where: { id: { in: batchIds } },
-			select: { id: true, [priceField]: true },
 		});
 
 		await prisma.$transaction(
