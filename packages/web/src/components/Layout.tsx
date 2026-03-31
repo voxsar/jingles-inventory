@@ -8,6 +8,7 @@ const navItems = [
   { to: '/grns', label: '📋 GRNs' },
   { to: '/skus', label: '🎵 Products (SKUs)' },
   { to: '/pricing', label: '💰 Batch Pricing' },
+  { to: '/pricing-overlays', label: '🎯 Pricing Overlays' },
   { to: '/categories', label: '🗂️ Categories' },
   { to: '/branches', label: '🏢 Branches & Storage' },
   { to: '/warehouse-3d', label: '🏗️ Warehouse 3D' },
