@@ -30,6 +30,7 @@ import attributeRoutes from './routes/attributes';
 import variantRoutes from './routes/variants';
 import uploadRoutes from './routes/uploads';
 import batchRoutes from './routes/batches';
+import pricingOverlayRoutes from './routes/pricing-overlays';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 
 const app = express();
@@ -85,6 +86,7 @@ app.use('/api/stock-transfers', stockTransferRoutes);
 app.use('/api/attributes', attributeRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/batches', batchRoutes);
+app.use('/api/pricing-overlays', pricingOverlayRoutes);
 
 app.use(errorHandler);
 

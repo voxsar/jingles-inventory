@@ -153,7 +153,8 @@ describe('Pricing Service', () => {
 	describe('calculateMargin', () => {
 		it('calculates margin from cost and selling price', () => {
 			const result = calculateMargin(100, 150);
-			expect(result.type).toBe('fixed');
+			// 50% margin (clean percentage) should return percentage type
+			expect(result.type).toBe('percentage');
 			expect(result.value).toBe(50);
 		});
 
