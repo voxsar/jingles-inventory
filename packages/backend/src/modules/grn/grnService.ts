@@ -4,6 +4,7 @@ import prisma from '../../prisma/client';
 import { recordEvent } from '../inventory/eventLedger';
 import { getStatusesByKeys, SpecialStatusKeys } from '../statuses/statusLookup';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
+import { createBatch, generateBatchNumber } from '../batch/batchService';
 
 export async function createGRN(data: {
 	supplierId: string;
@@ -19,6 +20,14 @@ export async function createGRN(data: {
 		variantId?: string;
 		expectedQuantity: number;
 		batchReference?: string;
+		batchId?: string;
+		createNewBatch?: boolean;
+		costPrice?: number;
+		sellingPrice?: number;
+		wholesalePrice?: number;
+		bulkPrice?: number;
+		marginType?: 'fixed' | 'percentage';
+		marginValue?: number;
 		notes?: string;
 	}>;
 }) {
@@ -58,13 +67,48 @@ export async function createGRN(data: {
 					variantId: line.variantId,
 					expectedQuantity: line.expectedQuantity,
 					receivedQuantity: 0,
+					batchId: line.batchId,
 					batchReference: line.batchReference,
+					costPrice: line.costPrice,
+					sellingPrice: line.sellingPrice,
+					wholesalePrice: line.wholesalePrice,
+					bulkPrice: line.bulkPrice,
 					notes: line.notes,
 				})),
 			},
 		},
 		include: { lines: true },
 	});
+
+	// Create batches for lines that request new batch creation
+	for (let i = 0; i < data.lines.length; i++) {
+		const line = data.lines[i];
+		const grnLine = grn.lines[i];
+
+		if (line.createNewBatch) {
+			try {
+				const batch = await createBatch({
+					skuId: line.skuId,
+					variantId: line.variantId,
+					costPrice: line.costPrice,
+					sellingPrice: line.sellingPrice,
+					wholesalePrice: line.wholesalePrice,
+					bulkPrice: line.bulkPrice,
+					marginType: line.marginType,
+					marginValue: line.marginValue,
+					notes: line.notes,
+				});
+
+				// Update GRN line with the batch ID
+				await prisma.gRNLine.update({
+					where: { id: grnLine.id },
+					data: { batchId: batch.id },
+				});
+			} catch (err) {
+				console.error('Failed to create batch for GRN line:', err);
+			}
+		}
+	}
 
 	await recordEvent({
 		eventType: InventoryEventType.GRN_CREATED,
@@ -111,7 +155,8 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
 				data: {
 					skuId: line.skuId,
 					variantId: line.variantId ?? null,
-					batchId: line.batchReference,
+					batchId: (line as any).batchId ?? null,
+					batchReference: (line as any).batchReference ?? null,
 					floorId: grn.floorId,
 					shelfId: grn.shelfId,
 					quantity: line.expectedQuantity,
@@ -199,7 +244,8 @@ export async function submitInspection(data: {
 				data: {
 					skuId: grnLine.skuId,
 					variantId: grnLine.variantId ?? null,
-					batchId: grnLine.batchReference,
+					batchId: (grnLine as any).batchId ?? null,
+					batchReference: (grnLine as any).batchReference ?? null,
 					quantity: data.approvedQuantity,
 					state: inventoryInspected,
 					userId: data.inspectorUserId,
@@ -225,7 +271,8 @@ export async function submitInspection(data: {
 				data: {
 					skuId: grnLine.skuId,
 					variantId: grnLine.variantId ?? null,
-					batchId: grnLine.batchReference,
+					batchId: (grnLine as any).batchId ?? null,
+					batchReference: (grnLine as any).batchReference ?? null,
 					quantity: data.rejectedQuantity,
 					state: inventoryDamaged,
 					userId: data.inspectorUserId,
