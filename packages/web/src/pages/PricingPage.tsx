@@ -128,13 +128,7 @@ export default function PricingPage() {
   const columns = [
     {
       key: 'select',
-      header: <input type="checkbox" onChange={(e) => {
-        if (e.target.checked) {
-          setSelectedBatches(batches.map(b => b.id));
-        } else {
-          setSelectedBatches([]);
-        }
-      }} checked={selectedBatches.length === batches.length && batches.length > 0} />,
+      header: '',
       render: (b: any) => (
         <input
           type="checkbox"
@@ -164,7 +158,7 @@ export default function PricingPage() {
     }},
     {
       key: 'actions',
-      header: '',
+      header: 'Actions',
       render: (b: any) => (
         <div className="flex items-center gap-2">
           <button className="btn-sm" onClick={() => handleEditBatch(b)}>Edit</button>
@@ -217,7 +211,13 @@ export default function PricingPage() {
             <DataTable columns={columns} data={batches} />
             {totalPages > 1 && (
               <div className="px-6 py-4 border-t border-gray-100">
-                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+                <Pagination 
+                  page={page} 
+                  totalPages={totalPages} 
+                  pageSize={pageSize} 
+                  total={total} 
+                  onPageChange={setPage} 
+                />
               </div>
             )}
           </>
