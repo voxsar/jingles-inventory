@@ -2,6 +2,7 @@ import { InventoryState, UserRole } from '@jingles/shared';
 import { validateTransition, isValidTransition } from '@jingles/shared';
 import prisma from '../../prisma/client';
 import logger from '../../utils/logger';
+import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
 
 export { validateTransition, isValidTransition };
 
@@ -51,6 +52,9 @@ export async function performTransition(
       },
     }),
   ]);
+
+  // Queue dashboard stats refresh in background
+  queueDashboardStatsRefresh();
 
   return { success: true, requiresOverride: result.requiresOverride, record: updatedRecord };
 }

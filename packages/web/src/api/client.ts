@@ -32,6 +32,12 @@ export const authApi = {
   me: () => api.get('/auth/me'),
 };
 
+// Dashboard
+export const dashboardApi = {
+  getStats: () => api.get('/dashboard/stats'),
+  refreshStats: () => api.post('/dashboard/refresh'),
+};
+
 // SKUs
 export const skusApi = {
   list: (params?: Record<string, string>) =>
@@ -154,6 +160,12 @@ export const settingsApi = {
   createStatus: (data: any) => api.post('/settings/statuses', data),
   updateStatus: (id: string, data: any) => api.put(`/settings/statuses/${id}`, data),
   deleteStatus: (id: string) => api.delete(`/settings/statuses/${id}`),
+  // Typesense Sync
+  testTypesense: () => api.get('/settings/typesense/test'),
+  syncTypesense: (entity?: string, recreate?: boolean) => 
+    api.post('/settings/typesense/sync', { entity, recreate }),
+  getTypesenseJobs: () => api.get('/settings/typesense/jobs'),
+  getTypesenseJob: (jobId: string) => api.get(`/settings/typesense/jobs/${jobId}`),
 };
 
 // Attributes (Global Attribute System)

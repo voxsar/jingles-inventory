@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '../../prisma/client';
 import { recordEvent } from '../inventory/eventLedger';
 import { getStatusesByKeys, SpecialStatusKeys } from '../statuses/statusLookup';
+import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
 
 export async function createGRN(data: {
 	supplierId: string;
@@ -71,6 +72,9 @@ export async function createGRN(data: {
 		userId: data.createdBy,
 		metadata: { grnId: grn.id, supplierId: data.supplierId },
 	});
+
+	// Queue dashboard stats refresh in background
+	queueDashboardStatsRefresh();
 
 	return grn;
 }
@@ -142,6 +146,9 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
 
 		return records;
 	});
+
+	// Queue dashboard stats refresh in background
+	queueDashboardStatsRefresh();
 
 	return { grn: { ...grn, status: grnSubmittedStatus }, inventoryRecords };
 }
@@ -261,6 +268,9 @@ export async function submitInspection(data: {
 
 		return record;
 	});
+
+	// Queue dashboard stats refresh in background
+	queueDashboardStatsRefresh();
 
 	return inspection;
 }

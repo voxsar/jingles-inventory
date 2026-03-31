@@ -7,6 +7,7 @@ import { performTransition } from '../modules/inventory/stateMachine';
 import { recordEvent, getEvents } from '../modules/inventory/eventLedger';
 import { convert } from '../modules/conversion/unitConverter';
 import { getStatusesByKeys, SpecialStatusKeys } from '../modules/statuses/statusLookup';
+import { queueDashboardStatsRefresh } from '../modules/dashboard/dashboardService';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -153,6 +154,9 @@ router.post(
 				terminalId,
 			});
 
+			// Queue dashboard stats refresh in background
+			queueDashboardStatsRefresh();
+
 			res.status(201).json({ success: true, data: record });
 		} catch (error) {
 			logger.error('Create inventory error', error);
@@ -249,6 +253,9 @@ router.post(
 				metadata: { boxesOpened: quantityToOpen, piecesCreated: totalPieces, newRecordId: pieceRecord.id },
 			});
 
+			// Queue dashboard stats refresh in background
+				queueDashboardStatsRefresh();
+
 			res.json({ success: true, data: { boxRecord: updatedBox, pieceRecord, piecesCreated: totalPieces } });
 		} catch (error) {
 			logger.error('Box open error', error);
@@ -309,7 +316,11 @@ router.put(
 				});
 			}
 
+			// Queue dashboard stats refresh in background
+			queueDashboardStatsRefresh();
+
 			res.json({ success: true, data: record });
+;
 		} catch (error) {
 			logger.error('Update inventory error', error);
 			res.status(500).json({ success: false, error: 'Failed to update inventory record' });

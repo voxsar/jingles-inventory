@@ -26,12 +26,14 @@ const GRID_COLOUR = '#8EBE7E';
 let aframeLoaded = false;
 function ensureAframe(): Promise<void> {
 	if (aframeLoaded) return Promise.resolve();
-	return import('aframe').then(() => { aframeLoaded = true; });
+	return import('aframe').then(() => {
+		aframeLoaded = true;
+	});
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-function ShelfBoard({ w, d, y }: { w: number; d: number; y: number }) {
+function ShelfBoard({ w, d, y, shelfId }: { w: number; d: number; y: number; shelfId?: string }) {
 	return (
 		<a-box
 			position={`0 ${y} 0`}
@@ -40,6 +42,7 @@ function ShelfBoard({ w, d, y }: { w: number; d: number; y: number }) {
 			depth={String(d)}
 			color="#8B7355"
 			roughness="0.9"
+			data-shelf-id={shelfId || ''}
 		/>
 	);
 }
@@ -74,17 +77,19 @@ function RackEntity({
 	posZ: number;
 	rotY: number;
 }) {
-	// Convert rack physical dimensions (cm) to scene units (1 unit ≈ 1 ft)
-	const w = Math.max((rack.widthCm || 100) * CM2S, 40 * CM2S);
-	const h = Math.max((rack.heightCm || 200) * CM2S, 50 * CM2S);
-	const d = Math.max((rack.depthCm || 60) * CM2S, 30 * CM2S);
+	// Convert rack physical dimensions (cm) to scene units (1 unit ≈ 1 ft) - scaled to 37.5%
+	const w = Math.max((rack.widthCm || 100) * CM2S, 40 * CM2S) * 0.375;
+	const h = Math.max((rack.heightCm || 200) * CM2S, 50 * CM2S) * 0.375;
+	const d = Math.max((rack.depthCm || 60) * CM2S, 30 * CM2S) * 0.375;
 	const hw = w / 2 - 0.02;
 	const hd = d / 2 - 0.02;
 
-	// One shelf level every ~50 cm
-	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / (50 * CM2S)));
+	// One shelf level every ~60 cm (increased spacing to prevent overlap)
+	// Calculate on the scaled height
+	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / (60 * CM2S * 0.375)));
 	const levelH = h / levels;
-	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH);
+	// Add extra spacing between shelves - multiply by 1.15 to create gaps
+	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH * 1.15);
 
 	const highlightColour = isSelected ? '#FFD700' : 'transparent';
 
@@ -110,7 +115,7 @@ function RackEntity({
 
 			{/* Shelf boards */}
 			{shelfBoardYs.map((y, i) => (
-				<ShelfBoard key={i} w={w} d={d} y={y} />
+				<ShelfBoard key={i} w={w} d={d} y={y} shelfId={shelves[i - 1]?.id} />
 			))}
 
 			{/* Back brace */}
@@ -136,7 +141,7 @@ function RackEntity({
 
 			{/* Shelf indicators */}
 			{shelves.map((shelf, si) => shelf.hasFreezer ? (
-				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.05} ${(si + 1) * levelH + 0.1} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
+				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.05} ${(si + 1) * levelH * 1.15 + 0.1} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
 			) : null)}
 
 			{/* Name label */}
@@ -151,13 +156,13 @@ function RackEntity({
 
 			{/* Boxes on shelves */}
 			{allBoxes.map(({ box, shelfIdx, boxIdx }) => {
-				const levelY = (shelfIdx + 0.5) * levelH;
-				const bw = Math.max((box.width || 30) * CM2S, 8 * CM2S);
-				const bh = Math.max((box.height || 30) * CM2S, 8 * CM2S);
-				const bd = Math.max((box.length || 30) * CM2S, 8 * CM2S);
+				const bw = Math.max((box.width || 30) * CM2S, 8 * CM2S) * 0.375;
+				const bh = Math.max((box.height || 30) * CM2S, 8 * CM2S) * 0.375;
+				const bd = Math.max((box.length || 30) * CM2S, 8 * CM2S) * 0.375;
 				const boxesInShelf = (shelfBoxes[shelves[shelfIdx]?.id ?? ''] ?? []).length;
 				const offsetX = (boxIdx - boxesInShelf / 2 + 0.5) * (bw + 0.02);
-				const baseY = (shelfIdx * levelH) + 0.03 + bh / 2;
+				// Match the 1.15 spacing multiplier for shelf boards
+				const baseY = (shelfIdx * levelH * 1.15) + 0.03 + bh / 2;
 				const stackY = baseY + (box.stackOrder ?? 0) * bh;
 				const colour = BOX_COLOURS[boxIdx % BOX_COLOURS.length];
 				return (
@@ -181,9 +186,9 @@ function RackEntity({
 
 /** Floor-level box (sitting directly on floor) */
 function FloorBox({ box, index }: { box: IStorageBox; index: number }) {
-	const bw = Math.max((box.width || 40) * CM2S, 10 * CM2S);
-	const bh = Math.max((box.height || 40) * CM2S, 10 * CM2S);
-	const bd = Math.max((box.length || 40) * CM2S, 10 * CM2S);
+	const bw = Math.max((box.width || 40) * CM2S, 10 * CM2S) * 0.375;
+	const bh = Math.max((box.height || 40) * CM2S, 10 * CM2S) * 0.375;
+	const bd = Math.max((box.length || 40) * CM2S, 10 * CM2S) * 0.375;
 	const posX = box.posX ?? snap(index * (bw + 0.1));
 	const posY = box.posY ?? (bh / 2 + (box.stackOrder ?? 0) * bh);
 	const posZ = box.posZ ?? 0;
@@ -235,7 +240,7 @@ export default function WarehouseVisualizerPage() {
 	const [camPos, setCamPos] = useState<{ x: number; y: number; z: number }>({ x: 4, y: 8, z: 7 });
 	const [camYaw, setCamYaw] = useState(30);    // horizontal rotation, degrees (0 = -Z, 90 = +X)
 	const [camPitch, setCamPitch] = useState(-45);   // vertical tilt, degrees (negative = look down)
-	const [camFov, setCamFov] = useState(60);    // field of view for zoom
+	const [camZoom, setCamZoom] = useState(1);    // orthographic zoom (higher = more zoomed in)
 
 	const [aframeReady, setAframeReady] = useState(false);
 
@@ -552,9 +557,9 @@ export default function WarehouseVisualizerPage() {
 
 			function onWheel(e: WheelEvent) {
 				e.preventDefault();
-				// Zoom only - change FOV instead of moving camera
-				const delta = e.deltaY * 0.1;
-				setCamFov(v => Math.max(30, Math.min(100, v + delta)));
+				// Zoom orthographic camera
+				const delta = e.deltaY * 0.001;
+				setCamZoom(v => Math.max(0.3, Math.min(3, v - delta)));
 			}
 
 			function onContextMenu(e: Event) { e.preventDefault(); }
@@ -588,7 +593,7 @@ export default function WarehouseVisualizerPage() {
 		};
 	}, [clampCamPos, aframeReady]);
 
-	// ── Click → select rack (single) / double-click → center view on rack ──────
+	// ── Click → select rack (single) / double-click → center view on rack/shelf ──
 	const sceneRef = useRef<HTMLElement & EventTarget>(null);
 	useEffect(() => {
 		const scene = sceneRef.current;
@@ -597,21 +602,37 @@ export default function WarehouseVisualizerPage() {
 			const ce = e as CustomEvent;
 			const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
 			let rackId: string | null = null;
+			let shelfId: string | null = null;
 			if (el) {
 				let node: HTMLElement | null = el;
 				while (node) {
-					const id = node.getAttribute('data-rack-id');
-					if (id) { rackId = id; break; }
+					// Check for shelf first (more specific)
+					const sid = node.getAttribute('data-shelf-id');
+					if (sid && sid !== '') { shelfId = sid; }
+					// Then check for rack
+					const rid = node.getAttribute('data-rack-id');
+					if (rid) { rackId = rid; break; }
 					node = node.parentElement;
 				}
 			}
 
 			const now = Date.now();
 			const isDoubleClick =
-				rackId !== null &&
+				(rackId !== null || shelfId !== null) &&
 				now - lastClickRef.current.time < 400 &&
-				lastClickRef.current.rackId === rackId;
-			lastClickRef.current = { rackId, time: now };
+				(lastClickRef.current.rackId === rackId || lastClickRef.current.rackId === shelfId);
+			lastClickRef.current = { rackId: shelfId || rackId, time: now };
+
+			if (isDoubleClick && shelfId) {
+				// Find the parent rack to select it (no camera movement)
+				for (const [rid, rshelves] of Object.entries(rackShelves)) {
+					if (rshelves.findIndex(s => s.id === shelfId) !== -1) {
+						setSelectedRack(rid);
+						break;
+					}
+				}
+				return;
+			}
 
 			if (isDoubleClick && rackId) {
 				// Center view on rack: look at it and move closer – no orbit anchor
@@ -646,7 +667,7 @@ export default function WarehouseVisualizerPage() {
 		}
 		scene.addEventListener('click', handler);
 		return () => scene.removeEventListener('click', handler);
-	}, [aframeReady, clampCamPos]);
+	}, [aframeReady, clampCamPos, rackShelves]);
 
 	// ── Move rack helper (saves to DB) ────────────────────────────────────────
 	const moveRack = useCallback((dx: number, dz: number) => {
@@ -736,6 +757,7 @@ export default function WarehouseVisualizerPage() {
 		setCamPos({ x: centerX, y: height, z: height * 0.6 });
 		setCamYaw(0);     // face north (−Z)
 		setCamPitch(-55); // look steeply down
+		setCamZoom(0.6);  // zoom out for overview
 	}, [floors.length, loadOverview]);
 
 	// ── Floor size ────────────────────────────────────────────────────────────
@@ -835,7 +857,7 @@ export default function WarehouseVisualizerPage() {
 						if (viewMode === 'overview') {
 							enterOverview();
 						} else {
-							setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
+							setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45); setCamZoom(1);
 						}
 					}}
 					className="ml-auto px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
@@ -875,13 +897,13 @@ export default function WarehouseVisualizerPage() {
 						<a-light type="directional" color="#ffffff" intensity="0.8" position="5 10 5" />
 						<a-light type="hemisphere" color="#87CEEB" ground-color="#B8D4A8" intensity="0.3" />
 
-						{/* Orbit camera – position and rotation fully driven by React state */}
+						{/* Orthographic camera – position and rotation fully driven by React state */}
+						{/* Note: orthographic component applied dynamically via useEffect to avoid initialization race */}
 						<a-camera
 							position={camPosStr}
 							rotation={camRotStr}
 							look-controls="enabled: false"
 							wasd-controls="enabled: false"
-							fov={String(camFov)}
 						>
 							<a-cursor
 								color="#FFD700"
