@@ -583,3 +583,15 @@ model StatusOption {
   @@unique([entityType, value])
   @@map("status_options")
 }
+
+model DashboardStats {
+  id                       String   @id @default(uuid())
+  totalItems               Int      @default(0) @map("total_items")
+  shelfReadyItems          Int      @default(0) @map("shelf_ready_items")
+  damagedItems             Int      @default(0) @map("damaged_items")
+  openGRNs                 Int      @default(0) @map("open_grns")
+  inventoryByState         Json     @default("{}") @map("inventory_by_state") // { "state": { count: number, quantity: number } }
+  lastUpdated              DateTime @default(now()) @map("last_updated")
+
+  @@map("dashboard_stats")
+}

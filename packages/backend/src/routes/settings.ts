@@ -3,6 +3,10 @@ import { body, param, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { testTypesenseConnection } from '../modules/typesense/client';
+import { startSyncJob } from '../modules/typesense/syncService';
+import { getJob, getAllJobs } from '../modules/typesense/jobTracker';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -218,5 +222,63 @@ router.delete(
 		res.json({ success: true, message: 'Status option deleted' });
 	}
 );
+
+// ── Typesense Sync ────────────────────────────────────────
+
+router.get('/typesense/test', requireRole('Admin'), async (_req, res: Response): Promise<void> => {
+	try {
+		const result = await testTypesenseConnection();
+		if (result.success) {
+			res.json({ success: true, message: 'Typesense connection successful' });
+		} else {
+			res.status(500).json({ success: false, error: result.error });
+		}
+	} catch (error: any) {
+		logger.error('Typesense test error', error);
+		res.status(500).json({ success: false, error: error.message });
+	}
+});
+
+router.post('/typesense/sync', requireRole('Admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const { entity, recreate } = req.body as { entity?: string; recreate?: boolean };
+
+		// Start async job and return immediately
+		const jobId = startSyncJob(entity, recreate);
+
+		res.json({ 
+			success: true, 
+			data: { jobId },
+			message: 'Sync job started. Use the status endpoint to check progress.' 
+		});
+	} catch (error: any) {
+		logger.error('Typesense sync error', error);
+		res.status(500).json({ success: false, error: error.message });
+	}
+});
+
+router.get('/typesense/jobs', requireRole('Admin'), async (_req, res: Response): Promise<void> => {
+	try {
+		const jobs = getAllJobs();
+		res.json({ success: true, data: jobs });
+	} catch (error: any) {
+		logger.error('Get typesense jobs error', error);
+		res.status(500).json({ success: false, error: error.message });
+	}
+});
+
+router.get('/typesense/jobs/:jobId', requireRole('Admin'), async (req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const job = getJob(req.params!.jobId);
+		if (!job) {
+			res.status(404).json({ success: false, error: 'Job not found' });
+			return;
+		}
+		res.json({ success: true, data: job });
+	} catch (error: any) {
+		logger.error('Get typesense job error', error);
+		res.status(500).json({ success: false, error: error.message });
+	}
+});
 
 export default router;

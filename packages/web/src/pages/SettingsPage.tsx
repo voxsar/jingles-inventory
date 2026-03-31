@@ -61,7 +61,7 @@ const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color
 const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
 const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder: '0' };
 
-type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes';
+type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense';
 
 export default function SettingsPage() {
 	const [section, setSection] = useState<Section>('home');
@@ -97,6 +97,13 @@ export default function SettingsPage() {
 	// All statuses (for the card-grid counts)
 	const [allStatuses, setAllStatuses] = useState<any[]>([]);
 	const [allStatusesLoading, setAllStatusesLoading] = useState(false);
+
+	// Typesense state
+	const [typesenseSyncing, setTypesenseSyncing] = useState(false);
+	const [typesenseStatus, setTypesenseStatus] = useState<string>('');
+	const [typesenseConnectionOk, setTypesenseConnectionOk] = useState<boolean | null>(null);
+	const [activeJobId, setActiveJobId] = useState<string | null>(null);
+	const [pollInterval, setPollInterval] = useState<number | null>(null);
 
 	// ── Units ─────────────────────────────────────────────────
 
@@ -352,6 +359,80 @@ export default function SettingsPage() {
 		}
 	};
 
+	// ── Typesense Sync ────────────────────────────────────────
+
+	const testTypesenseConnection = async () => {
+		try {
+			await settingsApi.testTypesense();
+			setTypesenseConnectionOk(true);
+			setTypesenseStatus('✅ Connection successful');
+		} catch (err: any) {
+			setTypesenseConnectionOk(false);
+			setTypesenseStatus('❌ Connection failed: ' + (err.response?.data?.error || err.message));
+		}
+	};
+
+	const handleSyncTypesense = async (entity?: string, recreate?: boolean) => {
+		setTypesenseSyncing(true);
+		setTypesenseStatus(`Starting sync for ${entity || 'all data'}...`);
+		try {
+			// Start the async job
+			const res = await settingsApi.syncTypesense(entity, recreate);
+			const jobId = res.data.data.jobId;
+			setActiveJobId(jobId);
+			setTypesenseStatus('⏳ Sync job started, checking status...');
+			
+			// Poll for job status
+			const interval = setInterval(async () => {
+				try {
+					const statusRes = await settingsApi.getTypesenseJob(jobId);
+					const job = statusRes.data.data;
+					
+					if (job.status === 'running') {
+						setTypesenseStatus(`⏳ ${job.progress || 'Processing...'}`);
+					} else if (job.status === 'completed') {
+						clearInterval(interval);
+						setPollInterval(null);
+						setTypesenseSyncing(false);
+						setActiveJobId(null);
+						
+						let message = '✅ Sync completed: ';
+						if (job.result) {
+							if (entity) {
+								message += `${job.result.synced || 0} records synced`;
+							} else {
+								message += `SKUs: ${job.result.skus || 0}, Inventory: ${job.result.inventory || 0}, Vendors: ${job.result.vendors || 0}`;
+							}
+						}
+						setTypesenseStatus(message);
+					} else if (job.status === 'failed') {
+						clearInterval(interval);
+						setPollInterval(null);
+						setTypesenseSyncing(false);
+						setActiveJobId(null);
+						setTypesenseStatus('❌ Sync failed: ' + (job.error || 'Unknown error'));
+					}
+				} catch (err: any) {
+					console.error('Failed to check job status', err);
+				}
+			}, 2000); // Poll every 2 seconds
+			
+			setPollInterval(interval);
+		} catch (err: any) {
+			setTypesenseSyncing(false);
+			setTypesenseStatus('❌ Failed to start sync: ' + (err.response?.data?.error || err.message));
+		}
+	};
+
+	// Cleanup polling on unmount
+	useEffect(() => {
+		return () => {
+			if (pollInterval) {
+				clearInterval(pollInterval);
+			}
+		};
+	}, [pollInterval]);
+
 	// ── Effects ───────────────────────────────────────────────
 
 	useEffect(() => {
@@ -359,6 +440,7 @@ export default function SettingsPage() {
 		if (section === 'statuses') loadAllStatuses();
 		if (section === 'status-detail') loadStatuses(statusEntityType);
 		if (section === 'attributes') loadAttributes();
+		if (section === 'typesense') testTypesenseConnection();
 	}, [section]);
 
 	useEffect(() => {
@@ -914,6 +996,122 @@ export default function SettingsPage() {
 		);
 	}
 
+	if (section === 'typesense') {
+		return (
+			<div className="flex flex-col gap-4">
+				<div className="page-header">
+					<div className="page-header-left">
+						<h1 className="page-title">🔍 Typesense Search Sync</h1>
+						<p className="page-subtitle">Sync data to Typesense for fast full-text search</p>
+					</div>
+					<div className="flex gap-2">
+						<button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
+					</div>
+				</div>
+
+				<div className="content-section">
+					<div className="p-6 space-y-6">
+						<div>
+							<h2 className="text-lg font-semibold text-gray-800 mb-2">Connection Status</h2>
+							<p className="text-sm text-gray-500 mb-4">Test connection to Typesense server</p>
+							<button
+								className="btn-primary"
+								onClick={testTypesenseConnection}
+								disabled={typesenseSyncing}
+							>
+								Test Connection
+							</button>
+							{typesenseConnectionOk !== null && (
+								<div className={`mt-3 p-3 rounded-md ${typesenseConnectionOk ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+									{typesenseConnectionOk ? '✅ Connected successfully' : '❌ Connection failed'}
+								</div>
+							)}
+						</div>
+
+						<hr className="border-gray-200" />
+
+						<div>
+							<h2 className="text-lg font-semibold text-gray-800 mb-2">Sync Data</h2>
+							<p className="text-sm text-gray-500 mb-4">
+								Synchronize your data to Typesense collections. Use "Sync All" to sync everything, or choose individual collections.
+							</p>
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+								<button
+									className="btn-primary flex items-center justify-center gap-2"
+									onClick={() => handleSyncTypesense()}
+									disabled={typesenseSyncing}
+								>
+									<span>🔄</span>
+									<span>Sync All</span>
+								</button>
+								<button
+									className="btn-secondary flex items-center justify-center gap-2"
+									onClick={() => handleSyncTypesense(undefined, true)}
+									disabled={typesenseSyncing}
+								>
+									<span>♻️</span>
+									<span>Recreate & Sync All</span>
+								</button>
+								<button
+									className="btn-secondary flex items-center justify-center gap-2"
+									onClick={() => handleSyncTypesense('skus')}
+									disabled={typesenseSyncing}
+								>
+									<span>📦</span>
+									<span>Sync SKUs Only</span>
+								</button>
+								<button
+									className="btn-secondary flex items-center justify-center gap-2"
+									onClick={() => handleSyncTypesense('inventory')}
+									disabled={typesenseSyncing}
+								>
+									<span>📊</span>
+									<span>Sync Inventory Only</span>
+								</button>
+								<button
+									className="btn-secondary flex items-center justify-center gap-2"
+									onClick={() => handleSyncTypesense('vendors')}
+									disabled={typesenseSyncing}
+								>
+									<span>🏭</span>
+									<span>Sync Vendors Only</span>
+								</button>
+							</div>
+
+							{typesenseStatus && (
+								<div className="mt-4 p-4 rounded-md bg-blue-50 text-blue-900">
+									<p className="text-sm">{typesenseStatus}</p>
+								</div>
+							)}
+
+							{typesenseSyncing && (
+								<div className="mt-4 flex items-center gap-3">
+									<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-600"></div>
+									<span className="text-sm text-gray-600">Syncing in progress...</span>
+								</div>
+							)}
+						</div>
+
+						<hr className="border-gray-200" />
+
+						<div>
+							<h2 className="text-lg font-semibold text-gray-800 mb-2">About</h2>
+							<div className="text-sm text-gray-600 space-y-2">
+								<p><strong>Server:</strong> typesense.artslabcreatives.com</p>
+								<p><strong>Collections:</strong> skus, inventory, vendors</p>
+								<p className="text-xs text-gray-500 mt-3">
+									Note: "Recreate & Sync All" will delete existing collections and recreate them from scratch.
+									Use this if you've made schema changes or want a fresh sync.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	// Home – card grid
 	return (
 		<div className="flex flex-col gap-4">
@@ -976,6 +1174,21 @@ export default function SettingsPage() {
 									<span key={t} className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{t}</span>
 								))}
 							</div>
+							<span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
+						</div>
+					</div>
+				</button>
+
+				{/* Typesense Sync card */}
+				<button
+					className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"
+					onClick={() => setSection('typesense')}
+				>
+					<div className="flex items-start gap-4">
+						<div className="text-4xl">🔍</div>
+						<div>
+							<h2 className="font-semibold text-gray-800 text-lg">Typesense Search Sync</h2>
+							<p className="text-sm text-gray-500 mt-1">Sync SKUs, inventory, and vendors to Typesense for fast full-text search</p>
 							<span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
 						</div>
 					</div>
