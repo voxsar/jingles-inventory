@@ -799,11 +799,13 @@ export default function LocationsPage() {
 									</div>
 									<div className="form-group">
 										<label className="form-label">Type</label>
-										<select className="input-field" value={barcodeForm.barcodeType} onChange={(e) => setBarcodeForm(f => ({ ...f, barcodeType: e.target.value }))}>
-											{['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map(t => (
-												<option key={t} value={t}>{t}</option>
-											))}
-										</select>
+										<SearchableSelect
+											options={['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map(t => ({ value: t, label: t }))}
+											value={barcodeForm.barcodeType}
+											onChange={(val) => { if (val) setBarcodeForm(f => ({ ...f, barcodeType: val })); }}
+											isClearable={false}
+											placeholder="Select type"
+										/>
 									</div>
 								</div>
 								<div className="form-group">

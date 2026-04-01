@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
 import { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
+import SearchableSelect from '../components/SearchableSelect';
 
 // ── Grid helper ─────────────────────────────────────────────────────────────
 const GRID = 0.5; // scene units per grid cell
@@ -806,13 +807,15 @@ export default function WarehouseVisualizerPage() {
 				{viewMode === 'single' && (
 					<>
 						<label className="font-semibold text-gray-300">Zone:</label>
-						<select
-							value={selectedFloor}
-							onChange={e => { setSelectedFloor(e.target.value); setViewMode('single'); }}
-							className="bg-gray-700 text-white border border-gray-600 rounded px-2 py-1 text-sm"
-						>
-							{floors.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-						</select>
+						<div style={{ width: '180px' }}>
+							<SearchableSelect
+								options={floors.map(f => ({ value: f.id, label: f.name }))}
+								value={selectedFloor}
+								onChange={(val) => { if (val) { setSelectedFloor(val); setViewMode('single'); } }}
+								isClearable={false}
+								placeholder="Select zone…"
+							/>
+						</div>
 					</>
 				)}
 
