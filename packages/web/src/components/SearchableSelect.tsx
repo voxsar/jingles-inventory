@@ -5,30 +5,42 @@ export interface SelectOption {
   label: string;
 }
 
-interface SearchableSelectProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value'> {
+interface CommonProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value' | 'isMulti'> {
   options: SelectOption[];
-  value: string | string[];
-  onChange: (value: string | string[]) => void;
   className?: string;
   placeholder?: string;
   isClearable?: boolean;
   isDisabled?: boolean;
   isLoading?: boolean;
-  isMulti?: boolean;
 }
 
-export default function SearchableSelect({
-  options,
-  value,
-  onChange,
-  className = '',
-  placeholder = 'Select...',
-  isClearable = true,
-  isDisabled = false,
-  isLoading = false,
-  isMulti = false,
-  ...rest
-}: SearchableSelectProps) {
+interface SingleSelectProps extends CommonProps {
+  isMulti?: false;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+interface MultiSelectProps extends CommonProps {
+  isMulti: true;
+  value: string[];
+  onChange: (value: string[]) => void;
+}
+
+type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
+
+export default function SearchableSelect(props: SearchableSelectProps) {
+  const {
+    options,
+    value,
+    onChange,
+    className = '',
+    placeholder = 'Select...',
+    isClearable = true,
+    isDisabled = false,
+    isLoading = false,
+    isMulti = false,
+    ...rest
+  } = props;
   const selectedOption = isMulti
     ? options.filter(opt => (value as string[]).includes(opt.value))
     : options.find(opt => opt.value === value) || null;
@@ -120,9 +132,9 @@ export default function SearchableSelect({
       onChange={(option) => {
         if (isMulti) {
           const values = Array.isArray(option) ? option.map(o => o.value) : [];
-          onChange(values);
+          (onChange as (value: string[]) => void)(values);
         } else {
-          onChange((option as SelectOption)?.value || '');
+          (onChange as (value: string) => void)((option as SelectOption)?.value || '');
         }
       }}
       styles={customStyles}

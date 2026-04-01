@@ -94,23 +94,23 @@ export default function UsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = { ...userForm };
+      const { vendorId, password, ...rest } = userForm;
+      const payload: Record<string, any> = { ...rest };
 
-      // Remove empty vendorId
-      if (!payload.vendorId) {
-        delete payload.vendorId;
+      // Include vendorId only if non-empty
+      if (vendorId) {
+        payload.vendorId = vendorId;
       }
 
       if (editingUser) {
         // Don't send password in update unless changing it
-        delete payload.password;
         await usersApi.update(editingUser.id, payload);
       } else {
-        if (!payload.password || payload.password.length < 6) {
+        if (!password || password.length < 6) {
           alert('Password must be at least 6 characters');
           return;
         }
-        await usersApi.create(payload);
+        await usersApi.create({ ...payload, password });
       }
       await loadUsers();
       closeModal();
@@ -145,10 +145,10 @@ export default function UsersPage() {
   };
 
   const userColumns = [
-    { header: 'Email', accessor: 'email', sortable: true },
+    { header: 'Email', key: 'email', sortable: true },
     {
       header: 'Role',
-      accessor: 'role',
+      key: 'role',
       render: (row: any) => (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
           {row.role}
@@ -157,7 +157,7 @@ export default function UsersPage() {
     },
     {
       header: 'Vendor',
-      accessor: 'vendor',
+      key: 'vendor',
       render: (row: any) =>
         row.vendor ? (
           <span className="text-sm text-gray-700">{row.vendor.name}</span>
@@ -167,7 +167,7 @@ export default function UsersPage() {
     },
     {
       header: 'Status',
-      accessor: 'isActive',
+      key: 'isActive',
       render: (row: any) =>
         row.isActive ? (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
@@ -181,12 +181,12 @@ export default function UsersPage() {
     },
     {
       header: 'Created',
-      accessor: 'createdAt',
+      key: 'createdAt',
       render: (row: any) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
       header: 'Actions',
-      accessor: 'id',
+      key: 'id',
       render: (row: any) => (
         <div className="flex gap-2">
           <button

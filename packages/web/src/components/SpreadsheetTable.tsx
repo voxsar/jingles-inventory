@@ -169,7 +169,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
         return <span>{option?.label || row[col.key] || '—'}</span>;
       }
       if (col.type === 'multiselect' && col.options) {
-        const values = Array.isArray(row[col.key]) ? row[col.key] : [];
+        const values: string[] = Array.isArray(row[col.key]) ? row[col.key] : [];
         return (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {values.map((v: string, i: number) => {
