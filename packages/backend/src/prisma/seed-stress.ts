@@ -55,6 +55,47 @@ const EDITION_SUFFIXES = [
 	'SE', 'FE', 'Neo', 'Core', 'Edge', 'Ace',
 ];
 
+// ── Tag definitions ──────────────────────────────────────────────────────────
+const TAG_DATA: Array<{ name: string; color: string }> = [
+	{ name: 'New Arrival', color: '#22c55e' },
+	{ name: 'Best Seller', color: '#f59e0b' },
+	{ name: 'Clearance', color: '#ef4444' },
+	{ name: 'Premium', color: '#8b5cf6' },
+	{ name: 'Eco-Friendly', color: '#10b981' },
+	{ name: 'Limited Stock', color: '#ec4899' },
+	{ name: 'Bulk Only', color: '#6366f1' },
+	{ name: 'Fragile', color: '#f97316' },
+	{ name: 'Heavy Item', color: '#78716c' },
+	{ name: 'Perishable', color: '#dc2626' },
+	{ name: 'Seasonal', color: '#0ea5e9' },
+	{ name: 'Imported', color: '#64748b' },
+	{ name: 'Warranty Included', color: '#14b8a6' },
+	{ name: 'Oversized', color: '#a855f7' },
+	{ name: 'High Demand', color: '#eab308' },
+	{ name: 'Discontinued', color: '#9ca3af' },
+	{ name: 'Pre-Order', color: '#3b82f6' },
+	{ name: 'Bundle Deal', color: '#d946ef' },
+	{ name: 'Staff Pick', color: '#06b6d4' },
+	{ name: 'Top Rated', color: '#84cc16' },
+];
+
+// ── Unit conversion rules ────────────────────────────────────────────────────
+const UNIT_CONVERSIONS: Record<string, object> = {
+	unit: { unitToBox: 6 },
+	piece: { pcToBox: 12 },
+	pc: { pcToBox: 12 },
+	pair: { pairToBox: 6 },
+	pack: { packToCase: 4 },
+	box: { boxToPallet: 24 },
+	set: { setToCase: 4 },
+	bottle: { bottleToCase: 12 },
+	jar: { jarToCase: 12 },
+	bag: { bagToCase: 6 },
+	kg: { kgToSack: 25 },
+	litre: { litreToCase: 6 },
+	kit: { kitToCase: 4 },
+};
+
 // ── Variant types ─────────────────────────────────────────────────────────────
 type VariantType = 'none' | 'colour' | 'size' | 'colour-size';
 
@@ -1042,6 +1083,7 @@ interface Combo {
 	variantType: VariantType;
 	dimensions: { lengthCm: number; widthCm: number; heightCm: number };
 	isFragile: boolean;
+	lowStockThreshold: number;
 }
 
 function buildCombos(
@@ -1049,6 +1091,7 @@ function buildCombos(
 	categoryMap: Map<string, string>,
 ): Combo[] {
 	const combos: Combo[] = [];
+	let idx = 0;
 	for (const tmpl of PRODUCT_TEMPLATES) {
 		const vendorId = vendorMap.get(tmpl.vendorName);
 		const categoryId = categoryMap.get(tmpl.categorySlug);
@@ -1066,7 +1109,9 @@ function buildCombos(
 					variantType: tmpl.variantType,
 					dimensions: { lengthCm: dim.lengthCm, widthCm: dim.widthCm, heightCm: dim.heightCm },
 					isFragile: dim.isFragile,
+					lowStockThreshold: 5 + (idx % 45),
 				});
+				idx++;
 			}
 		}
 	}
@@ -1202,6 +1247,18 @@ async function main() {
 		sizeValueMap.set(label, av.id);
 	}
 	console.log(`✅ Ensured Colour attribute (${ALL_COLOURS.length} values) and Size attribute (${ALL_SIZES.length} values)`);
+
+	// ── Tags ──────────────────────────────────────────────────────────────────
+	const tagMap = new Map<string, string>();
+	for (const td of TAG_DATA) {
+		let tag = await prisma.tag.findUnique({ where: { name: td.name } });
+		if (!tag) {
+			tag = await prisma.tag.create({ data: { name: td.name, color: td.color } });
+		}
+		tagMap.set(td.name, tag.id);
+	}
+	const tagIds = Array.from(tagMap.values());
+	console.log(`✅ Ensured ${TAG_DATA.length} tags`);
 
 	// ── Branch ────────────────────────────────────────────────────────────────
 	let branch = await prisma.branch.findFirst({ where: { code: 'STRESS-01' } });
@@ -1363,12 +1420,16 @@ async function main() {
 				variantType: VariantType;
 				dimensions: { lengthCm: number; widthCm: number; heightCm: number };
 				isFragile: boolean;
+				lowStockThreshold: number;
+				conversionRules: object;
+				batchPricing: object;
 			}
 			const batchMeta: BatchMeta[] = Array.from({ length: batchCount }, (_, i) => {
 				const globalIndex = startIndex + i;
 				const comboIdx = globalIndex % combos.length;
 				const edition = Math.floor(globalIndex / combos.length);
 				const combo = combos[comboIdx];
+				const costPrice = Math.round((5 + ((globalIndex * 17 + 31) % 500) * 0.8) * 100) / 100;
 				return {
 					skuCode: `PROD-${String(globalIndex + 1).padStart(6, '0')}`,
 					name: getSkuName(combo.name, edition),
@@ -1378,6 +1439,15 @@ async function main() {
 					variantType: combo.variantType,
 					dimensions: combo.dimensions,
 					isFragile: combo.isFragile,
+					lowStockThreshold: combo.lowStockThreshold,
+					conversionRules: UNIT_CONVERSIONS[combo.unit] ?? { unitToBox: 6 },
+					batchPricing: {
+						defaultCost: costPrice,
+						defaultSelling: Math.round(costPrice * 1.8 * 100) / 100,
+						defaultWholesale: Math.round(costPrice * 1.35 * 100) / 100,
+						defaultBulk: Math.round(costPrice * 1.15 * 100) / 100,
+						currency: 'LKR',
+					},
 				};
 			});
 
@@ -1392,16 +1462,161 @@ async function main() {
 			});
 			const skuByCode = new Map(skus.map((s: { id: string; skuCode: string }) => [s.skuCode, s.id]));
 
-			// ── GRN lines — one per SKU in this batch (received = expected) ───
+			// ── SKUVendor entries (primary + 1 additional vendor) ──────────
+			const skuVendorRows: Array<{ skuId: string; vendorId: string }> = [];
+			for (let i = 0; i < batchMeta.length; i++) {
+				const meta = batchMeta[i];
+				const skuId = skuByCode.get(meta.skuCode);
+				if (!skuId) continue;
+				const globalIdx = startIndex + i;
+				skuVendorRows.push({ skuId, vendorId: meta.vendorId });
+				const extraVendorId = vendorIds[(globalIdx * 7 + 3) % vendorIds.length];
+				if (extraVendorId !== meta.vendorId) {
+					skuVendorRows.push({ skuId, vendorId: extraVendorId });
+				}
+			}
+			await prisma.sKUVendor.createMany({ data: skuVendorRows, skipDuplicates: true });
+
+			// ── SKUTag entries (~50% of SKUs get 1-2 tags) ────────────────
+			const skuTagRows: Array<{ skuId: string; tagId: string }> = [];
+			for (let i = 0; i < batchMeta.length; i++) {
+				const globalIdx = startIndex + i;
+				if (globalIdx % 2 === 0) continue;
+				const skuId = skuByCode.get(batchMeta[i].skuCode);
+				if (!skuId) continue;
+				const tagCount = 1 + (globalIdx % 2);
+				for (let t = 0; t < tagCount; t++) {
+					skuTagRows.push({ skuId, tagId: tagIds[(globalIdx * 3 + t * 7) % tagIds.length] });
+				}
+			}
+			if (skuTagRows.length > 0) {
+				await prisma.sKUTag.createMany({ data: skuTagRows, skipDuplicates: true });
+			}
+
+			// ── SKUAttribute + SKUAttributeValue (for variant SKUs) ───────
+			const skuAttrRows: Array<{ skuId: string; attributeId: string }> = [];
+			for (const meta of batchMeta) {
+				const skuId = skuByCode.get(meta.skuCode);
+				if (!skuId || meta.variantType === 'none') continue;
+				if (meta.variantType === 'colour' || meta.variantType === 'colour-size') {
+					skuAttrRows.push({ skuId, attributeId: colourAttrId });
+				}
+				if (meta.variantType === 'size' || meta.variantType === 'colour-size') {
+					skuAttrRows.push({ skuId, attributeId: sizeAttrId });
+				}
+			}
+			if (skuAttrRows.length > 0) {
+				await prisma.sKUAttribute.createMany({ data: skuAttrRows, skipDuplicates: true });
+				const variantSkuIds = batchMeta
+					.filter(m => m.variantType !== 'none')
+					.map(m => skuByCode.get(m.skuCode))
+					.filter(Boolean) as string[];
+				const savedSkuAttrs = await prisma.sKUAttribute.findMany({
+					where: { skuId: { in: variantSkuIds } },
+					select: { id: true, skuId: true, attributeId: true },
+				});
+				const skuAttrValueRows: Array<{ skuAttributeId: string; attributeValueId: string }> = [];
+				for (const sa of savedSkuAttrs) {
+					const meta = batchMeta.find(m => skuByCode.get(m.skuCode) === sa.skuId);
+					if (!meta) continue;
+					if (sa.attributeId === colourAttrId) {
+						const colours = meta.variantType === 'colour-size' ? MULTI_COLOURS : ALL_COLOURS;
+						for (const c of colours) {
+							const avId = colourValueMap.get(c);
+							if (avId) skuAttrValueRows.push({ skuAttributeId: sa.id, attributeValueId: avId });
+						}
+					} else if (sa.attributeId === sizeAttrId) {
+						const sizes = meta.variantType === 'colour-size' ? MULTI_SIZES : ALL_SIZES;
+						for (const s of sizes) {
+							const avId = sizeValueMap.get(s);
+							if (avId) skuAttrValueRows.push({ skuAttributeId: sa.id, attributeValueId: avId });
+						}
+					}
+				}
+				if (skuAttrValueRows.length > 0) {
+					await prisma.sKUAttributeValue.createMany({ data: skuAttrValueRows, skipDuplicates: true });
+				}
+			}
+
+			// ── Product barcodes (EAN13-style, one per SKU) ───────────────
+			const barcodeRows = batchMeta.map((meta, i) => {
+				const skuId = skuByCode.get(meta.skuCode);
+				if (!skuId) return null;
+				const globalIdx = startIndex + i;
+				return {
+					skuId,
+					barcode: `200${String(globalIdx + 1).padStart(10, '0')}`,
+					barcodeType: 'EAN13',
+					isDefault: true,
+				};
+			}).filter(Boolean) as Array<{ skuId: string; barcode: string; barcodeType: string; isDefault: boolean }>;
+			await prisma.productBarcode.createMany({ data: barcodeRows, skipDuplicates: true });
+
+			// ── Batch records (1 per SKU with pricing) ────────────────────
+			const batchDataRows = batchMeta.map((meta) => {
+				const skuId = skuByCode.get(meta.skuCode);
+				if (!skuId) return null;
+				const pricing = meta.batchPricing as { defaultCost: number; defaultSelling: number; defaultWholesale: number; defaultBulk: number };
+				return {
+					batchNumber: `${meta.skuCode}-B001`,
+					skuId,
+					sequenceNumber: 1,
+					costPrice: pricing.defaultCost,
+					sellingPrice: pricing.defaultSelling,
+					wholesalePrice: pricing.defaultWholesale,
+					bulkPrice: pricing.defaultBulk,
+					currency: 'LKR',
+					vendorId: meta.vendorId,
+				};
+			}).filter(Boolean) as Array<{
+				batchNumber: string; skuId: string; sequenceNumber: number;
+				costPrice: number; sellingPrice: number; wholesalePrice: number; bulkPrice: number;
+				currency: string; vendorId: string;
+			}>;
+			await prisma.batch.createMany({ data: batchDataRows, skipDuplicates: true });
+
+			// Fetch batch IDs for linking to GRN lines and inventory
+			const savedBatches = await prisma.batch.findMany({
+				where: { batchNumber: { in: batchDataRows.map(b => b.batchNumber) } },
+				select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true, wholesalePrice: true, bulkPrice: true },
+			});
+			const batchByNumber = new Map(savedBatches.map(b => [b.batchNumber, b]));
+
+			// ── GRN lines (with pricing + batch linkage) ──────────────────
 			await prisma.gRNLine.createMany({
-				data: skus.map(sku => ({
-					grnId: grn!.id,
-					skuId: sku.id,
-					expectedQuantity: 50,
-					receivedQuantity: 50,
-				})),
+				data: skus.map(sku => {
+					const meta = batchMeta.find(m => m.skuCode === (skus.find(s => s.id === sku.id)?.skuCode ?? ''));
+					const batch = batchByNumber.get(`${meta?.skuCode ?? ''}-B001`);
+					return {
+						grnId: grn!.id,
+						skuId: sku.id,
+						batchId: batch?.id ?? null,
+						expectedQuantity: 50,
+						receivedQuantity: 50,
+						costPrice: batch?.costPrice ?? null,
+						sellingPrice: batch?.sellingPrice ?? null,
+						wholesalePrice: batch?.wholesalePrice ?? null,
+						bulkPrice: batch?.bulkPrice ?? null,
+					};
+				}),
 				skipDuplicates: true,
 			});
+
+			// ── Inspection records (every 10th SKU has 2 rejected) ────────
+			const grnLinesForBatch = await prisma.gRNLine.findMany({
+				where: { grnId: grn!.id, skuId: { in: skus.map(s => s.id) } },
+				select: { id: true, receivedQuantity: true },
+			});
+			const inspectionRows = grnLinesForBatch.map((line, idx) => ({
+				grnLineId: line.id,
+				approvedQuantity: Math.max(0, line.receivedQuantity - (idx % 10 === 0 ? 2 : 0)),
+				rejectedQuantity: idx % 10 === 0 ? 2 : 0,
+				damageClassification: idx % 10 === 0 ? 'Minor' : null,
+				inspectorUserId: seederUser.id,
+				timestamp: deliveryDate,
+				remarks: idx % 10 === 0 ? 'Minor packaging damage on arrival' : null,
+			}));
+			await prisma.inspectionRecord.createMany({ data: inspectionRows, skipDuplicates: true });
 
 			// ── Build variant rows (in-memory) ────────────────────────────────
 			interface VariantMeta {
@@ -1485,7 +1700,7 @@ async function main() {
 				}
 			}
 
-			// ── Inventory records (one per SKU, linked to GRN event) ──────────
+			// ── Inventory records (one per SKU, linked to GRN event + batch) ──
 			const inventoryBatch = skus.map((sku, idx) => {
 				const globalIdx = startIndex + idx;
 				const shelfIdx = globalIdx % shelfIds.length;
@@ -1493,8 +1708,10 @@ async function main() {
 					Math.floor(shelfIdx / (RACKS_PER_FLOOR * SHELVES_PER_RACK)),
 					floorIds.length - 1,
 				);
+				const batch = batchByNumber.get(`${batchMeta[idx].skuCode}-B001`);
 				return {
 					skuId: sku.id,
+					batchId: batch?.id ?? null,
 					floorId: floorIds[floorIdx],
 					shelfId: shelfIds[shelfIdx],
 					quantity: Math.floor(Math.random() * 200) + 1,
@@ -1512,21 +1729,151 @@ async function main() {
 			);
 		}
 		console.log(`\n✅ ${batchNum} GRNs created — every inventory record is backed by a GRN`);
-		console.log('✅ SKUs (with dimensions), variants, SKUVariantValues, GRN lines, and inventory records created');
+		console.log('✅ SKUs, variants, batches, barcodes, tags, vendor links, inspections, and inventory records created');
 	}
 
+	// ── Pricing Overlays ──────────────────────────────────────────────────────
+	const overlayDefs = [
+		{ name: 'Summer Sale 10%', description: 'Summer seasonal discount', type: 'percentage_discount', value: 10, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 1, stackable: false, status: 'active' },
+		{ name: 'Bulk Purchase 5% Off', description: 'Discount for bulk orders', type: 'percentage_discount', value: 5, appliesTo: { categoryIds: [] as string[] }, conditions: { minQty: 100 }, priority: 2, stackable: true, status: 'active' },
+		{ name: 'Premium Markup 15%', description: 'Premium category markup', type: 'percentage_markup', value: 15, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 3, stackable: false, status: 'active' },
+		{ name: 'Clearance 30% Off', description: 'Clearance items deep discount', type: 'percentage_discount', value: 30, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 4, stackable: false, status: 'active' },
+		{ name: 'New Customer $5 Off', description: 'New customer flat discount', type: 'fixed_discount', value: 5, appliesTo: { categoryIds: [] as string[] }, conditions: { customerGroups: ['new'] }, priority: 5, stackable: true, status: 'active' },
+		{ name: 'Holiday Special 20%', description: 'Holiday season promotion', type: 'percentage_discount', value: 20, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 1, stackable: false, status: 'scheduled', validFrom: new Date('2026-12-15'), validTo: new Date('2027-01-05') },
+		{ name: 'Electronics Markup $10', description: 'Fixed markup on electronics', type: 'fixed_markup', value: 10, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 6, stackable: true, status: 'active' },
+		{ name: 'Wholesale Tier 1', description: 'Wholesale pricing tier 1', type: 'percentage_discount', value: 15, appliesTo: { categoryIds: [] as string[] }, conditions: { customerGroups: ['wholesale'], minQty: 50 }, priority: 7, stackable: false, status: 'active' },
+		{ name: 'Flash Sale 25%', description: 'Limited time flash sale', type: 'percentage_discount', value: 25, appliesTo: { categoryIds: [] as string[] }, conditions: {}, priority: 8, stackable: false, status: 'expired', validFrom: new Date('2026-03-01'), validTo: new Date('2026-03-07') },
+		{ name: 'VIP Member 8%', description: 'VIP membership discount', type: 'percentage_discount', value: 8, appliesTo: { categoryIds: [] as string[] }, conditions: { customerGroups: ['vip'] }, priority: 9, stackable: true, status: 'active' },
+	];
+
+	const seederUserForPost = await prisma.user.findFirst({ where: { role: 'Admin' } });
+	let overlaysCreated = 0;
+	for (const def of overlayDefs) {
+		const existing = await prisma.pricingOverlay.findFirst({ where: { name: def.name } });
+		if (!existing) {
+			await prisma.pricingOverlay.create({
+				data: {
+					name: def.name,
+					description: def.description,
+					type: def.type,
+					value: def.value,
+					appliesTo: def.appliesTo,
+					conditions: def.conditions,
+					priority: def.priority,
+					stackable: def.stackable,
+					status: def.status,
+					validFrom: (def as any).validFrom ?? null,
+					validTo: (def as any).validTo ?? null,
+					createdBy: seederUserForPost?.id ?? null,
+				},
+			});
+			overlaysCreated++;
+		}
+	}
+	console.log(`✅ Ensured ${overlayDefs.length} pricing overlays (${overlaysCreated} created)`);
+
+	// ── Storage Boxes (2 per every 10th shelf) ────────────────────────────────
+	const boxShelfIndices = shelfIds.filter((_, i) => i % 10 === 0);
+	let boxesCreated = 0;
+	for (let si = 0; si < boxShelfIndices.length; si++) {
+		const shelfId = boxShelfIndices[si];
+		const floorIdx = Math.min(
+			Math.floor(si * 10 / (RACKS_PER_FLOOR * SHELVES_PER_RACK)),
+			floorIds.length - 1,
+		);
+		for (let b = 1; b <= 2; b++) {
+			const code = `BOX-${String(si + 1).padStart(4, '0')}-${b}`;
+			const existing = await prisma.storageBox.findFirst({ where: { code } });
+			if (!existing) {
+				await prisma.storageBox.create({
+					data: {
+						shelfId,
+						floorId: floorIds[floorIdx],
+						name: `Storage Box ${code}`,
+						code,
+						height: 0.3,
+						width: 0.4,
+						length: 0.3,
+					},
+				});
+				boxesCreated++;
+			}
+		}
+	}
+	console.log(`✅ Ensured ${boxShelfIndices.length * 2} storage boxes (${boxesCreated} created)`);
+
+	// ── Stock Transfers ───────────────────────────────────────────────────────
+	const transferDefs = [
+		{ refNum: 'ST-STRESS-001', fromFloorIdx: 0, toFloorIdx: 1, status: 'Completed', notes: 'Routine floor rebalancing' },
+		{ refNum: 'ST-STRESS-002', fromFloorIdx: 1, toFloorIdx: 2, status: 'InTransit', notes: 'Overflow transfer' },
+		{ refNum: 'ST-STRESS-003', fromFloorIdx: 2, toFloorIdx: 3, status: 'Approved', notes: 'Seasonal reorganisation' },
+		{ refNum: 'ST-STRESS-004', fromFloorIdx: 3, toFloorIdx: 4, status: 'Pending', notes: 'New arrivals redistribution' },
+		{ refNum: 'ST-STRESS-005', fromFloorIdx: 0, toFloorIdx: 4, status: 'Draft', notes: 'Proposed clearance move' },
+	];
+
+	let transfersCreated = 0;
+	for (const td of transferDefs) {
+		const existing = await prisma.stockTransfer.findFirst({ where: { referenceNumber: td.refNum } });
+		if (!existing) {
+			const sampleSkus = await prisma.sKU.findMany({
+				where: { skuCode: { startsWith: 'PROD-' } },
+				take: 5,
+				skip: transfersCreated * 10,
+				select: { id: true },
+			});
+
+			const transfer = await prisma.stockTransfer.create({
+				data: {
+					referenceNumber: td.refNum,
+					fromBranchId: branch.id,
+					toBranchId: branch.id,
+					fromFloorId: floorIds[td.fromFloorIdx],
+					toFloorId: floorIds[td.toFloorIdx],
+					status: td.status,
+					notes: td.notes,
+					requestedBy: seederUserForPost!.id,
+					approvedBy: td.status !== 'Draft' && td.status !== 'Pending' ? seederUserForPost!.id : null,
+					approvedAt: td.status !== 'Draft' && td.status !== 'Pending' ? new Date() : null,
+					completedAt: td.status === 'Completed' ? new Date() : null,
+				},
+			});
+
+			if (sampleSkus.length > 0) {
+				await prisma.stockTransferLine.createMany({
+					data: sampleSkus.map((sku, i) => ({
+						transferId: transfer.id,
+						skuId: sku.id,
+						requestedQty: 10 + i * 5,
+						transferredQty: td.status === 'Completed' ? 10 + i * 5 : 0,
+					})),
+				});
+			}
+			transfersCreated++;
+		}
+	}
+	console.log(`✅ Ensured ${transferDefs.length} stock transfers with lines (${transfersCreated} created)`);
+
 	console.log('\n🎉 Stress test seed complete!');
-	console.log(`   Branch     : ${branch.name} (${branch.code})`);
-	console.log(`   Vendors    : ${VENDOR_DATA.length}`);
-	console.log(`   Categories : ${categoryMap.size} (${l1Count} L1 → ${l2Count} L2 → ${l3Count} L3)`);
-	console.log(`   Floors     : ${FLOORS}`);
-	console.log(`   Racks      : ${rackIds.length} (${RACKS_PER_FLOOR}/floor)`);
-	console.log(`   Shelves    : ${shelfIds.length} (${SHELVES_PER_RACK}/rack)`);
-	console.log(`   SKUs       : ${TOTAL_SKUS.toLocaleString()} (with realistic category dimensions)`);
-	console.log(`   Variant types: colour-only (${ALL_COLOURS.length} variants/SKU), size-only (${ALL_SIZES.length} variants/SKU), colour+size (${MULTI_COLOURS.length}×${MULTI_SIZES.length} variants/SKU)`);
-	console.log(`   GRNs       : 1 per batch of ${BATCH_SIZE} SKUs — all inventory backed by a GRN`);
-	console.log(`   GRN lines  : ${TOTAL_SKUS.toLocaleString()} (1 per SKU)`);
-	console.log(`   Inv. Records : ${TOTAL_SKUS.toLocaleString()} (each linked to a GRN_CREATED event)`);
+	console.log(`   Branch       : ${branch.name} (${branch.code})`);
+	console.log(`   Vendors      : ${VENDOR_DATA.length}`);
+	console.log(`   Categories   : ${categoryMap.size} (${l1Count} L1 → ${l2Count} L2 → ${l3Count} L3)`);
+	console.log(`   Tags         : ${TAG_DATA.length}`);
+	console.log(`   Floors       : ${FLOORS}`);
+	console.log(`   Racks        : ${rackIds.length} (${RACKS_PER_FLOOR}/floor)`);
+	console.log(`   Shelves      : ${shelfIds.length} (${SHELVES_PER_RACK}/rack)`);
+	console.log(`   Storage Boxes: ${boxShelfIndices.length * 2}`);
+	console.log(`   SKUs         : ${TOTAL_SKUS.toLocaleString()} (with dimensions, pricing, barcodes, thresholds)`);
+	console.log(`   SKUVendors   : ~${(TOTAL_SKUS * 1.5).toLocaleString()} (multi-vendor links)`);
+	console.log(`   SKUTags      : ~${Math.floor(TOTAL_SKUS / 2).toLocaleString()} (50% of SKUs tagged)`);
+	console.log(`   Batches      : ${TOTAL_SKUS.toLocaleString()} (1 per SKU with full pricing)`);
+	console.log(`   Barcodes     : ${TOTAL_SKUS.toLocaleString()} (EAN13 per SKU)`);
+	console.log(`   Variant types: colour-only (${ALL_COLOURS.length}/SKU), size-only (${ALL_SIZES.length}/SKU), colour+size (${MULTI_COLOURS.length}×${MULTI_SIZES.length}/SKU)`);
+	console.log(`   GRNs         : 1 per batch of ${BATCH_SIZE} SKUs — all inventory backed by a GRN`);
+	console.log(`   GRN lines    : ${TOTAL_SKUS.toLocaleString()} (with batch + pricing linkage)`);
+	console.log(`   Inspections  : ${TOTAL_SKUS.toLocaleString()} (10% with rejected items)`);
+	console.log(`   Inv. Records : ${TOTAL_SKUS.toLocaleString()} (linked to GRN event + batch)`);
+	console.log(`   Overlays     : ${overlayDefs.length} pricing overlays`);
+	console.log(`   Transfers    : ${transferDefs.length} stock transfers with lines`);
 }
 
 main()
