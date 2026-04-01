@@ -7,6 +7,7 @@ import StateBadge from '../components/StateBadge';
 import MediaUpload from '../components/MediaUpload';
 import ImageGalleryManager from '../components/ImageGalleryManager';
 import { branding } from '../config/branding';
+import SearchableSelect from '../components/SearchableSelect';
 
 const PAGE_SIZE = 20;
 const defaultTransitionForm = { toState: '', reason: '' };
@@ -544,22 +545,30 @@ export default function SKUPage() {
 						value={searchTerm}
 						onChange={(e) => handleSearchChange(e.target.value)}
 					/>
-					<select
-						className="filter-select"
-						value={categoryFilter}
-						onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-					>
-						<option value="">All Categories</option>
-						{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-					</select>
-					<select
-						className="filter-select"
-						value={vendorFilter}
-						onChange={(e) => { setVendorFilter(e.target.value); setPage(1); }}
-					>
-						<option value="">All Vendors</option>
-						{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-					</select>
+					<div style={{ width: '180px' }}>
+						<SearchableSelect
+							options={[
+								{ value: '', label: 'All Categories' },
+								...categories.map((c: any) => ({ value: c.id, label: c.name }))
+							]}
+							value={categoryFilter}
+							onChange={(value) => { setCategoryFilter(value); setPage(1); }}
+							placeholder="All Categories"
+							isClearable={false}
+						/>
+					</div>
+					<div style={{ width: '180px' }}>
+						<SearchableSelect
+							options={[
+								{ value: '', label: 'All Vendors' },
+								...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+							]}
+							value={vendorFilter}
+							onChange={(value) => { setVendorFilter(value); setPage(1); }}
+							placeholder="All Vendors"
+							isClearable={false}
+						/>
+					</div>
 					{(searchTerm || categoryFilter || vendorFilter) && (
 						<button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setCategoryFilter(''); setVendorFilter(''); setPage(1); }}>
 							✕ Clear filters
@@ -696,27 +705,45 @@ export default function SKUPage() {
 								<div className="form-grid-2">
 									<div className="form-group">
 										<label className="form-label">Category</label>
-										<select className="input-field" value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}>
-											<option value="">— No Category —</option>
-											{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-										</select>
+										<SearchableSelect
+											options={[
+												{ value: '', label: '— No Category —' },
+												...categories.map((c: any) => ({ value: c.id, label: c.name }))
+											]}
+											value={form.categoryId}
+											onChange={(value) => setForm((f) => ({ ...f, categoryId: value }))}
+											placeholder="No Category"
+											isClearable={false}
+										/>
 									</div>
 									<div className="form-group">
 										<label className="form-label">Vendor *</label>
-										<select className="input-field" value={form.vendorId} onChange={(e) => setForm((f) => ({ ...f, vendorId: e.target.value }))}>
-											<option value="">Select vendor</option>
-											{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-										</select>
+										<SearchableSelect
+											options={[
+												{ value: '', label: 'Select vendor' },
+												...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+											]}
+											value={form.vendorId}
+											onChange={(value) => setForm((f) => ({ ...f, vendorId: value }))}
+											placeholder="Select vendor"
+											isClearable={false}
+										/>
 									</div>
 								</div>
 								<div className="form-grid-2">
 									<div className="form-group">
 										<label className="form-label">Unit of Measure *</label>
 										{units.length > 0 ? (
-											<select className="input-field" value={form.unitOfMeasureId} onChange={(e) => handleUnitChange(e.target.value, setForm)}>
-												<option value="">— Select Unit —</option>
-												{units.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</option>)}
-											</select>
+											<SearchableSelect
+												options={[
+													{ value: '', label: '— Select Unit —' },
+													...units.map((u: any) => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }))
+												]}
+												value={form.unitOfMeasureId}
+												onChange={(value) => handleUnitChange(value, setForm)}
+												placeholder="Select Unit"
+												isClearable={false}
+											/>
 										) : (
 											<input className="input-field" type="text" value={form.unitOfMeasure} required placeholder="e.g. Piece" onChange={(e) => setForm((f) => ({ ...f, unitOfMeasure: e.target.value }))} />
 										)}
@@ -908,27 +935,45 @@ export default function SKUPage() {
 									<div className="form-grid-2">
 										<div className="form-group">
 											<label className="form-label">Category</label>
-											<select className="input-field" value={editForm.categoryId} onChange={(e) => setEditForm((f) => ({ ...f, categoryId: e.target.value }))}>
-												<option value="">— No Category —</option>
-												{categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-											</select>
+											<SearchableSelect
+												options={[
+													{ value: '', label: '— No Category —' },
+													...categories.map((c: any) => ({ value: c.id, label: c.name }))
+												]}
+												value={editForm.categoryId}
+												onChange={(value) => setEditForm((f) => ({ ...f, categoryId: value }))}
+												placeholder="No Category"
+												isClearable={false}
+											/>
 										</div>
 										<div className="form-group">
 											<label className="form-label">Vendor</label>
-											<select className="input-field" value={editForm.vendorId} onChange={(e) => setEditForm((f) => ({ ...f, vendorId: e.target.value }))}>
-												<option value="">Select vendor</option>
-												{vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-											</select>
+											<SearchableSelect
+												options={[
+													{ value: '', label: 'Select vendor' },
+													...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+												]}
+												value={editForm.vendorId}
+												onChange={(value) => setEditForm((f) => ({ ...f, vendorId: value }))}
+												placeholder="Select vendor"
+												isClearable={false}
+											/>
 										</div>
 									</div>
 									<div className="form-grid-3">
 										<div className="form-group">
 											<label className="form-label">Unit of Measure</label>
 											{units.length > 0 ? (
-												<select className="input-field" value={editForm.unitOfMeasureId} onChange={(e) => handleUnitChange(e.target.value, setEditForm)}>
-													<option value="">— Select —</option>
-													{units.map((u: any) => <option key={u.id} value={u.id}>{u.name} ({u.abbreviation})</option>)}
-												</select>
+												<SearchableSelect
+													options={[
+														{ value: '', label: '— Select —' },
+														...units.map((u: any) => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }))
+													]}
+													value={editForm.unitOfMeasureId}
+													onChange={(value) => handleUnitChange(value, setEditForm)}
+													placeholder="Select Unit"
+													isClearable={false}
+												/>
 											) : (
 												<input className="input-field" type="text" value={editForm.unitOfMeasure} onChange={(e) => setEditForm((f) => ({ ...f, unitOfMeasure: e.target.value }))} />
 											)}
@@ -1012,9 +1057,13 @@ export default function SKUPage() {
 										<div className="form-grid-2">
 											<div className="form-group">
 												<label className="form-label">Type</label>
-												<select className="input-field" value={newBarcode.barcodeType} onChange={(e) => setNewBarcode((b) => ({ ...b, barcodeType: e.target.value }))}>
-													{['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map((t) => <option key={t} value={t}>{t}</option>)}
-												</select>
+												<SearchableSelect
+													options={['EAN13', 'UPC', 'QRCode', 'Code128', 'Code39', 'Custom'].map((t) => ({ value: t, label: t }))}
+													value={newBarcode.barcodeType}
+													onChange={(value) => setNewBarcode((b) => ({ ...b, barcodeType: value }))}
+													placeholder="Select barcode type"
+													isClearable={false}
+												/>
 											</div>
 											<div className="form-group">
 												<label className="form-label">Label (optional)</label>
@@ -1346,24 +1395,19 @@ export default function SKUPage() {
 									</div>
 									<div className="form-group">
 										<label className="form-label">Transition To *</label>
-										<select
-											className="input-field"
-											required
+										<SearchableSelect
+											options={[
+												{ value: '', label: '— Select new state —' },
+												...allowedNext.map(s => ({ value: s, label: `✅ ${s}` })),
+												...allStates
+													.filter(s => s !== currentState && !allowedNext.includes(s as InventoryState))
+													.map(s => ({ value: s, label: `⚠️ ${s} (Override)` }))
+											]}
 											value={transitionForm.toState}
-											onChange={(e) => setTransitionForm(f => ({ ...f, toState: e.target.value }))}
-										>
-											<option value="">— Select new state —</option>
-											{allowedNext.length > 0 && (
-												<optgroup label="✅ Valid transitions">
-													{allowedNext.map(s => <option key={s} value={s}>{s}</option>)}
-												</optgroup>
-											)}
-											<optgroup label="⚠️ Override (Manager/Admin only)">
-												{allStates.filter(s => s !== currentState && !allowedNext.includes(s as InventoryState)).map(s => (
-													<option key={s} value={s}>{s}</option>
-												))}
-											</optgroup>
-										</select>
+											onChange={(value) => setTransitionForm(f => ({ ...f, toState: value }))}
+											placeholder="Select new state"
+											isClearable={false}
+										/>
 										{allowedNext.length === 0 && (
 											<p className="text-xs text-amber-600 mt-1">⚠️ No valid transitions from "{currentState}". Override requires Manager or Admin role.</p>
 										)}
