@@ -75,13 +75,13 @@ describe('validateStacking', () => {
   const nonFragileItem = {
     isFragile: false,
     maxStackHeight: 120,
-    dimensions: { height: 20, width: 15, depth: 10, weight: 2 } as IDimensions,
+    dimensions: { height: 20, width: 15, length: 10, weight: 2 } as IDimensions,
   };
 
   const fragileItem = {
     isFragile: true,
     maxStackHeight: 40,
-    dimensions: { height: 15, width: 12, depth: 8, weight: 1.5 } as IDimensions,
+    dimensions: { height: 15, width: 12, length: 8, weight: 1.5 } as IDimensions,
   };
 
   it('allows stacking non-fragile items when height is within limit', () => {
@@ -99,9 +99,9 @@ describe('validateStacking', () => {
 
   it('prevents placing a fragile item that would exceed max stack height', () => {
     const tallStack = [
-      { isFragile: false, maxStackHeight: 30, dimensions: { height: 25, width: 15, depth: 10, weight: 2 } as IDimensions },
+      { isFragile: false, maxStackHeight: 30, dimensions: { height: 25, width: 15, length: 10, weight: 2 } as IDimensions },
     ];
-    const shortItem = { isFragile: false, maxStackHeight: 30, dimensions: { height: 10, width: 15, depth: 10, weight: 1 } as IDimensions };
+    const shortItem = { isFragile: false, maxStackHeight: 30, dimensions: { height: 10, width: 15, length: 10, weight: 1 } as IDimensions };
     const result = validateStacking(tallStack, shortItem);
     expect(result.canStack).toBe(false);
     expect(result.reason).toContain('Stack height');
@@ -109,9 +109,9 @@ describe('validateStacking', () => {
 
   it('allows stacking when total height is exactly at max', () => {
     const existingItems = [
-      { isFragile: false, maxStackHeight: 40, dimensions: { height: 20, width: 15, depth: 10, weight: 2 } as IDimensions },
+      { isFragile: false, maxStackHeight: 40, dimensions: { height: 20, width: 15, length: 10, weight: 2 } as IDimensions },
     ];
-    const newItem = { isFragile: false, maxStackHeight: 40, dimensions: { height: 20, width: 15, depth: 10, weight: 2 } as IDimensions };
+    const newItem = { isFragile: false, maxStackHeight: 40, dimensions: { height: 20, width: 15, length: 10, weight: 2 } as IDimensions };
     const result = validateStacking(existingItems, newItem);
     expect(result.canStack).toBe(true);
   });
@@ -123,9 +123,9 @@ describe('validateStacking', () => {
 
   it('prevents stacking when new item exceeds its own max stack height', () => {
     const base = [
-      { isFragile: false, maxStackHeight: 200, dimensions: { height: 60, width: 50, depth: 40, weight: 10 } as IDimensions },
+      { isFragile: false, maxStackHeight: 200, dimensions: { height: 60, width: 50, length: 40, weight: 10 } as IDimensions },
     ];
-    const restrictedItem = { isFragile: false, maxStackHeight: 60, dimensions: { height: 10, width: 50, depth: 40, weight: 5 } as IDimensions };
+    const restrictedItem = { isFragile: false, maxStackHeight: 60, dimensions: { height: 10, width: 50, length: 40, weight: 5 } as IDimensions };
     const result = validateStacking(base, restrictedItem);
     expect(result.canStack).toBe(false);
   });
@@ -137,7 +137,7 @@ describe('validateStacking', () => {
   });
 
   it('handles undefined maxStackHeight gracefully', () => {
-    const itemNoMax = { isFragile: false, maxStackHeight: null, dimensions: { height: 50, width: 20, depth: 20, weight: 5 } as IDimensions };
+    const itemNoMax = { isFragile: false, maxStackHeight: null, dimensions: { height: 50, width: 20, length: 20, weight: 5 } as IDimensions };
     const result = validateStacking([itemNoMax, itemNoMax], itemNoMax);
     expect(result.canStack).toBe(true);
   });

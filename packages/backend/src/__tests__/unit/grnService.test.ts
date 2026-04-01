@@ -210,15 +210,17 @@ describe('submitInspection', () => {
       grn: GRNS.submittedGRN,
     });
 
-    const uninspectedRecord = { id: 'inv-uninspected-001', quantity: 30, floorId: 'loc-A1-001', shelfId: null };
     const inspectionRecord = { id: 'inspect-001', approvedQuantity: 28, rejectedQuantity: 2 };
+    const approvedRecord = { id: 'inv-approved-001', state: InventoryState.Inspected, quantity: 28 };
+    const damagedRecord = { id: 'inv-damaged-001', state: InventoryState.Damaged, quantity: 2 };
+    const uninspectedRecord = { id: 'inv-uninspected-001', state: InventoryState.Uninspected, quantity: 30, floorId: 'floor-001', shelfId: 'shelf-001' };
 
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue(inspectionRecord) },
       inventoryRecord: {
         findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
-        update: vi.fn().mockResolvedValue({ ...uninspectedRecord, state: InventoryState.Inspected }),
-        create: vi.fn().mockResolvedValue({ id: 'inv-damaged-001', state: InventoryState.Damaged, quantity: 2 }),
+        create: vi.fn().mockResolvedValue(damagedRecord),
+        update: vi.fn().mockResolvedValue(approvedRecord),
       },
       inventoryEvent: { create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([
@@ -237,11 +239,13 @@ describe('submitInspection', () => {
       remarks: 'Minor surface damage on 2 items',
     });
 
+    // Should update existing record to Inspected with approved quantity
     expect(mockTx.inventoryRecord.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ state: InventoryState.Inspected, quantity: 28 }),
       })
     );
+    // Should create new Damaged record for rejected quantity
     expect(mockTx.inventoryRecord.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ state: InventoryState.Damaged, quantity: 2 }),
@@ -255,14 +259,14 @@ describe('submitInspection', () => {
       grn: GRNS.submittedGRN,
     });
 
-    const uninspectedRecord = { id: 'inv-uninspected-002', quantity: 30, floorId: 'loc-A1-001', shelfId: null };
+    const uninspectedRecord = { id: 'inv-uninspected-002', state: InventoryState.Uninspected, quantity: 30, floorId: 'floor-001', shelfId: 'shelf-001' };
 
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue({ id: 'inspect-002' }) },
       inventoryRecord: {
         findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
-        update: vi.fn().mockResolvedValue({ ...uninspectedRecord, state: InventoryState.Damaged }),
-        create: vi.fn(),
+        create: vi.fn().mockResolvedValue({ id: 'inv-dam-001', state: InventoryState.Damaged }),
+        update: vi.fn().mockResolvedValue({ id: 'inv-uninspected-002', state: InventoryState.Damaged }),
       },
       inventoryEvent: { create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([{ inspectionRecords: [{ id: 'inspect-002' }] }]) },
@@ -278,12 +282,13 @@ describe('submitInspection', () => {
       inspectorUserId: USERS.inspector.id,
     });
 
+    // Should update existing record to Damaged state
     expect(mockTx.inventoryRecord.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ state: InventoryState.Damaged }),
       })
     );
-    // No new record created for all-rejected case
+    // No new records created (all rejected)
     expect(mockTx.inventoryRecord.create).not.toHaveBeenCalled();
   });
 
@@ -293,14 +298,15 @@ describe('submitInspection', () => {
       grn: GRNS.submittedGRN,
     });
 
-    const uninspectedRecord = { id: 'inv-uninspected-003', quantity: 30, floorId: 'loc-A1-001', shelfId: null };
     const inspectionRecord = { id: 'inspect-003' };
+    const uninspectedRecord = { id: 'inv-uninspected-003', state: InventoryState.Uninspected, quantity: 30, floorId: 'floor-001', shelfId: 'shelf-001' };
+
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue(inspectionRecord) },
       inventoryRecord: {
         findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
-        update: vi.fn().mockResolvedValue({ ...uninspectedRecord, state: InventoryState.Inspected }),
-        create: vi.fn(),
+        create: vi.fn().mockResolvedValue({ id: 'inv-new', state: InventoryState.Inspected }),
+        update: vi.fn().mockResolvedValue({ id: 'inv-new', state: InventoryState.Inspected }),
       },
       inventoryEvent: { create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([
