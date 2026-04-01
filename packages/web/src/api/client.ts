@@ -45,6 +45,7 @@ export const skusApi = {
   get: (id: string) => api.get(`/skus/${id}`),
   create: (data: any) => api.post('/skus', data),
   update: (id: string, data: any) => api.put(`/skus/${id}`, data),
+  delete: (id: string) => api.delete(`/skus/${id}`),
   // Barcodes
   getBarcodes: (id: string) => api.get(`/skus/${id}/barcodes`),
   addBarcode: (id: string, data: any) => api.post(`/skus/${id}/barcodes`, data),
@@ -68,6 +69,7 @@ export const inventoryApi = {
     api.get('/inventory', { params }),
   create: (data: any) => api.post('/inventory', data),
   update: (id: string, data: any) => api.put(`/inventory/${id}`, data),
+  delete: (id: string) => api.delete(`/inventory/${id}`),
   transition: (id: string, toState: string, reason?: string) =>
     api.post(`/inventory/${id}/transition`, { toState, reason }),
   openBox: (data: any) => api.post('/inventory/box-open', data),
@@ -85,6 +87,7 @@ export const grnsApi = {
   submit: (id: string, deliveryDate?: string) =>
     api.put(`/grns/${id}/submit`, { deliveryDate }),
   inspect: (id: string, data: any) => api.post(`/grns/${id}/inspect`, data),
+  delete: (id: string) => api.delete(`/grns/${id}`),
 };
 
 // Locations
@@ -138,11 +141,12 @@ export const vendorsApi = {
   create: (data: any) => api.post('/vendors', data),
   update: (id: string, data: any) => api.put(`/vendors/${id}`, data),
   getProducts: (id: string) => api.get(`/vendors/${id}/products`),
+  delete: (id: string) => api.delete(`/vendors/${id}`),
 };
 
 // Categories
 export const categoriesApi = {
-  list: () => api.get('/categories'),
+  list: (params?: Record<string, string>) => api.get('/categories', { params }),
   tree: () => api.get('/categories/tree'),
   get: (id: string) => api.get(`/categories/${id}`),
   create: (data: any) => api.post('/categories', data),
@@ -152,7 +156,7 @@ export const categoriesApi = {
 
 // Settings (Units of Measure + Status Options)
 export const settingsApi = {
-  listUnits: () => api.get('/settings/units'),
+  listUnits: (params?: Record<string, string>) => api.get('/settings/units', { params }),
   createUnit: (data: any) => api.post('/settings/units', data),
   updateUnit: (id: string, data: any) => api.put(`/settings/units/${id}`, data),
   deleteUnit: (id: string) => api.delete(`/settings/units/${id}`),
@@ -196,10 +200,11 @@ export const variantsApi = {
 
 // Branches
 export const branchesApi = {
-  list: () => api.get('/branches'),
+  list: (params?: Record<string, string>) => api.get('/branches', { params }),
   get: (id: string) => api.get(`/branches/${id}`),
   create: (data: any) => api.post('/branches', data),
   update: (id: string, data: any) => api.put(`/branches/${id}`, data),
+  delete: (id: string) => api.delete(`/branches/${id}`),
 };
 
 // Stock Transfers

@@ -74,10 +74,10 @@ export default function TagsPage() {
   };
 
   const tagColumns = [
-    { header: 'Name', accessor: 'name', sortable: true },
+    { header: 'Name', key: 'name', sortable: true },
     {
       header: 'Color',
-      accessor: 'color',
+      key: 'color',
       render: (row: any) =>
         row.color ? (
           <div className="flex items-center gap-2">
@@ -93,19 +93,19 @@ export default function TagsPage() {
     },
     {
       header: 'SKU Count',
-      accessor: 'skuCount',
+      key: 'skuCount',
       render: (row: any) => (
         <span className="text-sm text-gray-700">{row.skuCount || 0}</span>
       ),
     },
     {
       header: 'Created',
-      accessor: 'createdAt',
+      key: 'createdAt',
       render: (row: any) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
       header: 'Actions',
-      accessor: 'id',
+      key: 'id',
       render: (row: any) => (
         <div className="flex gap-2">
           <button

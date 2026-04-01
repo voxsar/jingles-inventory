@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { settingsApi } from '../../api/client';
+import { tagsApi } from '../../api/client';
 import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
 
 export default function TagSpreadsheetPage() {
@@ -11,7 +11,7 @@ export default function TagSpreadsheetPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const res = await settingsApi.listTags();
+      const res = await tagsApi.list();
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
       setTags(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -66,7 +66,7 @@ export default function TagSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await settingsApi.updateTag(row.id, changes);
+      await tagsApi.update(row.id, changes);
       await loadData();
     } catch (err) {
       console.error('Failed to save tag:', err);
@@ -76,7 +76,7 @@ export default function TagSpreadsheetPage() {
 
   const handleDelete = async (row: any) => {
     try {
-      await settingsApi.deleteTag(row.id);
+      await tagsApi.delete(row.id);
       await loadData();
     } catch (err) {
       console.error('Failed to delete tag:', err);
@@ -86,7 +86,7 @@ export default function TagSpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await settingsApi.createTag(data);
+      await tagsApi.create(data);
       await loadData();
     } catch (err) {
       console.error('Failed to create tag:', err);
