@@ -268,3 +268,15 @@ export const batchesApi = {
   getAveragePrices: (params: Record<string, string>) => api.get('/batches/pricing/average', { params }),
 };
 
+// Pricing Overlays
+export const pricingOverlaysApi = {
+  list: (params?: Record<string, string>) =>
+    api.get('/pricing-overlays', { params }),
+  get: (id: string) => api.get(`/pricing-overlays/${id}`),
+  create: (data: any) => api.post('/pricing-overlays', data),
+  update: (id: string, data: any) => api.put(`/pricing-overlays/${id}`, data),
+  delete: (id: string) => api.delete(`/pricing-overlays/${id}`),
+  getConflicts: (id: string) => api.get(`/pricing-overlays/${id}/conflicts`),
+  resolvePrice: (data: any) => api.post('/pricing-overlays/resolve-price', data),
+};
+

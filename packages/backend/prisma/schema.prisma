@@ -546,6 +546,37 @@ model Batch {
   @@map("batches")
 }
 
+model PricingOverlay {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+
+  // Overlay type and value
+  type            String                                // 'percentage_discount', 'fixed_discount', 'percentage_markup', 'fixed_markup'
+  value           Float                                 // The amount or percentage
+
+  // Application scope (JSON to support flexible targeting)
+  appliesTo       Json     @map("applies_to")           // { skuIds?: string[], variantIds?: string[], batchIds?: string[], categoryIds?: string[] }
+
+  // Conditions for overlay activation (JSON for flexibility)
+  conditions      Json?                                 // { minQty?: number, maxQty?: number, customerGroups?: string[], dateRange?: {start, end}, branches?: string[] }
+
+  // Priority and stacking rules
+  priority        Int      @default(0)                  // Higher priority = applied first
+  stackable       Boolean  @default(false)              // Can be combined with other overlays?
+
+  // Status and metadata
+  status          String   @default("active")           // 'active', 'inactive', 'scheduled', 'expired'
+  validFrom       DateTime? @map("valid_from")
+  validTo         DateTime? @map("valid_to")
+
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_overlays")
+}
+
 model GRNLine {
   id               String  @id @default(uuid())
   grnId            String  @map("grn_id")
