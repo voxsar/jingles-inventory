@@ -29,7 +29,10 @@ router.get(
 			const result = await batchService.listBatches({
 				skuId: req.query.skuId as string,
 				variantId: req.query.variantId as string,
-				isActive: req.query.isActive === 'true',
+				isActive:
+					req.query.isActive === undefined
+						? undefined
+						: req.query.isActive === 'true',
 				page: req.query.page ? parseInt(req.query.page as string) : undefined,
 				pageSize: req.query.pageSize ? parseInt(req.query.pageSize as string) : undefined,
 			});
