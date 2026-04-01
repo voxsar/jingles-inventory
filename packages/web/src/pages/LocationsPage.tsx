@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { floorsApi, branchesApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import DataTable from '../components/DataTable';
+import SearchableSelect from '../components/SearchableSelect';
 
 type View = 'floors' | 'shelves' | 'boxes';
 
@@ -556,12 +557,16 @@ export default function LocationsPage() {
 								<p className="text-sm text-gray-500">A floor is a physical level inside a branch building (e.g., "Ground Floor", "1st Floor", "Basement").</p>
 								<div className="form-group">
 									<label className="form-label">Branch *</label>
-									<select className="input-field" required value={floorForm.branchId} onChange={(e) => setFloorForm(f => ({ ...f, branchId: e.target.value }))}>
-										<option value="">-- Select a branch --</option>
-										{branches.map((b: any) => (
-											<option key={b.id} value={b.id}>{b.name}</option>
-										))}
-									</select>
+									<SearchableSelect
+										options={[
+											{ value: '', label: '-- Select a branch --' },
+											...branches.map((b: any) => ({ value: b.id, label: b.name }))
+										]}
+										value={floorForm.branchId}
+										onChange={(value) => setFloorForm(f => ({ ...f, branchId: value }))}
+										placeholder="Select a branch"
+										isClearable={false}
+									/>
 								</div>
 								<div className="form-grid-2">
 									<div className="form-group">
