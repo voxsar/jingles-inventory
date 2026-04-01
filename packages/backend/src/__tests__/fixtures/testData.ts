@@ -266,7 +266,6 @@ export const GRN_LINES = {
 		skuId: 'sku-widget-box-001',
 		expectedQuantity: 50,
 		receivedQuantity: 0,
-		batchReference: 'BATCH-2024-001',
 		notes: null,
 	} as IGRNLine,
 
@@ -276,7 +275,6 @@ export const GRN_LINES = {
 		skuId: 'sku-widget-piece-002',
 		expectedQuantity: 100,
 		receivedQuantity: 0,
-		batchReference: 'BATCH-2024-002',
 		notes: 'Handle with care',
 	} as IGRNLine,
 
@@ -286,7 +284,6 @@ export const GRN_LINES = {
 		skuId: 'sku-widget-box-001',
 		expectedQuantity: 30,
 		receivedQuantity: 30,
-		batchReference: 'BATCH-2024-003',
 		notes: null,
 	} as IGRNLine,
 };
