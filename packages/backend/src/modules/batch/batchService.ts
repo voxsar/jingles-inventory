@@ -4,6 +4,7 @@ import prisma from '../../prisma/client';
 export interface CreateBatchParams {
 	skuId: string;
 	variantId?: string | null;
+	vendorId?: string | null;
 	costPrice?: number | null;
 	sellingPrice?: number | null;
 	wholesalePrice?: number | null;
@@ -94,6 +95,7 @@ export async function createBatch(params: CreateBatchParams) {
 			batchNumber,
 			skuId: params.skuId,
 			variantId: params.variantId ?? null,
+			vendorId: params.vendorId ?? null,
 			sequenceNumber,
 			costPrice: params.costPrice,
 			sellingPrice: params.sellingPrice,
@@ -110,6 +112,7 @@ export async function createBatch(params: CreateBatchParams) {
 		include: {
 			sku: true,
 			variant: true,
+			vendor: true,
 		},
 	});
 
@@ -151,6 +154,12 @@ export async function listBatches(params: {
 					select: {
 						id: true,
 						variantCode: true,
+						name: true,
+					},
+				},
+				vendor: {
+					select: {
+						id: true,
 						name: true,
 					},
 				},

@@ -90,6 +90,7 @@ export async function createGRN(data: {
 				const batch = await createBatch({
 					skuId: line.skuId,
 					variantId: line.variantId,
+					vendorId: data.supplierId,
 					costPrice: line.costPrice,
 					sellingPrice: line.sellingPrice,
 					wholesalePrice: line.wholesalePrice,

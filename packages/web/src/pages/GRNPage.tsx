@@ -105,12 +105,16 @@ export default function GRNPage() {
 
   useEffect(() => {
     if (!showForm) return;
-    const params: Record<string, string> = { pageSize: '50' };
+    if (!form.supplierId) {
+      setSkus([]);
+      return;
+    }
+    const params: Record<string, string> = { pageSize: '200', vendorId: form.supplierId };
     if (skuSearch) params.search = skuSearch;
     skusApi.list(params).then((res) => {
       setSkus(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
     }).catch((err) => { console.error('Failed to load SKUs', err); });
-  }, [showForm, skuSearch]);
+  }, [showForm, skuSearch, form.supplierId]);
 
   const handleSkuSearchChange = (value: string) => {
     setSkuSearch(value);
@@ -498,7 +502,22 @@ export default function GRNPage() {
                         ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
                       ]}
                       value={form.supplierId}
-                      onChange={(value) => setForm((f) => ({ ...f, supplierId: value }))}
+                      onChange={(value) => {
+                        setForm((f) => ({
+                          ...f,
+                          supplierId: value,
+                          lines: [{
+                            skuId: '', variantId: '', expectedQuantity: 1, batchId: '',
+                            createNewBatch: false, costPrice: '', sellingPrice: '',
+                            wholesalePrice: '', bulkPrice: '', marginType: '', marginValue: '', notes: '',
+                          }],
+                        }));
+                        setSkuSearch('');
+                        setLineVariants({});
+                        setLineBatches({});
+                        setNextBatchNumbers({});
+                        setPricingCollapsed({});
+                      }}
                       placeholder="Select supplier"
                       isClearable={false}
                     />
@@ -564,6 +583,11 @@ export default function GRNPage() {
 
                 {/* Line items */}
                 <div>
+                  {!form.supplierId && (
+                    <div className="p-3 mb-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+                      Please select a supplier first to load available products.
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-semibold text-gray-700">Line Items</span>
                     <div className="flex items-center gap-2">
