@@ -24,6 +24,11 @@ import SKUSpreadsheetPage from './pages/spreadsheet/SKUSpreadsheetPage';
 import InventorySpreadsheetPage from './pages/spreadsheet/InventorySpreadsheetPage';
 import VendorSpreadsheetPage from './pages/spreadsheet/VendorSpreadsheetPage';
 import BranchSpreadsheetPage from './pages/spreadsheet/BranchSpreadsheetPage';
+import CategorySpreadsheetPage from './pages/spreadsheet/CategorySpreadsheetPage';
+import FloorSpreadsheetPage from './pages/spreadsheet/FloorSpreadsheetPage';
+import UnitSpreadsheetPage from './pages/spreadsheet/UnitSpreadsheetPage';
+import TagSpreadsheetPage from './pages/spreadsheet/TagSpreadsheetPage';
+import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
@@ -64,6 +69,11 @@ function AppRoutes() {
         <Route path="spreadsheet/inventory" element={<InventorySpreadsheetPage />} />
         <Route path="spreadsheet/vendors" element={<VendorSpreadsheetPage />} />
         <Route path="spreadsheet/branches" element={<BranchSpreadsheetPage />} />
+        <Route path="spreadsheet/categories" element={<CategorySpreadsheetPage />} />
+        <Route path="spreadsheet/floors" element={<FloorSpreadsheetPage />} />
+        <Route path="spreadsheet/units" element={<UnitSpreadsheetPage />} />
+        <Route path="spreadsheet/tags" element={<TagSpreadsheetPage />} />
+        <Route path="spreadsheet/grns" element={<GRNSpreadsheetPage />} />
         <Route
           path="vendor-portal"
           element={
