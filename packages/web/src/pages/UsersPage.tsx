@@ -145,10 +145,10 @@ export default function UsersPage() {
   };
 
   const userColumns = [
-    { header: 'Email', accessor: 'email', sortable: true },
+    { key: 'email', header: 'Email', sortable: true },
     {
+      key: 'role',
       header: 'Role',
-      accessor: 'role',
       render: (row: any) => (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
           {row.role}
@@ -156,8 +156,8 @@ export default function UsersPage() {
       ),
     },
     {
+      key: 'vendor',
       header: 'Vendor',
-      accessor: 'vendor',
       render: (row: any) =>
         row.vendor ? (
           <span className="text-sm text-gray-700">{row.vendor.name}</span>
@@ -166,8 +166,8 @@ export default function UsersPage() {
         ),
     },
     {
+      key: 'isActive',
       header: 'Status',
-      accessor: 'isActive',
       render: (row: any) =>
         row.isActive ? (
           <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
@@ -180,13 +180,13 @@ export default function UsersPage() {
         ),
     },
     {
+      key: 'createdAt',
       header: 'Created',
-      accessor: 'createdAt',
       render: (row: any) => new Date(row.createdAt).toLocaleDateString(),
     },
     {
+      key: 'id',
       header: 'Actions',
-      accessor: 'id',
       render: (row: any) => (
         <div className="flex gap-2">
           <button
