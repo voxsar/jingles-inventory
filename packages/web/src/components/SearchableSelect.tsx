@@ -5,17 +5,28 @@ export interface SelectOption {
   label: string;
 }
 
-interface SearchableSelectProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value'> {
+interface SearchableSelectPropsBase extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value' | 'isMulti'> {
   options: SelectOption[];
-  value: string | string[];
-  onChange: (value: string | string[]) => void;
   className?: string;
   placeholder?: string;
   isClearable?: boolean;
   isDisabled?: boolean;
   isLoading?: boolean;
-  isMulti?: boolean;
 }
+
+interface SearchableSelectSingleProps extends SearchableSelectPropsBase {
+  isMulti?: false;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+interface SearchableSelectMultiProps extends SearchableSelectPropsBase {
+  isMulti: true;
+  value: string[];
+  onChange: (value: string[]) => void;
+}
+
+type SearchableSelectProps = SearchableSelectSingleProps | SearchableSelectMultiProps;
 
 export default function SearchableSelect({
   options,
@@ -120,9 +131,9 @@ export default function SearchableSelect({
       onChange={(option) => {
         if (isMulti) {
           const values = Array.isArray(option) ? option.map(o => o.value) : [];
-          onChange(values);
+          (onChange as (value: string[]) => void)(values);
         } else {
-          onChange((option as SelectOption)?.value || '');
+          (onChange as (value: string) => void)((option as SelectOption)?.value || '');
         }
       }}
       styles={customStyles}
