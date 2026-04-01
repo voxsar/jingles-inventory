@@ -1,0 +1,196 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { vendorsApi } from '../../api/client';
+import { VendorType } from '@jingles/shared';
+import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import Pagination from '../../components/Pagination';
+
+const PAGE_SIZE = 50;
+
+export default function VendorSpreadsheetPage() {
+  const navigate = useNavigate();
+  const [vendors, setVendors] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await vendorsApi.list({ page: String(page), pageSize: String(pageSize) });
+      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+      setVendors(Array.isArray(data) ? data : []);
+      setTotal(res.data?.data?.total ?? 0);
+      setTotalPages(res.data?.data?.totalPages ?? 1);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [page, pageSize]);
+
+  const typeOptions = Object.values(VendorType).map(t => ({ value: t, label: t }));
+
+  const columns: SpreadsheetColumn<any>[] = [
+    {
+      key: 'name',
+      header: 'Vendor Name',
+      type: 'text',
+      width: '200px',
+      required: true,
+    },
+    {
+      key: 'contactEmail',
+      header: 'Email',
+      type: 'text',
+      width: '200px',
+      required: true,
+      validate: (value) => {
+        if (value && !value.includes('@')) return 'Invalid email format';
+        return null;
+      },
+    },
+    {
+      key: 'contactPhone',
+      header: 'Phone',
+      type: 'text',
+      width: '140px',
+      getValue: (row) => row.contactPhone || '',
+      setValue: (row, value) => ({ contactPhone: value || null }),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      type: 'select',
+      options: typeOptions,
+      width: '120px',
+      required: true,
+    },
+    {
+      key: 'address',
+      header: 'Address',
+      type: 'text',
+      width: '220px',
+      getValue: (row) => row.address || '',
+      setValue: (row, value) => ({ address: value || null }),
+    },
+    {
+      key: 'website',
+      header: 'Website',
+      type: 'text',
+      width: '180px',
+      getValue: (row) => row.website || '',
+      setValue: (row, value) => ({ website: value || null }),
+    },
+    {
+      key: 'taxId',
+      header: 'Tax ID',
+      type: 'text',
+      width: '140px',
+      getValue: (row) => row.taxId || '',
+      setValue: (row, value) => ({ taxId: value || null }),
+    },
+    {
+      key: 'paymentTerms',
+      header: 'Payment Terms',
+      type: 'text',
+      width: '160px',
+      getValue: (row) => row.paymentTerms || '',
+      setValue: (row, value) => ({ paymentTerms: value || null }),
+    },
+    {
+      key: 'isActive',
+      header: 'Active',
+      type: 'boolean',
+      width: '80px',
+      getValue: (row) => !!row.isActive,
+      setValue: (row, value) => ({ isActive: value }),
+    },
+  ];
+
+  const handleSave = async (row: any, changes: Partial<any>) => {
+    try {
+      await vendorsApi.update(row.id, changes);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to save vendor:', err);
+      throw err;
+    }
+  };
+
+  const handleDelete = async (row: any) => {
+    try {
+      await vendorsApi.delete(row.id);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to delete vendor:', err);
+      throw err;
+    }
+  };
+
+  const handleAdd = async (data: Partial<any>) => {
+    try {
+      await vendorsApi.create(data);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to create vendor:', err);
+      throw err;
+    }
+  };
+
+  return (
+    <div>
+      {/* Page Header */}
+      <div className="page-header" style={{ marginBottom: '24px' }}>
+        <div className="page-header-left">
+          <button
+            onClick={() => navigate('/spreadsheet')}
+            className="btn-secondary"
+            style={{ marginRight: '16px', padding: '6px 12px', fontSize: '13px' }}
+          >
+            ← Back
+          </button>
+          <div>
+            <h1 className="page-title">🤝 Vendors/Suppliers Spreadsheet</h1>
+            <p className="page-subtitle">Manage vendor information with inline editing</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
+        <SpreadsheetTable
+          columns={columns}
+          data={vendors}
+          isLoading={isLoading}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onAdd={handleAdd}
+          getRowKey={(row) => row.id}
+          emptyMessage="No vendors found"
+          emptyIcon="🤝"
+        />
+      </div>
+
+      {/* Pagination */}
+      {!isLoading && vendors.length > 0 && (
+        <div style={{ marginTop: '16px' }}>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
