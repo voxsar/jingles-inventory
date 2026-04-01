@@ -144,7 +144,7 @@ export interface IBatch {
 	currency: string;
 	marginType?: 'fixed' | 'percentage' | null;
 	marginValue?: number | null;
-	supplier?: string | null;
+	vendorId?: string | null;
 	expiryDate?: Date | null;
 	manufacturingDate?: Date | null;
 	notes?: string | null;
@@ -153,6 +153,7 @@ export interface IBatch {
 	updatedAt: Date;
 	sku?: ISKU;
 	variant?: ISKUVariant | null;
+	vendor?: IVendor | null;
 }
 
 export interface ISKU {
@@ -356,7 +357,6 @@ export interface IInventoryRecord {
 	skuId: string;
 	variantId?: string | null;
 	batchId?: string | null;
-	batchReference?: string | null;
 	floorId?: string | null;
 	shelfId?: string | null;
 	boxId?: string | null;
@@ -408,7 +408,6 @@ export interface IGRNLine {
 	skuId: string;
 	variantId?: string | null;
 	batchId?: string | null;
-	batchReference?: string | null;
 	expectedQuantity: number;
 	receivedQuantity: number;
 	costPrice?: number | null;

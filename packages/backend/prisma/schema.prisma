@@ -79,7 +79,7 @@ model Tag {
   @@map("tags")
 }
 
-model UnitOfMeasureModel {
+model UnitOfMeasure {
   id           String   @id @default(uuid())
   name         String   @unique
   abbreviation String
@@ -136,7 +136,7 @@ model SKU {
 
   vendor           Vendor              @relation(fields: [vendorId], references: [id])
   category         Category?           @relation(fields: [categoryId], references: [id])
-  unitModel        UnitOfMeasureModel? @relation(fields: [unitOfMeasureId], references: [id])
+  unitModel        UnitOfMeasure? @relation(fields: [unitOfMeasureId], references: [id])
   inventoryRecords    InventoryRecord[]
   grnLines            GRNLine[]
   images              ProductImage[]
@@ -462,8 +462,7 @@ model InventoryRecord {
   id            String   @id @default(uuid())
   skuId         String   @map("sku_id")
   variantId     String?  @map("variant_id")
-  batchId       String?  @map("batch_id")             // Link to Batch table (preferred)
-  batchReference String? @map("batch_reference")      // Legacy batch string support
+  batchId       String?  @map("batch_id")
   floorId       String?  @map("floor_id")
   shelfId       String?  @map("shelf_id")
   boxId         String?  @map("box_id")
@@ -550,7 +549,6 @@ model Batch {
 
   // Batch metadata
   vendorId        String?   @map("vendor_id")            // FK to Vendor (supplier for this batch)
-  supplier        String?                                // Legacy supplier name
   expiryDate      DateTime? @map("expiry_date")
   manufacturingDate DateTime? @map("manufacturing_date")
   notes           String?
@@ -606,8 +604,7 @@ model GRNLine {
   grnId            String  @map("grn_id")
   skuId            String  @map("sku_id")
   variantId        String? @map("variant_id")
-  batchId          String? @map("batch_id")              // Link to Batch table
-  batchReference   String? @map("batch_reference")       // Legacy support
+  batchId          String? @map("batch_id")
   expectedQuantity Int     @map("expected_quantity")
   receivedQuantity Int     @default(0) @map("received_quantity")
 

@@ -19,7 +19,6 @@ export async function createGRN(data: {
 		skuId: string;
 		variantId?: string;
 		expectedQuantity: number;
-		batchReference?: string;
 		batchId?: string;
 		createNewBatch?: boolean;
 		costPrice?: number;
@@ -68,7 +67,6 @@ export async function createGRN(data: {
 					expectedQuantity: line.expectedQuantity,
 					receivedQuantity: 0,
 					batchId: line.batchId,
-					batchReference: line.batchReference,
 					costPrice: line.costPrice,
 					sellingPrice: line.sellingPrice,
 					wholesalePrice: line.wholesalePrice,
@@ -157,7 +155,6 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
 					skuId: line.skuId,
 					variantId: line.variantId ?? null,
 					batchId: (line as any).batchId ?? null,
-					batchReference: (line as any).batchReference ?? null,
 					floorId: grn.floorId,
 					shelfId: grn.shelfId,
 					quantity: line.expectedQuantity,
@@ -341,7 +338,6 @@ export async function submitInspection(data: {
 					skuId: grnLine.skuId,
 					variantId: grnLine.variantId ?? null,
 					batchId: (grnLine as any).batchId ?? null,
-					batchReference: (grnLine as any).batchReference ?? null,
 					floorId: uninspectedRecord.floorId,
 					shelfId: uninspectedRecord.shelfId,
 					quantity: data.rejectedQuantity,

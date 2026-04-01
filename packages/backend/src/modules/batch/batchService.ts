@@ -12,7 +12,6 @@ export interface CreateBatchParams {
 	currency?: string;
 	marginType?: 'fixed' | 'percentage' | null;
 	marginValue?: number | null;
-	supplier?: string | null;
 	expiryDate?: Date | null;
 	manufacturingDate?: Date | null;
 	notes?: string | null;
@@ -26,7 +25,6 @@ export interface UpdateBatchParams {
 	currency?: string;
 	marginType?: 'fixed' | 'percentage' | null;
 	marginValue?: number | null;
-	supplier?: string | null;
 	expiryDate?: Date | null;
 	manufacturingDate?: Date | null;
 	notes?: string | null;
@@ -104,7 +102,6 @@ export async function createBatch(params: CreateBatchParams) {
 			currency: params.currency ?? 'LKR',
 			marginType: params.marginType,
 			marginValue: params.marginValue,
-			supplier: params.supplier,
 			expiryDate: params.expiryDate,
 			manufacturingDate: params.manufacturingDate,
 			notes: params.notes,
@@ -234,7 +231,6 @@ export async function updateBatch(id: string, params: UpdateBatchParams) {
 			currency: params.currency,
 			marginType: params.marginType,
 			marginValue: params.marginValue,
-			supplier: params.supplier,
 			expiryDate: params.expiryDate,
 			manufacturingDate: params.manufacturingDate,
 			notes: params.notes,
