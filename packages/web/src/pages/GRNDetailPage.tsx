@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { grnsApi, settingsApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared';
+import SearchableSelect from '../components/SearchableSelect';
 
 const STATUS_TONES: Record<string, string> = {
   [GRNStatus.Draft]: '',
@@ -246,10 +247,13 @@ export default function GRNDetailPage() {
                   <div className="form-grid-2">
                     <div className="form-group">
                       <label className="form-label">Damage Classification</label>
-                      <select className="input-field" value={inspectionForm.damageClassification} onChange={(e) => setInspectionForm((f) => ({ ...f, damageClassification: e.target.value }))}>
-                        <option value="">None</option>
-                        {damageClassifications.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                      </select>
+                      <SearchableSelect
+                        options={[{ value: '', label: 'None' }, ...damageClassifications.map(d => ({ value: d.value, label: d.label }))]}
+                        value={inspectionForm.damageClassification}
+                        onChange={(val) => setInspectionForm((f) => ({ ...f, damageClassification: val ?? '' }))}
+                        isClearable={false}
+                        placeholder="None"
+                      />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Remarks</label>
