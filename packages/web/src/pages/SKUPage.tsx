@@ -8,6 +8,7 @@ import MediaUpload from '../components/MediaUpload';
 import ImageGalleryManager from '../components/ImageGalleryManager';
 import { branding } from '../config/branding';
 import SearchableSelect from '../components/SearchableSelect';
+import MultiSearchableSelect from '../components/MultiSearchableSelect';
 
 const PAGE_SIZE = 20;
 const defaultTransitionForm = { toState: '', reason: '' };
@@ -17,7 +18,7 @@ const defaultForm = {
 	name: '',
 	description: '',
 	categoryId: '',
-	vendorId: '',
+	vendorIds: [] as string[],
 	unitOfMeasure: '',
 	unitOfMeasureId: '',
 	isFragile: false,
@@ -201,6 +202,7 @@ export default function SKUPage() {
 
 			const payload = {
 				...form,
+				vendorIds: form.vendorIds,
 				maxStackHeight: form.maxStackHeight ? parseFloat(form.maxStackHeight) : null,
 				lowStockThreshold: form.lowStockThreshold ? parseInt(form.lowStockThreshold) : null,
 				categoryId: form.categoryId || undefined,
@@ -235,9 +237,10 @@ export default function SKUPage() {
 
 	const openEdit = async (sku: any) => {
 		const unit = units.find((u: any) => u.name === sku.unitOfMeasure);
+		const vendorIds = sku.skuVendors?.map((sv: any) => sv.vendorId) ?? (sku.vendorId ? [sku.vendorId] : []);
 		setEditForm({
 			skuCode: sku.skuCode, name: sku.name, description: sku.description ?? '',
-			categoryId: sku.categoryId ?? '', vendorId: sku.vendorId ?? '',
+			categoryId: sku.categoryId ?? '', vendorIds,
 			unitOfMeasure: sku.unitOfMeasure ?? '', unitOfMeasureId: unit?.id ?? '',
 			isFragile: sku.isFragile ?? false, isActive: sku.isActive ?? true,
 			maxStackHeight: sku.maxStackHeight != null ? String(sku.maxStackHeight) : '',
@@ -257,6 +260,7 @@ export default function SKUPage() {
 		try {
 			const payload = {
 				...editForm,
+				vendorIds: editForm.vendorIds,
 				maxStackHeight: editForm.maxStackHeight ? parseFloat(editForm.maxStackHeight) : null,
 				lowStockThreshold: editForm.lowStockThreshold ? parseInt(editForm.lowStockThreshold) : null,
 				categoryId: editForm.categoryId || undefined,
@@ -629,7 +633,7 @@ export default function SKUPage() {
 													{variantCount > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#6d7175', background: '#f3f4f6', borderRadius: '10px', padding: '1px 6px' }}>{variantCount} variant{variantCount !== 1 ? 's' : ''}</span>}
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.category?.name ?? '—'}</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.vendor?.name}</td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.skuVendors?.length > 0 ? sku.skuVendors.map((sv: any) => sv.vendor?.name).join(', ') : sku.vendor?.name}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.unitOfMeasure}</td>
 												<td style={{ padding: '12px 16px' }}>
 													<div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -715,16 +719,12 @@ export default function SKUPage() {
 										/>
 									</div>
 									<div className="form-group">
-										<label className="form-label">Vendor *</label>
-										<SearchableSelect
-											options={[
-												{ value: '', label: 'Select vendor' },
-												...vendors.map((v: any) => ({ value: v.id, label: v.name }))
-											]}
-											value={form.vendorId}
-											onChange={(value) => setForm((f) => ({ ...f, vendorId: value }))}
-											placeholder="Select vendor"
-											isClearable={false}
+										<label className="form-label">Vendors *</label>
+										<MultiSearchableSelect
+											options={vendors.map((v: any) => ({ value: v.id, label: v.name }))}
+											value={form.vendorIds}
+											onChange={(values) => setForm((f) => ({ ...f, vendorIds: values }))}
+											placeholder="Select vendors"
 										/>
 									</div>
 								</div>
@@ -945,16 +945,12 @@ export default function SKUPage() {
 											/>
 										</div>
 										<div className="form-group">
-											<label className="form-label">Vendor</label>
-											<SearchableSelect
-												options={[
-													{ value: '', label: 'Select vendor' },
-													...vendors.map((v: any) => ({ value: v.id, label: v.name }))
-												]}
-												value={editForm.vendorId}
-												onChange={(value) => setEditForm((f) => ({ ...f, vendorId: value }))}
-												placeholder="Select vendor"
-												isClearable={false}
+											<label className="form-label">Vendors</label>
+											<MultiSearchableSelect
+												options={vendors.map((v: any) => ({ value: v.id, label: v.name }))}
+												value={editForm.vendorIds}
+												onChange={(values) => setEditForm((f) => ({ ...f, vendorIds: values }))}
+												placeholder="Select vendors"
 											/>
 										</div>
 									</div>

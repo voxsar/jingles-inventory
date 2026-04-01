@@ -130,7 +130,7 @@ router.get(
       return;
     }
     const skus = await prisma.sKU.findMany({
-      where: { vendorId: req.params!.id, isActive: true },
+      where: { skuVendors: { some: { vendorId: req.params!.id } }, isActive: true },
     });
     res.json(skus);
   }

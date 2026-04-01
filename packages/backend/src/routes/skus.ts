@@ -21,7 +21,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
 	const where: Prisma.SKUWhereInput = {
-		...(vendorId ? { vendorId } : {}),
+		...(vendorId ? { skuVendors: { some: { vendorId } } } : {}),
 		...(categoryId ? { categoryId } : {}),
 		...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
 		...(search
@@ -46,6 +46,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				images: { where: { isPrimary: true }, take: 1 },
 				barcodes: { where: { isDefault: true }, take: 1 },
 				tags: { include: { tag: true } },
+				skuVendors: { include: { vendor: true } },
 				_count: { select: { variants: true } },
 			},
 			orderBy: { createdAt: 'desc' },
@@ -73,6 +74,7 @@ router.get(
 				images: { orderBy: { sortOrder: 'asc' } },
 				barcodes: { orderBy: { isDefault: 'desc' } },
 				tags: { include: { tag: true } },
+				skuVendors: { include: { vendor: true } },
 				skuAttributes: {
 					include: {
 						attribute: { include: { values: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } } } },
@@ -103,7 +105,6 @@ router.post(
 	[
 		body('skuCode').notEmpty(),
 		body('name').notEmpty(),
-		body('vendorId').isUUID(),
 		body('unitOfMeasure').notEmpty(),
 	],
 	async (req: AuthRequest, res: Response): Promise<void> => {
@@ -118,6 +119,7 @@ router.post(
 			description,
 			categoryId,
 			vendorId,
+			vendorIds,
 			unitOfMeasure,
 			unitOfMeasureId,
 			conversionRules,
@@ -133,7 +135,8 @@ router.post(
 			name: string;
 			description?: string;
 			categoryId?: string;
-			vendorId: string;
+			vendorId?: string;
+			vendorIds?: string[];
 			unitOfMeasure: string;
 			unitOfMeasureId?: string;
 			conversionRules?: object;
@@ -146,6 +149,15 @@ router.post(
 			attributeSelections?: { attributeId: string; valueIds: string[] }[];
 		};
 
+		// Resolve vendor IDs: prefer vendorIds array, fall back to single vendorId
+		const resolvedVendorIds = vendorIds && vendorIds.length > 0 ? vendorIds : (vendorId ? [vendorId] : []);
+		if (resolvedVendorIds.length === 0) {
+			res.status(400).json({ error: 'At least one vendor must be selected' });
+			return;
+		}
+		// Use the first vendor as the primary vendorId (for backwards compatibility)
+		const primaryVendorId = resolvedVendorIds[0];
+
 		// Create the SKU
 		const sku = await prisma.sKU.create({
 			data: {
@@ -153,7 +165,7 @@ router.post(
 				name,
 				description,
 				categoryId,
-				vendorId,
+				vendorId: primaryVendorId,
 				unitOfMeasure,
 				unitOfMeasureId,
 				conversionRules,
@@ -163,6 +175,9 @@ router.post(
 				batchPricing,
 				batchReferencePricing,
 				lowStockThreshold,
+				skuVendors: {
+					create: resolvedVendorIds.map(vid => ({ vendorId: vid })),
+				},
 			},
 		});
 
@@ -307,9 +322,26 @@ router.put(
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
+		const { vendorIds, ...rest } = req.body;
+
+		// If vendorIds is provided, sync the SKUVendor pivot table
+		if (vendorIds && Array.isArray(vendorIds)) {
+			// Delete existing and recreate
+			await prisma.sKUVendor.deleteMany({ where: { skuId: req.params!.id } });
+			if (vendorIds.length > 0) {
+				await prisma.sKUVendor.createMany({
+					data: vendorIds.map((vid: string) => ({ skuId: req.params!.id, vendorId: vid })),
+					skipDuplicates: true,
+				});
+				// Update primary vendorId to the first one
+				rest.vendorId = vendorIds[0];
+			}
+		}
+
 		const sku = await prisma.sKU.update({
 			where: { id: req.params!.id },
-			data: req.body,
+			data: rest,
+			include: { skuVendors: { include: { vendor: true } } },
 		});
 		res.json({ success: true, data: sku });
 	}
