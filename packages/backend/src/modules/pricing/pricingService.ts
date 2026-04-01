@@ -1,4 +1,6 @@
 import prisma from '../../prisma/client';
+import type { IPricingContext, IResolvedPrice } from '@jingles/shared';
+import { getApplicableOverlays, resolveOverlays } from './overlayService';
 
 export interface PricingQuery {
 	skuId: string;
@@ -278,3 +280,37 @@ export async function getAveragePrices(skuId: string, variantId?: string | null)
 		batchCount: batches.length,
 	};
 }
+
+/**
+ * Get the resolved price with overlays applied (new layered pricing system)
+ * This is the primary function for the layered pricing architecture
+ */
+export async function getPriceWithOverlays(context: IPricingContext): Promise<IResolvedPrice> {
+	// 1. Get base price using existing logic
+	const baseResult = await getPrice({
+		skuId: context.skuId,
+		variantId: context.variantId,
+		batchId: context.batchId,
+		quantity: context.quantity,
+		priceType: context.priceType,
+	});
+
+	// 2. Get applicable overlays for this context
+	const applicableOverlays = await getApplicableOverlays(context);
+
+	// 3. Apply overlays using stacking rules
+	const { finalPrice, appliedOverlays, warnings } = resolveOverlays(baseResult.price, applicableOverlays);
+
+	// 4. Return resolved price with full details
+	return {
+		basePrice: baseResult.price,
+		finalPrice,
+		currency: baseResult.currency,
+		priceType: baseResult.priceType,
+		batchNumber: baseResult.batchNumber,
+		source: baseResult.source,
+		appliedOverlays,
+		warnings,
+	};
+}
+
