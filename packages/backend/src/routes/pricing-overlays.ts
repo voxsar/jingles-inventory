@@ -1,24 +1,29 @@
-import { Router } from 'express';
-import { body, query, param } from 'express-validator';
-import { authenticate, requireRole } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import { Router, Response } from 'express';
+import { body, query, param, validationResult } from 'express-validator';
+import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import * as overlayService from '../modules/pricing/overlayService';
 import * as pricingService from '../modules/pricing/pricingService';
 import { UserRole, PricingOverlayType, PricingOverlayStatus } from '@jingles/shared';
 
 const router = Router();
 
+router.use(authenticate);
+
 // List overlays
 router.get(
 	'/',
-	authenticate(),
-	validate([
+	[
 		query('status').optional().isIn(Object.values(PricingOverlayStatus)),
 		query('type').optional().isIn(Object.values(PricingOverlayType)),
 		query('page').optional().isInt({ min: 1 }).toInt(),
 		query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const result = await overlayService.listOverlays({
 				status: req.query.status as string,
@@ -36,9 +41,13 @@ router.get(
 // Get single overlay
 router.get(
 	'/:id',
-	authenticate(),
-	validate([param('id').isUUID()]),
-	async (req, res) => {
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const overlay = await overlayService.getOverlay(req.params.id);
 			res.json({ success: true, data: overlay });
@@ -51,9 +60,8 @@ router.get(
 // Create overlay
 router.post(
 	'/',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole(UserRole.Admin, UserRole.Manager),
+	[
 		body('name').notEmpty().isString(),
 		body('description').optional({ nullable: true }).isString(),
 		body('type').isIn(Object.values(PricingOverlayType)),
@@ -69,10 +77,15 @@ router.post(
 		body('status').optional().isIn(Object.values(PricingOverlayStatus)),
 		body('validFrom').optional({ nullable: true }).isISO8601().toDate(),
 		body('validTo').optional({ nullable: true }).isISO8601().toDate(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
-			const userId = (req as any).user?.id;
+			const userId = req.user?.id;
 			const overlay = await overlayService.createOverlay({
 				...req.body,
 				createdBy: userId,
@@ -87,9 +100,8 @@ router.post(
 // Update overlay
 router.put(
 	'/:id',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([
+	requireRole(UserRole.Admin, UserRole.Manager),
+	[
 		param('id').isUUID(),
 		body('name').optional().isString(),
 		body('description').optional({ nullable: true }).isString(),
@@ -102,8 +114,13 @@ router.put(
 		body('status').optional().isIn(Object.values(PricingOverlayStatus)),
 		body('validFrom').optional({ nullable: true }).isISO8601().toDate(),
 		body('validTo').optional({ nullable: true }).isISO8601().toDate(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const overlay = await overlayService.updateOverlay(req.params.id, req.body);
 			res.json({ success: true, data: overlay });
@@ -116,10 +133,14 @@ router.put(
 // Delete overlay (soft delete)
 router.delete(
 	'/:id',
-	authenticate(),
-	requireRole([UserRole.Admin, UserRole.Manager]),
-	validate([param('id').isUUID()]),
-	async (req, res) => {
+	requireRole(UserRole.Admin, UserRole.Manager),
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const overlay = await overlayService.deleteOverlay(req.params.id);
 			res.json({ success: true, data: overlay });
@@ -132,9 +153,13 @@ router.delete(
 // Get conflicts for an overlay
 router.get(
 	'/:id/conflicts',
-	authenticate(),
-	validate([param('id').isUUID()]),
-	async (req, res) => {
+	[param('id').isUUID()],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const conflicts = await overlayService.detectOverlayConflicts(req.params.id);
 			res.json({ success: true, data: conflicts });
@@ -147,8 +172,7 @@ router.get(
 // Resolve price with overlays (new endpoint for layered pricing)
 router.post(
 	'/resolve-price',
-	authenticate(),
-	validate([
+	[
 		body('skuId').isUUID(),
 		body('variantId').optional({ nullable: true }).isUUID(),
 		body('batchId').optional({ nullable: true }).isUUID(),
@@ -157,8 +181,13 @@ router.post(
 		body('customerGroup').optional().isString(),
 		body('customerType').optional().isString(),
 		body('branchId').optional().isUUID(),
-	]),
-	async (req, res) => {
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
 		try {
 			const resolvedPrice = await pricingService.getPriceWithOverlays({
 				skuId: req.body.skuId,
