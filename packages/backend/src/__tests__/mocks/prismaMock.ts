@@ -156,7 +156,7 @@ export const prismaMock = {
 		delete: vi.fn(),
 		count: vi.fn(),
 	},
-	unitOfMeasureModel: {
+	unitOfMeasure: {
 		findUnique: vi.fn(),
 		findMany: vi.fn(),
 		create: vi.fn(),
