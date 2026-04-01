@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@jingles/shared';
