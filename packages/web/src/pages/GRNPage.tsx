@@ -39,6 +39,16 @@ export default function GRNPage() {
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
   const [nextBatchNumbers, setNextBatchNumbers] = useState<Record<number, string>>({});
+  const [pricingCollapsed, setPricingCollapsed] = useState<Record<number, boolean>>({});
+  const [showBulkPricing, setShowBulkPricing] = useState(false);
+  const [bulkPricing, setBulkPricing] = useState({
+    costPrice: '',
+    sellingPrice: '',
+    wholesalePrice: '',
+    bulkPrice: '',
+    marginType: '',
+    marginValue: '',
+  });
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
@@ -192,6 +202,45 @@ export default function GRNPage() {
     setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; });
     setLineBatches(prev => { const n = { ...prev }; delete n[i]; return n; });
     setNextBatchNumbers(prev => { const n = { ...prev }; delete n[i]; return n; });
+    setPricingCollapsed(prev => { const n = { ...prev }; delete n[i]; return n; });
+  };
+
+  const togglePricingCollapse = (i: number) => {
+    setPricingCollapsed(prev => ({ ...prev, [i]: !prev[i] }));
+  };
+
+  const collapseAllPricing = () => {
+    const collapsed: Record<number, boolean> = {};
+    form.lines.forEach((_, i) => { collapsed[i] = true; });
+    setPricingCollapsed(collapsed);
+  };
+
+  const expandAllPricing = () => {
+    setPricingCollapsed({});
+  };
+
+  const applyBulkPricing = () => {
+    setForm(f => ({
+      ...f,
+      lines: f.lines.map(line => ({
+        ...line,
+        costPrice: bulkPricing.costPrice || line.costPrice,
+        sellingPrice: bulkPricing.sellingPrice || line.sellingPrice,
+        wholesalePrice: bulkPricing.wholesalePrice || line.wholesalePrice,
+        bulkPrice: bulkPricing.bulkPrice || line.bulkPrice,
+        marginType: bulkPricing.marginType || line.marginType,
+        marginValue: bulkPricing.marginValue || line.marginValue,
+      }))
+    }));
+    setShowBulkPricing(false);
+    setBulkPricing({
+      costPrice: '',
+      sellingPrice: '',
+      wholesalePrice: '',
+      bulkPrice: '',
+      marginType: '',
+      marginValue: '',
+    });
   };
 
   const updateLine = (i: number, field: string, value: any) => {
@@ -267,7 +316,12 @@ export default function GRNPage() {
             marginValue: batch.marginValue?.toString() ?? '',
           } : l)
         }));
+        // Auto-collapse pricing panel when existing batch is selected
+        setPricingCollapsed(prev => ({ ...prev, [i]: true }));
       }
+    } else if (field === 'batchId' && !value) {
+      // Expand pricing when batch is deselected
+      setPricingCollapsed(prev => ({ ...prev, [i]: false }));
     } else if (field === 'createNewBatch') {
       // Clear batchId when switching to create new batch
       if (value) {
@@ -275,6 +329,8 @@ export default function GRNPage() {
           ...f,
           lines: f.lines.map((l, idx) => idx === i ? { ...l, batchId: '' } : l)
         }));
+        // Expand pricing panel when creating new batch
+        setPricingCollapsed(prev => ({ ...prev, [i]: false }));
       }
     }
   };
@@ -483,7 +539,16 @@ export default function GRNPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-semibold text-gray-700">Line Items</span>
-                    <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
+                    <div className="flex items-center gap-2">
+                      {form.lines.length > 1 && (
+                        <>
+                          <button type="button" className="btn-sm text-xs" onClick={collapseAllPricing}>▼ Collapse All</button>
+                          <button type="button" className="btn-sm text-xs" onClick={expandAllPricing}>▲ Expand All</button>
+                          <button type="button" className="btn-sm text-xs" onClick={() => setShowBulkPricing(true)}>💰 Bulk Pricing</button>
+                        </>
+                      )}
+                      <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
+                    </div>
                   </div>
                   <div className="mb-3">
                     <input
@@ -570,18 +635,29 @@ export default function GRNPage() {
                             </div>
 
                             {!line.createNewBatch ? (
-                              <select
-                                className="input-field"
-                                value={line.batchId}
-                                onChange={(e) => updateLine(i, 'batchId', e.target.value)}
-                              >
-                                <option value="">— Select Batch (optional) —</option>
-                                {(lineBatches[i] ?? []).map((b: any) => (
-                                  <option key={b.id} value={b.id}>
-                                    {b.batchNumber} {b.costPrice && `— Cost: ${b.costPrice}`}
-                                  </option>
-                                ))}
-                              </select>
+                              <div>
+                                <select
+                                  className="input-field"
+                                  value={line.batchId}
+                                  onChange={(e) => updateLine(i, 'batchId', e.target.value)}
+                                >
+                                  <option value="">— Select Batch (optional) —</option>
+                                  {(lineBatches[i] ?? []).map((b: any) => (
+                                    <option key={b.id} value={b.id}>
+                                      {b.batchNumber} {b.costPrice && `— Cost: ${b.costPrice}`}
+                                    </option>
+                                  ))}
+                                </select>
+                                {line.batchId && pricingCollapsed[i] && (
+                                  <button
+                                    type="button"
+                                    className="text-xs text-blue-600 hover:text-blue-800 mt-2"
+                                    onClick={() => togglePricingCollapse(i)}
+                                  >
+                                    👁️ Show Pricing
+                                  </button>
+                                )}
+                              </div>
                             ) : (
                               <div className="text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded border border-blue-200">
                                 📦 New batch will be created: <span className="font-mono font-semibold">{nextBatchNumbers[i] ?? '...'}</span>
@@ -590,10 +666,21 @@ export default function GRNPage() {
                           </div>
                         )}
 
-                        {/* Pricing Fields (only if creating new batch or no batch selected) */}
-                        {line.skuId && (line.createNewBatch || !line.batchId) && (
+                        {/* Pricing Fields (collapsible) */}
+                        {line.skuId && (line.createNewBatch || line.batchId) && !pricingCollapsed[i] && (
                           <div className="border-t pt-3">
-                            <div className="text-sm font-semibold text-gray-700 mb-2">💰 Batch Pricing</div>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm font-semibold text-gray-700">💰 Batch Pricing</div>
+                              {line.batchId && (
+                                <button
+                                  type="button"
+                                  className="text-xs text-gray-500 hover:text-gray-700"
+                                  onClick={() => togglePricingCollapse(i)}
+                                >
+                                  ▲ Collapse
+                                </button>
+                              )}
+                            </div>
                             <div className="grid grid-cols-2 gap-2 mb-3">
                               <div>
                                 <label className="text-xs font-medium text-gray-600 block mb-1">Cost Price</label>
@@ -753,6 +840,103 @@ export default function GRNPage() {
               <button type="button" className="btn-secondary" onClick={() => setEditingGrn(null)}>Cancel</button>
               <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSavingEdit}>
                 {isSavingEdit ? '⏳ Saving…' : '💾 Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Pricing Modal */}
+      {showBulkPricing && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowBulkPricing(false)}>
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h2 className="modal-title">💰 Apply Bulk Pricing to All Lines</h2>
+              <button className="modal-close" onClick={() => setShowBulkPricing(false)}>✕</button>
+            </div>
+            <div className="modal-body form-stack">
+              <p className="text-sm text-gray-600 mb-4">
+                Set pricing for all {form.lines.length} line items at once. Leave fields empty to keep existing values.
+              </p>
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label className="form-label">Cost Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-field"
+                    value={bulkPricing.costPrice}
+                    placeholder="Leave empty to skip"
+                    onChange={(e) => setBulkPricing(p => ({ ...p, costPrice: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Selling Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-field"
+                    value={bulkPricing.sellingPrice}
+                    placeholder="Leave empty to skip"
+                    onChange={(e) => setBulkPricing(p => ({ ...p, sellingPrice: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Wholesale Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-field"
+                    value={bulkPricing.wholesalePrice}
+                    placeholder="Leave empty to skip"
+                    onChange={(e) => setBulkPricing(p => ({ ...p, wholesalePrice: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Bulk Price</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-field"
+                    value={bulkPricing.bulkPrice}
+                    placeholder="Leave empty to skip"
+                    onChange={(e) => setBulkPricing(p => ({ ...p, bulkPrice: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Margin Settings</h3>
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Margin Type</label>
+                    <select
+                      className="input-field"
+                      value={bulkPricing.marginType}
+                      onChange={(e) => setBulkPricing(p => ({ ...p, marginType: e.target.value }))}
+                    >
+                      <option value="">Leave empty to skip</option>
+                      <option value="fixed">Fixed Amount</option>
+                      <option value="percentage">Percentage (%)</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Margin Value</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="input-field"
+                      value={bulkPricing.marginValue}
+                      placeholder={bulkPricing.marginType === 'percentage' ? 'e.g., 25' : 'e.g., 50.00'}
+                      onChange={(e) => setBulkPricing(p => ({ ...p, marginValue: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={() => setShowBulkPricing(false)}>Cancel</button>
+              <button type="button" className="btn-primary" onClick={applyBulkPricing}>
+                Apply to {form.lines.length} Lines
               </button>
             </div>
           </div>

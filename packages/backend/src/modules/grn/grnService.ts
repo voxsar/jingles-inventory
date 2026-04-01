@@ -210,12 +210,14 @@ export async function submitInspection(data: {
 		SpecialStatusKeys.GRN_DRAFT,
 		SpecialStatusKeys.GRN_FULLY_INSPECTED,
 		SpecialStatusKeys.GRN_PARTIALLY_INSPECTED,
+		SpecialStatusKeys.INVENTORY_UNINSPECTED,
 		SpecialStatusKeys.INVENTORY_INSPECTED,
 		SpecialStatusKeys.INVENTORY_DAMAGED,
 	]);
 	const grnDraftStatus = statusMap.get(SpecialStatusKeys.GRN_DRAFT)!;
 	const grnFullyInspectedStatus = statusMap.get(SpecialStatusKeys.GRN_FULLY_INSPECTED)!;
 	const grnPartiallyInspectedStatus = statusMap.get(SpecialStatusKeys.GRN_PARTIALLY_INSPECTED)!;
+	const inventoryUninspected = statusMap.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)!;
 	const inventoryInspected = statusMap.get(SpecialStatusKeys.INVENTORY_INSPECTED)!;
 	const inventoryDamaged = statusMap.get(SpecialStatusKeys.INVENTORY_DAMAGED)!;
 
@@ -239,40 +241,108 @@ export async function submitInspection(data: {
 			},
 		});
 
-		if (data.approvedQuantity > 0) {
-			const approvedRecord = await tx.inventoryRecord.create({
+		// Find the UNINSPECTED inventory record created during GRN submission
+		const uninspectedRecord = await tx.inventoryRecord.findFirst({
+			where: {
+				skuId: grnLine.skuId,
+				variantId: grnLine.variantId ?? null,
+				batchId: (grnLine as any).batchId ?? null,
+				state: inventoryUninspected,
+				// Match by GRN metadata in events to ensure we get the right record
+			},
+			orderBy: { createdAt: 'desc' },
+		});
+
+		if (!uninspectedRecord) {
+			throw new Error('UNINSPECTED inventory record not found for this GRN line. GRN may not have been properly submitted.');
+		}
+
+		const totalInspected = data.approvedQuantity + data.rejectedQuantity;
+		if (totalInspected !== uninspectedRecord.quantity) {
+			throw new Error(
+				`Inspection quantities (${data.approvedQuantity} approved + ${data.rejectedQuantity} rejected = ${totalInspected}) ` +
+				`do not match uninspected quantity (${uninspectedRecord.quantity})`
+			);
+		}
+
+		// Update the UNINSPECTED record based on inspection results
+		if (data.approvedQuantity > 0 && data.rejectedQuantity === 0) {
+			// All approved - update record to INSPECTED state
+			await tx.inventoryRecord.update({
+				where: { id: uninspectedRecord.id },
 				data: {
-					skuId: grnLine.skuId,
-					variantId: grnLine.variantId ?? null,
-					batchId: (grnLine as any).batchId ?? null,
-					batchReference: (grnLine as any).batchReference ?? null,
-					quantity: data.approvedQuantity,
 					state: inventoryInspected,
 					userId: data.inspectorUserId,
-					version: 1,
+					version: { increment: 1 },
 				},
 			});
 
 			await tx.inventoryEvent.create({
 				data: {
 					eventType: InventoryEventType.INSPECTION_APPROVED,
-					parentEntityId: approvedRecord.id,
-					quantityDelta: data.approvedQuantity,
-					beforeQuantity: 0,
+					parentEntityId: uninspectedRecord.id,
+					quantityDelta: 0,
+					beforeQuantity: uninspectedRecord.quantity,
 					afterQuantity: data.approvedQuantity,
 					userId: data.inspectorUserId,
-					metadata: { grnLineId: data.grnLineId, inspectionId: record.id } as any,
+					metadata: { grnLineId: data.grnLineId, inspectionId: record.id, previousState: inventoryUninspected, newState: inventoryInspected } as any,
 				},
 			});
-		}
+		} else if (data.rejectedQuantity > 0 && data.approvedQuantity === 0) {
+			// All damaged - update record to DAMAGED state
+			await tx.inventoryRecord.update({
+				where: { id: uninspectedRecord.id },
+				data: {
+					state: inventoryDamaged,
+					userId: data.inspectorUserId,
+					version: { increment: 1 },
+				},
+			});
 
-		if (data.rejectedQuantity > 0) {
+			await tx.inventoryEvent.create({
+				data: {
+					eventType: InventoryEventType.DAMAGE_RECORDED,
+					parentEntityId: uninspectedRecord.id,
+					quantityDelta: 0,
+					beforeQuantity: uninspectedRecord.quantity,
+					afterQuantity: data.rejectedQuantity,
+					userId: data.inspectorUserId,
+					metadata: { grnLineId: data.grnLineId, inspectionId: record.id, damageClassification: data.damageClassification, previousState: inventoryUninspected, newState: inventoryDamaged } as any,
+				},
+			});
+		} else if (data.approvedQuantity > 0 && data.rejectedQuantity > 0) {
+			// Mixed result - update original to INSPECTED with approved quantity, create new DAMAGED record for rejected
+			await tx.inventoryRecord.update({
+				where: { id: uninspectedRecord.id },
+				data: {
+					quantity: data.approvedQuantity,
+					state: inventoryInspected,
+					userId: data.inspectorUserId,
+					version: { increment: 1 },
+				},
+			});
+
+			await tx.inventoryEvent.create({
+				data: {
+					eventType: InventoryEventType.INSPECTION_APPROVED,
+					parentEntityId: uninspectedRecord.id,
+					quantityDelta: -(data.rejectedQuantity),
+					beforeQuantity: uninspectedRecord.quantity,
+					afterQuantity: data.approvedQuantity,
+					userId: data.inspectorUserId,
+					metadata: { grnLineId: data.grnLineId, inspectionId: record.id, previousState: inventoryUninspected, newState: inventoryInspected, note: 'Partial approval - quantity adjusted' } as any,
+				},
+			});
+
+			// Create new DAMAGED record for rejected quantity
 			const damagedRecord = await tx.inventoryRecord.create({
 				data: {
 					skuId: grnLine.skuId,
 					variantId: grnLine.variantId ?? null,
 					batchId: (grnLine as any).batchId ?? null,
 					batchReference: (grnLine as any).batchReference ?? null,
+					floorId: uninspectedRecord.floorId,
+					shelfId: uninspectedRecord.shelfId,
 					quantity: data.rejectedQuantity,
 					state: inventoryDamaged,
 					userId: data.inspectorUserId,
@@ -288,7 +358,7 @@ export async function submitInspection(data: {
 					beforeQuantity: 0,
 					afterQuantity: data.rejectedQuantity,
 					userId: data.inspectorUserId,
-					metadata: { grnLineId: data.grnLineId, damageClassification: data.damageClassification } as any,
+					metadata: { grnLineId: data.grnLineId, inspectionId: record.id, damageClassification: data.damageClassification, splitFromRecord: uninspectedRecord.id } as any,
 				},
 			});
 		}
