@@ -3,6 +3,7 @@ import { pricingOverlaysApi, skusApi, variantsApi, batchesApi, categoriesApi } f
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import { PricingOverlayType, PricingOverlayStatus } from '@jingles/shared';
+import SearchableSelect from '../components/SearchableSelect';
 
 const PAGE_SIZE = 20;
 
@@ -294,29 +295,37 @@ export default function PricingOverlaysPage() {
 
 			{/* Filters */}
 			<div className="filter-bar">
-				<select
-					className="filter-select"
-					value={statusFilter}
-					onChange={(e) => setStatusFilter(e.target.value)}
-				>
-					<option value="">All Statuses</option>
-					<option value={PricingOverlayStatus.Active}>Active</option>
-					<option value={PricingOverlayStatus.Inactive}>Inactive</option>
-					<option value={PricingOverlayStatus.Scheduled}>Scheduled</option>
-					<option value={PricingOverlayStatus.Expired}>Expired</option>
-				</select>
+				<div style={{ width: '180px' }}>
+					<SearchableSelect
+						options={[
+							{ value: '', label: 'All Statuses' },
+							{ value: PricingOverlayStatus.Active, label: 'Active' },
+							{ value: PricingOverlayStatus.Inactive, label: 'Inactive' },
+							{ value: PricingOverlayStatus.Scheduled, label: 'Scheduled' },
+							{ value: PricingOverlayStatus.Expired, label: 'Expired' }
+						]}
+						value={statusFilter}
+						onChange={(value) => setStatusFilter(value)}
+						placeholder="All Statuses"
+						isClearable={false}
+					/>
+				</div>
 
-				<select
-					className="filter-select"
-					value={typeFilter}
-					onChange={(e) => setTypeFilter(e.target.value)}
-				>
-					<option value="">All Types</option>
-					<option value={PricingOverlayType.PercentageDiscount}>% Discount</option>
-					<option value={PricingOverlayType.FixedDiscount}>Fixed Discount</option>
-					<option value={PricingOverlayType.PercentageMarkup}>% Markup</option>
-					<option value={PricingOverlayType.FixedMarkup}>Fixed Markup</option>
-				</select>
+				<div style={{ width: '180px' }}>
+					<SearchableSelect
+						options={[
+							{ value: '', label: 'All Types' },
+							{ value: PricingOverlayType.PercentageDiscount, label: '% Discount' },
+							{ value: PricingOverlayType.FixedDiscount, label: 'Fixed Discount' },
+							{ value: PricingOverlayType.PercentageMarkup, label: '% Markup' },
+							{ value: PricingOverlayType.FixedMarkup, label: 'Fixed Markup' }
+						]}
+						value={typeFilter}
+						onChange={(value) => setTypeFilter(value)}
+						placeholder="All Types"
+						isClearable={false}
+					/>
+				</div>
 			</div>
 
 			{/* Table */}
@@ -364,15 +373,17 @@ export default function PricingOverlaysPage() {
 								</div>
 								<div>
 									<label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-									<select
-										className="w-full px-3 py-2 border border-gray-300 rounded"
+									<SearchableSelect
+										options={[
+											{ value: PricingOverlayStatus.Active, label: 'Active' },
+											{ value: PricingOverlayStatus.Inactive, label: 'Inactive' },
+											{ value: PricingOverlayStatus.Scheduled, label: 'Scheduled' }
+										]}
 										value={formData.status}
-										onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-									>
-										<option value={PricingOverlayStatus.Active}>Active</option>
-										<option value={PricingOverlayStatus.Inactive}>Inactive</option>
-										<option value={PricingOverlayStatus.Scheduled}>Scheduled</option>
-									</select>
+										onChange={(value) => setFormData({ ...formData, status: value as any })}
+										placeholder="Select Status"
+										isClearable={false}
+									/>
 								</div>
 							</div>
 
@@ -392,16 +403,18 @@ export default function PricingOverlaysPage() {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-										<select
-											className="w-full px-3 py-2 border border-gray-300 rounded"
+										<SearchableSelect
+											options={[
+												{ value: PricingOverlayType.PercentageDiscount, label: 'Percentage Discount' },
+												{ value: PricingOverlayType.FixedDiscount, label: 'Fixed Discount' },
+												{ value: PricingOverlayType.PercentageMarkup, label: 'Percentage Markup' },
+												{ value: PricingOverlayType.FixedMarkup, label: 'Fixed Markup' }
+											]}
 											value={formData.type}
-											onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-										>
-											<option value={PricingOverlayType.PercentageDiscount}>Percentage Discount</option>
-											<option value={PricingOverlayType.FixedDiscount}>Fixed Discount</option>
-											<option value={PricingOverlayType.PercentageMarkup}>Percentage Markup</option>
-											<option value={PricingOverlayType.FixedMarkup}>Fixed Markup</option>
-										</select>
+											onChange={(value) => setFormData({ ...formData, type: value as any })}
+											placeholder="Select Type"
+											isClearable={false}
+										/>
 									</div>
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">Value *</label>
@@ -475,17 +488,19 @@ export default function PricingOverlaysPage() {
 								<h3 className="text-sm font-medium text-gray-700 mb-3">Applies To</h3>
 								<div>
 									<label className="block text-sm font-medium text-gray-700 mb-1">Target</label>
-									<select
-										className="w-full px-3 py-2 border border-gray-300 rounded"
+									<SearchableSelect
+										options={[
+											{ value: 'all', label: 'All Products' },
+											{ value: 'sku', label: 'Specific SKUs' },
+											{ value: 'variant', label: 'Specific Variants' },
+											{ value: 'batch', label: 'Specific Batches' },
+											{ value: 'category', label: 'Specific Categories' }
+										]}
 										value={formData.targetType}
-										onChange={(e) => setFormData({ ...formData, targetType: e.target.value as any })}
-									>
-										<option value="all">All Products</option>
-										<option value="sku">Specific SKUs</option>
-										<option value="variant">Specific Variants</option>
-										<option value="batch">Specific Batches</option>
-										<option value="category">Specific Categories</option>
-									</select>
+										onChange={(value) => setFormData({ ...formData, targetType: value as any })}
+										placeholder="Select Target"
+										isClearable={false}
+									/>
 								</div>
 
 								{formData.targetType !== 'all' && (

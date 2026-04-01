@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { vendorsApi, settingsApi } from '../api/client';
 import DataTable from '../components/DataTable';
+import SearchableSelect from '../components/SearchableSelect';
 
 const defaultForm = {
   name: '',
@@ -163,23 +164,31 @@ export default function SuppliersPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select
-            className="filter-select"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">All Types</option>
-            {vendorTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Types' },
+                ...vendorTypes.map(t => ({ value: t.value, label: t.label }))
+              ]}
+              value={typeFilter}
+              onChange={(value) => setTypeFilter(value)}
+              placeholder="All Types"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'true', label: 'Active' },
+                { value: 'false', label: 'Inactive' }
+              ]}
+              value={statusFilter}
+              onChange={(value) => setStatusFilter(value)}
+              placeholder="All Statuses"
+              isClearable={false}
+            />
+          </div>
           {(searchTerm || typeFilter || statusFilter) && (
             <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); }}>
               ✕ Clear filters
@@ -211,12 +220,16 @@ export default function SuppliersPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Type *</label>
-                    <select className="input-field" value={form.type} onChange={(e) => setForm(f => ({ ...f, type: e.target.value }))}>
-                      {vendorTypes.length === 0
-                        ? <option value="">Loading…</option>
-                        : vendorTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)
+                    <SearchableSelect
+                      options={vendorTypes.length === 0
+                        ? [{ value: '', label: 'Loading…' }]
+                        : vendorTypes.map(t => ({ value: t.value, label: t.label }))
                       }
-                    </select>
+                      value={form.type}
+                      onChange={(value) => setForm(f => ({ ...f, type: value }))}
+                      placeholder="Select Type"
+                      isClearable={false}
+                    />
                   </div>
                 </div>
                 <div className="form-grid-2">

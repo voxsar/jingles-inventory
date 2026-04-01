@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { batchesApi, skusApi, pricingOverlaysApi } from '../api/client';
 import DataTable from '../components/DataTable';
+import SearchableSelect from '../components/SearchableSelect';
 import Pagination from '../components/Pagination';
 import EffectivePricePreview from '../components/EffectivePricePreview';
 
@@ -336,15 +337,17 @@ export default function PricingPage() {
 								<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">Margin Type</label>
-										<select
-											className="w-full px-3 py-2 border border-gray-300 rounded"
+										<SearchableSelect
+											options={[
+												{ value: '', label: 'None' },
+												{ value: 'fixed', label: 'Fixed Amount' },
+												{ value: 'percentage', label: 'Percentage' }
+											]}
 											value={editForm.marginType}
-											onChange={(e) => setEditForm({ ...editForm, marginType: e.target.value })}
-										>
-											<option value="">None</option>
-											<option value="fixed">Fixed Amount</option>
-											<option value="percentage">Percentage</option>
-										</select>
+											onChange={(value) => setEditForm({ ...editForm, marginType: value })}
+											placeholder="None"
+											isClearable={false}
+										/>
 									</div>
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-1">Margin Value</label>
@@ -377,29 +380,33 @@ export default function PricingPage() {
 						<form onSubmit={handleBulkPricingSubmit} className="space-y-4">
 							<div>
 								<label className="block text-sm font-medium text-gray-700 mb-1">Price Field</label>
-								<select
-									className="w-full px-3 py-2 border border-gray-300 rounded"
+								<SearchableSelect
+									options={[
+										{ value: 'costPrice', label: 'Cost Price' },
+										{ value: 'sellingPrice', label: 'Selling Price' },
+										{ value: 'wholesalePrice', label: 'Wholesale Price' },
+										{ value: 'bulkPrice', label: 'Bulk Price' }
+									]}
 									value={bulkPriceField}
-									onChange={(e) => setBulkPriceField(e.target.value as any)}
-								>
-									<option value="costPrice">Cost Price</option>
-									<option value="sellingPrice">Selling Price</option>
-									<option value="wholesalePrice">Wholesale Price</option>
-									<option value="bulkPrice">Bulk Price</option>
-								</select>
+									onChange={(value) => setBulkPriceField(value as any)}
+									placeholder="Select Price Field"
+									isClearable={false}
+								/>
 							</div>
 
 							<div>
 								<label className="block text-sm font-medium text-gray-700 mb-1">Operation</label>
-								<select
-									className="w-full px-3 py-2 border border-gray-300 rounded"
+								<SearchableSelect
+									options={[
+										{ value: 'set', label: 'Set to Amount' },
+										{ value: 'increase_fixed', label: 'Increase by Fixed Amount' },
+										{ value: 'increase_percentage', label: 'Increase by Percentage' }
+									]}
 									value={bulkOperation}
-									onChange={(e) => setBulkOperation(e.target.value as any)}
-								>
-									<option value="set">Set to Amount</option>
-									<option value="increase_fixed">Increase by Fixed Amount</option>
-									<option value="increase_percentage">Increase by Percentage</option>
-								</select>
+									onChange={(value) => setBulkOperation(value as any)}
+									placeholder="Select Operation"
+									isClearable={false}
+								/>
 							</div>
 
 							<div>
