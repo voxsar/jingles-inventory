@@ -18,7 +18,7 @@ import { STORAGE_GEOMETRIES, SKUS } from '../fixtures/testData';
 
 describe('calculateVolume', () => {
   it('computes correct volume for standard dimensions', () => {
-    const dims: IDimensions = { height: 10, width: 5, depth: 2, weight: 1 };
+    const dims: IDimensions = { height: 10, width: 5, length: 2, weight: 1 };
     expect(calculateVolume(dims)).toBe(100);
   });
 
@@ -35,12 +35,12 @@ describe('calculateVolume', () => {
   });
 
   it('returns 0 when any dimension is 0', () => {
-    const dims: IDimensions = { height: 0, width: 10, depth: 5, weight: 1 };
+    const dims: IDimensions = { height: 0, width: 10, length: 5, weight: 1 };
     expect(calculateVolume(dims)).toBe(0);
   });
 
   it('handles fractional dimensions', () => {
-    const dims: IDimensions = { height: 1.5, width: 2.0, depth: 2.0, weight: 0.5 };
+    const dims: IDimensions = { height: 1.5, width: 2.0, length: 2.0, weight: 0.5 };
     expect(calculateVolume(dims)).toBeCloseTo(6.0);
   });
 });
