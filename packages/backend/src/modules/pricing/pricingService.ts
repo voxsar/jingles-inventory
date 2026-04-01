@@ -190,6 +190,12 @@ export async function getBatchPricingSummary(batchId: string) {
 					name: true,
 				},
 			},
+			vendor: {
+				select: {
+					id: true,
+					name: true,
+				},
+			},
 		},
 	});
 
@@ -216,6 +222,7 @@ export async function getBatchPricingSummary(batchId: string) {
 			batchNumber: batch.batchNumber,
 			sku: batch.sku,
 			variant: batch.variant,
+			vendor: batch.vendor,
 		},
 		pricing: {
 			cost: batch.costPrice,
@@ -226,7 +233,6 @@ export async function getBatchPricingSummary(batchId: string) {
 		},
 		margin: marginInfo,
 		metadata: {
-			supplier: batch.supplier,
 			expiryDate: batch.expiryDate,
 			manufacturingDate: batch.manufacturingDate,
 			notes: batch.notes,
