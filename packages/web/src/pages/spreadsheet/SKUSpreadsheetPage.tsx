@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skusApi, vendorsApi, categoriesApi, settingsApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -56,82 +56,69 @@ export default function SKUSpreadsheetPage() {
   const categoryOptions = categories.map(c => ({ value: c.id, label: c.name }));
   const unitOptions = units.map(u => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'skuCode',
       header: 'SKU Code',
-      type: 'text',
+      
       width: '140px',
-      required: true,
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{row.skuCode}</span>,
+      
+      render: (value) => String(value || ""),
     },
     {
       key: 'name',
       header: 'Product Name',
-      type: 'text',
-      required: true,
+      
+      
       width: '220px',
     },
     {
       key: 'description',
       header: 'Description',
-      type: 'text',
+      
       width: '200px',
     },
     {
       key: 'categoryId',
       header: 'Category',
-      type: 'select',
+      
       options: categoryOptions,
       width: '160px',
       getValue: (row) => row.categoryId || '',
       setValue: (row, value) => ({ categoryId: value || null }),
-      render: (row) => {
-        const cat = categories.find(c => c.id === row.categoryId);
-        return <span>{cat?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'vendorIds',
       header: 'Vendors',
-      type: 'multiselect',
+      
       options: vendorOptions,
       width: '200px',
       getValue: (row) => row.vendorIds || [],
       setValue: (row, value) => ({ vendorIds: value }),
-      render: (row) => {
+      render: (value, row) => {
         const vendorIds = row.vendorIds || [];
-        return (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-            {vendorIds.map((vid: string) => {
-              const vendor = vendors.find(v => v.id === vid);
-              return vendor ? (
-                <span key={vid} className="badge" style={{ fontSize: '11px', padding: '2px 6px' }}>
-                  {vendor.name}
-                </span>
-              ) : null;
-            })}
-          </div>
-        );
+        const vendorNames = vendorIds.map((vid: string) => {
+          const vendor = vendors.find(v => v.id === vid);
+          return vendor ? vendor.name : null;
+        }).filter(Boolean);
+        return vendorNames.join(', ');
       },
     },
     {
       key: 'unitOfMeasureId',
       header: 'Unit',
-      type: 'select',
+      
       options: unitOptions,
       width: '140px',
       getValue: (row) => row.unitOfMeasureId || '',
       setValue: (row, value) => ({ unitOfMeasureId: value || null }),
-      render: (row) => {
-        const unit = units.find(u => u.id === row.unitOfMeasureId);
-        return <span>{unit?.abbreviation || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'isFragile',
       header: 'Fragile',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isFragile,
       setValue: (row, value) => ({ isFragile: value }),
@@ -139,7 +126,7 @@ export default function SKUSpreadsheetPage() {
     {
       key: 'lowStockThreshold',
       header: 'Low Stock',
-      type: 'number',
+      
       width: '100px',
       getValue: (row) => row.lowStockThreshold || '',
       setValue: (row, value) => ({ lowStockThreshold: value || null }),
@@ -147,7 +134,7 @@ export default function SKUSpreadsheetPage() {
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -205,7 +192,7 @@ export default function SKUSpreadsheetPage() {
 
       {/* Table */}
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={skus}
           isLoading={isLoading}
@@ -213,8 +200,6 @@ export default function SKUSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No products found"
-          emptyIcon="🎵"
         />
       </div>
 
