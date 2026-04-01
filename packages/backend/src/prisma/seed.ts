@@ -120,9 +120,9 @@ async function main() {
 	let unitsCreated = 0;
 	let unitsSkipped = 0;
 	for (const unitEntry of UNIT_SEED_DATA) {
-		const existing = await prisma.unitOfMeasureModel.findUnique({ where: { name: unitEntry.name } });
+		const existing = await prisma.unitOfMeasure.findUnique({ where: { name: unitEntry.name } });
 		if (!existing) {
-			await prisma.unitOfMeasureModel.create({
+			await prisma.unitOfMeasure.create({
 				data: {
 					name: unitEntry.name,
 					abbreviation: unitEntry.abbreviation,
