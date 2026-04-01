@@ -5,15 +5,16 @@ export interface SelectOption {
   label: string;
 }
 
-interface SearchableSelectProps extends Omit<SelectProps<SelectOption, false>, 'options' | 'onChange' | 'value'> {
+interface SearchableSelectProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value'> {
   options: SelectOption[];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | string[];
+  onChange: (value: string | string[]) => void;
   className?: string;
   placeholder?: string;
   isClearable?: boolean;
   isDisabled?: boolean;
   isLoading?: boolean;
+  isMulti?: boolean;
 }
 
 export default function SearchableSelect({
@@ -25,11 +26,14 @@ export default function SearchableSelect({
   isClearable = true,
   isDisabled = false,
   isLoading = false,
+  isMulti = false,
   ...rest
 }: SearchableSelectProps) {
-  const selectedOption = options.find(opt => opt.value === value) || null;
+  const selectedOption = isMulti
+    ? options.filter(opt => (value as string[]).includes(opt.value))
+    : options.find(opt => opt.value === value) || null;
 
-  const customStyles: StylesConfig<SelectOption, false> = {
+  const customStyles: StylesConfig<SelectOption, boolean> = {
     control: (base, state) => ({
       ...base,
       minHeight: '38px',
@@ -110,10 +114,17 @@ export default function SearchableSelect({
   };
 
   return (
-    <Select<SelectOption, false>
+    <Select<SelectOption, boolean>
       options={options}
       value={selectedOption}
-      onChange={(option) => onChange(option?.value || '')}
+      onChange={(option) => {
+        if (isMulti) {
+          const values = Array.isArray(option) ? option.map(o => o.value) : [];
+          onChange(values);
+        } else {
+          onChange((option as SelectOption)?.value || '');
+        }
+      }}
       styles={customStyles}
       className={className}
       placeholder={placeholder}
@@ -121,6 +132,7 @@ export default function SearchableSelect({
       isDisabled={isDisabled}
       isLoading={isLoading}
       isSearchable={true}
+      isMulti={isMulti}
       {...rest}
     />
   );

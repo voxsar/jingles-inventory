@@ -14,6 +14,7 @@ const navItems = [
   { to: '/warehouse-3d', label: '🏗️ Warehouse 3D' },
   { to: '/stock-transfers', label: '🔄 Stock Transfers' },
   { to: '/suppliers', label: '🤝 Suppliers' },
+  { to: '/spreadsheet', label: '📊 Spreadsheet Interface' },
   { to: '/reports', label: '📈 Reports' },
   { to: '/settings', label: '⚙️ Settings' },
 ];
