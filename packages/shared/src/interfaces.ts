@@ -215,6 +215,13 @@ export interface ISKUAttribute {
 	selectedValues?: IAttributeValue[];
 }
 
+export interface ISKUAttributeValue {
+	skuAttributeId: string;
+	attributeValueId: string;
+	skuAttribute?: ISKUAttribute;
+	attributeValue?: IAttributeValue;
+}
+
 export interface ISKUVariant {
 	id: string;
 	skuId: string;

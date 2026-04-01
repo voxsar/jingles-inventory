@@ -280,3 +280,22 @@ export const pricingOverlaysApi = {
   resolvePrice: (data: any) => api.post('/pricing-overlays/resolve-price', data),
 };
 
+// Tags
+export const tagsApi = {
+  list: (params?: Record<string, string>) => api.get('/tags', { params }),
+  get: (id: string) => api.get(`/tags/${id}`),
+  create: (data: any) => api.post('/tags', data),
+  update: (id: string, data: any) => api.put(`/tags/${id}`, data),
+  delete: (id: string) => api.delete(`/tags/${id}`),
+};
+
+// Users
+export const usersApi = {
+  list: (params?: Record<string, string>) => api.get('/users', { params }),
+  get: (id: string) => api.get(`/users/${id}`),
+  create: (data: any) => api.post('/users', data),
+  update: (id: string, data: any) => api.put(`/users/${id}`, data),
+  updatePassword: (id: string, password: string) => api.put(`/users/${id}/password`, { password }),
+  delete: (id: string) => api.delete(`/users/${id}`),
+};
+

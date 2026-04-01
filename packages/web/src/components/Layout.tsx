@@ -10,10 +10,12 @@ const navItems = [
   { to: '/pricing', label: '💰 Batch Pricing' },
   { to: '/pricing-overlays', label: '🎯 Pricing Overlays' },
   { to: '/categories', label: '🗂️ Categories' },
+  { to: '/tags', label: '🏷️ Tags', roles: ['Admin', 'Manager'] },
   { to: '/branches', label: '🏢 Branches & Storage' },
   { to: '/warehouse-3d', label: '🏗️ Warehouse 3D' },
   { to: '/stock-transfers', label: '🔄 Stock Transfers' },
   { to: '/suppliers', label: '🤝 Suppliers' },
+  { to: '/users', label: '👥 Users', roles: ['Admin', 'Manager'] },
   { to: '/spreadsheet', label: '📊 Spreadsheet Interface' },
   { to: '/reports', label: '📈 Reports' },
   { to: '/settings', label: '⚙️ Settings' },
@@ -30,7 +32,13 @@ export default function Layout() {
 
   const allNavItems = user?.role === 'Vendor'
     ? [{ to: '/vendor-portal', label: '🛒 Vendor Portal' }]
-    : navItems;
+    : navItems.filter((item: any) => {
+        // Filter items based on user role if roles array is defined
+        if (item.roles && !item.roles.includes(user?.role || '')) {
+          return false;
+        }
+        return true;
+      });
 
   const initials = user?.email
     ? user.email.slice(0, 2).toUpperCase()
