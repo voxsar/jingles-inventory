@@ -22,17 +22,16 @@ const mockUnits = [
 describe('convert - database-driven rules', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
 		clearConversionCache();
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	it('converts Box to Piece at 1:12', async () => {
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
 		expect(await convert(1, 'Box', 'Piece')).toBe(12);
 		expect(await convert(5, 'Box', 'Piece')).toBe(60);
 	});
@@ -83,7 +82,7 @@ describe('convert - database-driven rules', () => {
 describe('convert - custom rules', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -117,7 +116,7 @@ describe('convert - custom rules', () => {
 describe('getConversionRatio', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -140,7 +139,7 @@ describe('getConversionRatio', () => {
 describe('hasConversionRule', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -173,7 +172,7 @@ describe('hasConversionRule', () => {
 describe('box-to-piece conversion - business rules', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		prismaMock.unitOfMeasureModel.findMany.mockResolvedValue(mockUnits);
+		(prismaMock.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
