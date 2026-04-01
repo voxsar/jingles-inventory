@@ -4,6 +4,7 @@ import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batch
 import { GRNStatus } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import SearchableSelect from '../components/SearchableSelect';
 
 const STATUS_TONES: Record<string, string> = {
   [GRNStatus.Draft]: '',
@@ -428,22 +429,30 @@ export default function GRNPage() {
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All Statuses</option>
-            {Object.values(GRNStatus).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select
-            className="filter-select"
-            value={supplierFilter}
-            onChange={(e) => { setSupplierFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All Suppliers</option>
-            {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-          </select>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Statuses' },
+                ...Object.values(GRNStatus).map((s) => ({ value: s, label: s }))
+              ]}
+              value={statusFilter}
+              onChange={(value) => { setStatusFilter(value); setPage(1); }}
+              placeholder="All Statuses"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Suppliers' },
+                ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+              ]}
+              value={supplierFilter}
+              onChange={(value) => { setSupplierFilter(value); setPage(1); }}
+              placeholder="All Suppliers"
+              isClearable={false}
+            />
+          </div>
           {hasFilters && (
             <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setStatusFilter(''); setSupplierFilter(''); setPage(1); }}>
               ✕ Clear filters
@@ -483,10 +492,16 @@ export default function GRNPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Supplier *</label>
-                    <select className="input-field" value={form.supplierId} onChange={(e) => setForm((f) => ({ ...f, supplierId: e.target.value }))} required>
-                      <option value="">Select supplier</option>
-                      {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: 'Select supplier' },
+                        ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+                      ]}
+                      value={form.supplierId}
+                      onChange={(value) => setForm((f) => ({ ...f, supplierId: value }))}
+                      placeholder="Select supplier"
+                      isClearable={false}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Invoice Reference</label>
@@ -505,33 +520,45 @@ export default function GRNPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Receive Location — Floor</label>
-                  <select className="input-field" value={form.floorId} onChange={(e) => {
-                    const floorId = e.target.value;
-                    setForm((f) => ({ ...f, floorId, shelfId: '' }));
-                    setFormShelves([]);
-                    if (floorId) {
-                      shelvesApi.list({ floorId }).then((res) => {
-                        setFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
-                      }).catch(() => setFormShelves([]));
-                    }
-                  }}>
-                    <option value="">— No Floor —</option>
-                    {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— No Floor —' },
+                      ...locations.map((loc: any) => ({
+                        value: loc.id,
+                        label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
+                      }))
+                    ]}
+                    value={form.floorId}
+                    onChange={(value) => {
+                      const floorId = value;
+                      setForm((f) => ({ ...f, floorId, shelfId: '' }));
+                      setFormShelves([]);
+                      if (floorId) {
+                        shelvesApi.list({ floorId }).then((res) => {
+                          setFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+                        }).catch(() => setFormShelves([]));
+                      }
+                    }}
+                    placeholder="No Floor"
+                    isClearable={false}
+                  />
                 </div>
                 {form.floorId && (
                   <div className="form-group">
                     <label className="form-label">Receive Location — Shelf</label>
-                    <select className="input-field" value={form.shelfId} onChange={(e) => setForm((f) => ({ ...f, shelfId: e.target.value }))}>
-                      <option value="">— Select Shelf —</option>
-                      {formShelves.map((s: any) => (
-                        <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select Shelf —' },
+                        ...formShelves.map((s: any) => ({
+                          value: s.id,
+                          label: `${s.name} (${s.code})`
+                        }))
+                      ]}
+                      value={form.shelfId}
+                      onChange={(value) => setForm((f) => ({ ...f, shelfId: value }))}
+                      placeholder="Select Shelf"
+                      isClearable={false}
+                    />
                   </div>
                 )}
 
@@ -566,15 +593,16 @@ export default function GRNPage() {
                         <div className="flex gap-2 items-start mb-3">
                           <div className="flex-1">
                             <label className="text-xs font-medium text-gray-600 block mb-1">Product *</label>
-                            <select
-                              className="input-field"
+                            <SearchableSelect
+                              options={[
+                                { value: '', label: 'Select product' },
+                                ...skus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
+                              ]}
                               value={line.skuId}
-                              onChange={(e) => updateLine(i, 'skuId', e.target.value)}
-                              required
-                            >
-                              <option value="">Select product</option>
-                              {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
-                            </select>
+                              onChange={(value) => updateLine(i, 'skuId', value)}
+                              placeholder="Select product"
+                              isClearable={false}
+                            />
                           </div>
                           <div style={{ width: '100px' }}>
                             <label className="text-xs font-medium text-gray-600 block mb-1">Quantity *</label>
@@ -597,16 +625,19 @@ export default function GRNPage() {
                         {line.skuId && (lineVariants[i] ?? []).length > 0 && (
                           <div className="mb-3">
                             <label className="text-xs font-medium text-gray-600 block mb-1">Variant</label>
-                            <select
-                              className="input-field"
+                            <SearchableSelect
+                              options={[
+                                { value: '', label: '— No Variant (base SKU) —' },
+                                ...(lineVariants[i] ?? []).map((v: any) => ({
+                                  value: v.id,
+                                  label: `${v.name} (${v.variantCode})`
+                                }))
+                              ]}
                               value={line.variantId}
-                              onChange={(e) => updateLine(i, 'variantId', e.target.value)}
-                            >
-                              <option value="">— No Variant (base SKU) —</option>
-                              {(lineVariants[i] ?? []).map((v: any) => (
-                                <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>
-                              ))}
-                            </select>
+                              onChange={(value) => updateLine(i, 'variantId', value)}
+                              placeholder="No Variant"
+                              isClearable={false}
+                            />
                           </div>
                         )}
 
@@ -636,18 +667,19 @@ export default function GRNPage() {
 
                             {!line.createNewBatch ? (
                               <div>
-                                <select
-                                  className="input-field"
+                                <SearchableSelect
+                                  options={[
+                                    { value: '', label: '— Select Batch (optional) —' },
+                                    ...(lineBatches[i] ?? []).map((b: any) => ({
+                                      value: b.id,
+                                      label: `${b.batchNumber}${b.costPrice ? ` — Cost: ${b.costPrice}` : ''}`
+                                    }))
+                                  ]}
                                   value={line.batchId}
-                                  onChange={(e) => updateLine(i, 'batchId', e.target.value)}
-                                >
-                                  <option value="">— Select Batch (optional) —</option>
-                                  {(lineBatches[i] ?? []).map((b: any) => (
-                                    <option key={b.id} value={b.id}>
-                                      {b.batchNumber} {b.costPrice && `— Cost: ${b.costPrice}`}
-                                    </option>
-                                  ))}
-                                </select>
+                                  onChange={(value) => updateLine(i, 'batchId', value)}
+                                  placeholder="Select Batch (optional)"
+                                  isClearable={false}
+                                />
                                 {line.batchId && pricingCollapsed[i] && (
                                   <button
                                     type="button"
@@ -734,15 +766,17 @@ export default function GRNPage() {
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
                                   <label className="text-xs font-medium text-gray-600 block mb-1">Margin Type</label>
-                                  <select
-                                    className="input-field text-sm"
+                                  <SearchableSelect
+                                    options={[
+                                      { value: '', label: 'None' },
+                                      { value: 'fixed', label: 'Fixed Amount' },
+                                      { value: 'percentage', label: 'Percentage (%)' }
+                                    ]}
                                     value={line.marginType}
-                                    onChange={(e) => updateLine(i, 'marginType', e.target.value)}
-                                  >
-                                    <option value="">None</option>
-                                    <option value="fixed">Fixed Amount</option>
-                                    <option value="percentage">Percentage (%)</option>
-                                  </select>
+                                    onChange={(value) => updateLine(i, 'marginType', value)}
+                                    placeholder="None"
+                                    isClearable={false}
+                                  />
                                 </div>
                                 <div>
                                   <label className="text-xs font-medium text-gray-600 block mb-1">Margin Value</label>
@@ -787,10 +821,16 @@ export default function GRNPage() {
             <div className="modal-body form-stack">
               <div className="form-group">
                 <label className="form-label">Supplier</label>
-                <select className="input-field" value={editForm.supplierId} onChange={(e) => setEditForm((f) => ({ ...f, supplierId: e.target.value }))}>
-                  <option value="">Select supplier</option>
-                  {vendors.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                </select>
+                <SearchableSelect
+                  options={[
+                    { value: '', label: 'Select supplier' },
+                    ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
+                  ]}
+                  value={editForm.supplierId}
+                  onChange={(value) => setEditForm((f) => ({ ...f, supplierId: value }))}
+                  placeholder="Select supplier"
+                  isClearable={false}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Invoice Reference</label>
@@ -806,33 +846,45 @@ export default function GRNPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Receive Location — Floor</label>
-                <select className="input-field" value={editForm.floorId} onChange={(e) => {
-                  const floorId = e.target.value;
-                  setEditForm((f) => ({ ...f, floorId, shelfId: '' }));
-                  setEditFormShelves([]);
-                  if (floorId) {
-                    shelvesApi.list({ floorId }).then((res) => {
-                      setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
-                    }).catch(() => setEditFormShelves([]));
-                  }
-                }}>
-                  <option value="">— No Floor —</option>
-                  {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '— No Floor —' },
+                    ...locations.map((loc: any) => ({
+                      value: loc.id,
+                      label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
+                    }))
+                  ]}
+                  value={editForm.floorId}
+                  onChange={(value) => {
+                    const floorId = value;
+                    setEditForm((f) => ({ ...f, floorId, shelfId: '' }));
+                    setEditFormShelves([]);
+                    if (floorId) {
+                      shelvesApi.list({ floorId }).then((res) => {
+                        setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
+                      }).catch(() => setEditFormShelves([]));
+                    }
+                  }}
+                  placeholder="No Floor"
+                  isClearable={false}
+                />
               </div>
               {editForm.floorId && (
                 <div className="form-group">
                   <label className="form-label">Receive Location — Shelf</label>
-                  <select className="input-field" value={editForm.shelfId} onChange={(e) => setEditForm((f) => ({ ...f, shelfId: e.target.value }))}>
-                    <option value="">— Select Shelf —</option>
-                    {editFormShelves.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-                    ))}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— Select Shelf —' },
+                      ...editFormShelves.map((s: any) => ({
+                        value: s.id,
+                        label: `${s.name} (${s.code})`
+                      }))
+                    ]}
+                    value={editForm.shelfId}
+                    onChange={(value) => setEditForm((f) => ({ ...f, shelfId: value }))}
+                    placeholder="Select Shelf"
+                    isClearable={false}
+                  />
                 </div>
               )}
             </div>
@@ -909,15 +961,17 @@ export default function GRNPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Margin Type</label>
-                    <select
-                      className="input-field"
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: 'Leave empty to skip' },
+                        { value: 'fixed', label: 'Fixed Amount' },
+                        { value: 'percentage', label: 'Percentage (%)' }
+                      ]}
                       value={bulkPricing.marginType}
-                      onChange={(e) => setBulkPricing(p => ({ ...p, marginType: e.target.value }))}
-                    >
-                      <option value="">Leave empty to skip</option>
-                      <option value="fixed">Fixed Amount</option>
-                      <option value="percentage">Percentage (%)</option>
-                    </select>
+                      onChange={(value) => setBulkPricing(p => ({ ...p, marginType: value }))}
+                      placeholder="Leave empty to skip"
+                      isClearable={false}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Margin Value</label>
