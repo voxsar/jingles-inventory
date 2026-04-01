@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi } from '../api/client';
+import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi, batchesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -76,7 +76,6 @@ export default function SKUPage() {
 
 	// Pricing tab state
 	const [batchPrices, setBatchPrices] = useState<any[]>([]);
-	const [newBatchPrice, setNewBatchPrice] = useState({ batchReference: '', unitPrice: '', currency: 'USD', notes: '' });
 	const [quantityTiers, setQuantityTiers] = useState<any[]>([]);
 	const [newQtyTier, setNewQtyTier] = useState({ minQty: '', maxQty: '', price: '', currency: 'USD' });
 
@@ -404,11 +403,13 @@ export default function SKUPage() {
 	const loadPricing = async () => {
 		if (!editingSku) return;
 		try {
-			const res = await skusApi.get(editingSku.id);
-			const sku = res.data?.data;
-			// Load batch reference prices
-			setBatchPrices(sku?.batchReferencePricing ?? []);
-			// Load quantity tiers
+			const [batchRes, skuRes] = await Promise.all([
+				batchesApi.list({ skuId: editingSku.id }),
+				skusApi.get(editingSku.id),
+			]);
+			const batches = batchRes.data?.data?.items ?? batchRes.data?.data ?? [];
+			setBatchPrices(batches);
+			const sku = skuRes.data?.data;
 			setQuantityTiers(sku?.batchPricing ?? []);
 		} catch {
 			setBatchPrices([]);
@@ -416,36 +417,33 @@ export default function SKUPage() {
 		}
 	};
 
-	const handleAddBatchPrice = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!newBatchPrice.batchReference || !newBatchPrice.unitPrice) return;
-		const updated = [...batchPrices, {
-			batchReference: newBatchPrice.batchReference,
-			unitPrice: parseFloat(newBatchPrice.unitPrice),
-			currency: newBatchPrice.currency,
-			notes: newBatchPrice.notes || null,
-		}];
-		try {
-			await skusApi.update(editingSku.id, { batchReferencePricing: updated });
-			setBatchPrices(updated);
-			setNewBatchPrice({ batchReference: '', unitPrice: '', currency: 'USD', notes: '' });
-			setSaveSuccess(true);
-			setTimeout(() => setSaveSuccess(false), 2000);
-		} catch (err: any) {
-			alert(err.response?.data?.error ?? 'Failed to add batch price');
-		}
+	const [editingBatchPrice, setEditingBatchPrice] = useState<{ id: string; costPrice: string; sellingPrice: string; wholesalePrice: string; bulkPrice: string } | null>(null);
+
+	const handleEditBatchPrice = (batch: any) => {
+		setEditingBatchPrice({
+			id: batch.id,
+			costPrice: batch.costPrice?.toString() ?? '',
+			sellingPrice: batch.sellingPrice?.toString() ?? '',
+			wholesalePrice: batch.wholesalePrice?.toString() ?? '',
+			bulkPrice: batch.bulkPrice?.toString() ?? '',
+		});
 	};
 
-	const handleRemoveBatchPrice = async (index: number) => {
-		if (!confirm('Remove this batch price?')) return;
-		const updated = batchPrices.filter((_, i) => i !== index);
+	const handleSaveBatchPrice = async () => {
+		if (!editingBatchPrice) return;
 		try {
-			await skusApi.update(editingSku.id, { batchReferencePricing: updated });
-			setBatchPrices(updated);
+			await batchesApi.update(editingBatchPrice.id, {
+				costPrice: editingBatchPrice.costPrice ? parseFloat(editingBatchPrice.costPrice) : null,
+				sellingPrice: editingBatchPrice.sellingPrice ? parseFloat(editingBatchPrice.sellingPrice) : null,
+				wholesalePrice: editingBatchPrice.wholesalePrice ? parseFloat(editingBatchPrice.wholesalePrice) : null,
+				bulkPrice: editingBatchPrice.bulkPrice ? parseFloat(editingBatchPrice.bulkPrice) : null,
+			});
+			setEditingBatchPrice(null);
 			setSaveSuccess(true);
 			setTimeout(() => setSaveSuccess(false), 2000);
+			await loadPricing();
 		} catch (err: any) {
-			alert(err.response?.data?.error ?? 'Failed to remove batch price');
+			alert(err.response?.data?.error ?? 'Failed to update batch pricing');
 		}
 	};
 
@@ -1262,54 +1260,56 @@ export default function SKUPage() {
 							)}
 							{modalTab === 'pricing' && (
 								<div className="flex flex-col gap-6">
-									{/* Batch Reference Pricing */}
+									{/* Batch Records Pricing */}
 									<div className="border border-gray-200 rounded-lg p-4">
-										<p className="text-sm font-semibold text-gray-700 mb-3">Batch Reference Pricing</p>
+										<p className="text-sm font-semibold text-gray-700 mb-3">Batch Pricing</p>
 										{batchPrices.length === 0 ? (
-											<p className="text-sm text-gray-400 mb-3">No batch reference prices set.</p>
+											<p className="text-sm text-gray-400 mb-3">No batches found for this product. Create batches via GRN receipts.</p>
 										) : (
 											<table className="w-full text-sm border-collapse mb-3">
 												<thead>
 													<tr className="bg-gray-50">
-														{['Batch Reference', 'Unit Price', 'Currency', 'Notes', ''].map(h => (
+														{['Batch #', 'Variant', 'Cost Price', 'Selling Price', 'Wholesale', 'Bulk Price', ''].map(h => (
 															<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
 														))}
 													</tr>
 												</thead>
 												<tbody>
-													{batchPrices.map((bp: any, i: number) => (
-														<tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-															<td className="px-3 py-2 font-mono text-xs">{bp.batchReference}</td>
-															<td className="px-3 py-2">{bp.unitPrice}</td>
-															<td className="px-3 py-2">{bp.currency}</td>
-															<td className="px-3 py-2 text-gray-500">{bp.notes ?? '—'}</td>
-															<td className="px-3 py-2">
-																<button className="btn-sm text-red-600 text-xs" onClick={() => handleRemoveBatchPrice(i)}>Remove</button>
-															</td>
+													{batchPrices.map((bp: any) => {
+														const isEditing = editingBatchPrice?.id === bp.id;
+														const ep = editingBatchPrice;
+														return (
+														<tr key={bp.id} className="border-b border-gray-100 hover:bg-gray-50">
+															<td className="px-3 py-2 font-mono text-xs">{bp.batchNumber}</td>
+															<td className="px-3 py-2 text-xs text-gray-500">{bp.variant?.name ?? bp.variant?.variantCode ?? '—'}</td>
+															{isEditing && ep ? (
+																<>
+																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.costPrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, costPrice: e.target.value } : p)} /></td>
+																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.sellingPrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, sellingPrice: e.target.value } : p)} /></td>
+																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.wholesalePrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, wholesalePrice: e.target.value } : p)} /></td>
+																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.bulkPrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, bulkPrice: e.target.value } : p)} /></td>
+																	<td className="px-3 py-2 flex gap-1">
+																		<button className="btn-sm text-xs" onClick={handleSaveBatchPrice}>Save</button>
+																		<button className="btn-sm text-xs text-gray-500" onClick={() => setEditingBatchPrice(null)}>Cancel</button>
+																	</td>
+																</>
+															) : (
+																<>
+																	<td className="px-3 py-2">{bp.costPrice ?? '—'}</td>
+																	<td className="px-3 py-2">{bp.sellingPrice ?? '—'}</td>
+																	<td className="px-3 py-2">{bp.wholesalePrice ?? '—'}</td>
+																	<td className="px-3 py-2">{bp.bulkPrice ?? '—'}</td>
+																	<td className="px-3 py-2">
+																		<button className="btn-sm text-xs" onClick={() => handleEditBatchPrice(bp)}>Edit</button>
+																	</td>
+																</>
+															)}
 														</tr>
-													))}
+														);
+													})}
 												</tbody>
 											</table>
 										)}
-										<form onSubmit={handleAddBatchPrice} className="flex flex-wrap gap-2 items-end">
-											<div className="flex flex-col gap-1">
-												<label className="text-xs text-gray-500">Batch Reference *</label>
-												<input className="input-field text-sm" placeholder="e.g. BATCH-001" value={newBatchPrice.batchReference} onChange={e => setNewBatchPrice(p => ({ ...p, batchReference: e.target.value }))} />
-											</div>
-											<div className="flex flex-col gap-1">
-												<label className="text-xs text-gray-500">Unit Price *</label>
-												<input className="input-field text-sm" type="number" step="0.01" placeholder="0.00" value={newBatchPrice.unitPrice} onChange={e => setNewBatchPrice(p => ({ ...p, unitPrice: e.target.value }))} />
-											</div>
-											<div className="flex flex-col gap-1">
-												<label className="text-xs text-gray-500">Currency</label>
-												<input className="input-field text-sm" placeholder="USD" value={newBatchPrice.currency} onChange={e => setNewBatchPrice(p => ({ ...p, currency: e.target.value }))} />
-											</div>
-											<div className="flex flex-col gap-1">
-												<label className="text-xs text-gray-500">Notes</label>
-												<input className="input-field text-sm" placeholder="Optional" value={newBatchPrice.notes} onChange={e => setNewBatchPrice(p => ({ ...p, notes: e.target.value }))} />
-											</div>
-											<button type="submit" className="btn-primary text-sm">+ Add</button>
-										</form>
 									</div>
 									{/* Quantity Tier Pricing */}
 									<div className="border border-gray-200 rounded-lg p-4">
