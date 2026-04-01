@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { settingsApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import { tagsApi } from '../../api/client';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 
 export default function TagSpreadsheetPage() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function TagSpreadsheetPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const res = await settingsApi.listTags();
+      const res = await tagsApi.list();
       const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
       setTags(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -25,48 +25,32 @@ export default function TagSpreadsheetPage() {
     loadData();
   }, []);
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'name',
       header: 'Tag Name',
-      type: 'text',
       width: '200px',
-      required: true,
     },
     {
       key: 'color',
       header: 'Color',
-      type: 'text',
       width: '140px',
       getValue: (row) => row.color || '',
       setValue: (row, value) => ({ color: value || null }),
-      render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {row.color && (
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '4px',
-              backgroundColor: row.color,
-              border: '1px solid #e1e3e5'
-            }} />
-          )}
-          <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{row.color || '—'}</span>
-        </div>
-      ),
+      render: (value) => value || '—',
     },
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
       width: '120px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      readOnly: true,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await settingsApi.updateTag(row.id, changes);
+      await tagsApi.update(row.id, changes);
       await loadData();
     } catch (err) {
       console.error('Failed to save tag:', err);
@@ -76,7 +60,7 @@ export default function TagSpreadsheetPage() {
 
   const handleDelete = async (row: any) => {
     try {
-      await settingsApi.deleteTag(row.id);
+      await tagsApi.delete(row.id);
       await loadData();
     } catch (err) {
       console.error('Failed to delete tag:', err);
@@ -86,7 +70,7 @@ export default function TagSpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await settingsApi.createTag(data);
+      await tagsApi.create(data);
       await loadData();
     } catch (err) {
       console.error('Failed to create tag:', err);
@@ -113,7 +97,7 @@ export default function TagSpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={tags}
           isLoading={isLoading}
@@ -121,8 +105,6 @@ export default function TagSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No tags found"
-          emptyIcon="🏷️"
         />
       </div>
     </div>

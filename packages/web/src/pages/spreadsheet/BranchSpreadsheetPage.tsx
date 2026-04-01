@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { branchesApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -34,26 +34,26 @@ export default function BranchSpreadsheetPage() {
     loadData();
   }, [page, pageSize]);
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'code',
       header: 'Branch Code',
-      type: 'text',
+      
       width: '120px',
-      required: true,
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600 }}>{row.code}</span>,
+      
+      render: (value) => String(value || ""),
     },
     {
       key: 'name',
       header: 'Branch Name',
-      type: 'text',
+      
       width: '200px',
-      required: true,
+      
     },
     {
       key: 'address',
       header: 'Address',
-      type: 'text',
+      
       width: '260px',
       getValue: (row) => row.address || '',
       setValue: (row, value) => ({ address: value || null }),
@@ -61,7 +61,7 @@ export default function BranchSpreadsheetPage() {
     {
       key: 'phone',
       header: 'Phone',
-      type: 'text',
+      
       width: '140px',
       getValue: (row) => row.phone || '',
       setValue: (row, value) => ({ phone: value || null }),
@@ -69,7 +69,7 @@ export default function BranchSpreadsheetPage() {
     {
       key: 'email',
       header: 'Email',
-      type: 'text',
+      
       width: '180px',
       getValue: (row) => row.email || '',
       setValue: (row, value) => ({ email: value || null }),
@@ -81,7 +81,7 @@ export default function BranchSpreadsheetPage() {
     {
       key: 'isDefault',
       header: 'Default',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isDefault,
       setValue: (row, value) => ({ isDefault: value }),
@@ -89,7 +89,7 @@ export default function BranchSpreadsheetPage() {
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -97,9 +97,9 @@ export default function BranchSpreadsheetPage() {
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
+      
       width: '110px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -154,7 +154,7 @@ export default function BranchSpreadsheetPage() {
 
       {/* Table */}
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={branches}
           isLoading={isLoading}
@@ -162,8 +162,6 @@ export default function BranchSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No branches found"
-          emptyIcon="🏢"
         />
       </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -38,26 +38,23 @@ export default function CategorySpreadsheetPage() {
     .filter(c => !c.parentId)
     .map(c => ({ value: c.id, label: c.name }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'name',
       header: 'Category Name',
-      type: 'text',
+      
       width: '200px',
-      required: true,
+      
     },
     {
       key: 'slug',
       header: 'Slug',
-      type: 'text',
       width: '160px',
-      required: true,
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{row.slug}</span>,
     },
     {
       key: 'description',
       header: 'Description',
-      type: 'text',
+      
       width: '260px',
       getValue: (row) => row.description || '',
       setValue: (row, value) => ({ description: value || null }),
@@ -65,20 +62,19 @@ export default function CategorySpreadsheetPage() {
     {
       key: 'parentId',
       header: 'Parent Category',
-      type: 'select',
       options: parentOptions,
       width: '180px',
       getValue: (row) => row.parentId || '',
       setValue: (row, value) => ({ parentId: value || null }),
-      render: (row) => {
+      render: (value, row) => {
         const parent = categories.find(c => c.id === row.parentId);
-        return <span>{parent?.name || '—'}</span>;
+        return parent?.name || '—';
       },
     },
     {
       key: 'sortOrder',
       header: 'Sort Order',
-      type: 'number',
+      
       width: '100px',
       getValue: (row) => row.sortOrder ?? 0,
       setValue: (row, value) => ({ sortOrder: value ?? 0 }),
@@ -86,7 +82,7 @@ export default function CategorySpreadsheetPage() {
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -94,9 +90,9 @@ export default function CategorySpreadsheetPage() {
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
       width: '110px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      readOnly: true,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -149,7 +145,7 @@ export default function CategorySpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={categories}
           isLoading={isLoading}
@@ -157,8 +153,6 @@ export default function CategorySpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No categories found"
-          emptyIcon="🗂️"
         />
       </div>
 
