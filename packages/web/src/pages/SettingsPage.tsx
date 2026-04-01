@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { settingsApi, attributesApi } from '../api/client';
+import SearchableSelect from '../components/SearchableSelect';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
 const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
@@ -479,9 +480,13 @@ export default function SettingsPage() {
 										</div>
 										<div className="form-group">
 											<label className="form-label">Type *</label>
-											<select className="input-field" value={attrForm.type} onChange={(e) => setAttrForm(f => ({ ...f, type: e.target.value }))}>
-												{ATTRIBUTE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-											</select>
+											<SearchableSelect
+												options={ATTRIBUTE_TYPES.map(t => ({ value: t, label: t }))}
+												value={attrForm.type}
+												onChange={(value) => setAttrForm(f => ({ ...f, type: value }))}
+												placeholder="Select Type"
+												isClearable={false}
+											/>
 										</div>
 									</div>
 									<div className="form-group">
@@ -734,9 +739,13 @@ export default function SettingsPage() {
 									<div className="form-grid-3">
 										<div className="form-group">
 											<label className="form-label">Type *</label>
-											<select className="input-field" value={unitForm.type} onChange={(e) => setUnitForm(f => ({ ...f, type: e.target.value }))}>
-												{UNIT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-											</select>
+											<SearchableSelect
+												options={UNIT_TYPES.map(t => ({ value: t, label: t }))}
+												value={unitForm.type}
+												onChange={(value) => setUnitForm(f => ({ ...f, type: value }))}
+												placeholder="Select Type"
+												isClearable={false}
+											/>
 										</div>
 										<div className="form-group">
 											<label className="form-label">Base Unit</label>
@@ -909,21 +918,22 @@ export default function SettingsPage() {
 												Application Behaviour
 												<span className="ml-1 text-xs text-gray-400 font-normal">(assign a special role to this status)</span>
 											</label>
-											<select
-												className="input-field"
+											<SearchableSelect
+												options={[
+													{ value: '', label: '— No special behaviour —' },
+													...(SPECIAL_KEYS_BY_ENTITY[statusForm.entityType] ?? []).map(sk => {
+														const takenBy = statuses.find((s: any) => s.specialKey === sk.key && s.id !== editingStatus?.id);
+														return {
+															value: sk.key,
+															label: `${sk.label}${takenBy ? ` (used by "${takenBy.label}")` : ''}`
+														};
+													})
+												]}
 												value={statusForm.specialKey}
-												onChange={(e) => setStatusForm(f => ({ ...f, specialKey: e.target.value }))}
-											>
-												<option value="">— No special behaviour —</option>
-												{(SPECIAL_KEYS_BY_ENTITY[statusForm.entityType] ?? []).map(sk => {
-													const takenBy = statuses.find((s: any) => s.specialKey === sk.key && s.id !== editingStatus?.id);
-													return (
-														<option key={sk.key} value={sk.key} disabled={!!takenBy}>
-															{sk.label}{takenBy ? ` (used by "${takenBy.label}")` : ''}
-														</option>
-													);
-												})}
-											</select>
+												onChange={(value) => setStatusForm(f => ({ ...f, specialKey: value }))}
+												placeholder="No special behaviour"
+												isClearable={false}
+											/>
 											{statusForm.specialKey && (
 												<p className="text-xs text-indigo-600 mt-1">
 													ℹ️ {(SPECIAL_KEYS_BY_ENTITY[statusForm.entityType] ?? []).find(sk => sk.key === statusForm.specialKey)?.description}

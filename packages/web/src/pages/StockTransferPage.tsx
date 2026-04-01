@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { branchesApi, floorsApi, skusApi, stockTransfersApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import SearchableSelect from '../components/SearchableSelect';
 
 const STATUS_TONES: Record<string, string> = {
   Draft: '',
@@ -158,16 +159,21 @@ export default function StockTransferPage() {
       <div className="content-section">
         {/* Filter bar */}
         <div className="filter-bar">
-          <select
-            className="filter-select"
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All Statuses</option>
-            {['Draft', 'Pending', 'Approved', 'InTransit', 'Completed', 'Cancelled'].map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Statuses' },
+                ...['Draft', 'Pending', 'Approved', 'InTransit', 'Completed', 'Cancelled'].map(s => ({
+                  value: s,
+                  label: s
+                }))
+              ]}
+              value={statusFilter}
+              onChange={(value) => { setStatusFilter(value); setPage(1); }}
+              placeholder="All Statuses"
+              isClearable={false}
+            />
+          </div>
           <span className="text-sm text-gray-500">{total} transfers</span>
         </div>
 
@@ -202,47 +208,69 @@ export default function StockTransferPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">From Branch</label>
-                    <select className="input-field" value={form.fromBranchId} onChange={(e) => setForm(f => ({ ...f, fromBranchId: e.target.value, fromFloorId: '' }))}>
-                      <option value="">— Select Branch —</option>
-                      {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select Branch —' },
+                        ...branches.map((b: any) => ({ value: b.id, label: b.name }))
+                      ]}
+                      value={form.fromBranchId}
+                      onChange={(value) => setForm(f => ({ ...f, fromBranchId: value, fromFloorId: '' }))}
+                      placeholder="Select Branch"
+                      isClearable={false}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Branch</label>
-                    <select className="input-field" value={form.toBranchId} onChange={(e) => setForm(f => ({ ...f, toBranchId: e.target.value, toFloorId: '' }))}>
-                      <option value="">— Select Branch —</option>
-                      {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select Branch —' },
+                        ...branches.map((b: any) => ({ value: b.id, label: b.name }))
+                      ]}
+                      value={form.toBranchId}
+                      onChange={(value) => setForm(f => ({ ...f, toBranchId: value, toFloorId: '' }))}
+                      placeholder="Select Branch"
+                      isClearable={false}
+                    />
                   </div>
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">From Location</label>
-                    <select className="input-field" value={form.fromFloorId} onChange={(e) => setForm(f => ({ ...f, fromFloorId: e.target.value }))}>
-                      <option value="">— Select Location —</option>
-                      {(form.fromBranchId
-                        ? locations.filter((l: any) => l.branchId === form.fromBranchId || l.branch?.id === form.fromBranchId)
-                        : locations
-                      ).map((l: any) => (
-                        <option key={l.id} value={l.id}>
-                          {l.branch?.name && !form.fromBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select Location —' },
+                        ...(form.fromBranchId
+                          ? locations.filter((l: any) => l.branchId === form.fromBranchId || l.branch?.id === form.fromBranchId)
+                          : locations
+                        ).map((l: any) => ({
+                          value: l.id,
+                          label: l.branch?.name && !form.fromBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`
+                        }))
+                      ]}
+                      value={form.fromFloorId}
+                      onChange={(value) => setForm(f => ({ ...f, fromFloorId: value }))}
+                      placeholder="Select Location"
+                      isClearable={false}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Location</label>
-                    <select className="input-field" value={form.toFloorId} onChange={(e) => setForm(f => ({ ...f, toFloorId: e.target.value }))}>
-                      <option value="">— Select Location —</option>
-                      {(form.toBranchId
-                        ? locations.filter((l: any) => l.branchId === form.toBranchId || l.branch?.id === form.toBranchId)
-                        : locations
-                      ).map((l: any) => (
-                        <option key={l.id} value={l.id}>
-                          {l.branch?.name && !form.toBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select Location —' },
+                        ...(form.toBranchId
+                          ? locations.filter((l: any) => l.branchId === form.toBranchId || l.branch?.id === form.toBranchId)
+                          : locations
+                        ).map((l: any) => ({
+                          value: l.id,
+                          label: l.branch?.name && !form.toBranchId ? `${l.branch.name} › ${l.name}` : `${l.name} (${l.code})`
+                        }))
+                      ]}
+                      value={form.toFloorId}
+                      onChange={(value) => setForm(f => ({ ...f, toFloorId: value }))}
+                      placeholder="Select Location"
+                      isClearable={false}
+                    />
                   </div>
                 </div>
                 <div className="form-group">
@@ -259,14 +287,18 @@ export default function StockTransferPage() {
                   <div className="flex flex-col gap-2">
                     {form.lines.map((line, idx) => (
                       <div key={idx} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <select
-                          className="input-field flex-1"
-                          value={line.skuId}
-                          onChange={(e) => updateLine(idx, 'skuId', e.target.value)}
-                        >
-                          <option value="">— Select SKU —</option>
-                          {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
-                        </select>
+                        <div className="flex-1">
+                          <SearchableSelect
+                            options={[
+                              { value: '', label: '— Select SKU —' },
+                              ...skus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
+                            ]}
+                            value={line.skuId}
+                            onChange={(value) => updateLine(idx, 'skuId', value)}
+                            placeholder="Select SKU"
+                            isClearable={false}
+                          />
+                        </div>
                         <input
                           type="number"
                           className="input-field"
