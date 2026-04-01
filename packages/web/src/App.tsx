@@ -19,6 +19,11 @@ import SuppliersPage from './pages/SuppliersPage';
 import WarehouseVisualizerPage from './pages/WarehouseVisualizerPage';
 import PricingPage from './pages/PricingPage';
 import PricingOverlaysPage from './pages/PricingOverlaysPage';
+import SpreadsheetPage from './pages/SpreadsheetPage';
+import SKUSpreadsheetPage from './pages/spreadsheet/SKUSpreadsheetPage';
+import InventorySpreadsheetPage from './pages/spreadsheet/InventorySpreadsheetPage';
+import VendorSpreadsheetPage from './pages/spreadsheet/VendorSpreadsheetPage';
+import BranchSpreadsheetPage from './pages/spreadsheet/BranchSpreadsheetPage';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
@@ -54,6 +59,11 @@ function AppRoutes() {
         <Route path="pricing" element={<PricingPage />} />
         <Route path="pricing-overlays" element={<PricingOverlaysPage />} />
         <Route path="warehouse-3d" element={<WarehouseVisualizerPage />} />
+        <Route path="spreadsheet" element={<SpreadsheetPage />} />
+        <Route path="spreadsheet/skus" element={<SKUSpreadsheetPage />} />
+        <Route path="spreadsheet/inventory" element={<InventorySpreadsheetPage />} />
+        <Route path="spreadsheet/vendors" element={<VendorSpreadsheetPage />} />
+        <Route path="spreadsheet/branches" element={<BranchSpreadsheetPage />} />
         <Route
           path="vendor-portal"
           element={
