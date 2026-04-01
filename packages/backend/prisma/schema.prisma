@@ -135,14 +135,15 @@ model SKU {
   vendor           Vendor              @relation(fields: [vendorId], references: [id])
   category         Category?           @relation(fields: [categoryId], references: [id])
   unitModel        UnitOfMeasureModel? @relation(fields: [unitOfMeasureId], references: [id])
-  inventoryRecords InventoryRecord[]
-  grnLines         GRNLine[]
-  images           ProductImage[]
-  barcodes         ProductBarcode[]
-  tags             SKUTag[]
-  skuAttributes    SKUAttribute[]
-  variants         SKUVariant[]
-  batches          Batch[]
+  inventoryRecords    InventoryRecord[]
+  grnLines            GRNLine[]
+  images              ProductImage[]
+  barcodes            ProductBarcode[]
+  tags                SKUTag[]
+  skuAttributes       SKUAttribute[]
+  variants            SKUVariant[]
+  batches             Batch[]
+  stockTransferLines  StockTransferLine[]
 
   @@map("skus")
 }
@@ -233,6 +234,7 @@ model SKUVariant {
   inventoryRecords InventoryRecord[]
   grnLines         GRNLine[]
   batches          Batch[]
+  stockTransferLines StockTransferLine[]
 
   @@map("sku_variants")
 }
@@ -425,14 +427,19 @@ model StockTransfer {
 }
 
 model StockTransferLine {
-  id               String @id @default(uuid())
-  transferId       String @map("transfer_id")
-  skuId            String @map("sku_id")
-  requestedQty     Int    @map("requested_qty")
-  transferredQty   Int    @default(0) @map("transferred_qty")
+  id               String  @id @default(uuid())
+  transferId       String  @map("transfer_id")
+  skuId            String  @map("sku_id")
+  variantId        String? @map("variant_id")
+  batchId          String? @map("batch_id")
+  requestedQty     Int     @map("requested_qty")
+  transferredQty   Int     @default(0) @map("transferred_qty")
   notes            String?
 
   transfer StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  sku      SKU           @relation(fields: [skuId], references: [id])
+  variant  SKUVariant?   @relation(fields: [variantId], references: [id])
+  batch    Batch?        @relation(fields: [batchId], references: [id])
 
   @@map("stock_transfer_lines")
 }
@@ -541,6 +548,7 @@ model Batch {
   variant          SKUVariant?        @relation(fields: [variantId], references: [id])
   grnLines         GRNLine[]
   inventoryRecords InventoryRecord[]
+  stockTransferLines StockTransferLine[]
 
   @@unique([skuId, variantId, sequenceNumber])
   @@map("batches")

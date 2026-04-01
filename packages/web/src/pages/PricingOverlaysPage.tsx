@@ -22,6 +22,13 @@ export default function PricingOverlaysPage() {
 	const [conflicts, setConflicts] = useState<any[]>([]);
 	const [conflictOverlayName, setConflictOverlayName] = useState('');
 
+	// Selector data
+	const [allSkus, setAllSkus] = useState<any[]>([]);
+	const [allBatches, setAllBatches] = useState<any[]>([]);
+	const [allCategories, setAllCategories] = useState<any[]>([]);
+	const [allVariants, setAllVariants] = useState<any[]>([]);
+	const [variantSkuId, setVariantSkuId] = useState('');
+
 	const [formData, setFormData] = useState({
 		name: '',
 		description: '',
@@ -48,6 +55,21 @@ export default function PricingOverlaysPage() {
 		dateRangeStart: '',
 		dateRangeEnd: '',
 	});
+
+	const loadSelectorData = async () => {
+		try {
+			const [skuRes, batchRes, catRes] = await Promise.all([
+				skusApi.list({ pageSize: '200' }),
+				batchesApi.list({ pageSize: '200', isActive: 'true' }),
+				categoriesApi.list(),
+			]);
+			setAllSkus(skuRes.data?.data?.items ?? skuRes.data?.data ?? []);
+			setAllBatches(batchRes.data?.data?.items ?? batchRes.data?.data ?? []);
+			setAllCategories(catRes.data?.data?.items ?? catRes.data?.data ?? catRes.data ?? []);
+		} catch (err) {
+			console.error('Failed to load selector data', err);
+		}
+	};
 
 	const loadOverlays = async () => {
 		setIsLoading(true);
@@ -101,11 +123,17 @@ export default function PricingOverlaysPage() {
 
 	const handleCreateClick = () => {
 		resetForm();
+		setVariantSkuId('');
+		setAllVariants([]);
+		loadSelectorData();
 		setShowCreateModal(true);
 	};
 
 	const handleEditClick = (overlay: any) => {
 		setEditingOverlay(overlay);
+		setVariantSkuId('');
+		setAllVariants([]);
+		loadSelectorData();
 		const appliesTo = overlay.appliesTo || {};
 		const conditions = overlay.conditions || {};
 
@@ -357,247 +385,361 @@ export default function PricingOverlaysPage() {
 			{(showCreateModal || editingOverlay) && (
 				<div className="modal-overlay" onClick={() => { setShowCreateModal(false); setEditingOverlay(null); }}>
 					<div className="modal-panel-lg" onClick={(e) => e.stopPropagation()}>
-						<h2 className="text-lg font-semibold mb-4">{editingOverlay ? 'Edit Overlay' : 'Create Overlay'}</h2>
-						<form onSubmit={handleSubmit} className="space-y-4">
-							{/* Basic Info */}
-							<div className="grid grid-cols-2 gap-4">
-								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-									<input
-										type="text"
-										className="w-full px-3 py-2 border border-gray-300 rounded"
-										value={formData.name}
-										onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-										required
-									/>
-								</div>
-								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-									<SearchableSelect
-										options={[
-											{ value: PricingOverlayStatus.Active, label: 'Active' },
-											{ value: PricingOverlayStatus.Inactive, label: 'Inactive' },
-											{ value: PricingOverlayStatus.Scheduled, label: 'Scheduled' }
-										]}
-										value={formData.status}
-										onChange={(value) => setFormData({ ...formData, status: value as any })}
-										placeholder="Select Status"
-										isClearable={false}
-									/>
-								</div>
-							</div>
-
-							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-								<textarea
-									className="w-full px-3 py-2 border border-gray-300 rounded"
-									rows={2}
-									value={formData.description}
-									onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-								/>
-							</div>
-
-							{/* Pricing Details */}
-							<div className="border-t pt-4">
-								<h3 className="text-sm font-medium text-gray-700 mb-3">Pricing Adjustment</h3>
-								<div className="grid grid-cols-2 gap-4">
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-										<SearchableSelect
-											options={[
-												{ value: PricingOverlayType.PercentageDiscount, label: 'Percentage Discount' },
-												{ value: PricingOverlayType.FixedDiscount, label: 'Fixed Discount' },
-												{ value: PricingOverlayType.PercentageMarkup, label: 'Percentage Markup' },
-												{ value: PricingOverlayType.FixedMarkup, label: 'Fixed Markup' }
-											]}
-											value={formData.type}
-											onChange={(value) => setFormData({ ...formData, type: value as any })}
-											placeholder="Select Type"
-											isClearable={false}
-										/>
-									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+						<div className="modal-header">
+							<h2 className="modal-title">🎯 {editingOverlay ? 'Edit Overlay' : 'Create Overlay'}</h2>
+							<button className="modal-close" onClick={() => { setShowCreateModal(false); setEditingOverlay(null); }}>✕</button>
+						</div>
+						<form onSubmit={handleSubmit}>
+							<div className="modal-body form-stack">
+								{/* Basic Info */}
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Name *</label>
 										<input
-											type="number"
-											step="0.01"
-											className="w-full px-3 py-2 border border-gray-300 rounded"
-											value={formData.value}
-											onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-											placeholder={formData.type.includes('percentage') ? '10 (for 10%)' : '50.00'}
+											type="text"
+											className="input-field"
+											value={formData.name}
+											onChange={(e) => setFormData({ ...formData, name: e.target.value })}
 											required
 										/>
 									</div>
-								</div>
-							</div>
-
-							{/* Priority and Stacking */}
-							<div className="border-t pt-4">
-								<h3 className="text-sm font-medium text-gray-700 mb-3">Priority & Stacking</h3>
-								<div className="grid grid-cols-2 gap-4">
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-										<input
-											type="number"
-											className="w-full px-3 py-2 border border-gray-300 rounded"
-											value={formData.priority}
-											onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-										/>
-										<p className="text-xs text-gray-500 mt-1">Higher values are applied first</p>
-									</div>
-									<div>
-										<label className="flex items-center gap-2 mt-7">
-											<input
-												type="checkbox"
-												checked={formData.stackable}
-												onChange={(e) => setFormData({ ...formData, stackable: e.target.checked })}
-											/>
-											<span className="text-sm">Allow stacking with other overlays</span>
-										</label>
-									</div>
-								</div>
-							</div>
-
-							{/* Validity Dates */}
-							<div className="border-t pt-4">
-								<h3 className="text-sm font-medium text-gray-700 mb-3">Validity Period</h3>
-								<div className="grid grid-cols-2 gap-4">
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">Valid From</label>
-										<input
-											type="datetime-local"
-											className="w-full px-3 py-2 border border-gray-300 rounded"
-											value={formData.validFrom}
-											onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
-										/>
-									</div>
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-1">Valid To</label>
-										<input
-											type="datetime-local"
-											className="w-full px-3 py-2 border border-gray-300 rounded"
-											value={formData.validTo}
-											onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
+									<div className="form-group">
+										<label className="form-label">Status</label>
+										<SearchableSelect
+											options={[
+												{ value: PricingOverlayStatus.Active, label: 'Active' },
+												{ value: PricingOverlayStatus.Inactive, label: 'Inactive' },
+												{ value: PricingOverlayStatus.Scheduled, label: 'Scheduled' }
+											]}
+											value={formData.status}
+											onChange={(value) => setFormData({ ...formData, status: value as any })}
+											placeholder="Select Status"
+											isClearable={false}
 										/>
 									</div>
 								</div>
-							</div>
 
-							{/* Applies To */}
-							<div className="border-t pt-4">
-								<h3 className="text-sm font-medium text-gray-700 mb-3">Applies To</h3>
-								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">Target</label>
-									<SearchableSelect
-										options={[
-											{ value: 'all', label: 'All Products' },
-											{ value: 'sku', label: 'Specific SKUs' },
-											{ value: 'variant', label: 'Specific Variants' },
-											{ value: 'batch', label: 'Specific Batches' },
-											{ value: 'category', label: 'Specific Categories' }
-										]}
-										value={formData.targetType}
-										onChange={(value) => setFormData({ ...formData, targetType: value as any })}
-										placeholder="Select Target"
-										isClearable={false}
+								<div className="form-group">
+									<label className="form-label">Description</label>
+									<textarea
+										className="input-field"
+										rows={2}
+										value={formData.description}
+										onChange={(e) => setFormData({ ...formData, description: e.target.value })}
 									/>
 								</div>
 
-								{formData.targetType !== 'all' && (
-									<div className="mt-3">
-										<label className="block text-sm font-medium text-gray-700 mb-1">Target IDs (comma-separated)</label>
-										<input
-											type="text"
-											className="w-full px-3 py-2 border border-gray-300 rounded"
-											placeholder="Enter UUIDs separated by commas"
-											value={
-												formData.targetType === 'sku' ? formData.skuIds.join(',') :
-													formData.targetType === 'variant' ? formData.variantIds.join(',') :
-														formData.targetType === 'batch' ? formData.batchIds.join(',') :
-															formData.targetType === 'category' ? formData.categoryIds.join(',') : ''
-											}
-											onChange={(e) => {
-												const ids = e.target.value.split(',').map(id => id.trim()).filter(Boolean);
-												if (formData.targetType === 'sku') setFormData({ ...formData, skuIds: ids });
-												else if (formData.targetType === 'variant') setFormData({ ...formData, variantIds: ids });
-												else if (formData.targetType === 'batch') setFormData({ ...formData, batchIds: ids });
-												else if (formData.targetType === 'category') setFormData({ ...formData, categoryIds: ids });
-											}}
-										/>
-									</div>
-								)}
-							</div>
-
-							{/* Conditions */}
-							<div className="border-t pt-4">
-								<label className="flex items-center gap-2 mb-3">
-									<input
-										type="checkbox"
-										checked={formData.hasConditions}
-										onChange={(e) => setFormData({ ...formData, hasConditions: e.target.checked })}
-									/>
-									<span className="text-sm font-medium text-gray-700">Add Activation Conditions</span>
-								</label>
-
-								{formData.hasConditions && (
-									<div className="space-y-4 ml-6 border-l-2 border-gray-200 pl-4">
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium text-gray-700 mb-1">Min Quantity</label>
-												<input
-													type="number"
-													className="w-full px-3 py-2 border border-gray-300 rounded"
-													value={formData.minQty}
-													onChange={(e) => setFormData({ ...formData, minQty: e.target.value })}
-												/>
-											</div>
-											<div>
-												<label className="block text-sm font-medium text-gray-700 mb-1">Max Quantity</label>
-												<input
-													type="number"
-													className="w-full px-3 py-2 border border-gray-300 rounded"
-													value={formData.maxQty}
-													onChange={(e) => setFormData({ ...formData, maxQty: e.target.value })}
-												/>
-											</div>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
-											<input
-												type="text"
-												className="w-full px-3 py-2 border border-gray-300 rounded"
-												value={formData.customerType}
-												onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
-												placeholder="e.g., wholesale, retail"
+								{/* Pricing Details */}
+								<div className="border-t pt-4">
+									<p className="text-sm font-semibold text-gray-700 mb-3">Pricing Adjustment</p>
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Type *</label>
+											<SearchableSelect
+												options={[
+													{ value: PricingOverlayType.PercentageDiscount, label: 'Percentage Discount' },
+													{ value: PricingOverlayType.FixedDiscount, label: 'Fixed Discount' },
+													{ value: PricingOverlayType.PercentageMarkup, label: 'Percentage Markup' },
+													{ value: PricingOverlayType.FixedMarkup, label: 'Fixed Markup' }
+												]}
+												value={formData.type}
+												onChange={(value) => setFormData({ ...formData, type: value as any })}
+												placeholder="Select Type"
+												isClearable={false}
 											/>
 										</div>
-
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium text-gray-700 mb-1">Date Range Start</label>
-												<input
-													type="date"
-													className="w-full px-3 py-2 border border-gray-300 rounded"
-													value={formData.dateRangeStart}
-													onChange={(e) => setFormData({ ...formData, dateRangeStart: e.target.value })}
-												/>
-											</div>
-											<div>
-												<label className="block text-sm font-medium text-gray-700 mb-1">Date Range End</label>
-												<input
-													type="date"
-													className="w-full px-3 py-2 border border-gray-300 rounded"
-													value={formData.dateRangeEnd}
-													onChange={(e) => setFormData({ ...formData, dateRangeEnd: e.target.value })}
-												/>
-											</div>
+										<div className="form-group">
+											<label className="form-label">Value *</label>
+											<input
+												type="number"
+												step="0.01"
+												className="input-field"
+												value={formData.value}
+												onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+												placeholder={formData.type.includes('percentage') ? '10 (for 10%)' : '50.00'}
+												required
+											/>
 										</div>
 									</div>
-								)}
-							</div>
+								</div>
 
-							<div className="flex justify-end gap-3 pt-4 border-t">
+								{/* Priority and Stacking */}
+								<div className="border-t pt-4">
+									<p className="text-sm font-semibold text-gray-700 mb-3">Priority &amp; Stacking</p>
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Priority</label>
+											<input
+												type="number"
+												className="input-field"
+												value={formData.priority}
+												onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+											/>
+											<p className="text-xs text-gray-500 mt-1">Higher values are applied first</p>
+										</div>
+										<div className="form-group">
+											<label className="flex items-center gap-2 mt-7 cursor-pointer">
+												<input
+													type="checkbox"
+													checked={formData.stackable}
+													onChange={(e) => setFormData({ ...formData, stackable: e.target.checked })}
+												/>
+												<span className="text-sm">Allow stacking with other overlays</span>
+											</label>
+										</div>
+									</div>
+								</div>
+
+								{/* Validity Dates */}
+								<div className="border-t pt-4">
+									<p className="text-sm font-semibold text-gray-700 mb-3">Validity Period</p>
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Valid From</label>
+											<input
+												type="datetime-local"
+												className="input-field"
+												value={formData.validFrom}
+												onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
+											/>
+										</div>
+										<div className="form-group">
+											<label className="form-label">Valid To</label>
+											<input
+												type="datetime-local"
+												className="input-field"
+												value={formData.validTo}
+												onChange={(e) => setFormData({ ...formData, validTo: e.target.value })}
+											/>
+										</div>
+									</div>
+								</div>
+
+								{/* Applies To */}
+								<div className="border-t pt-4">
+									<p className="text-sm font-semibold text-gray-700 mb-3">Applies To</p>
+									<div className="form-group">
+										<label className="form-label">Target</label>
+										<SearchableSelect
+											options={[
+												{ value: 'all', label: 'All Products' },
+												{ value: 'sku', label: 'Specific SKUs' },
+												{ value: 'variant', label: 'Specific Variants' },
+												{ value: 'batch', label: 'Specific Batches' },
+												{ value: 'category', label: 'Specific Categories' }
+											]}
+											value={formData.targetType}
+											onChange={(value) => setFormData({ ...formData, targetType: value as any, skuIds: [], variantIds: [], batchIds: [], categoryIds: [] })}
+											placeholder="Select Target"
+											isClearable={false}
+										/>
+									</div>
+
+									{formData.targetType === 'sku' && (
+										<div className="form-group mt-3">
+											<label className="form-label">Select SKUs</label>
+											<div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+												{allSkus.map((s: any) => (
+													<label key={s.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+														<input
+															type="checkbox"
+															checked={formData.skuIds.includes(s.id)}
+															onChange={(e) => {
+																const ids = e.target.checked
+																	? [...formData.skuIds, s.id]
+																	: formData.skuIds.filter(id => id !== s.id);
+																setFormData({ ...formData, skuIds: ids });
+															}}
+														/>
+														<span className="text-sm font-mono">{s.skuCode}</span>
+														<span className="text-sm text-gray-600">– {s.name}</span>
+													</label>
+												))}
+												{allSkus.length === 0 && <p className="text-xs text-gray-400 px-2">No SKUs loaded</p>}
+											</div>
+											{formData.skuIds.length > 0 && (
+												<p className="text-xs text-blue-600 mt-1">{formData.skuIds.length} SKU(s) selected</p>
+											)}
+										</div>
+									)}
+
+									{formData.targetType === 'variant' && (
+										<div className="form-group mt-3">
+											<label className="form-label">Filter by SKU</label>
+											<SearchableSelect
+												options={[
+													{ value: '', label: '— All SKUs —' },
+													...allSkus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
+												]}
+												value={variantSkuId}
+												onChange={(value) => {
+													setVariantSkuId(value);
+													if (value) {
+														variantsApi.list(value).then(res => {
+															setAllVariants(res.data?.data ?? []);
+														}).catch(() => setAllVariants([]));
+													} else {
+														setAllVariants([]);
+													}
+												}}
+												placeholder="Select SKU to load variants"
+												isClearable={false}
+											/>
+											{allVariants.length > 0 && (
+												<>
+													<label className="form-label mt-2">Select Variants</label>
+													<div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+														{allVariants.map((v: any) => (
+															<label key={v.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+																<input
+																	type="checkbox"
+																	checked={formData.variantIds.includes(v.id)}
+																	onChange={(e) => {
+																		const ids = e.target.checked
+																			? [...formData.variantIds, v.id]
+																			: formData.variantIds.filter(id => id !== v.id);
+																		setFormData({ ...formData, variantIds: ids });
+																	}}
+																/>
+																<span className="text-sm font-mono">{v.variantCode}</span>
+																{v.name && <span className="text-sm text-gray-600">– {v.name}</span>}
+															</label>
+														))}
+													</div>
+													{formData.variantIds.length > 0 && (
+														<p className="text-xs text-blue-600 mt-1">{formData.variantIds.length} variant(s) selected</p>
+													)}
+												</>
+											)}
+										</div>
+									)}
+
+									{formData.targetType === 'batch' && (
+										<div className="form-group mt-3">
+											<label className="form-label">Select Batches</label>
+											<div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+												{allBatches.map((b: any) => (
+													<label key={b.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+														<input
+															type="checkbox"
+															checked={formData.batchIds.includes(b.id)}
+															onChange={(e) => {
+																const ids = e.target.checked
+																	? [...formData.batchIds, b.id]
+																	: formData.batchIds.filter(id => id !== b.id);
+																setFormData({ ...formData, batchIds: ids });
+															}}
+														/>
+														<span className="text-sm font-mono">{b.batchNumber}</span>
+														{b.sku && <span className="text-sm text-gray-600">– {b.sku.name ?? b.sku.skuCode}</span>}
+													</label>
+												))}
+												{allBatches.length === 0 && <p className="text-xs text-gray-400 px-2">No batches loaded</p>}
+											</div>
+											{formData.batchIds.length > 0 && (
+												<p className="text-xs text-blue-600 mt-1">{formData.batchIds.length} batch(es) selected</p>
+											)}
+										</div>
+									)}
+
+									{formData.targetType === 'category' && (
+										<div className="form-group mt-3">
+											<label className="form-label">Select Categories</label>
+											<div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+												{allCategories.map((c: any) => (
+													<label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+														<input
+															type="checkbox"
+															checked={formData.categoryIds.includes(c.id)}
+															onChange={(e) => {
+																const ids = e.target.checked
+																	? [...formData.categoryIds, c.id]
+																	: formData.categoryIds.filter(id => id !== c.id);
+																setFormData({ ...formData, categoryIds: ids });
+															}}
+														/>
+														<span className="text-sm">{c.name}</span>
+													</label>
+												))}
+												{allCategories.length === 0 && <p className="text-xs text-gray-400 px-2">No categories loaded</p>}
+											</div>
+											{formData.categoryIds.length > 0 && (
+												<p className="text-xs text-blue-600 mt-1">{formData.categoryIds.length} categor{formData.categoryIds.length === 1 ? 'y' : 'ies'} selected</p>
+											)}
+										</div>
+									)}
+								</div>
+
+								{/* Conditions */}
+								<div className="border-t pt-4">
+									<label className="flex items-center gap-2 mb-3 cursor-pointer">
+										<input
+											type="checkbox"
+											checked={formData.hasConditions}
+											onChange={(e) => setFormData({ ...formData, hasConditions: e.target.checked })}
+										/>
+										<span className="text-sm font-semibold text-gray-700">Add Activation Conditions</span>
+									</label>
+
+									{formData.hasConditions && (
+										<div className="form-stack ml-6 border-l-2 border-gray-200 pl-4">
+											<div className="form-grid-2">
+												<div className="form-group">
+													<label className="form-label">Min Quantity</label>
+													<input
+														type="number"
+														className="input-field"
+														value={formData.minQty}
+														onChange={(e) => setFormData({ ...formData, minQty: e.target.value })}
+													/>
+												</div>
+												<div className="form-group">
+													<label className="form-label">Max Quantity</label>
+													<input
+														type="number"
+														className="input-field"
+														value={formData.maxQty}
+														onChange={(e) => setFormData({ ...formData, maxQty: e.target.value })}
+													/>
+												</div>
+											</div>
+
+											<div className="form-group">
+												<label className="form-label">Customer Type</label>
+												<input
+													type="text"
+													className="input-field"
+													value={formData.customerType}
+													onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}
+													placeholder="e.g., wholesale, retail"
+												/>
+											</div>
+
+											<div className="form-grid-2">
+												<div className="form-group">
+													<label className="form-label">Date Range Start</label>
+													<input
+														type="date"
+														className="input-field"
+														value={formData.dateRangeStart}
+														onChange={(e) => setFormData({ ...formData, dateRangeStart: e.target.value })}
+													/>
+												</div>
+												<div className="form-group">
+													<label className="form-label">Date Range End</label>
+													<input
+														type="date"
+														className="input-field"
+														value={formData.dateRangeEnd}
+														onChange={(e) => setFormData({ ...formData, dateRangeEnd: e.target.value })}
+													/>
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
+							<div className="modal-footer">
 								<button type="button" className="btn-secondary" onClick={() => { setShowCreateModal(false); setEditingOverlay(null); }}>
 									Cancel
 								</button>
@@ -612,25 +754,30 @@ export default function PricingOverlaysPage() {
 			{showConflictsModal && (
 				<div className="modal-overlay" onClick={() => setShowConflictsModal(false)}>
 					<div className="modal-panel-md" onClick={(e) => e.stopPropagation()}>
-						<h2 className="text-lg font-semibold mb-4">Conflicts for "{conflictOverlayName}"</h2>
-						{conflicts.length === 0 ? (
-							<p className="text-sm text-gray-600">No conflicts detected. This overlay can be safely applied.</p>
-						) : (
-							<div className="space-y-2">
-								<p className="text-sm text-gray-600 mb-3">
-									The following overlays conflict with this one (same priority, non-stackable, overlapping targets):
-								</p>
-								{conflicts.map((c) => (
-									<div key={c.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded">
-										<div className="font-medium">{c.name}</div>
-										<div className="text-sm text-gray-600">
-											{getTypeLabel(c.type)} • Priority: {c.priority} • Status: {c.status}
+						<div className="modal-header">
+							<h2 className="modal-title">⚠️ Conflicts for "{conflictOverlayName}"</h2>
+							<button className="modal-close" onClick={() => setShowConflictsModal(false)}>✕</button>
+						</div>
+						<div className="modal-body">
+							{conflicts.length === 0 ? (
+								<p className="text-sm text-gray-600">No conflicts detected. This overlay can be safely applied.</p>
+							) : (
+								<div className="flex flex-col gap-2">
+									<p className="text-sm text-gray-600 mb-1">
+										The following overlays conflict with this one (same priority, non-stackable, overlapping targets):
+									</p>
+									{conflicts.map((c) => (
+										<div key={c.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+											<div className="font-medium">{c.name}</div>
+											<div className="text-sm text-gray-600">
+												{getTypeLabel(c.type)} • Priority: {c.priority} • Status: {c.status}
+											</div>
 										</div>
-									</div>
-								))}
-							</div>
-						)}
-						<div className="flex justify-end gap-3 pt-4 border-t mt-4">
+									))}
+								</div>
+							)}
+						</div>
+						<div className="modal-footer">
 							<button className="btn-primary" onClick={() => setShowConflictsModal(false)}>Close</button>
 						</div>
 					</div>
