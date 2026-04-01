@@ -5,7 +5,7 @@ export interface SelectOption {
   label: string;
 }
 
-interface SearchableSelectPropsBase extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value' | 'isMulti'> {
+interface CommonProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value' | 'isMulti'> {
   options: SelectOption[];
   className?: string;
   placeholder?: string;
@@ -14,32 +14,33 @@ interface SearchableSelectPropsBase extends Omit<SelectProps<SelectOption, boole
   isLoading?: boolean;
 }
 
-interface SearchableSelectSingleProps extends SearchableSelectPropsBase {
+interface SingleSelectProps extends CommonProps {
   isMulti?: false;
   value: string;
   onChange: (value: string) => void;
 }
 
-interface SearchableSelectMultiProps extends SearchableSelectPropsBase {
+interface MultiSelectProps extends CommonProps {
   isMulti: true;
   value: string[];
   onChange: (value: string[]) => void;
 }
 
-type SearchableSelectProps = SearchableSelectSingleProps | SearchableSelectMultiProps;
+type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
 
-export default function SearchableSelect({
-  options,
-  value,
-  onChange,
-  className = '',
-  placeholder = 'Select...',
-  isClearable = true,
-  isDisabled = false,
-  isLoading = false,
-  isMulti = false,
-  ...rest
-}: SearchableSelectProps) {
+export default function SearchableSelect(props: SearchableSelectProps) {
+  const {
+    options,
+    value,
+    onChange,
+    className = '',
+    placeholder = 'Select...',
+    isClearable = true,
+    isDisabled = false,
+    isLoading = false,
+    isMulti = false,
+    ...rest
+  } = props;
   const selectedOption = isMulti
     ? options.filter(opt => (value as string[]).includes(opt.value))
     : options.find(opt => opt.value === value) || null;
