@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { branchesApi, floorsApi, skusApi, stockTransfersApi } from '../api/client';
+import { branchesApi, floorsApi, skusApi, stockTransfersApi, variantsApi, batchesApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import SearchableSelect from '../components/SearchableSelect';
@@ -31,6 +31,10 @@ export default function StockTransferPage() {
   const [skus, setSkus] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
+  const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
+  const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
+
+  const EMPTY_LINE = { skuId: '', variantId: '', batchId: '', requestedQty: '1', notes: '' };
 
   const [form, setForm] = useState({
     fromBranchId: '',
@@ -38,7 +42,7 @@ export default function StockTransferPage() {
     fromFloorId: '',
     toFloorId: '',
     notes: '',
-    lines: [{ skuId: '', requestedQty: '1', notes: '' }],
+    lines: [{ ...EMPTY_LINE }],
   });
 
   const loadData = async () => {
@@ -67,12 +71,23 @@ export default function StockTransferPage() {
 
   useEffect(() => { loadData(); }, [page, pageSize, statusFilter]);
 
+  const fetchBatchesForLine = (idx: number, skuId: string, variantId?: string) => {
+    const params: Record<string, string> = { skuId, isActive: 'true' };
+    if (variantId) params.variantId = variantId;
+    batchesApi.list(params).then(res => {
+      const batches = res.data?.data?.items ?? res.data?.data ?? [];
+      setLineBatches(prev => ({ ...prev, [idx]: batches }));
+    }).catch(() => setLineBatches(prev => ({ ...prev, [idx]: [] })));
+  };
+
   const addLine = () => {
-    setForm(f => ({ ...f, lines: [...f.lines, { skuId: '', requestedQty: '1', notes: '' }] }));
+    setForm(f => ({ ...f, lines: [...f.lines, { ...EMPTY_LINE }] }));
   };
 
   const removeLine = (idx: number) => {
     setForm(f => ({ ...f, lines: f.lines.filter((_, i) => i !== idx) }));
+    setLineVariants(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    setLineBatches(prev => { const n = { ...prev }; delete n[idx]; return n; });
   };
 
   const updateLine = (idx: number, field: string, value: string) => {
@@ -80,6 +95,24 @@ export default function StockTransferPage() {
       ...f,
       lines: f.lines.map((l, i) => i === idx ? { ...l, [field]: value } : l),
     }));
+
+    if (field === 'skuId' && value) {
+      variantsApi.list(value).then(res => {
+        const variants = res.data?.data ?? [];
+        setLineVariants(prev => ({ ...prev, [idx]: variants }));
+        setForm(f => ({ ...f, lines: f.lines.map((l, i) => i === idx ? { ...l, variantId: '', batchId: '' } : l) }));
+      }).catch(() => setLineVariants(prev => ({ ...prev, [idx]: [] })));
+      fetchBatchesForLine(idx, value);
+    } else if (field === 'skuId' && !value) {
+      setLineVariants(prev => { const n = { ...prev }; delete n[idx]; return n; });
+      setLineBatches(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    } else if (field === 'variantId') {
+      const line = form.lines[idx];
+      if (line.skuId) {
+        fetchBatchesForLine(idx, line.skuId, value || undefined);
+        setForm(f => ({ ...f, lines: f.lines.map((l, i) => i === idx ? { ...l, batchId: '' } : l) }));
+      }
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -93,6 +126,8 @@ export default function StockTransferPage() {
         notes: form.notes || undefined,
         lines: form.lines.map(l => ({
           skuId: l.skuId,
+          variantId: l.variantId || undefined,
+          batchId: l.batchId || undefined,
           requestedQty: parseInt(l.requestedQty),
           notes: l.notes || undefined,
         })),
@@ -100,8 +135,10 @@ export default function StockTransferPage() {
       setShowForm(false);
       setForm({
         fromBranchId: '', toBranchId: '', fromFloorId: '', toFloorId: '',
-        notes: '', lines: [{ skuId: '', requestedQty: '1', notes: '' }],
+        notes: '', lines: [{ ...EMPTY_LINE }],
       });
+      setLineVariants({});
+      setLineBatches({});
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create transfer');
@@ -286,38 +323,76 @@ export default function StockTransferPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {form.lines.map((line, idx) => (
-                      <div key={idx} className="flex gap-2 items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex-1">
-                          <SearchableSelect
-                            options={[
-                              { value: '', label: '— Select SKU —' },
-                              ...skus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
-                            ]}
-                            value={line.skuId}
-                            onChange={(value) => updateLine(idx, 'skuId', value)}
-                            placeholder="Select SKU"
-                            isClearable={false}
+                      <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex gap-2 items-center">
+                          <div className="flex-1">
+                            <SearchableSelect
+                              options={[
+                                { value: '', label: '— Select SKU —' },
+                                ...skus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
+                              ]}
+                              value={line.skuId}
+                              onChange={(value) => updateLine(idx, 'skuId', value)}
+                              placeholder="Select SKU"
+                              isClearable={false}
+                            />
+                          </div>
+                          <input
+                            type="number"
+                            className="input-field"
+                            style={{ width: '80px' }}
+                            value={line.requestedQty}
+                            placeholder="Qty"
+                            min="1"
+                            onChange={(e) => updateLine(idx, 'requestedQty', e.target.value)}
                           />
+                          <input
+                            type="text"
+                            className="input-field"
+                            style={{ width: '140px' }}
+                            value={line.notes}
+                            placeholder="Notes"
+                            onChange={(e) => updateLine(idx, 'notes', e.target.value)}
+                          />
+                          {form.lines.length > 1 && (
+                            <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(idx)}>✕</button>
+                          )}
                         </div>
-                        <input
-                          type="number"
-                          className="input-field"
-                          style={{ width: '80px' }}
-                          value={line.requestedQty}
-                          placeholder="Qty"
-                          min="1"
-                          onChange={(e) => updateLine(idx, 'requestedQty', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ width: '140px' }}
-                          value={line.notes}
-                          placeholder="Notes"
-                          onChange={(e) => updateLine(idx, 'notes', e.target.value)}
-                        />
-                        {form.lines.length > 1 && (
-                          <button type="button" className="btn-icon text-red-500" onClick={() => removeLine(idx)}>✕</button>
+                        {line.skuId && (lineVariants[idx] ?? []).length > 0 && (
+                          <div className="mt-2">
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Variant</label>
+                            <SearchableSelect
+                              options={[
+                                { value: '', label: '— No Variant (base SKU) —' },
+                                ...(lineVariants[idx] ?? []).map((v: any) => ({
+                                  value: v.id,
+                                  label: `${v.name ?? v.variantCode} (${v.variantCode})`
+                                }))
+                              ]}
+                              value={line.variantId}
+                              onChange={(value) => updateLine(idx, 'variantId', value)}
+                              placeholder="No Variant"
+                              isClearable={false}
+                            />
+                          </div>
+                        )}
+                        {line.skuId && (lineBatches[idx] ?? []).length > 0 && (
+                          <div className="mt-2">
+                            <label className="text-xs font-medium text-gray-600 block mb-1">Batch (optional)</label>
+                            <SearchableSelect
+                              options={[
+                                { value: '', label: '— Any Batch —' },
+                                ...(lineBatches[idx] ?? []).map((b: any) => ({
+                                  value: b.id,
+                                  label: `${b.batchNumber}${b.costPrice ? ` — Cost: ${b.costPrice}` : ''}`
+                                }))
+                              ]}
+                              value={line.batchId}
+                              onChange={(value) => updateLine(idx, 'batchId', value)}
+                              placeholder="Any Batch"
+                              isClearable={false}
+                            />
+                          </div>
                         )}
                       </div>
                     ))}
