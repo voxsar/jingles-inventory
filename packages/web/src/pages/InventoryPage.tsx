@@ -5,6 +5,7 @@ import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
 import BarcodeInput from '../components/BarcodeInput';
+import SearchableSelect from '../components/SearchableSelect';
 
 const PAGE_SIZE = 20;
 
@@ -349,88 +350,101 @@ export default function InventoryPage() {
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
-          <select
-            className="filter-select"
-            value={stateFilter}
-            onChange={(e) => { setStateFilter(e.target.value); setPage(1); }}
-          >
-            <option value="">All States</option>
-            {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select
-            className="filter-select"
-            value={branchFilter}
-            onChange={(e) => { setBranchFilter(e.target.value); setLocationFilter(''); setRackFilter(''); setShelfFilter(''); setFilterRacks([]); setFilterShelves([]); setPage(1); }}
-          >
-            <option value="">All Branches</option>
-            {branches.map((b: any) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-          <select
-            className="filter-select"
-            value={locationFilter}
-            onChange={async (e) => {
-              const floorId = e.target.value;
-              setLocationFilter(floorId);
-              setRackFilter('');
-              setShelfFilter('');
-              setFilterShelves([]);
-              setPage(1);
-              if (floorId) {
-                try {
-                  const res = await racksApi.list({ floorId });
-                  setFilterRacks(Array.isArray(res.data?.data?.items ?? res.data?.data ?? res.data) ? (res.data?.data?.items ?? res.data?.data ?? res.data) : []);
-                } catch { setFilterRacks([]); }
-              } else {
-                setFilterRacks([]);
-              }
-            }}
-          >
-            <option value="">All Floors</option>
-            {visibleLocations.map((loc: any) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
-              </option>
-            ))}
-          </select>
-          {filterRacks.length > 0 && (
-            <select
-              className="filter-select"
-              value={rackFilter}
-              onChange={async (e) => {
-                const rackId = e.target.value;
-                setRackFilter(rackId);
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All States' },
+                ...Object.values(InventoryState).map((s) => ({ value: s, label: s }))
+              ]}
+              value={stateFilter}
+              onChange={(value) => { setStateFilter(value); setPage(1); }}
+              placeholder="All States"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Branches' },
+                ...branches.map((b: any) => ({ value: b.id, label: b.name }))
+              ]}
+              value={branchFilter}
+              onChange={(value) => { setBranchFilter(value); setLocationFilter(''); setRackFilter(''); setShelfFilter(''); setFilterRacks([]); setFilterShelves([]); setPage(1); }}
+              placeholder="All Branches"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Floors' },
+                ...visibleLocations.map((loc: any) => ({
+                  value: loc.id,
+                  label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
+                }))
+              ]}
+              value={locationFilter}
+              onChange={async (value) => {
+                const floorId = value;
+                setLocationFilter(floorId);
+                setRackFilter('');
                 setShelfFilter('');
+                setFilterShelves([]);
                 setPage(1);
-                if (rackId) {
+                if (floorId) {
                   try {
-                    const res = await shelvesApi.list({ rackId });
-                    const data = res.data?.data?.items ?? res.data?.data ?? res.data;
-                    setFilterShelves(Array.isArray(data) ? data : []);
-                  } catch { setFilterShelves([]); }
+                    const res = await racksApi.list({ floorId });
+                    setFilterRacks(Array.isArray(res.data?.data?.items ?? res.data?.data ?? res.data) ? (res.data?.data?.items ?? res.data?.data ?? res.data) : []);
+                  } catch { setFilterRacks([]); }
                 } else {
-                  setFilterShelves([]);
+                  setFilterRacks([]);
                 }
               }}
-            >
-              <option value="">All Racks</option>
-              {filterRacks.map((r: any) => (
-                <option key={r.id} value={r.id}>{r.name} ({r.code})</option>
-              ))}
-            </select>
+              placeholder="All Floors"
+              isClearable={false}
+            />
+          </div>
+          {filterRacks.length > 0 && (
+            <div style={{ width: '180px' }}>
+              <SearchableSelect
+                options={[
+                  { value: '', label: 'All Racks' },
+                  ...filterRacks.map((r: any) => ({ value: r.id, label: `${r.name} (${r.code})` }))
+                ]}
+                value={rackFilter}
+                onChange={async (value) => {
+                  const rackId = value;
+                  setRackFilter(rackId);
+                  setShelfFilter('');
+                  setPage(1);
+                  if (rackId) {
+                    try {
+                      const res = await shelvesApi.list({ rackId });
+                      const data = res.data?.data?.items ?? res.data?.data ?? res.data;
+                      setFilterShelves(Array.isArray(data) ? data : []);
+                    } catch { setFilterShelves([]); }
+                  } else {
+                    setFilterShelves([]);
+                  }
+                }}
+                placeholder="All Racks"
+                isClearable={false}
+              />
+            </div>
           )}
           {filterShelves.length > 0 && (
-            <select
-              className="filter-select"
-              value={shelfFilter}
-              onChange={(e) => { setShelfFilter(e.target.value); setPage(1); }}
-            >
-              <option value="">All Shelves</option>
-              {filterShelves.map((s: any) => (
-                <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
-              ))}
-            </select>
+            <div style={{ width: '180px' }}>
+              <SearchableSelect
+                options={[
+                  { value: '', label: 'All Shelves' },
+                  ...filterShelves.map((s: any) => ({ value: s.id, label: `${s.name} (${s.code})` }))
+                ]}
+                value={shelfFilter}
+                onChange={(value) => { setShelfFilter(value); setPage(1); }}
+                placeholder="All Shelves"
+                isClearable={false}
+              />
+            </div>
           )}
           {hasFilters && (
             <button className="btn-secondary text-xs" onClick={clearFilters}>
@@ -469,18 +483,30 @@ export default function InventoryPage() {
               <div className="modal-body form-stack">
                 <div className="form-group">
                   <label className="form-label">Product (SKU) *</label>
-                  <select className="input-field" value={newForm.skuId} required onChange={(e) => handleNewFormSkuChange(e.target.value)}>
-                    <option value="">— Select Product —</option>
-                    {skus.map((s: any) => <option key={s.id} value={s.id}>{s.skuCode} – {s.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— Select Product —' },
+                      ...skus.map((s: any) => ({ value: s.id, label: `${s.skuCode} – ${s.name}` }))
+                    ]}
+                    value={newForm.skuId}
+                    onChange={(value) => handleNewFormSkuChange(value)}
+                    placeholder="Select Product"
+                    isClearable={false}
+                  />
                 </div>
                 {skuVariants.length > 0 && (
                   <div className="form-group">
                     <label className="form-label">Variant</label>
-                    <select className="input-field" value={newForm.variantId} onChange={(e) => setNewForm(f => ({ ...f, variantId: e.target.value }))}>
-                      <option value="">— No Variant (base SKU) —</option>
-                      {skuVariants.map((v: any) => <option key={v.id} value={v.id}>{v.name} ({v.variantCode})</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— No Variant (base SKU) —' },
+                        ...skuVariants.map((v: any) => ({ value: v.id, label: `${v.name} (${v.variantCode})` }))
+                      ]}
+                      value={newForm.variantId}
+                      onChange={(value) => setNewForm(f => ({ ...f, variantId: value }))}
+                      placeholder="No Variant"
+                      isClearable={false}
+                    />
                   </div>
                 )}
                 <div className="form-grid-2">
@@ -495,53 +521,73 @@ export default function InventoryPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">State</label>
-                    <select className="input-field" value={newForm.state} onChange={(e) => setNewForm(f => ({ ...f, state: e.target.value }))}>
-                      {Object.values(InventoryState).map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={Object.values(InventoryState).map((s) => ({ value: s, label: s }))}
+                      value={newForm.state}
+                      onChange={(value) => setNewForm(f => ({ ...f, state: value }))}
+                      placeholder="Select State"
+                      isClearable={false}
+                    />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Floor</label>
-                  <select className="input-field" value={newForm.floorId} onChange={(e) => {
-                    const floorId = e.target.value;
-                    setNewForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
-                    fetchShelves(floorId, setNewFormShelves);
-                    setNewFormBoxes([]);
-                    if (floorId) fetchBoxes({ floorId }, setNewFormBoxes);
-                  }}>
-                    <option value="">— No Floor —</option>
-                    {locations.map((loc: any) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— No Floor —' },
+                      ...locations.map((loc: any) => ({
+                        value: loc.id,
+                        label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
+                      }))
+                    ]}
+                    value={newForm.floorId}
+                    onChange={(value) => {
+                      const floorId = value;
+                      setNewForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
+                      fetchShelves(floorId, setNewFormShelves);
+                      setNewFormBoxes([]);
+                      if (floorId) fetchBoxes({ floorId }, setNewFormBoxes);
+                    }}
+                    placeholder="No Floor"
+                    isClearable={false}
+                  />
                 </div>
                 {newForm.floorId && (
                   <div className="form-group">
                     <label className="form-label">Shelf <span className="text-gray-400 font-normal">(optional)</span></label>
-                    <select className="input-field" value={newForm.shelfId} onChange={(e) => {
-                      const shelfId = e.target.value;
-                      setNewForm(f => ({ ...f, shelfId, boxId: '' }));
-                      if (shelfId) fetchBoxes({ shelfId }, setNewFormBoxes);
-                      else fetchBoxes({ floorId: newForm.floorId }, setNewFormBoxes);
-                    }}>
-                      <option value="">— No Shelf —</option>
-                      {newFormShelves.map((s: any) => (
-                        <option key={s.id} value={s.id}>{s.name} ({s.code}){s.rack ? ` · ${s.rack.name}` : ''}</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— No Shelf —' },
+                        ...newFormShelves.map((s: any) => ({
+                          value: s.id,
+                          label: `${s.name} (${s.code})${s.rack ? ` · ${s.rack.name}` : ''}`
+                        }))
+                      ]}
+                      value={newForm.shelfId}
+                      onChange={(value) => {
+                        const shelfId = value;
+                        setNewForm(f => ({ ...f, shelfId, boxId: '' }));
+                        if (shelfId) fetchBoxes({ shelfId }, setNewFormBoxes);
+                        else fetchBoxes({ floorId: newForm.floorId }, setNewFormBoxes);
+                      }}
+                      placeholder="No Shelf"
+                      isClearable={false}
+                    />
                   </div>
                 )}
                 {newForm.floorId && newFormBoxes.length > 0 && (
                   <div className="form-group">
                     <label className="form-label">Box <span className="text-gray-400 font-normal">(optional)</span></label>
-                    <select className="input-field" value={newForm.boxId} onChange={(e) => setNewForm(f => ({ ...f, boxId: e.target.value }))}>
-                      <option value="">— No Box —</option>
-                      {newFormBoxes.map((b: any) => (
-                        <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— No Box —' },
+                        ...newFormBoxes.map((b: any) => ({ value: b.id, label: `${b.name} (${b.code})` }))
+                      ]}
+                      value={newForm.boxId}
+                      onChange={(value) => setNewForm(f => ({ ...f, boxId: value }))}
+                      placeholder="No Box"
+                      isClearable={false}
+                    />
                   </div>
                 )}
                 <div className="form-group">
@@ -572,46 +618,62 @@ export default function InventoryPage() {
             <div className="modal-body form-stack">
               <div className="form-group">
                 <label className="form-label">Floor</label>
-                <select className="input-field" value={editForm.floorId} onChange={(e) => {
-                  const floorId = e.target.value;
-                  setEditForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
-                  fetchShelves(floorId, setEditFormShelves);
-                  setEditFormBoxes([]);
-                  if (floorId) fetchBoxes({ floorId }, setEditFormBoxes);
-                }}>
-                  <option value="">— No Floor —</option>
-                  {locations.map((loc: any) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`}
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '— No Floor —' },
+                    ...locations.map((loc: any) => ({
+                      value: loc.id,
+                      label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
+                    }))
+                  ]}
+                  value={editForm.floorId}
+                  onChange={(value) => {
+                    const floorId = value;
+                    setEditForm(f => ({ ...f, floorId, shelfId: '', boxId: '' }));
+                    fetchShelves(floorId, setEditFormShelves);
+                    setEditFormBoxes([]);
+                    if (floorId) fetchBoxes({ floorId }, setEditFormBoxes);
+                  }}
+                  placeholder="No Floor"
+                  isClearable={false}
+                />
               </div>
               {editForm.floorId && (
                 <div className="form-group">
                   <label className="form-label">Shelf <span className="text-gray-400 font-normal">(optional)</span></label>
-                  <select className="input-field" value={editForm.shelfId} onChange={(e) => {
-                    const shelfId = e.target.value;
-                    setEditForm(f => ({ ...f, shelfId, boxId: '' }));
-                    if (shelfId) fetchBoxes({ shelfId }, setEditFormBoxes);
-                    else fetchBoxes({ floorId: editForm.floorId }, setEditFormBoxes);
-                  }}>
-                    <option value="">— No Shelf —</option>
-                    {editFormShelves.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.code}){s.rack ? ` · ${s.rack.name}` : ''}</option>
-                    ))}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— No Shelf —' },
+                      ...editFormShelves.map((s: any) => ({
+                        value: s.id,
+                        label: `${s.name} (${s.code})${s.rack ? ` · ${s.rack.name}` : ''}`
+                      }))
+                    ]}
+                    value={editForm.shelfId}
+                    onChange={(value) => {
+                      const shelfId = value;
+                      setEditForm(f => ({ ...f, shelfId, boxId: '' }));
+                      if (shelfId) fetchBoxes({ shelfId }, setEditFormBoxes);
+                      else fetchBoxes({ floorId: editForm.floorId }, setEditFormBoxes);
+                    }}
+                    placeholder="No Shelf"
+                    isClearable={false}
+                  />
                 </div>
               )}
               {editForm.floorId && editFormBoxes.length > 0 && (
                 <div className="form-group">
                   <label className="form-label">Box <span className="text-gray-400 font-normal">(optional)</span></label>
-                  <select className="input-field" value={editForm.boxId} onChange={(e) => setEditForm(f => ({ ...f, boxId: e.target.value }))}>
-                    <option value="">— No Box —</option>
-                    {editFormBoxes.map((b: any) => (
-                      <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                    ))}
-                  </select>
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— No Box —' },
+                      ...editFormBoxes.map((b: any) => ({ value: b.id, label: `${b.name} (${b.code})` }))
+                    ]}
+                    value={editForm.boxId}
+                    onChange={(value) => setEditForm(f => ({ ...f, boxId: value }))}
+                    placeholder="No Box"
+                    isClearable={false}
+                  />
                 </div>
               )}
               <div className="form-group">
@@ -668,24 +730,19 @@ export default function InventoryPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Transition To *</label>
-                    <select
-                      className="input-field"
-                      required
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Select new state —' },
+                        ...allowedNext.map(s => ({ value: s, label: `✅ ${s}` })),
+                        ...allStates
+                          .filter(s => s !== currentState && !allowedNext.includes(s as InventoryState))
+                          .map(s => ({ value: s, label: `⚠️ ${s} (Override)` }))
+                      ]}
                       value={transitionForm.toState}
-                      onChange={(e) => setTransitionForm(f => ({ ...f, toState: e.target.value }))}
-                    >
-                      <option value="">— Select new state —</option>
-                      {allowedNext.length > 0 && (
-                        <optgroup label="✅ Valid transitions">
-                          {allowedNext.map(s => <option key={s} value={s}>{s}</option>)}
-                        </optgroup>
-                      )}
-                      <optgroup label="⚠️ Override (Manager/Admin only)">
-                        {allStates.filter(s => s !== currentState && !allowedNext.includes(s as InventoryState)).map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </optgroup>
-                    </select>
+                      onChange={(value) => setTransitionForm(f => ({ ...f, toState: value }))}
+                      placeholder="Select new state"
+                      isClearable={false}
+                    />
                     {allowedNext.length === 0 && (
                       <p className="text-xs text-amber-600 mt-1">⚠️ No valid transitions from "{currentState}". Override requires Manager or Admin role.</p>
                     )}
