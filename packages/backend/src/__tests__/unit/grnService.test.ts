@@ -32,8 +32,8 @@ describe('createGRN', () => {
       invoiceReference: 'ACME-INV-2024-001',
       createdBy: USERS.admin.id,
       lines: [
-        { skuId: SKUS.widgetBox.id, expectedQuantity: 50, batchReference: 'BATCH-001' },
-        { skuId: SKUS.widgetPiece.id, expectedQuantity: 100, batchReference: 'BATCH-002' },
+        { skuId: SKUS.widgetBox.id, expectedQuantity: 50 },
+        { skuId: SKUS.widgetPiece.id, expectedQuantity: 100 },
       ],
     });
 
