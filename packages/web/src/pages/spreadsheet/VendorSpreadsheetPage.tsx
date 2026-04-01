@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { vendorsApi } from '../../api/client';
 import { VendorType } from '@jingles/shared';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -37,20 +37,20 @@ export default function VendorSpreadsheetPage() {
 
   const typeOptions = Object.values(VendorType).map(t => ({ value: t, label: t }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'name',
       header: 'Vendor Name',
-      type: 'text',
+      
       width: '200px',
-      required: true,
+      
     },
     {
       key: 'contactEmail',
       header: 'Email',
-      type: 'text',
+      
       width: '200px',
-      required: true,
+      
       validate: (value) => {
         if (value && !value.includes('@')) return 'Invalid email format';
         return null;
@@ -59,7 +59,7 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'contactPhone',
       header: 'Phone',
-      type: 'text',
+      
       width: '140px',
       getValue: (row) => row.contactPhone || '',
       setValue: (row, value) => ({ contactPhone: value || null }),
@@ -67,15 +67,15 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'type',
       header: 'Type',
-      type: 'select',
+      
       options: typeOptions,
       width: '120px',
-      required: true,
+      
     },
     {
       key: 'address',
       header: 'Address',
-      type: 'text',
+      
       width: '220px',
       getValue: (row) => row.address || '',
       setValue: (row, value) => ({ address: value || null }),
@@ -83,7 +83,7 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'website',
       header: 'Website',
-      type: 'text',
+      
       width: '180px',
       getValue: (row) => row.website || '',
       setValue: (row, value) => ({ website: value || null }),
@@ -91,7 +91,7 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'taxId',
       header: 'Tax ID',
-      type: 'text',
+      
       width: '140px',
       getValue: (row) => row.taxId || '',
       setValue: (row, value) => ({ taxId: value || null }),
@@ -99,7 +99,7 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'paymentTerms',
       header: 'Payment Terms',
-      type: 'text',
+      
       width: '160px',
       getValue: (row) => row.paymentTerms || '',
       setValue: (row, value) => ({ paymentTerms: value || null }),
@@ -107,7 +107,7 @@ export default function VendorSpreadsheetPage() {
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -165,7 +165,7 @@ export default function VendorSpreadsheetPage() {
 
       {/* Table */}
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={vendors}
           isLoading={isLoading}
@@ -173,8 +173,6 @@ export default function VendorSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No vendors found"
-          emptyIcon="🤝"
         />
       </div>
 

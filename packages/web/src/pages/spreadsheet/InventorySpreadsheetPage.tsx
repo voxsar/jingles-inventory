@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { inventoryApi, floorsApi, branchesApi, skusApi, racksApi, shelvesApi, boxesApi } from '../../api/client';
 import { InventoryState } from '@jingles/shared';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 import StateBadge from '../../components/StateBadge';
 
@@ -76,28 +76,22 @@ export default function InventorySpreadsheetPage() {
   const boxOptions = boxes.map(b => ({ value: b.id, label: b.name || b.id }));
   const stateOptions = Object.values(InventoryState).map(s => ({ value: s, label: s }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'sku',
       header: 'SKU',
-      type: 'readonly',
       width: '200px',
-      render: (row) => {
+      render: (value, row) => {
         const sku = skus.find(s => s.id === row.skuId);
-        return (
-          <div>
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600 }}>{sku?.skuCode}</div>
-            <div style={{ fontSize: '11px', color: '#6d7175' }}>{sku?.name}</div>
-          </div>
-        );
+        return sku ? `${sku.skuCode} - ${sku.name}` : '';
       },
     },
     {
       key: 'quantity',
       header: 'Quantity',
-      type: 'number',
+      
       width: '100px',
-      required: true,
+      
       validate: (value) => {
         if (!value || value < 0) return 'Must be positive';
         return null;
@@ -106,79 +100,64 @@ export default function InventorySpreadsheetPage() {
     {
       key: 'state',
       header: 'State',
-      type: 'select',
+      
       options: stateOptions,
       width: '140px',
-      required: true,
-      render: (row) => <StateBadge state={row.state} />,
+      render: (value) => String(value || ''),
     },
     {
       key: 'floorId',
       header: 'Floor',
-      type: 'select',
+      
       options: floorOptions,
       width: '180px',
       getValue: (row) => row.floorId || '',
       setValue: (row, value) => ({ floorId: value || null }),
-      render: (row) => {
-        const floor = floors.find(f => f.id === row.floorId);
-        return <span>{floor?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'rackId',
       header: 'Rack',
-      type: 'select',
+      
       options: rackOptions,
       width: '140px',
       getValue: (row) => row.rackId || '',
       setValue: (row, value) => ({ rackId: value || null }),
-      render: (row) => {
-        const rack = racks.find(r => r.id === row.rackId);
-        return <span>{rack?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'shelfId',
       header: 'Shelf',
-      type: 'select',
+      
       options: shelfOptions,
       width: '140px',
       getValue: (row) => row.shelfId || '',
       setValue: (row, value) => ({ shelfId: value || null }),
-      render: (row) => {
-        const shelf = shelves.find(s => s.id === row.shelfId);
-        return <span>{shelf?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'boxId',
       header: 'Box',
-      type: 'select',
+      
       options: boxOptions,
       width: '140px',
       getValue: (row) => row.boxId || '',
       setValue: (row, value) => ({ boxId: value || null }),
-      render: (row) => {
-        const box = boxes.find(b => b.id === row.boxId);
-        return <span>{box?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'batchId',
       header: 'Batch',
-      type: 'text',
+      
       width: '120px',
-      render: (row) => (
-        <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{row.batchId || '—'}</span>
-      ),
+      render: (value, row) => String(row.batchId || '—'),
     },
     {
       key: 'updatedAt',
       header: 'Last Updated',
-      type: 'readonly',
+      
       width: '120px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.updatedAt).toLocaleDateString()}</span>,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -223,7 +202,7 @@ export default function InventorySpreadsheetPage() {
 
       {/* Table */}
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={records}
           isLoading={isLoading}
@@ -231,8 +210,6 @@ export default function InventorySpreadsheetPage() {
           onDelete={handleDelete}
           getRowKey={(row) => row.id}
           canAdd={false}
-          emptyMessage="No inventory records found"
-          emptyIcon="📦"
         />
       </div>
 
