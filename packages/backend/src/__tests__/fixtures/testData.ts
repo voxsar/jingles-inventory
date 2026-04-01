@@ -109,7 +109,7 @@ export const SKUS = {
 		vendorId: 'vendor-acme-001',
 		unitOfMeasure: 'Box',
 		conversionRules: [{ fromUnit: 'Box', toUnit: 'Piece', ratio: 12 }],
-		dimensions: { height: 30, width: 20, depth: 15, weight: 2.5, volume: 9000 },
+		dimensions: { height: 30, width: 20, length: 15, weight: 2.5, volume: 9000 },
 		isFragile: false,
 		maxStackHeight: 120,
 		isActive: true,
@@ -126,7 +126,7 @@ export const SKUS = {
 		vendorId: 'vendor-acme-001',
 		unitOfMeasure: 'Piece',
 		conversionRules: null,
-		dimensions: { height: 5, width: 5, depth: 3, weight: 0.2, volume: 75 },
+		dimensions: { height: 5, width: 5, length: 3, weight: 0.2, volume: 75 },
 		isFragile: true,
 		maxStackHeight: 15,
 		isActive: true,
@@ -143,7 +143,7 @@ export const SKUS = {
 		vendorId: 'vendor-globaltech-002',
 		unitOfMeasure: 'Pack',
 		conversionRules: [{ fromUnit: 'Pack', toUnit: 'Piece', ratio: 6 }],
-		dimensions: { height: 40, width: 30, depth: 25, weight: 3.0, volume: 30000 },
+		dimensions: { height: 40, width: 30, length: 25, weight: 3.0, volume: 30000 },
 		isFragile: true,
 		maxStackHeight: 40,
 		isActive: true,
@@ -160,7 +160,7 @@ export const SKUS = {
 		vendorId: 'vendor-acme-001',
 		unitOfMeasure: 'Piece',
 		conversionRules: null,
-		dimensions: { height: 60, width: 50, depth: 40, weight: 25.0, volume: 120000 },
+		dimensions: { height: 60, width: 50, length: 40, weight: 25.0, volume: 120000 },
 		isFragile: false,
 		maxStackHeight: 60,
 		isActive: true,
@@ -521,10 +521,10 @@ export const SYNC_CONFLICTS = {
 // ─── Storage Geometry Fixtures ────────────────────────────────────────────────
 
 export const STORAGE_GEOMETRIES = {
-	smallItem: { height: 10, width: 8, depth: 5, weight: 0.5, volume: 400 },
-	mediumBox: { height: 30, width: 20, depth: 15, weight: 2.5, volume: 9000 },
-	largeFragile: { height: 50, width: 40, depth: 30, weight: 8.0, volume: 60000 },
-	heavyEquipment: { height: 60, width: 50, depth: 40, weight: 25.0, volume: 120000 },
+	smallItem: { height: 10, width: 8, length: 5, weight: 0.5, volume: 400 },
+	mediumBox: { height: 30, width: 20, length: 15, weight: 2.5, volume: 9000 },
+	largeFragile: { height: 50, width: 40, length: 30, weight: 8.0, volume: 60000 },
+	heavyEquipment: { height: 60, width: 50, length: 40, weight: 25.0, volume: 120000 },
 };
 
 // ─── Attribute Fixtures ───────────────────────────────────────────────────────
