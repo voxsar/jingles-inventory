@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { grnsApi, vendorsApi, floorsApi } from '../../api/client';
 import { GRNStatus } from '@jingles/shared';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -52,98 +52,66 @@ export default function GRNSpreadsheetPage() {
   const floorOptions = floors.map(f => ({ value: f.id, label: `${f.name} (${f.branch?.name || ''})` }));
   const statusOptions = Object.values(GRNStatus).map(s => ({ value: s, label: s }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'invoiceReference',
       header: 'Invoice Ref',
-      type: 'text',
+      
       width: '140px',
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{row.invoiceReference || '—'}</span>,
+      render: (value, row) => String(row.invoiceReference || '—' || ""),
     },
     {
       key: 'supplierId',
       header: 'Supplier',
-      type: 'select',
+      
       options: vendorOptions,
       width: '180px',
-      required: true,
-      render: (row) => {
-        const vendor = vendors.find(v => v.id === row.supplierId);
-        return <span>{vendor?.name || '—'}</span>;
-      },
+      
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'floorId',
       header: 'Floor',
-      type: 'select',
+      
       options: floorOptions,
       width: '180px',
       getValue: (row) => row.floorId || '',
       setValue: (row, value) => ({ floorId: value || null }),
-      render: (row) => {
-        const floor = floors.find(f => f.id === row.floorId);
-        return <span>{floor?.name || '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'status',
       header: 'Status',
-      type: 'select',
+
       options: statusOptions,
       width: '140px',
-      required: true,
-      render: (row) => {
-        const statusColors: Record<string, string> = {
-          Draft: '#6b7280',
-          Submitted: '#3b82f6',
-          PartiallyInspected: '#f59e0b',
-          FullyInspected: '#10b981',
-          Closed: '#6b7280',
-        };
-        return (
-          <span style={{
-            padding: '3px 8px',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontWeight: 500,
-            backgroundColor: statusColors[row.status] || '#6b7280',
-            color: 'white'
-          }}>
-            {row.status}
-          </span>
-        );
-      },
+
+      render: (value) => String(value || ''),
     },
     {
       key: 'expectedDeliveryDate',
       header: 'Expected Date',
-      type: 'date',
+      
       width: '120px',
       getValue: (row) => row.expectedDeliveryDate || '',
       setValue: (row, value) => ({ expectedDeliveryDate: value || null }),
-      render: (row, isEditing) => {
-        if (isEditing || !row.expectedDeliveryDate) return null;
-        return <span style={{ fontSize: '11px' }}>{new Date(row.expectedDeliveryDate).toLocaleDateString()}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'actualDeliveryDate',
       header: 'Actual Date',
-      type: 'date',
+      
       width: '120px',
       getValue: (row) => row.actualDeliveryDate || '',
       setValue: (row, value) => ({ actualDeliveryDate: value || null }),
-      render: (row, isEditing) => {
-        if (isEditing || !row.actualDeliveryDate) return null;
-        return <span style={{ fontSize: '11px' }}>{new Date(row.actualDeliveryDate).toLocaleDateString()}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
+      
       width: '110px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -186,7 +154,7 @@ export default function GRNSpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={grns}
           isLoading={isLoading}
@@ -194,8 +162,6 @@ export default function GRNSpreadsheetPage() {
           onDelete={handleDelete}
           getRowKey={(row) => row.id}
           canAdd={false}
-          emptyMessage="No GRNs found"
-          emptyIcon="📋"
         />
       </div>
 

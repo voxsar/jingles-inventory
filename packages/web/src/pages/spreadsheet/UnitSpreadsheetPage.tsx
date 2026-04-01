@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsApi } from '../../api/client';
 import { UnitType } from '@jingles/shared';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -38,47 +38,44 @@ export default function UnitSpreadsheetPage() {
   const typeOptions = Object.values(UnitType).map(t => ({ value: t, label: t }));
   const baseUnitOptions = units.map(u => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'name',
       header: 'Unit Name',
-      type: 'text',
+      
       width: '160px',
-      required: true,
+      
     },
     {
       key: 'abbreviation',
       header: 'Abbreviation',
-      type: 'text',
+      
       width: '120px',
-      required: true,
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600 }}>{row.abbreviation}</span>,
+      
+      render: (value) => String(value || ""),
     },
     {
       key: 'type',
       header: 'Type',
-      type: 'select',
+      
       options: typeOptions,
       width: '120px',
-      required: true,
+      
     },
     {
       key: 'baseUnit',
       header: 'Base Unit',
-      type: 'select',
+      
       options: baseUnitOptions,
       width: '160px',
       getValue: (row) => row.baseUnit || '',
       setValue: (row, value) => ({ baseUnit: value || null }),
-      render: (row) => {
-        const base = units.find(u => u.id === row.baseUnit);
-        return <span>{base ? `${base.name} (${base.abbreviation})` : '—'}</span>;
-      },
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'conversionFactor',
       header: 'Conversion Factor',
-      type: 'number',
+      
       width: '140px',
       getValue: (row) => row.conversionFactor || '',
       setValue: (row, value) => ({ conversionFactor: value || null }),
@@ -86,16 +83,14 @@ export default function UnitSpreadsheetPage() {
     {
       key: 'isSystem',
       header: 'System',
-      type: 'boolean',
       width: '80px',
-      editable: false,
       getValue: (row) => !!row.isSystem,
-      render: (row) => <span>{row.isSystem ? '✓' : '—'}</span>,
+      render: (value) => value ? '✓' : '—',
     },
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -151,7 +146,7 @@ export default function UnitSpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={units}
           isLoading={isLoading}
@@ -159,8 +154,6 @@ export default function UnitSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No units found"
-          emptyIcon="📏"
         />
       </div>
 

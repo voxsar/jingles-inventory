@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tagsApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 
 export default function TagSpreadsheetPage() {
   const navigate = useNavigate();
@@ -25,42 +25,26 @@ export default function TagSpreadsheetPage() {
     loadData();
   }, []);
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'name',
       header: 'Tag Name',
-      type: 'text',
       width: '200px',
-      required: true,
     },
     {
       key: 'color',
       header: 'Color',
-      type: 'text',
       width: '140px',
       getValue: (row) => row.color || '',
       setValue: (row, value) => ({ color: value || null }),
-      render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {row.color && (
-            <div style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '4px',
-              backgroundColor: row.color,
-              border: '1px solid #e1e3e5'
-            }} />
-          )}
-          <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{row.color || '—'}</span>
-        </div>
-      ),
+      render: (value) => value || '—',
     },
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
       width: '120px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      readOnly: true,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -113,7 +97,7 @@ export default function TagSpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={tags}
           isLoading={isLoading}
@@ -121,8 +105,6 @@ export default function TagSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No tags found"
-          emptyIcon="🏷️"
         />
       </div>
     </div>
