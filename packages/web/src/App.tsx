@@ -29,6 +29,8 @@ import FloorSpreadsheetPage from './pages/spreadsheet/FloorSpreadsheetPage';
 import UnitSpreadsheetPage from './pages/spreadsheet/UnitSpreadsheetPage';
 import TagSpreadsheetPage from './pages/spreadsheet/TagSpreadsheetPage';
 import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
+import TagsPage from './pages/TagsPage';
+import UsersPage from './pages/UsersPage';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
@@ -64,6 +66,16 @@ function AppRoutes() {
         <Route path="pricing" element={<PricingPage />} />
         <Route path="pricing-overlays" element={<PricingOverlaysPage />} />
         <Route path="warehouse-3d" element={<WarehouseVisualizerPage />} />
+        <Route path="tags" element={
+          <ProtectedRoute roles={['Admin', 'Manager']}>
+            <TagsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="users" element={
+          <ProtectedRoute roles={['Admin', 'Manager']}>
+            <UsersPage />
+          </ProtectedRoute>
+        } />
         <Route path="spreadsheet" element={<SpreadsheetPage />} />
         <Route path="spreadsheet/skus" element={<SKUSpreadsheetPage />} />
         <Route path="spreadsheet/inventory" element={<InventorySpreadsheetPage />} />
