@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { categoriesApi } from '../api/client';
+import SearchableSelect from '../components/SearchableSelect';
 
 interface Category {
   id: string;
@@ -237,12 +238,16 @@ export default function CategoriesPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Parent Category</label>
-                    <select className="input-field" value={form.parentId} onChange={(e) => setForm(f => ({ ...f, parentId: e.target.value }))}>
-                      <option value="">— Top Level —</option>
-                      {flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '— Top Level —' },
+                        ...flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => ({ value: c.id, label: c.name }))
+                      ]}
+                      value={form.parentId}
+                      onChange={(value) => setForm(f => ({ ...f, parentId: value }))}
+                      placeholder="Top Level"
+                      isClearable={false}
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Sort Order</label>
