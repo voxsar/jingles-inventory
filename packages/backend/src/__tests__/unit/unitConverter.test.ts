@@ -24,11 +24,11 @@ describe('convert - database-driven rules', () => {
 	afterEach(() => {
 		clearConversionCache();
 		resetPrismaMocks();
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	it('converts Box to Piece at 1:12', async () => {
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 		expect(await convert(1, 'Box', 'Piece')).toBe(12);
 		expect(await convert(5, 'Box', 'Piece')).toBe(60);
 	});
@@ -79,7 +79,7 @@ describe('convert - database-driven rules', () => {
 describe('convert - custom rules', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -113,7 +113,7 @@ describe('convert - custom rules', () => {
 describe('getConversionRatio', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -136,7 +136,7 @@ describe('getConversionRatio', () => {
 describe('hasConversionRule', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {
@@ -169,7 +169,7 @@ describe('hasConversionRule', () => {
 describe('box-to-piece conversion - business rules', () => {
 	beforeAll(() => {
 		resetPrismaMocks();
-		(prisma.unitOfMeasureModel.findMany as any).mockResolvedValue(mockUnits);
+		(prisma.unitOfMeasure.findMany as any).mockResolvedValue(mockUnits);
 	});
 
 	afterEach(() => {

@@ -13,7 +13,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/units', async (_req, res: Response): Promise<void> => {
-	const units = await prisma.unitOfMeasureModel.findMany({
+	const units = await prisma.unitOfMeasure.findMany({
 		orderBy: [{ type: 'asc' }, { name: 'asc' }],
 	});
 	res.json({ success: true, data: units });
@@ -40,12 +40,12 @@ router.post(
 			conversionFactor?: number;
 			type: string;
 		};
-		const existing = await prisma.unitOfMeasureModel.findUnique({ where: { name } });
+		const existing = await prisma.unitOfMeasure.findUnique({ where: { name } });
 		if (existing) {
 			res.status(409).json({ error: 'A unit with this name already exists' });
 			return;
 		}
-		const unit = await prisma.unitOfMeasureModel.create({
+		const unit = await prisma.unitOfMeasure.create({
 			data: { name, abbreviation, baseUnit, conversionFactor, type },
 		});
 		res.status(201).json({ success: true, data: unit });
@@ -62,7 +62,7 @@ router.put(
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
-		const existing = await prisma.unitOfMeasureModel.findUnique({ where: { id: req.params!.id } });
+		const existing = await prisma.unitOfMeasure.findUnique({ where: { id: req.params!.id } });
 		if (!existing) {
 			res.status(404).json({ error: 'Unit not found' });
 			return;
@@ -71,7 +71,7 @@ router.put(
 			res.status(403).json({ error: 'Cannot modify system units' });
 			return;
 		}
-		const unit = await prisma.unitOfMeasureModel.update({
+		const unit = await prisma.unitOfMeasure.update({
 			where: { id: req.params!.id },
 			data: req.body,
 		});
@@ -89,7 +89,7 @@ router.delete(
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
-		const existing = await prisma.unitOfMeasureModel.findUnique({ where: { id: req.params!.id } });
+		const existing = await prisma.unitOfMeasure.findUnique({ where: { id: req.params!.id } });
 		if (!existing) {
 			res.status(404).json({ error: 'Unit not found' });
 			return;
@@ -98,7 +98,7 @@ router.delete(
 			res.status(403).json({ error: 'Cannot delete system units' });
 			return;
 		}
-		await prisma.unitOfMeasureModel.delete({ where: { id: req.params!.id } });
+		await prisma.unitOfMeasure.delete({ where: { id: req.params!.id } });
 		res.json({ success: true, message: 'Unit deleted' });
 	}
 );

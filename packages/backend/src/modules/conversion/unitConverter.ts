@@ -11,7 +11,7 @@ const CACHE_TTL = 60000; // 1 minute cache
  * Converts baseUnit + conversionFactor into a lookup table
  */
 async function loadConversionsFromDB(): Promise<Record<string, Record<string, number>>> {
-	const units = await prisma.unitOfMeasureModel.findMany({
+	const units = await prisma.unitOfMeasure.findMany({
 		where: { isActive: true },
 		select: { name: true, baseUnit: true, conversionFactor: true },
 	});
