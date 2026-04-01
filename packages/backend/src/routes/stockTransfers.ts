@@ -9,6 +9,12 @@ const router = Router();
 
 router.use(authenticate);
 
+const lineInclude = {
+  sku: { select: { id: true, skuCode: true, name: true } },
+  variant: { select: { id: true, variantCode: true, name: true } },
+  batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true } },
+};
+
 router.get(
   '/',
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -31,7 +37,7 @@ router.get(
           fromFloor: true,
           toFloor: true,
           requester: { select: { id: true, email: true } },
-          lines: true,
+          lines: { include: lineInclude },
         },
       }),
       prisma.stockTransfer.count({ where }),
@@ -62,7 +68,7 @@ router.get(
         toFloor: true,
         requester: { select: { id: true, email: true } },
         approver: { select: { id: true, email: true } },
-        lines: true,
+        lines: { include: lineInclude },
       },
     });
     if (!transfer) {
@@ -79,6 +85,8 @@ router.post(
     body('lines').isArray({ min: 1 }),
     body('lines.*.skuId').isUUID(),
     body('lines.*.requestedQty').isInt({ min: 1 }),
+    body('lines.*.variantId').optional({ nullable: true }).if(body('lines.*.variantId').notEmpty()).isUUID(),
+    body('lines.*.batchId').optional({ nullable: true }).if(body('lines.*.batchId').notEmpty()).isUUID(),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -92,8 +100,33 @@ router.post(
       fromFloorId?: string;
       toFloorId?: string;
       notes?: string;
-      lines: { skuId: string; requestedQty: number; notes?: string }[];
+      lines: { skuId: string; variantId?: string; batchId?: string; requestedQty: number; notes?: string }[];
     };
+
+    // Cross-field validation: ensure variant belongs to SKU, batch belongs to SKU/variant
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.variantId) {
+        const variant = await prisma.sKUVariant.findFirst({ where: { id: l.variantId, skuId: l.skuId } });
+        if (!variant) {
+          res.status(400).json({ error: `Line ${i + 1}: variant does not belong to the specified SKU` });
+          return;
+        }
+      }
+      if (l.batchId) {
+        const batch = await prisma.batch.findFirst({
+          where: {
+            id: l.batchId,
+            skuId: l.skuId,
+            ...(l.variantId ? { variantId: l.variantId } : {}),
+          },
+        });
+        if (!batch) {
+          res.status(400).json({ error: `Line ${i + 1}: batch does not match the specified SKU/variant` });
+          return;
+        }
+      }
+    }
 
     const referenceNumber = `ST-${Date.now().toString(36).toUpperCase()}`;
 
@@ -109,12 +142,14 @@ router.post(
         lines: {
           create: lines.map(l => ({
             skuId: l.skuId,
+            variantId: l.variantId || undefined,
+            batchId: l.batchId || undefined,
             requestedQty: l.requestedQty,
             notes: l.notes,
           })),
         },
       },
-      include: { lines: true },
+      include: { lines: { include: lineInclude } },
     });
     res.status(201).json({ success: true, data: transfer });
   }
