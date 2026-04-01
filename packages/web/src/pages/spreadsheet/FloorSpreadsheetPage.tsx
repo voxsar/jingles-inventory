@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { floorsApi, branchesApi } from '../../api/client';
-import SpreadsheetTable, { SpreadsheetColumn } from '../../components/SpreadsheetTable';
+import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 
 const PAGE_SIZE = 50;
@@ -44,38 +44,35 @@ export default function FloorSpreadsheetPage() {
 
   const branchOptions = branches.map(b => ({ value: b.id, label: b.name }));
 
-  const columns: SpreadsheetColumn<any>[] = [
+  const columns: ColumnDefinition<any>[] = [
     {
       key: 'code',
       header: 'Floor Code',
-      type: 'text',
+      
       width: '120px',
-      required: true,
-      render: (row) => <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 600 }}>{row.code}</span>,
+      
+      render: (value) => String(value || ""),
     },
     {
       key: 'name',
       header: 'Floor Name',
-      type: 'text',
+      
       width: '180px',
-      required: true,
+      
     },
     {
       key: 'branchId',
       header: 'Branch',
-      type: 'select',
+      
       options: branchOptions,
       width: '180px',
-      required: true,
-      render: (row) => {
-        const branch = branches.find(b => b.id === row.branchId);
-        return <span>{branch?.name || '—'}</span>;
-      },
+      
+      render: (value, row) => String(value || ""),
     },
     {
       key: 'lengthMeters',
       header: 'Length (m)',
-      type: 'number',
+      
       width: '100px',
       getValue: (row) => row.lengthMeters || '',
       setValue: (row, value) => ({ lengthMeters: value || null }),
@@ -83,7 +80,7 @@ export default function FloorSpreadsheetPage() {
     {
       key: 'widthMeters',
       header: 'Width (m)',
-      type: 'number',
+      
       width: '100px',
       getValue: (row) => row.widthMeters || '',
       setValue: (row, value) => ({ widthMeters: value || null }),
@@ -91,7 +88,7 @@ export default function FloorSpreadsheetPage() {
     {
       key: 'isActive',
       header: 'Active',
-      type: 'boolean',
+      
       width: '80px',
       getValue: (row) => !!row.isActive,
       setValue: (row, value) => ({ isActive: value }),
@@ -99,9 +96,9 @@ export default function FloorSpreadsheetPage() {
     {
       key: 'createdAt',
       header: 'Created',
-      type: 'readonly',
+      
       width: '110px',
-      render: (row) => <span style={{ fontSize: '11px' }}>{new Date(row.createdAt).toLocaleDateString()}</span>,
+      render: (value) => new Date(value).toLocaleDateString(),
     },
   ];
 
@@ -154,7 +151,7 @@ export default function FloorSpreadsheetPage() {
       </div>
 
       <div className="content-section" style={{ padding: 0, overflow: 'hidden' }}>
-        <SpreadsheetTable
+        <ReactSpreadsheetWrapper
           columns={columns}
           data={floors}
           isLoading={isLoading}
@@ -162,8 +159,6 @@ export default function FloorSpreadsheetPage() {
           onDelete={handleDelete}
           onAdd={handleAdd}
           getRowKey={(row) => row.id}
-          emptyMessage="No floors found"
-          emptyIcon="🏗️"
         />
       </div>
 
