@@ -237,6 +237,18 @@ export const reportsApi = {
   floorPerformance: () => api.get('/reports/floor-performance'),
   salesSummary: (params?: Record<string, string>) =>
     api.get('/reports/sales-summary', { params }),
+  grn: (params?: Record<string, string>) =>
+    api.get('/reports/grn', { params }),
+  prn: (params?: Record<string, string>) =>
+    api.get('/reports/prn', { params }),
+  stockAdjustment: (params?: Record<string, string>) =>
+    api.get('/reports/stock-adjustment', { params }),
+  stockBalance: (params?: Record<string, string>) =>
+    api.get('/reports/stock-balance', { params }),
+  stockMovement: (params?: Record<string, string>) =>
+    api.get('/reports/stock-movement', { params }),
+  tog: (params?: Record<string, string>) =>
+    api.get('/reports/tog', { params }),
 };
 
 // Barcode
