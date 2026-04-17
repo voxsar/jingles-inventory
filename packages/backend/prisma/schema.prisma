@@ -129,6 +129,21 @@ model SKU {
   videoUrl        String?  @map("video_url")
   isFragile       Boolean  @default(false) @map("is_fragile")
   maxStackHeight  Float?   @map("max_stack_height")
+
+  // Default pricing fields (used as fallback when no batch-specific price exists)
+  costPrice       Float?   @map("cost_price")
+  sellingPrice    Float?   @map("selling_price")
+  wholesalePrice  Float?   @map("wholesale_price")
+  bulkPrice       Float?   @map("bulk_price")
+  marginType      String?  @map("margin_type")      // 'fixed' or 'percentage'
+  marginValue     Float?   @map("margin_value")     // Amount or %
+  currency        String   @default("LKR")
+
+  // Default date fields (used as fallback for batches)
+  defaultManufacturingDate DateTime? @map("default_manufacturing_date")  // Default manufacture date
+  defaultExpiryDate        DateTime? @map("default_expiry_date")         // Default expiry date
+  shelfLifeDays            Int?      @map("shelf_life_days")            // Days between manufacture and expiry
+
   batchPricing    Json?    @map("batch_pricing")
   batchReferencePricing Json? @map("batch_reference_pricing")
   lowStockThreshold Int?   @map("low_stock_threshold")

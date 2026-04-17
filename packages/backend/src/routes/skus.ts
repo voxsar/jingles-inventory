@@ -126,6 +126,16 @@ router.post(
 			dimensions,
 			isFragile,
 			maxStackHeight,
+			costPrice,
+			sellingPrice,
+			wholesalePrice,
+			bulkPrice,
+			marginType,
+			marginValue,
+			currency,
+			defaultManufacturingDate,
+			defaultExpiryDate,
+			shelfLifeDays,
 			batchPricing,
 			batchReferencePricing,
 			lowStockThreshold,
@@ -143,6 +153,16 @@ router.post(
 			dimensions?: object;
 			isFragile?: boolean;
 			maxStackHeight?: number;
+			costPrice?: number;
+			sellingPrice?: number;
+			wholesalePrice?: number;
+			bulkPrice?: number;
+			marginType?: 'fixed' | 'percentage';
+			marginValue?: number;
+			currency?: string;
+			defaultManufacturingDate?: string;
+			defaultExpiryDate?: string;
+			shelfLifeDays?: number;
 			batchPricing?: object;
 			batchReferencePricing?: object;
 			lowStockThreshold?: number;
@@ -172,6 +192,16 @@ router.post(
 				dimensions,
 				isFragile: isFragile ?? false,
 				maxStackHeight,
+				costPrice,
+				sellingPrice,
+				wholesalePrice,
+				bulkPrice,
+				marginType,
+				marginValue,
+				currency,
+				defaultManufacturingDate: defaultManufacturingDate ? new Date(defaultManufacturingDate) : null,
+				defaultExpiryDate: defaultExpiryDate ? new Date(defaultExpiryDate) : null,
+				shelfLifeDays,
 				batchPricing,
 				batchReferencePricing,
 				lowStockThreshold,
