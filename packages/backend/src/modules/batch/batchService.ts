@@ -73,6 +73,7 @@ export async function generateBatchNumber(skuId: string, variantId?: string | nu
 
 /**
  * Create a new batch with auto-incremented batch number
+ * Inherits default dates and shelf life from SKU if not provided
  */
 export async function createBatch(params: CreateBatchParams) {
 	const batchNumber = await generateBatchNumber(params.skuId, params.variantId);
@@ -88,6 +89,40 @@ export async function createBatch(params: CreateBatchParams) {
 	});
 	const sequenceNumber = (lastBatch?.sequenceNumber ?? 0) + 1;
 
+	// Fetch SKU to get default dates and shelf life
+	const sku = await prisma.sKU.findUnique({
+		where: { id: params.skuId },
+		select: {
+			defaultManufacturingDate: true,
+			defaultExpiryDate: true,
+			shelfLifeDays: true,
+			createdAt: true,
+		},
+	});
+
+	if (!sku) {
+		throw new Error('SKU not found');
+	}
+
+	// Determine manufacturing date: use provided, or SKU default, or SKU creation date
+	let manufacturingDate = params.manufacturingDate;
+	if (!manufacturingDate) {
+		manufacturingDate = sku.defaultManufacturingDate ?? sku.createdAt;
+	}
+
+	// Determine expiry date: use provided, or calculate from manufacturing date + shelf life, or use SKU default
+	let expiryDate = params.expiryDate;
+	if (!expiryDate) {
+		if (manufacturingDate && sku.shelfLifeDays) {
+			// Calculate expiry from manufacturing date + shelf life
+			expiryDate = new Date(manufacturingDate);
+			expiryDate.setDate(expiryDate.getDate() + sku.shelfLifeDays);
+		} else {
+			// Fall back to SKU default expiry date
+			expiryDate = sku.defaultExpiryDate ?? null;
+		}
+	}
+
 	const batch = await prisma.batch.create({
 		data: {
 			batchNumber,
@@ -102,8 +137,8 @@ export async function createBatch(params: CreateBatchParams) {
 			currency: params.currency ?? 'LKR',
 			marginType: params.marginType,
 			marginValue: params.marginValue,
-			expiryDate: params.expiryDate,
-			manufacturingDate: params.manufacturingDate,
+			expiryDate,
+			manufacturingDate,
 			notes: params.notes,
 		},
 		include: {
