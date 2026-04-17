@@ -9,6 +9,7 @@ import ImageGalleryManager from '../components/ImageGalleryManager';
 import { branding } from '../config/branding';
 import SearchableSelect from '../components/SearchableSelect';
 import MultiSearchableSelect from '../components/MultiSearchableSelect';
+import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
 
 const PAGE_SIZE = 20;
 const defaultTransitionForm = { toState: '', reason: '' };
@@ -551,7 +552,7 @@ export default function SKUPage() {
 						<SearchableSelect
 							options={[
 								{ value: '', label: 'All Categories' },
-								...categories.map((c: any) => ({ value: c.id, label: c.name }))
+								...buildHierarchicalCategoryOptionsFromFlat(categories)
 							]}
 							value={categoryFilter}
 							onChange={(value) => { setCategoryFilter(value); setPage(1); }}
@@ -710,7 +711,7 @@ export default function SKUPage() {
 										<SearchableSelect
 											options={[
 												{ value: '', label: '— No Category —' },
-												...categories.map((c: any) => ({ value: c.id, label: c.name }))
+												...buildHierarchicalCategoryOptionsFromFlat(categories)
 											]}
 											value={form.categoryId}
 											onChange={(value) => setForm((f) => ({ ...f, categoryId: value }))}
@@ -936,7 +937,7 @@ export default function SKUPage() {
 											<SearchableSelect
 												options={[
 													{ value: '', label: '— No Category —' },
-													...categories.map((c: any) => ({ value: c.id, label: c.name }))
+													...buildHierarchicalCategoryOptionsFromFlat(categories)
 												]}
 												value={editForm.categoryId}
 												onChange={(value) => setEditForm((f) => ({ ...f, categoryId: value }))}
