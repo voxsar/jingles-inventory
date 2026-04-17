@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { skusApi, vendorsApi, categoriesApi, settingsApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { buildHierarchicalCategoryOptionsFromFlat } from '../../utils/categoryHelpers';
 
 const PAGE_SIZE = 50;
 
@@ -53,7 +54,7 @@ export default function SKUSpreadsheetPage() {
   }, [page, pageSize]);
 
   const vendorOptions = vendors.map(v => ({ value: v.id, label: v.name }));
-  const categoryOptions = categories.map(c => ({ value: c.id, label: c.name }));
+  const categoryOptions = buildHierarchicalCategoryOptionsFromFlat(categories);
   const unitOptions = units.map(u => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }));
 
   const columns: ColumnDefinition<any>[] = [
