@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import { PricingOverlayType, PricingOverlayStatus } from '@jingles/shared';
 import SearchableSelect from '../components/SearchableSelect';
+import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
 
 const PAGE_SIZE = 20;
 
@@ -646,19 +647,19 @@ export default function PricingOverlaysPage() {
 										<div className="form-group mt-3">
 											<label className="form-label">Select Categories</label>
 											<div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
-												{allCategories.map((c: any) => (
-													<label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+												{buildHierarchicalCategoryOptionsFromFlat(allCategories).map((c) => (
+													<label key={c.value} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
 														<input
 															type="checkbox"
-															checked={formData.categoryIds.includes(c.id)}
+															checked={formData.categoryIds.includes(c.value)}
 															onChange={(e) => {
 																const ids = e.target.checked
-																	? [...formData.categoryIds, c.id]
-																	: formData.categoryIds.filter(id => id !== c.id);
+																	? [...formData.categoryIds, c.value]
+																	: formData.categoryIds.filter(id => id !== c.value);
 																setFormData({ ...formData, categoryIds: ids });
 															}}
 														/>
-														<span className="text-sm">{c.name}</span>
+														<span className="text-sm" style={{ whiteSpace: 'pre' }}>{c.label}</span>
 													</label>
 												))}
 												{allCategories.length === 0 && <p className="text-xs text-gray-400 px-2">No categories loaded</p>}

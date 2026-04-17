@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { categoriesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
+import { buildHierarchicalCategoryOptions } from '../utils/categoryHelpers';
 
 interface Category {
   id: string;
@@ -241,7 +242,9 @@ export default function CategoriesPage() {
                     <SearchableSelect
                       options={[
                         { value: '', label: '— Top Level —' },
-                        ...flat.filter(c => !editingCategory || c.id !== editingCategory.id).map(c => ({ value: c.id, label: c.name }))
+                        ...buildHierarchicalCategoryOptions(
+                          categories.filter(c => !editingCategory || c.id !== editingCategory.id)
+                        )
                       ]}
                       value={form.parentId}
                       onChange={(value) => setForm(f => ({ ...f, parentId: value }))}
