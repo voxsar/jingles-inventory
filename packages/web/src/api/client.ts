@@ -90,6 +90,19 @@ export const grnsApi = {
   delete: (id: string) => api.delete(`/grns/${id}`),
 };
 
+// PRNs
+export const prnsApi = {
+  list: (params?: Record<string, string>) =>
+    api.get('/prns', { params }),
+  get: (id: string) => api.get(`/prns/${id}`),
+  create: (data: any) => api.post('/prns', data),
+  update: (id: string, data: any) => api.put(`/prns/${id}`, data),
+  submit: (id: string, pickupDate?: string) =>
+    api.put(`/prns/${id}/submit`, { pickupDate }),
+  pickup: (id: string) => api.put(`/prns/${id}/pickup`),
+  delete: (id: string) => api.delete(`/prns/${id}`),
+};
+
 // Locations
 export const floorsApi = {
   list: (params?: Record<string, string>) =>

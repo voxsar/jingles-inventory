@@ -20,6 +20,7 @@ model User {
   inventoryRecords       InventoryRecord[]
   inventoryEvents        InventoryEvent[]
   grns                   GRN[]
+  prns                   PRN[]
   inspectionRecords      InspectionRecord[]
   auditLogs              AuditLog[]
   stockTransfersCreated  StockTransfer[]        @relation("StockTransferCreator")
@@ -45,6 +46,7 @@ model Vendor {
   users      User[]
   skus       SKU[]
   grns       GRN[]
+  prns       PRN[]
   skuVendors SKUVendor[]
   batches    Batch[]
 
@@ -139,6 +141,7 @@ model SKU {
   unitModel        UnitOfMeasure? @relation(fields: [unitOfMeasureId], references: [id])
   inventoryRecords    InventoryRecord[]
   grnLines            GRNLine[]
+  prnLines            PRNLine[]
   images              ProductImage[]
   barcodes            ProductBarcode[]
   tags                SKUTag[]
@@ -247,6 +250,7 @@ model SKUVariant {
   attributeValues  SKUVariantValue[]
   inventoryRecords InventoryRecord[]
   grnLines         GRNLine[]
+  prnLines         PRNLine[]
   batches          Batch[]
   stockTransferLines StockTransferLine[]
 
@@ -314,6 +318,7 @@ model Floor {
   boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
   grns             GRN[]
+  prns             PRN[]
   transfersFrom    StockTransfer[] @relation("StockTransferFromFloor")
   transfersTo      StockTransfer[] @relation("StockTransferToFloor")
 
@@ -367,6 +372,7 @@ model Shelf {
   boxes            StorageBox[]
   inventoryRecords InventoryRecord[]
   grns             GRN[]
+  prns             PRN[]
 
   @@unique([floorId, code])
   @@map("shelves")
@@ -566,6 +572,7 @@ model Batch {
   variant          SKUVariant?        @relation(fields: [variantId], references: [id])
   vendor           Vendor?            @relation(fields: [vendorId], references: [id])
   grnLines         GRNLine[]
+  prnLines         PRNLine[]
   inventoryRecords InventoryRecord[]
   stockTransferLines StockTransferLine[]
 
@@ -642,8 +649,52 @@ model InspectionRecord {
 
   grnLine   GRNLine @relation(fields: [grnLineId], references: [id])
   inspector User    @relation(fields: [inspectorUserId], references: [id])
+  prns      PRN[]
 
   @@map("inspection_records")
+}
+
+model PRN {
+  id                   String    @id @default(uuid())
+  supplierId           String    @map("supplier_id")
+  inspectionRecordId   String?   @map("inspection_record_id")
+  floorId              String?   @map("floor_id")
+  shelfId              String?   @map("shelf_id")
+  returnReason         String?   @map("return_reason")
+  expectedPickupDate   DateTime? @map("expected_pickup_date")
+  pickupDate           DateTime? @map("pickup_date")
+  status               String    @default("Draft")
+  notes                String?
+  createdBy            String    @map("created_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  supplier          Vendor             @relation(fields: [supplierId], references: [id])
+  inspectionRecord  InspectionRecord?  @relation(fields: [inspectionRecordId], references: [id])
+  floor             Floor?             @relation(fields: [floorId], references: [id])
+  shelf             Shelf?             @relation(fields: [shelfId], references: [id])
+  creator           User               @relation(fields: [createdBy], references: [id])
+  lines             PRNLine[]
+
+  @@map("prns")
+}
+
+model PRNLine {
+  id               String  @id @default(uuid())
+  prnId            String  @map("prn_id")
+  skuId            String  @map("sku_id")
+  variantId        String? @map("variant_id")
+  batchId          String? @map("batch_id")
+  returnQuantity   Int     @map("return_quantity")
+  pickedUpQuantity Int     @default(0) @map("picked_up_quantity")
+  notes            String?
+
+  prn     PRN         @relation(fields: [prnId], references: [id])
+  sku     SKU         @relation(fields: [skuId], references: [id])
+  variant SKUVariant? @relation(fields: [variantId], references: [id])
+  batch   Batch?      @relation(fields: [batchId], references: [id])
+
+  @@map("prn_lines")
 }
 
 model AuditLog {

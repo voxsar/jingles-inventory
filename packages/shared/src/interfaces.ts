@@ -436,6 +436,33 @@ export interface IInspectionRecord {
 	remarks?: string | null;
 }
 
+export interface IPRN {
+	id: string;
+	supplierId: string;
+	inspectionRecordId?: string | null;
+	floorId?: string | null;
+	shelfId?: string | null;
+	returnReason?: string | null;
+	expectedPickupDate?: Date | null;
+	pickupDate?: Date | null;
+	status: string;
+	notes?: string | null;
+	createdBy: string;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface IPRNLine {
+	id: string;
+	prnId: string;
+	skuId: string;
+	variantId?: string | null;
+	batchId?: string | null;
+	returnQuantity: number;
+	pickedUpQuantity: number;
+	notes?: string | null;
+}
+
 export interface IAuditLog {
 	id: string;
 	userId: string;

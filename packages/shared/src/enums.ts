@@ -11,6 +11,7 @@ export enum InventoryState {
 
 export enum InventoryEventType {
   GRN_CREATED = 'GRN_CREATED',
+  PRN_CREATED = 'PRN_CREATED',
   BOX_OPENED = 'BOX_OPENED',
   INSPECTION_APPROVED = 'INSPECTION_APPROVED',
   LOCATION_TRANSFER = 'LOCATION_TRANSFER',
@@ -26,6 +27,13 @@ export enum GRNStatus {
   Submitted = 'Submitted',
   PartiallyInspected = 'PartiallyInspected',
   FullyInspected = 'FullyInspected',
+  Closed = 'Closed',
+}
+
+export enum PRNStatus {
+  Draft = 'Draft',
+  Submitted = 'Submitted',
+  PickedUp = 'PickedUp',
   Closed = 'Closed',
 }
 

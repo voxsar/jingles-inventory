@@ -26,6 +26,12 @@ export const SpecialStatusKeys = {
 	GRN_FULLY_INSPECTED: 'GRN_FULLY_INSPECTED',
 	GRN_CLOSED: 'GRN_CLOSED',
 
+	// PRN statuses
+	PRN_DRAFT: 'PRN_DRAFT',
+	PRN_SUBMITTED: 'PRN_SUBMITTED',
+	PRN_PICKED_UP: 'PRN_PICKED_UP',
+	PRN_CLOSED: 'PRN_CLOSED',
+
 	// Stock transfer statuses
 	TRANSFER_DRAFT: 'TRANSFER_DRAFT',
 	TRANSFER_PENDING: 'TRANSFER_PENDING',
@@ -59,6 +65,10 @@ const FALLBACK_STATUS_BY_KEY: Record<string, string> = {
 	GRN_PARTIALLY_INSPECTED: 'PartiallyInspected',
 	GRN_FULLY_INSPECTED: 'FullyInspected',
 	GRN_CLOSED: 'Closed',
+	PRN_DRAFT: 'Draft',
+	PRN_SUBMITTED: 'Submitted',
+	PRN_PICKED_UP: 'PickedUp',
+	PRN_CLOSED: 'Closed',
 	TRANSFER_DRAFT: 'Draft',
 	TRANSFER_PENDING: 'Pending',
 	TRANSFER_APPROVED: 'Approved',
