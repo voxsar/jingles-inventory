@@ -525,7 +525,7 @@ export default function LocationsPage() {
 															<span className="text-gray-400">└</span>
 															<span className="font-medium text-gray-700">×{r.quantity}</span>
 															<span className="px-1.5 py-0.5 rounded-full text-xs font-medium" style={{ background: '#e0e7ff', color: '#3730a3' }}>{r.state}</span>
-															{r.batchId && <span className="font-mono text-gray-400">{r.batchId}</span>}
+															{r.batch && <span className="font-mono text-gray-400">{r.batch.batchNumber}</span>}
 															{r.shelf && <span className="text-gray-400">🗄 {r.shelf.name}</span>}
 															{r.box && <span className="text-gray-400">📦 {r.box.name}</span>}
 														</div>
