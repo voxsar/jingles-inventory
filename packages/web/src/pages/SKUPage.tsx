@@ -728,7 +728,7 @@ export default function SKUPage() {
 										/>
 									</div>
 								</div>
-								<div className="form-grid-2">
+								<div className="form-grid-3">
 									<div className="form-group">
 										<label className="form-label">Unit of Measure *</label>
 										{units.length > 0 ? (
@@ -749,6 +749,10 @@ export default function SKUPage() {
 									<div className="form-group">
 										<label className="form-label">Low Stock Alert</label>
 										<input className="input-field" type="number" value={form.lowStockThreshold} placeholder="Alert when qty ≤ value" onChange={(e) => setForm((f) => ({ ...f, lowStockThreshold: e.target.value }))} />
+									</div>
+									<div className="form-group">
+										<label className="form-label">Max Stack Height (cm)</label>
+										<input className="input-field" type="number" value={form.maxStackHeight} placeholder="Maximum stack height" onChange={(e) => setForm((f) => ({ ...f, maxStackHeight: e.target.value }))} />
 									</div>
 								</div>
 								<div className="form-group">
