@@ -84,6 +84,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
       padding: '8px 12px',
       borderRadius: '0.375rem',
       fontSize: '0.875rem',
+      whiteSpace: 'pre',
       '&:active': {
         backgroundColor: state.isSelected ? '#6366f1' : '#e5e7eb',
       },
@@ -97,6 +98,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
       ...base,
       color: '#111827',
       fontSize: '0.875rem',
+      whiteSpace: 'pre',
     }),
     input: (base) => ({
       ...base,
