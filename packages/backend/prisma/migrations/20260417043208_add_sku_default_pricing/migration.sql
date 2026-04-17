@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "skus" ADD COLUMN "cost_price" DOUBLE PRECISION,
+ADD COLUMN "selling_price" DOUBLE PRECISION,
+ADD COLUMN "wholesale_price" DOUBLE PRECISION,
+ADD COLUMN "bulk_price" DOUBLE PRECISION,
+ADD COLUMN "margin_type" TEXT,
+ADD COLUMN "margin_value" DOUBLE PRECISION,
+ADD COLUMN "currency" TEXT NOT NULL DEFAULT 'LKR';
