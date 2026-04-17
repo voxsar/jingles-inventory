@@ -16,8 +16,9 @@ function flattenCategoryTree(categories: ICategory[], depth = 0): CategoryOption
   const result: CategoryOption[] = [];
 
   for (const category of categories) {
-    // Add indentation using non-breaking spaces and visual indicators
-    const indent = depth > 0 ? '\u00A0\u00A0'.repeat(depth) + '└ ' : '';
+    // Add indentation using tab characters for proper spacing
+    // Use visual tree indicators for better hierarchy visualization
+    const indent = depth > 0 ? '\t'.repeat(depth) + '└─ ' : '';
 
     result.push({
       value: category.id,
@@ -71,3 +72,4 @@ export function buildHierarchicalCategoryOptionsFromFlat(flatCategories: any[]):
 
   return flattenCategoryTree(rootCategories);
 }
+
