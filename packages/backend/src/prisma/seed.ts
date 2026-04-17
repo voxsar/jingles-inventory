@@ -961,11 +961,19 @@ async function seedStockTransfers(params: {
 		if (!skuId) continue;
 		const variantId = line.variantCode ? params.variantMap.get(line.variantCode) ?? null : null;
 		const batchId = params.batchMap.get(line.batchNumber) ?? null;
-		await prisma.stockTransferLine.upsert({
-			where: { transferId_skuId_variantId_batchId: { transferId: transfer.id, skuId, variantId, batchId } },
-			update: { requestedQty: line.requestedQty, transferredQty: line.transferredQty },
-			create: { transferId: transfer.id, skuId, variantId, batchId, requestedQty: line.requestedQty, transferredQty: line.transferredQty },
+		const existing = await prisma.stockTransferLine.findFirst({
+			where: { transferId: transfer.id, skuId, variantId, batchId },
 		});
+		if (existing) {
+			await prisma.stockTransferLine.update({
+				where: { id: existing.id },
+				data: { requestedQty: line.requestedQty, transferredQty: line.transferredQty },
+			});
+		} else {
+			await prisma.stockTransferLine.create({
+				data: { transferId: transfer.id, skuId, variantId, batchId, requestedQty: line.requestedQty, transferredQty: line.transferredQty },
+			});
+		}
 	}
 
 	await prisma.inventoryEvent.create({

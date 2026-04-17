@@ -1,9 +1,13 @@
-import { ICategory } from '@jingles/shared';
-
 export interface CategoryOption {
   value: string;
   label: string;
   depth: number;
+}
+
+interface CategoryNode {
+  id: string;
+  name: string;
+  children?: CategoryNode[];
 }
 
 /**
@@ -12,7 +16,7 @@ export interface CategoryOption {
  * @param depth Current depth level (for internal use)
  * @returns Flat array of category options with indented labels
  */
-function flattenCategoryTree(categories: ICategory[], depth = 0): CategoryOption[] {
+function flattenCategoryTree(categories: CategoryNode[], depth = 0): CategoryOption[] {
   const result: CategoryOption[] = [];
 
   for (const category of categories) {
@@ -40,7 +44,7 @@ function flattenCategoryTree(categories: ICategory[], depth = 0): CategoryOption
  * @param categoryTree Tree-structured categories
  * @returns Array of options with hierarchical labels for use in dropdowns
  */
-export function buildHierarchicalCategoryOptions(categoryTree: ICategory[]): CategoryOption[] {
+export function buildHierarchicalCategoryOptions(categoryTree: CategoryNode[]): CategoryOption[] {
   return flattenCategoryTree(categoryTree);
 }
 
