@@ -170,6 +170,14 @@ export interface ISKU {
 	videoUrl?: string | null;
 	isFragile: boolean;
 	maxStackHeight?: number | null;
+	// Default pricing fields (used as fallback when no batch-specific price exists)
+	costPrice?: number | null;
+	sellingPrice?: number | null;
+	wholesalePrice?: number | null;
+	bulkPrice?: number | null;
+	marginType?: 'fixed' | 'percentage' | null;
+	marginValue?: number | null;
+	currency?: string;
 	batchPricing?: IBatchPricingTier[] | null;
 	batchReferencePricing?: IBatchReferencePricing[] | null;
 	lowStockThreshold?: number | null;

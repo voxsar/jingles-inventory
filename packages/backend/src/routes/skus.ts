@@ -126,6 +126,13 @@ router.post(
 			dimensions,
 			isFragile,
 			maxStackHeight,
+			costPrice,
+			sellingPrice,
+			wholesalePrice,
+			bulkPrice,
+			marginType,
+			marginValue,
+			currency,
 			batchPricing,
 			batchReferencePricing,
 			lowStockThreshold,
@@ -143,6 +150,13 @@ router.post(
 			dimensions?: object;
 			isFragile?: boolean;
 			maxStackHeight?: number;
+			costPrice?: number;
+			sellingPrice?: number;
+			wholesalePrice?: number;
+			bulkPrice?: number;
+			marginType?: 'fixed' | 'percentage';
+			marginValue?: number;
+			currency?: string;
 			batchPricing?: object;
 			batchReferencePricing?: object;
 			lowStockThreshold?: number;
@@ -172,6 +186,13 @@ router.post(
 				dimensions,
 				isFragile: isFragile ?? false,
 				maxStackHeight,
+				costPrice,
+				sellingPrice,
+				wholesalePrice,
+				bulkPrice,
+				marginType,
+				marginValue,
+				currency,
 				batchPricing,
 				batchReferencePricing,
 				lowStockThreshold,

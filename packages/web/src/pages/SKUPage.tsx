@@ -25,6 +25,13 @@ const defaultForm = {
 	isActive: true,
 	maxStackHeight: '',
 	lowStockThreshold: '',
+	costPrice: '',
+	sellingPrice: '',
+	wholesalePrice: '',
+	bulkPrice: '',
+	marginType: '' as 'fixed' | 'percentage' | '',
+	marginValue: '',
+	currency: 'LKR',
 };
 
 type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images' | 'pricing';
@@ -205,6 +212,12 @@ export default function SKUPage() {
 				vendorIds: form.vendorIds,
 				maxStackHeight: form.maxStackHeight ? parseFloat(form.maxStackHeight) : null,
 				lowStockThreshold: form.lowStockThreshold ? parseInt(form.lowStockThreshold) : null,
+				costPrice: form.costPrice ? parseFloat(form.costPrice) : null,
+				sellingPrice: form.sellingPrice ? parseFloat(form.sellingPrice) : null,
+				wholesalePrice: form.wholesalePrice ? parseFloat(form.wholesalePrice) : null,
+				bulkPrice: form.bulkPrice ? parseFloat(form.bulkPrice) : null,
+				marginType: form.marginType || null,
+				marginValue: form.marginValue ? parseFloat(form.marginValue) : null,
 				categoryId: form.categoryId || undefined,
 				unitOfMeasureId: form.unitOfMeasureId || undefined,
 				attributeSelections: attributeSelections.length > 0 ? attributeSelections : undefined,
@@ -245,6 +258,13 @@ export default function SKUPage() {
 			isFragile: sku.isFragile ?? false, isActive: sku.isActive ?? true,
 			maxStackHeight: sku.maxStackHeight != null ? String(sku.maxStackHeight) : '',
 			lowStockThreshold: sku.lowStockThreshold != null ? String(sku.lowStockThreshold) : '',
+			costPrice: sku.costPrice != null ? String(sku.costPrice) : '',
+			sellingPrice: sku.sellingPrice != null ? String(sku.sellingPrice) : '',
+			wholesalePrice: sku.wholesalePrice != null ? String(sku.wholesalePrice) : '',
+			bulkPrice: sku.bulkPrice != null ? String(sku.bulkPrice) : '',
+			marginType: sku.marginType ?? '',
+			marginValue: sku.marginValue != null ? String(sku.marginValue) : '',
+			currency: sku.currency ?? 'LKR',
 		});
 		setEditTags(sku.tags?.map((t: any) => t.tagId ?? t.tag?.id).filter(Boolean) ?? []);
 		setEditingSku(sku);
@@ -265,6 +285,12 @@ export default function SKUPage() {
 				lowStockThreshold: editForm.lowStockThreshold ? parseInt(editForm.lowStockThreshold) : null,
 				categoryId: editForm.categoryId || undefined,
 				unitOfMeasureId: editForm.unitOfMeasureId || undefined,
+				costPrice: editForm.costPrice ? parseFloat(editForm.costPrice) : null,
+				sellingPrice: editForm.sellingPrice ? parseFloat(editForm.sellingPrice) : null,
+				wholesalePrice: editForm.wholesalePrice ? parseFloat(editForm.wholesalePrice) : null,
+				bulkPrice: editForm.bulkPrice ? parseFloat(editForm.bulkPrice) : null,
+				marginType: editForm.marginType || null,
+				marginValue: editForm.marginValue ? parseFloat(editForm.marginValue) : null,
 			};
 			await skusApi.update(editingSku.id, payload);
 			setSaveSuccess(true);
@@ -759,6 +785,45 @@ export default function SKUPage() {
 									<label className="form-label">Description</label>
 									<input className="input-field" type="text" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
 								</div>
+								{/* Pricing Section */}
+								<div className="border-t border-gray-200 pt-4 mt-4">
+									<p className="form-label mb-3">💰 Default Pricing</p>
+									<p className="text-xs text-gray-500 mb-4">These prices are used as defaults when creating GRNs and when no batch-specific pricing exists.</p>
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Cost Price</label>
+											<input className="input-field" type="number" step="0.01" value={form.costPrice} placeholder="0.00" onChange={(e) => setForm((f) => ({ ...f, costPrice: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Selling Price</label>
+											<input className="input-field" type="number" step="0.01" value={form.sellingPrice} placeholder="0.00" onChange={(e) => setForm((f) => ({ ...f, sellingPrice: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Wholesale Price</label>
+											<input className="input-field" type="number" step="0.01" value={form.wholesalePrice} placeholder="0.00" onChange={(e) => setForm((f) => ({ ...f, wholesalePrice: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Bulk Price</label>
+											<input className="input-field" type="number" step="0.01" value={form.bulkPrice} placeholder="0.00" onChange={(e) => setForm((f) => ({ ...f, bulkPrice: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Margin Type</label>
+											<select className="input-field" value={form.marginType} onChange={(e) => setForm((f) => ({ ...f, marginType: e.target.value as 'fixed' | 'percentage' | '' }))}>
+												<option value="">— No Margin —</option>
+												<option value="fixed">Fixed Amount</option>
+												<option value="percentage">Percentage</option>
+											</select>
+										</div>
+										<div className="form-group">
+											<label className="form-label">Margin Value</label>
+											<input className="input-field" type="number" step="0.01" value={form.marginValue} placeholder={form.marginType === 'percentage' ? '0.00%' : '0.00'} onChange={(e) => setForm((f) => ({ ...f, marginValue: e.target.value }))} disabled={!form.marginType} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Currency</label>
+											<input className="input-field" type="text" value={form.currency} onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))} />
+										</div>
+									</div>
+								</div>
 								<div>
 									<p className="form-label mb-2">Tags</p>
 									<div className="flex flex-wrap gap-2 mb-2">
@@ -988,6 +1053,45 @@ export default function SKUPage() {
 									<div className="form-group">
 										<label className="form-label">Description</label>
 										<input className="input-field" type="text" value={editForm.description} onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
+									</div>
+									{/* Pricing Section */}
+									<div className="border-t border-gray-200 pt-4 mt-4">
+										<p className="form-label mb-3">💰 Default Pricing</p>
+										<p className="text-xs text-gray-500 mb-4">These prices are used as defaults when creating GRNs and when no batch-specific pricing exists.</p>
+										<div className="form-grid-2">
+											<div className="form-group">
+												<label className="form-label">Cost Price</label>
+												<input className="input-field" type="number" step="0.01" value={editForm.costPrice} placeholder="0.00" onChange={(e) => setEditForm((f) => ({ ...f, costPrice: e.target.value }))} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Selling Price</label>
+												<input className="input-field" type="number" step="0.01" value={editForm.sellingPrice} placeholder="0.00" onChange={(e) => setEditForm((f) => ({ ...f, sellingPrice: e.target.value }))} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Wholesale Price</label>
+												<input className="input-field" type="number" step="0.01" value={editForm.wholesalePrice} placeholder="0.00" onChange={(e) => setEditForm((f) => ({ ...f, wholesalePrice: e.target.value }))} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Bulk Price</label>
+												<input className="input-field" type="number" step="0.01" value={editForm.bulkPrice} placeholder="0.00" onChange={(e) => setEditForm((f) => ({ ...f, bulkPrice: e.target.value }))} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Margin Type</label>
+												<select className="input-field" value={editForm.marginType} onChange={(e) => setEditForm((f) => ({ ...f, marginType: e.target.value as 'fixed' | 'percentage' | '' }))}>
+													<option value="">— No Margin —</option>
+													<option value="fixed">Fixed Amount</option>
+													<option value="percentage">Percentage</option>
+												</select>
+											</div>
+											<div className="form-group">
+												<label className="form-label">Margin Value</label>
+												<input className="input-field" type="number" step="0.01" value={editForm.marginValue} placeholder={editForm.marginType === 'percentage' ? '0.00%' : '0.00'} onChange={(e) => setEditForm((f) => ({ ...f, marginValue: e.target.value }))} disabled={!editForm.marginType} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Currency</label>
+												<input className="input-field" type="text" value={editForm.currency} onChange={(e) => setEditForm((f) => ({ ...f, currency: e.target.value }))} />
+											</div>
+										</div>
 									</div>
 									<div className="flex items-center gap-6">
 										<label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
