@@ -133,6 +133,9 @@ router.post(
 			marginType,
 			marginValue,
 			currency,
+			defaultManufacturingDate,
+			defaultExpiryDate,
+			shelfLifeDays,
 			batchPricing,
 			batchReferencePricing,
 			lowStockThreshold,
@@ -157,6 +160,9 @@ router.post(
 			marginType?: 'fixed' | 'percentage';
 			marginValue?: number;
 			currency?: string;
+			defaultManufacturingDate?: string;
+			defaultExpiryDate?: string;
+			shelfLifeDays?: number;
 			batchPricing?: object;
 			batchReferencePricing?: object;
 			lowStockThreshold?: number;
@@ -193,6 +199,9 @@ router.post(
 				marginType,
 				marginValue,
 				currency,
+				defaultManufacturingDate: defaultManufacturingDate ? new Date(defaultManufacturingDate) : null,
+				defaultExpiryDate: defaultExpiryDate ? new Date(defaultExpiryDate) : null,
+				shelfLifeDays,
 				batchPricing,
 				batchReferencePricing,
 				lowStockThreshold,

@@ -178,6 +178,10 @@ export interface ISKU {
 	marginType?: 'fixed' | 'percentage' | null;
 	marginValue?: number | null;
 	currency?: string;
+	// Default date fields (used as fallback for batches)
+	defaultManufacturingDate?: Date | null;
+	defaultExpiryDate?: Date | null;
+	shelfLifeDays?: number | null;
 	batchPricing?: IBatchPricingTier[] | null;
 	batchReferencePricing?: IBatchReferencePricing[] | null;
 	lowStockThreshold?: number | null;

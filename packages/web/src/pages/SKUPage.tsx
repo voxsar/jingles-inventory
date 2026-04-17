@@ -32,6 +32,9 @@ const defaultForm = {
 	marginType: '' as 'fixed' | 'percentage' | '',
 	marginValue: '',
 	currency: 'LKR',
+	defaultManufacturingDate: '',
+	defaultExpiryDate: '',
+	shelfLifeDays: '',
 };
 
 type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images' | 'pricing';
@@ -218,6 +221,9 @@ export default function SKUPage() {
 				bulkPrice: form.bulkPrice ? parseFloat(form.bulkPrice) : null,
 				marginType: form.marginType || null,
 				marginValue: form.marginValue ? parseFloat(form.marginValue) : null,
+				defaultManufacturingDate: form.defaultManufacturingDate || null,
+				defaultExpiryDate: form.defaultExpiryDate || null,
+				shelfLifeDays: form.shelfLifeDays ? parseInt(form.shelfLifeDays) : null,
 				categoryId: form.categoryId || undefined,
 				unitOfMeasureId: form.unitOfMeasureId || undefined,
 				attributeSelections: attributeSelections.length > 0 ? attributeSelections : undefined,
@@ -265,6 +271,9 @@ export default function SKUPage() {
 			marginType: sku.marginType ?? '',
 			marginValue: sku.marginValue != null ? String(sku.marginValue) : '',
 			currency: sku.currency ?? 'LKR',
+			defaultManufacturingDate: sku.defaultManufacturingDate ? new Date(sku.defaultManufacturingDate).toISOString().split('T')[0] : '',
+			defaultExpiryDate: sku.defaultExpiryDate ? new Date(sku.defaultExpiryDate).toISOString().split('T')[0] : '',
+			shelfLifeDays: sku.shelfLifeDays != null ? String(sku.shelfLifeDays) : '',
 		});
 		setEditTags(sku.tags?.map((t: any) => t.tagId ?? t.tag?.id).filter(Boolean) ?? []);
 		setEditingSku(sku);
@@ -291,6 +300,9 @@ export default function SKUPage() {
 				bulkPrice: editForm.bulkPrice ? parseFloat(editForm.bulkPrice) : null,
 				marginType: editForm.marginType || null,
 				marginValue: editForm.marginValue ? parseFloat(editForm.marginValue) : null,
+				defaultManufacturingDate: editForm.defaultManufacturingDate || null,
+				defaultExpiryDate: editForm.defaultExpiryDate || null,
+				shelfLifeDays: editForm.shelfLifeDays ? parseInt(editForm.shelfLifeDays) : null,
 			};
 			await skusApi.update(editingSku.id, payload);
 			setSaveSuccess(true);
@@ -824,6 +836,50 @@ export default function SKUPage() {
 										</div>
 									</div>
 								</div>
+								{/* Date & Shelf Life Section */}
+								<div className="border-t border-gray-200 pt-4 mt-4">
+									<p className="form-label mb-3">📅 Manufacture & Expiry Dates</p>
+									<p className="text-xs text-gray-500 mb-4">Set default dates for product batches. Expiry date will auto-calculate if shelf life is provided.</p>
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Default Manufacturing Date</label>
+											<input className="input-field" type="date" value={form.defaultManufacturingDate} onChange={(e) => {
+												setForm((f) => {
+													const newForm = { ...f, defaultManufacturingDate: e.target.value };
+													// Auto-calculate expiry if shelf life is set
+													if (e.target.value && f.shelfLifeDays) {
+														const mfgDate = new Date(e.target.value);
+														const expiryDate = new Date(mfgDate);
+														expiryDate.setDate(expiryDate.getDate() + parseInt(f.shelfLifeDays));
+														newForm.defaultExpiryDate = expiryDate.toISOString().split('T')[0];
+													}
+													return newForm;
+												});
+											}} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Default Expiry Date</label>
+											<input className="input-field" type="date" value={form.defaultExpiryDate} onChange={(e) => setForm((f) => ({ ...f, defaultExpiryDate: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Shelf Life (days)</label>
+											<input className="input-field" type="number" value={form.shelfLifeDays} placeholder="e.g., 365" onChange={(e) => {
+												setForm((f) => {
+													const newForm = { ...f, shelfLifeDays: e.target.value };
+													// Auto-calculate expiry if manufacturing date is set
+													if (f.defaultManufacturingDate && e.target.value) {
+														const mfgDate = new Date(f.defaultManufacturingDate);
+														const expiryDate = new Date(mfgDate);
+														expiryDate.setDate(expiryDate.getDate() + parseInt(e.target.value));
+														newForm.defaultExpiryDate = expiryDate.toISOString().split('T')[0];
+													}
+													return newForm;
+												});
+											}} />
+											<p className="text-xs text-gray-400 mt-1">Auto-calculates expiry when manufacture date is set</p>
+										</div>
+									</div>
+								</div>
 								<div>
 									<p className="form-label mb-2">Tags</p>
 									<div className="flex flex-wrap gap-2 mb-2">
@@ -1090,6 +1146,50 @@ export default function SKUPage() {
 											<div className="form-group">
 												<label className="form-label">Currency</label>
 												<input className="input-field" type="text" value={editForm.currency} onChange={(e) => setEditForm((f) => ({ ...f, currency: e.target.value }))} />
+											</div>
+										</div>
+									</div>
+									{/* Date & Shelf Life Section */}
+									<div className="border-t border-gray-200 pt-4 mt-4">
+										<p className="form-label mb-3">📅 Manufacture & Expiry Dates</p>
+										<p className="text-xs text-gray-500 mb-4">Set default dates for product batches. Expiry date will auto-calculate if shelf life is provided.</p>
+										<div className="form-grid-2">
+											<div className="form-group">
+												<label className="form-label">Default Manufacturing Date</label>
+												<input className="input-field" type="date" value={editForm.defaultManufacturingDate} onChange={(e) => {
+													setEditForm((f) => {
+														const newForm = { ...f, defaultManufacturingDate: e.target.value };
+														// Auto-calculate expiry if shelf life is set
+														if (e.target.value && f.shelfLifeDays) {
+															const mfgDate = new Date(e.target.value);
+															const expiryDate = new Date(mfgDate);
+															expiryDate.setDate(expiryDate.getDate() + parseInt(f.shelfLifeDays));
+															newForm.defaultExpiryDate = expiryDate.toISOString().split('T')[0];
+														}
+														return newForm;
+													});
+												}} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Default Expiry Date</label>
+												<input className="input-field" type="date" value={editForm.defaultExpiryDate} onChange={(e) => setEditForm((f) => ({ ...f, defaultExpiryDate: e.target.value }))} />
+											</div>
+											<div className="form-group">
+												<label className="form-label">Shelf Life (days)</label>
+												<input className="input-field" type="number" value={editForm.shelfLifeDays} placeholder="e.g., 365" onChange={(e) => {
+													setEditForm((f) => {
+														const newForm = { ...f, shelfLifeDays: e.target.value };
+														// Auto-calculate expiry if manufacturing date is set
+														if (f.defaultManufacturingDate && e.target.value) {
+															const mfgDate = new Date(f.defaultManufacturingDate);
+															const expiryDate = new Date(mfgDate);
+															expiryDate.setDate(expiryDate.getDate() + parseInt(e.target.value));
+															newForm.defaultExpiryDate = expiryDate.toISOString().split('T')[0];
+														}
+														return newForm;
+													});
+												}} />
+												<p className="text-xs text-gray-400 mt-1">Auto-calculates expiry when manufacture date is set</p>
 											</div>
 										</div>
 									</div>

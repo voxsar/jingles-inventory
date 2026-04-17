@@ -137,6 +137,11 @@ model SKU {
   marginValue     Float?   @map("margin_value")     // Amount or %
   currency        String   @default("LKR")
 
+  // Default date fields (used as fallback for batches)
+  defaultManufacturingDate DateTime? @map("default_manufacturing_date")  // Default manufacture date
+  defaultExpiryDate        DateTime? @map("default_expiry_date")         // Default expiry date
+  shelfLifeDays            Int?      @map("shelf_life_days")            // Days between manufacture and expiry
+
   batchPricing    Json?    @map("batch_pricing")
   batchReferencePricing Json? @map("batch_reference_pricing")
   lowStockThreshold Int?   @map("low_stock_threshold")
