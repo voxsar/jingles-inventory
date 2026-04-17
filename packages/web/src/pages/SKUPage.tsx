@@ -1108,7 +1108,7 @@ export default function SKUPage() {
 															<div key={r.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-gray-100 last:border-0">
 																<div className="flex items-center gap-3">
 																	<s-badge>{r.state}</s-badge>
-																	{r.batchId && <span className="text-xs text-gray-500">Batch: {r.batchId}</span>}
+																	{r.batch && <span className="text-xs text-gray-500">Batch: {r.batch.batchNumber}</span>}
 																</div>
 																<div className="flex items-center gap-3">
 																	<span className="font-medium">{r.quantity} {editingSku?.unitOfMeasure}</span>

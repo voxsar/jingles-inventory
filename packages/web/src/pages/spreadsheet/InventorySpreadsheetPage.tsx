@@ -148,9 +148,9 @@ export default function InventorySpreadsheetPage() {
     {
       key: 'batchId',
       header: 'Batch',
-      
+
       width: '120px',
-      render: (value, row) => String(row.batchId || '—'),
+      render: (value, row) => row.batch?.batchNumber || '—',
     },
     {
       key: 'updatedAt',

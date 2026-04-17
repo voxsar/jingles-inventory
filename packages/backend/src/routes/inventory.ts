@@ -58,6 +58,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 					floor: { include: { branch: { select: { id: true, name: true } } } },
 					shelf: true,
 					box: true,
+					batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true, expiryDate: true } },
 					user: { select: { email: true } },
 				},
 				orderBy: { updatedAt: 'desc' },
