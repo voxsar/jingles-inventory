@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -611,7 +611,7 @@ async function seedSkus(options: {
 				categoryId: options.categoryMap.get(skuDef.categorySlug) ?? null,
 				unitOfMeasureId: options.unitMap.get(skuDef.unit) ?? null,
 				unitOfMeasure: skuDef.unit,
-				conversionRules: skuDef.conversionRules ?? null,
+				conversionRules: skuDef.conversionRules ?? Prisma.JsonNull,
 				dimensions: skuDef.dimensions,
 				isFragile: skuDef.isFragile ?? false,
 				lowStockThreshold: skuDef.lowStockThreshold ?? null,
@@ -625,7 +625,7 @@ async function seedSkus(options: {
 				categoryId: options.categoryMap.get(skuDef.categorySlug) ?? null,
 				unitOfMeasureId: options.unitMap.get(skuDef.unit) ?? null,
 				unitOfMeasure: skuDef.unit,
-				conversionRules: skuDef.conversionRules ?? null,
+				conversionRules: skuDef.conversionRules ?? Prisma.JsonNull,
 				dimensions: skuDef.dimensions,
 				isFragile: skuDef.isFragile ?? false,
 				lowStockThreshold: skuDef.lowStockThreshold ?? null,
