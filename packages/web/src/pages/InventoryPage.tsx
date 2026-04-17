@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi, racksApi } from '../api/client';
+import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi, racksApi, batchesApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -52,6 +52,9 @@ export default function InventoryPage() {
   // Shelves and boxes for edit form (cascade: floor → shelf → box)
   const [editFormShelves, setEditFormShelves] = useState<any[]>([]);
   const [editFormBoxes, setEditFormBoxes] = useState<any[]>([]);
+  // Batches for new and edit forms
+  const [newFormBatches, setNewFormBatches] = useState<any[]>([]);
+  const [editFormBatches, setEditFormBatches] = useState<any[]>([]);
   const [barcodeScanResult, setBarcodeScanResult] = useState<any>(null);
   const [transitioning, setTransitioning] = useState<string | null>(null);
   const [transitionRecord, setTransitionRecord] = useState<any>(null);
@@ -176,11 +179,7 @@ export default function InventoryPage() {
         state: newForm.state,
         batchId: newForm.batchId || undefined,
       });
-      setShowNewForm(false);
-      setNewForm(defaultNewForm);
-      setSkuVariants([]);
-      setNewFormShelves([]);
-      setNewFormBoxes([]);
+      closeNewForm();
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to create record');
@@ -190,15 +189,40 @@ export default function InventoryPage() {
   };
 
   const handleNewFormSkuChange = async (skuId: string) => {
-    setNewForm(f => ({ ...f, skuId, variantId: '' }));
+    setNewForm(f => ({ ...f, skuId, variantId: '', batchId: '' }));
     if (skuId) {
       try {
-        const res = await variantsApi.list(skuId);
-        setSkuVariants(res.data?.data ?? []);
-      } catch { setSkuVariants([]); }
+        const [variantsRes, batchesRes] = await Promise.all([
+          variantsApi.list(skuId),
+          batchesApi.list({ skuId, isActive: 'true' })
+        ]);
+        setSkuVariants(variantsRes.data?.data ?? []);
+        const batchData = batchesRes.data?.data?.items ?? batchesRes.data?.data ?? batchesRes.data ?? [];
+        setNewFormBatches(Array.isArray(batchData) ? batchData : []);
+      } catch {
+        setSkuVariants([]);
+        setNewFormBatches([]);
+      }
     } else {
       setSkuVariants([]);
+      setNewFormBatches([]);
     }
+  };
+
+  const closeNewForm = () => {
+    setShowNewForm(false);
+    setNewForm(defaultNewForm);
+    setSkuVariants([]);
+    setNewFormShelves([]);
+    setNewFormBoxes([]);
+    setNewFormBatches([]);
+  };
+
+  const closeEditForm = () => {
+    setEditingRecord(null);
+    setEditFormShelves([]);
+    setEditFormBoxes([]);
+    setEditFormBatches([]);
   };
 
   const openEdit = (record: any) => {
@@ -219,6 +243,15 @@ export default function InventoryPage() {
       if (shelfId) fetchBoxes({ shelfId }, setEditFormBoxes);
       else fetchBoxes({ floorId }, setEditFormBoxes);
     }
+    // Pre-load batches for the SKU
+    if (record.skuId) {
+      const params: Record<string, string> = { skuId: record.skuId, isActive: 'true' };
+      if (record.variantId) params.variantId = record.variantId;
+      batchesApi.list(params).then((res) => {
+        const batchData = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+        setEditFormBatches(Array.isArray(batchData) ? batchData : []);
+      }).catch(() => setEditFormBatches([]));
+    }
   };
 
   const handleSaveEdit = async () => {
@@ -234,9 +267,7 @@ export default function InventoryPage() {
         quantity: qty,
         batchId: editForm.batchId || null,
       });
-      setEditingRecord(null);
-      setEditFormShelves([]);
-      setEditFormBoxes([]);
+      closeEditForm();
       await fetchInventory();
     } catch (err: any) {
       alert(err.response?.data?.error ?? 'Failed to update record');
@@ -267,7 +298,7 @@ export default function InventoryPage() {
     { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
     { key: 'floor', header: 'Location', render: (r: any) => <s-text>{formatLocation(r)}</s-text> },
-    { key: 'batchId', header: 'Batch', render: (r: any) => r.batchId ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batchId}</span> : <s-text>—</s-text> },
+    { key: 'batchId', header: 'Batch', render: (r: any) => r.batch ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batch.batchNumber}</span> : <s-text>—</s-text> },
     { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <s-text>{new Date(r.updatedAt).toLocaleDateString()}</s-text> },
     {
       key: 'actions', header: '',
@@ -473,11 +504,11 @@ export default function InventoryPage() {
 
       {/* New Record Modal */}
       {showNewForm && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowNewForm(false)}>
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeNewForm()}>
           <div className="modal-panel-md">
             <div className="modal-header">
               <h2 className="modal-title">➕ New Inventory Record</h2>
-              <button className="modal-close" onClick={() => setShowNewForm(false)}>✕</button>
+              <button className="modal-close" onClick={closeNewForm}>✕</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body form-stack">
@@ -592,11 +623,23 @@ export default function InventoryPage() {
                 )}
                 <div className="form-group">
                   <label className="form-label">Batch ID</label>
-                  <input className="input-field" type="text" placeholder="Optional batch reference" value={newForm.batchId} onChange={(e) => setNewForm(f => ({ ...f, batchId: e.target.value }))} />
+                  <SearchableSelect
+                    options={[
+                      { value: '', label: '— No Batch —' },
+                      ...newFormBatches.map((b: any) => ({
+                        value: b.id,
+                        label: `${b.batchNumber}${b.costPrice ? ` — Cost: ${b.costPrice}` : ''}${b.expiryDate ? ` — Exp: ${new Date(b.expiryDate).toLocaleDateString()}` : ''}`
+                      }))
+                    ]}
+                    value={newForm.batchId}
+                    onChange={(value) => setNewForm(f => ({ ...f, batchId: value }))}
+                    placeholder="No Batch"
+                    isClearable={false}
+                  />
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowNewForm(false)}>Cancel</button>
+                <button type="button" className="btn-secondary" onClick={closeNewForm}>Cancel</button>
                 <button type="submit" className="btn-primary" disabled={isSaving}>{isSaving ? '⏳ Saving…' : '💾 Create Record'}</button>
               </div>
             </form>
@@ -606,14 +649,14 @@ export default function InventoryPage() {
 
       {/* Edit Record Modal */}
       {editingRecord && (
-        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); } }}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { closeEditForm(); } }}>
           <div className="modal-panel-md">
             <div className="modal-header">
               <div>
                 <h2 className="modal-title">✏️ Edit Inventory Record</h2>
                 <p className="text-xs text-gray-400 font-mono">{editingRecord.sku?.skuCode} — {editingRecord.sku?.name}</p>
               </div>
-              <button type="button" className="modal-close" onClick={() => { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); }}>✕</button>
+              <button type="button" className="modal-close" onClick={closeEditForm}>✕</button>
             </div>
             <div className="modal-body form-stack">
               <div className="form-group">
@@ -687,7 +730,19 @@ export default function InventoryPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Batch ID</label>
-                <input className="input-field" type="text" placeholder="Optional batch reference" value={editForm.batchId} onChange={(e) => setEditForm(f => ({ ...f, batchId: e.target.value }))} />
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '— No Batch —' },
+                    ...editFormBatches.map((b: any) => ({
+                      value: b.id,
+                      label: `${b.batchNumber}${b.costPrice ? ` — Cost: ${b.costPrice}` : ''}${b.expiryDate ? ` — Exp: ${new Date(b.expiryDate).toLocaleDateString()}` : ''}`
+                    }))
+                  ]}
+                  value={editForm.batchId}
+                  onChange={(value) => setEditForm(f => ({ ...f, batchId: value }))}
+                  placeholder="No Batch"
+                  isClearable={false}
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Current State</label>
@@ -698,7 +753,7 @@ export default function InventoryPage() {
               </div>
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => { setEditingRecord(null); setEditFormShelves([]); setEditFormBoxes([]); }}>Cancel</button>
+              <button type="button" className="btn-secondary" onClick={closeEditForm}>Cancel</button>
               <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSaving}>
                 {isSaving ? '⏳ Saving…' : '💾 Save Changes'}
               </button>
