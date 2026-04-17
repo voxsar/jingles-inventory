@@ -590,16 +590,6 @@ export default function GRNPage() {
                   )}
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-semibold text-gray-700">Line Items</span>
-                    <div className="flex items-center gap-2">
-                      {form.lines.length > 1 && (
-                        <>
-                          <button type="button" className="btn-sm text-xs" onClick={collapseAllPricing}>▼ Collapse All</button>
-                          <button type="button" className="btn-sm text-xs" onClick={expandAllPricing}>▲ Expand All</button>
-                          <button type="button" className="btn-sm text-xs" onClick={() => setShowBulkPricing(true)}>💰 Bulk Pricing</button>
-                        </>
-                      )}
-                      <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
-                    </div>
                   </div>
                   <div className="mb-3">
                     <input
@@ -819,6 +809,17 @@ export default function GRNPage() {
                         )}
                       </div>
                     ))}
+                  </div>
+                  {/* Shortcuts - positioned below line items for better UX */}
+                  <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-200">
+                    {form.lines.length > 1 && (
+                      <>
+                        <button type="button" className="btn-sm text-xs" onClick={collapseAllPricing}>▼ Collapse All</button>
+                        <button type="button" className="btn-sm text-xs" onClick={expandAllPricing}>▲ Expand All</button>
+                        <button type="button" className="btn-sm text-xs" onClick={() => setShowBulkPricing(true)}>💰 Bulk Pricing</button>
+                      </>
+                    )}
+                    <button type="button" className="btn-sm" onClick={addLine}>+ Add Line</button>
                   </div>
                 </div>
               </div>
