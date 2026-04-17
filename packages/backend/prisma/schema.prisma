@@ -30,7 +30,7 @@ model User {
 
 model Vendor {
   id           String   @id @default(uuid())
-  name         String
+  name         String   @unique
   contactEmail String   @map("contact_email")
   contactPhone String?  @map("contact_phone")
   address      String?
@@ -278,6 +278,7 @@ model ProductImage {
 
   sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
 
+  @@unique([skuId, sortOrder])
   @@map("product_images")
 }
 
@@ -316,6 +317,7 @@ model Floor {
   transfersFrom    StockTransfer[] @relation("StockTransferFromFloor")
   transfersTo      StockTransfer[] @relation("StockTransferToFloor")
 
+  @@unique([branchId, code])
   @@map("floors")
 }
 
@@ -341,6 +343,7 @@ model Rack {
   floor   Floor   @relation(fields: [floorId], references: [id])
   shelves Shelf[]
 
+  @@unique([floorId, code])
   @@map("racks")
 }
 
@@ -365,6 +368,7 @@ model Shelf {
   inventoryRecords InventoryRecord[]
   grns             GRN[]
 
+  @@unique([floorId, code])
   @@map("shelves")
 }
 
@@ -373,7 +377,7 @@ model StorageBox {
   shelfId        String?  @map("shelf_id")
   floorId        String?  @map("floor_id")
   name           String
-  code           String
+  code           String   @unique
   height         Float
   width          Float
   length         Float
@@ -455,6 +459,7 @@ model StockTransferLine {
   variant  SKUVariant?   @relation(fields: [variantId], references: [id])
   batch    Batch?        @relation(fields: [batchId], references: [id])
 
+  @@unique([transferId, skuId, variantId, batchId])
   @@map("stock_transfer_lines")
 }
 
@@ -570,7 +575,7 @@ model Batch {
 
 model PricingOverlay {
   id              String   @id @default(uuid())
-  name            String
+  name            String   @unique
   description     String?
 
   // Overlay type and value
