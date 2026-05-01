@@ -19,3 +19,14 @@ coverage/
 *.tsbuildinfo
 out/
 release/
+
+# Large data files
+*.dump
+*.sql.gz
+*.tar.gz
+*.zip
+*.xlsx
+*.xls
+*.csv
+.import-backups/
+*.bak
