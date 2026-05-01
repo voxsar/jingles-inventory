@@ -4,6 +4,7 @@ import { vendorsApi } from '../../api/client';
 import { VendorType } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -116,8 +117,10 @@ export default function VendorSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await vendorsApi.update(row.id, changes);
-      await loadData();
+      const response = await vendorsApi.update(row.id, changes);
+      setVendors(current => current.map(vendor => (
+        vendor.id === row.id ? mergeUpdatedRow(vendor, changes, response) : vendor
+      )));
     } catch (err) {
       console.error('Failed to save vendor:', err);
       throw err;
@@ -127,7 +130,8 @@ export default function VendorSpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await vendorsApi.delete(row.id);
-      await loadData();
+      setVendors(current => current.filter(vendor => vendor.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete vendor:', err);
       throw err;
@@ -136,8 +140,9 @@ export default function VendorSpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await vendorsApi.create(data);
-      await loadData();
+      const response = await vendorsApi.create(data);
+      setVendors(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
+      setTotal(current => current + 1);
     } catch (err) {
       console.error('Failed to create vendor:', err);
       throw err;

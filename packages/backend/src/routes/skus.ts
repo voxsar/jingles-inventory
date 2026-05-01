@@ -9,9 +9,10 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-	const { vendorId, categoryId, isActive, search, page = '1', pageSize = '20' } = req.query as {
+	const { vendorId, categoryId, unitOfMeasureId, isActive, search, page = '1', pageSize = '20' } = req.query as {
 		vendorId?: string;
 		categoryId?: string;
+		unitOfMeasureId?: string;
 		isActive?: string;
 		search?: string;
 		page?: string;
@@ -23,6 +24,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	const where: Prisma.SKUWhereInput = {
 		...(vendorId ? { skuVendors: { some: { vendorId } } } : {}),
 		...(categoryId ? { categoryId } : {}),
+		...(unitOfMeasureId ? { unitOfMeasureId } : {}),
 		...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
 		...(search
 			? {
@@ -30,6 +32,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 					{ name: { contains: search, mode: 'insensitive' } },
 					{ skuCode: { contains: search, mode: 'insensitive' } },
 					{ description: { contains: search, mode: 'insensitive' } },
+					{ vendor: { name: { contains: search, mode: 'insensitive' } } },
+					{ category: { name: { contains: search, mode: 'insensitive' } } },
 				],
 			}
 			: {}),
@@ -43,10 +47,28 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			include: {
 				vendor: true,
 				category: true,
+				unitModel: true,
 				images: { where: { isPrimary: true }, take: 1 },
 				barcodes: { where: { isDefault: true }, take: 1 },
 				tags: { include: { tag: true } },
 				skuVendors: { include: { vendor: true } },
+				inventoryRecords: {
+					select: {
+						id: true,
+						quantity: true,
+						state: true,
+						floor: {
+							select: {
+								id: true,
+								name: true,
+								code: true,
+								branch: { select: { id: true, name: true, code: true } },
+							},
+						},
+						shelf: { select: { id: true, name: true, code: true } },
+						box: { select: { id: true, name: true, code: true } },
+					},
+				},
 				_count: { select: { variants: true } },
 			},
 			orderBy: { createdAt: 'desc' },
@@ -54,7 +76,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		prisma.sKU.count({ where }),
 	]);
 
-	res.json({ success: true, data: { items, total, page: parseInt(page), pageSize: parseInt(pageSize) } });
+	res.json({ success: true, data: { items, total, page: parseInt(page), pageSize: parseInt(pageSize), totalPages: Math.ceil(total / parseInt(pageSize)) } });
 });
 
 router.get(
@@ -120,6 +142,7 @@ router.post(
 			categoryId,
 			vendorId,
 			vendorIds,
+			tagIds,
 			unitOfMeasure,
 			unitOfMeasureId,
 			conversionRules,
@@ -147,6 +170,7 @@ router.post(
 			categoryId?: string;
 			vendorId?: string;
 			vendorIds?: string[];
+			tagIds?: string[];
 			unitOfMeasure: string;
 			unitOfMeasureId?: string;
 			conversionRules?: object;
@@ -205,6 +229,11 @@ router.post(
 				batchPricing,
 				batchReferencePricing,
 				lowStockThreshold,
+				tags: tagIds && tagIds.length > 0
+					? {
+						create: tagIds.map((tagId) => ({ tagId })),
+					}
+					: undefined,
 				skuVendors: {
 					create: resolvedVendorIds.map(vid => ({ vendorId: vid })),
 				},
@@ -352,7 +381,7 @@ router.put(
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
-		const { vendorIds, ...rest } = req.body;
+		const { vendorIds, tagIds, ...rest } = req.body;
 
 		// If vendorIds is provided, sync the SKUVendor pivot table
 		if (vendorIds && Array.isArray(vendorIds)) {
@@ -368,10 +397,25 @@ router.put(
 			}
 		}
 
+		if (tagIds && Array.isArray(tagIds)) {
+			await prisma.sKUTag.deleteMany({ where: { skuId: req.params!.id } });
+			if (tagIds.length > 0) {
+				await prisma.sKUTag.createMany({
+					data: tagIds.map((tagId: string) => ({ skuId: req.params!.id, tagId })),
+					skipDuplicates: true,
+				});
+			}
+		}
+
 		const sku = await prisma.sKU.update({
 			where: { id: req.params!.id },
 			data: rest,
-			include: { skuVendors: { include: { vendor: true } } },
+			include: {
+				category: true,
+				unitModel: true,
+				tags: { include: { tag: true } },
+				skuVendors: { include: { vendor: true } },
+			},
 		});
 		res.json({ success: true, data: sku });
 	}
@@ -580,4 +624,3 @@ router.delete(
 );
 
 export default router;
-

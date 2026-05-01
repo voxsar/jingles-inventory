@@ -157,6 +157,8 @@ export async function createBatch(params: CreateBatchParams) {
 export async function listBatches(params: {
 	skuId?: string;
 	variantId?: string;
+	vendorId?: string;
+	search?: string;
 	isActive?: boolean;
 	page?: number;
 	pageSize?: number;
@@ -165,7 +167,19 @@ export async function listBatches(params: {
 
 	if (params.skuId) where.skuId = params.skuId;
 	if (params.variantId !== undefined) where.variantId = params.variantId;
+	if (params.vendorId) where.vendorId = params.vendorId;
 	if (params.isActive !== undefined) where.isActive = params.isActive;
+	if (params.search) {
+		where.OR = [
+			{ batchNumber: { contains: params.search, mode: 'insensitive' } },
+			{ notes: { contains: params.search, mode: 'insensitive' } },
+			{ sku: { skuCode: { contains: params.search, mode: 'insensitive' } } },
+			{ sku: { name: { contains: params.search, mode: 'insensitive' } } },
+			{ vendor: { name: { contains: params.search, mode: 'insensitive' } } },
+			{ variant: { variantCode: { contains: params.search, mode: 'insensitive' } } },
+			{ variant: { name: { contains: params.search, mode: 'insensitive' } } },
+		];
+	}
 
 	const page = params.page ?? 1;
 	const pageSize = params.pageSize ?? 50;

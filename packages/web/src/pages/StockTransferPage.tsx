@@ -29,7 +29,12 @@ export default function StockTransferPage() {
   const [branches, setBranches] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [fromBranchFilter, setFromBranchFilter] = useState('');
+  const [toBranchFilter, setToBranchFilter] = useState('');
+  const [fromDateFilter, setFromDateFilter] = useState('');
+  const [toDateFilter, setToDateFilter] = useState('');
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
@@ -49,7 +54,12 @@ export default function StockTransferPage() {
     setIsLoading(true);
     try {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
+      if (searchTerm) params.search = searchTerm;
       if (statusFilter) params.status = statusFilter;
+      if (fromBranchFilter) params.fromBranchId = fromBranchFilter;
+      if (toBranchFilter) params.toBranchId = toBranchFilter;
+      if (fromDateFilter) params.requestedFrom = fromDateFilter;
+      if (toDateFilter) params.requestedTo = toDateFilter;
       const [transferRes, branchRes, locationRes, skuRes] = await Promise.all([
         stockTransfersApi.list(params),
         branchesApi.list(),
@@ -69,7 +79,7 @@ export default function StockTransferPage() {
     }
   };
 
-  useEffect(() => { loadData(); }, [page, pageSize, statusFilter]);
+  useEffect(() => { loadData(); }, [page, pageSize, searchTerm, statusFilter, fromBranchFilter, toBranchFilter, fromDateFilter, toDateFilter]);
 
   const fetchBatchesForLine = (idx: number, skuId: string, variantId?: string) => {
     const params: Record<string, string> = { skuId, isActive: 'true' };
@@ -196,6 +206,13 @@ export default function StockTransferPage() {
       <div className="content-section">
         {/* Filter bar */}
         <div className="filter-bar">
+          <input
+            type="search"
+            className="filter-input-wide"
+            placeholder="Search reference, notes, requester, branches…"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+          />
           <div style={{ width: '180px' }}>
             <SearchableSelect
               options={[
@@ -211,6 +228,49 @@ export default function StockTransferPage() {
               isClearable={false}
             />
           </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All From Branches' },
+                ...branches.map((branch: any) => ({ value: branch.id, label: branch.name }))
+              ]}
+              value={fromBranchFilter}
+              onChange={(value) => { setFromBranchFilter(value); setPage(1); }}
+              placeholder="All From Branches"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All To Branches' },
+                ...branches.map((branch: any) => ({ value: branch.id, label: branch.name }))
+              ]}
+              value={toBranchFilter}
+              onChange={(value) => { setToBranchFilter(value); setPage(1); }}
+              placeholder="All To Branches"
+              isClearable={false}
+            />
+          </div>
+          <input
+            type="date"
+            className="filter-select"
+            value={fromDateFilter}
+            onChange={(e) => { setFromDateFilter(e.target.value); setPage(1); }}
+            title="Requested from"
+          />
+          <input
+            type="date"
+            className="filter-select"
+            value={toDateFilter}
+            onChange={(e) => { setToDateFilter(e.target.value); setPage(1); }}
+            title="Requested to"
+          />
+          {(searchTerm || statusFilter || fromBranchFilter || toBranchFilter || fromDateFilter || toDateFilter) && (
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setStatusFilter(''); setFromBranchFilter(''); setToBranchFilter(''); setFromDateFilter(''); setToDateFilter(''); setPage(1); }}>
+              ✕ Clear filters
+            </button>
+          )}
           <span className="text-sm text-gray-500">{total} transfers</span>
         </div>
 

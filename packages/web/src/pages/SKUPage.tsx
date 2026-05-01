@@ -57,6 +57,8 @@ export default function SKUPage() {
 	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState('');
 	const [vendorFilter, setVendorFilter] = useState('');
+	const [unitFilter, setUnitFilter] = useState('');
+	const [activeFilter, setActiveFilter] = useState('');
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(PAGE_SIZE);
 	const [editingSku, setEditingSku] = useState<any>(null);
@@ -107,6 +109,8 @@ export default function SKUPage() {
 			if (debouncedSearch) params.search = debouncedSearch;
 			if (categoryFilter) params.categoryId = categoryFilter;
 			if (vendorFilter) params.vendorId = vendorFilter;
+			if (unitFilter) params.unitOfMeasureId = unitFilter;
+			if (activeFilter) params.isActive = activeFilter;
 			const [skuRes, vendorRes, catRes, unitRes, tagRes] = await Promise.all([
 				skusApi.list(params),
 				vendorsApi.list(),
@@ -128,7 +132,7 @@ export default function SKUPage() {
 		}
 	};
 
-	useEffect(() => { load(); }, [page, pageSize, debouncedSearch, categoryFilter, vendorFilter]);
+	useEffect(() => { load(); }, [page, pageSize, debouncedSearch, categoryFilter, vendorFilter, unitFilter, activeFilter]);
 
 	const toggleSkuExpand = async (skuId: string, variantCount: number) => {
 		if (variantCount === 0) return;
@@ -167,9 +171,53 @@ export default function SKUPage() {
 		setter((f: any) => ({ ...f, unitOfMeasureId: unitId, unitOfMeasure: unit?.name ?? '' }));
 	};
 
+	const resetCreateState = () => {
+		setForm(defaultForm);
+		setFormTags([]);
+		setNewTagInput('');
+		setCreateFormSelectedAttrs({});
+	};
+
+	const closeCreateForm = () => {
+		setShowCreateForm(false);
+		resetCreateState();
+	};
+
+	const applySkuToEditState = (sku: any, initialTab: ModalTab = 'details') => {
+		const unit = units.find((u: any) => u.name === sku.unitOfMeasure || u.id === sku.unitOfMeasureId);
+		const vendorIds = sku.skuVendors?.map((sv: any) => sv.vendorId) ?? (sku.vendorId ? [sku.vendorId] : []);
+
+		setEditForm({
+			skuCode: sku.skuCode, name: sku.name, description: sku.description ?? '',
+			categoryId: sku.categoryId ?? '', vendorIds,
+			unitOfMeasure: sku.unitOfMeasure ?? '', unitOfMeasureId: unit?.id ?? sku.unitOfMeasureId ?? '',
+			isFragile: sku.isFragile ?? false, isActive: sku.isActive ?? true,
+			maxStackHeight: sku.maxStackHeight != null ? String(sku.maxStackHeight) : '',
+			lowStockThreshold: sku.lowStockThreshold != null ? String(sku.lowStockThreshold) : '',
+			costPrice: sku.costPrice != null ? String(sku.costPrice) : '',
+			sellingPrice: sku.sellingPrice != null ? String(sku.sellingPrice) : '',
+			wholesalePrice: sku.wholesalePrice != null ? String(sku.wholesalePrice) : '',
+			bulkPrice: sku.bulkPrice != null ? String(sku.bulkPrice) : '',
+			marginType: sku.marginType ?? '',
+			marginValue: sku.marginValue != null ? String(sku.marginValue) : '',
+			currency: sku.currency ?? 'LKR',
+			defaultManufacturingDate: sku.defaultManufacturingDate ? new Date(sku.defaultManufacturingDate).toISOString().split('T')[0] : '',
+			defaultExpiryDate: sku.defaultExpiryDate ? new Date(sku.defaultExpiryDate).toISOString().split('T')[0] : '',
+			shelfLifeDays: sku.shelfLifeDays != null ? String(sku.shelfLifeDays) : '',
+		});
+		setEditTags(sku.tags?.map((t: any) => t.tagId ?? t.tag?.id).filter(Boolean) ?? []);
+		setEditingSku(sku);
+		setModalTab(initialTab);
+		setSaveSuccess(false);
+		setBarcodes([]);
+		setInventoryLocations([]);
+		setSkuImages((sku.images ?? []).slice().sort((a: any, b: any) => a.sortOrder - b.sortOrder));
+		setSkuVideoUrl(sku.videoUrl ?? null);
+	};
+
 	const openCreateForm = async () => {
 		setShowCreateForm(true);
-		setCreateFormSelectedAttrs({});
+		resetCreateState();
 		// Load attributes and units if not already loaded
 		const loadPromises = [];
 		if (allAttributes.length === 0) {
@@ -244,10 +292,16 @@ export default function SKUPage() {
 				alert(`✅ Product created with ${variantCount} variant${variantCount !== 1 ? 's' : ''}!`);
 			}
 
-			setShowCreateForm(false);
-			setForm(defaultForm);
-			setFormTags([]);
-			setCreateFormSelectedAttrs({});
+			let createdSkuForEdit = newSku;
+			try {
+				const createdSkuRes = await skusApi.get(newSku.id);
+				createdSkuForEdit = createdSkuRes.data?.data ?? newSku;
+			} catch (refreshErr) {
+				console.error('Failed to reload created SKU for editing:', refreshErr);
+			}
+
+			closeCreateForm();
+			applySkuToEditState(createdSkuForEdit, 'images');
 			await load();
 		} catch (err: any) {
 			console.error('Create SKU error:', err);
@@ -255,33 +309,8 @@ export default function SKUPage() {
 		}
 	};
 
-	const openEdit = async (sku: any) => {
-		const unit = units.find((u: any) => u.name === sku.unitOfMeasure);
-		const vendorIds = sku.skuVendors?.map((sv: any) => sv.vendorId) ?? (sku.vendorId ? [sku.vendorId] : []);
-		setEditForm({
-			skuCode: sku.skuCode, name: sku.name, description: sku.description ?? '',
-			categoryId: sku.categoryId ?? '', vendorIds,
-			unitOfMeasure: sku.unitOfMeasure ?? '', unitOfMeasureId: unit?.id ?? '',
-			isFragile: sku.isFragile ?? false, isActive: sku.isActive ?? true,
-			maxStackHeight: sku.maxStackHeight != null ? String(sku.maxStackHeight) : '',
-			lowStockThreshold: sku.lowStockThreshold != null ? String(sku.lowStockThreshold) : '',
-			costPrice: sku.costPrice != null ? String(sku.costPrice) : '',
-			sellingPrice: sku.sellingPrice != null ? String(sku.sellingPrice) : '',
-			wholesalePrice: sku.wholesalePrice != null ? String(sku.wholesalePrice) : '',
-			bulkPrice: sku.bulkPrice != null ? String(sku.bulkPrice) : '',
-			marginType: sku.marginType ?? '',
-			marginValue: sku.marginValue != null ? String(sku.marginValue) : '',
-			currency: sku.currency ?? 'LKR',
-			defaultManufacturingDate: sku.defaultManufacturingDate ? new Date(sku.defaultManufacturingDate).toISOString().split('T')[0] : '',
-			defaultExpiryDate: sku.defaultExpiryDate ? new Date(sku.defaultExpiryDate).toISOString().split('T')[0] : '',
-			shelfLifeDays: sku.shelfLifeDays != null ? String(sku.shelfLifeDays) : '',
-		});
-		setEditTags(sku.tags?.map((t: any) => t.tagId ?? t.tag?.id).filter(Boolean) ?? []);
-		setEditingSku(sku);
-		setModalTab('details');
-		setSaveSuccess(false);
-		setBarcodes([]);
-		setInventoryLocations([]);
+	const openEdit = (sku: any, initialTab: ModalTab = 'details') => {
+		applySkuToEditState(sku, initialTab);
 	};
 
 	const handleSaveEdit = async () => {
@@ -573,7 +602,7 @@ export default function SKUPage() {
 			</div>
 
 			<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-				🖼️ You can upload product images and video right after creating this product (Edit → Images tab).
+				🖼️ Creating a product now flows straight into the full editor, so you can upload images and video immediately after the first save.
 			</div>
 			{/* Table section */}
 			<div className="content-section">
@@ -610,8 +639,33 @@ export default function SKUPage() {
 							isClearable={false}
 						/>
 					</div>
-					{(searchTerm || categoryFilter || vendorFilter) && (
-						<button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setCategoryFilter(''); setVendorFilter(''); setPage(1); }}>
+					<div style={{ width: '180px' }}>
+						<SearchableSelect
+							options={[
+								{ value: '', label: 'All Units' },
+								...units.map((unit: any) => ({ value: unit.id, label: unit.name }))
+							]}
+							value={unitFilter}
+							onChange={(value) => { setUnitFilter(value); setPage(1); }}
+							placeholder="All Units"
+							isClearable={false}
+						/>
+					</div>
+					<div style={{ width: '180px' }}>
+						<SearchableSelect
+							options={[
+								{ value: '', label: 'All Statuses' },
+								{ value: 'true', label: 'Active' },
+								{ value: 'false', label: 'Inactive' },
+							]}
+							value={activeFilter}
+							onChange={(value) => { setActiveFilter(value); setPage(1); }}
+							placeholder="All Statuses"
+							isClearable={false}
+						/>
+					</div>
+					{(searchTerm || categoryFilter || vendorFilter || unitFilter || activeFilter) && (
+						<button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setCategoryFilter(''); setVendorFilter(''); setUnitFilter(''); setActiveFilter(''); setPage(1); }}>
 							✕ Clear filters
 						</button>
 					)}
@@ -725,11 +779,11 @@ export default function SKUPage() {
 
 			{/* Create Product Modal */}
 			{showCreateForm && (
-				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowCreateForm(false)}>
+				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeCreateForm()}>
 					<div className="modal-panel-lg">
 						<div className="modal-header">
 							<h2 className="modal-title">➕ Create New Product</h2>
-							<button className="modal-close" onClick={() => { setShowCreateForm(false); setForm(defaultForm); setFormTags([]); setCreateFormSelectedAttrs({}); }}>✕</button>
+							<button className="modal-close" onClick={closeCreateForm}>✕</button>
 						</div>
 						<form onSubmit={handleCreate}>
 							<div className="modal-body form-stack">
@@ -998,8 +1052,8 @@ export default function SKUPage() {
 								</div>
 							</div>
 							<div className="modal-footer">
-								<button type="button" className="btn-secondary" onClick={() => { setShowCreateForm(false); setForm(defaultForm); setFormTags([]); setCreateFormSelectedAttrs({}); }}>Cancel</button>
-								<button type="submit" className="btn-primary">Create Product</button>
+								<button type="button" className="btn-secondary" onClick={closeCreateForm}>Cancel</button>
+								<button type="submit" className="btn-primary">Create Product & Continue</button>
 							</div>
 						</form>
 					</div>

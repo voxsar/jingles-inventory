@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { categoriesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -98,8 +99,10 @@ export default function CategorySpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await categoriesApi.update(row.id, changes);
-      await loadData();
+      const response = await categoriesApi.update(row.id, changes);
+      setCategories(current => current.map(category => (
+        category.id === row.id ? mergeUpdatedRow(category, changes, response) : category
+      )));
     } catch (err) {
       console.error('Failed to save category:', err);
       throw err;
@@ -109,7 +112,8 @@ export default function CategorySpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await categoriesApi.delete(row.id);
-      await loadData();
+      setCategories(current => current.filter(category => category.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete category:', err);
       throw err;
@@ -118,8 +122,9 @@ export default function CategorySpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await categoriesApi.create(data);
-      await loadData();
+      const response = await categoriesApi.create(data);
+      setCategories(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
+      setTotal(current => current + 1);
     } catch (err) {
       console.error('Failed to create category:', err);
       throw err;

@@ -3,26 +3,53 @@ import { body, param, query, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
 router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { type, isActive, search } = req.query as { type?: string; isActive?: string; search?: string };
+  const { type, isActive, search, hasWebsite } = req.query as { type?: string; isActive?: string; search?: string; hasWebsite?: string };
+  const pagination = getPagination(req.query);
 
   const where: Prisma.VendorWhereInput = {
     ...(type ? { type } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : { isActive: true }),
+    ...(hasWebsite === 'true'
+      ? { website: { not: null } }
+      : hasWebsite === 'false'
+        ? { website: null }
+        : {}),
     ...(search
       ? {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
             { contactEmail: { contains: search, mode: 'insensitive' } },
+            { contactPhone: { contains: search, mode: 'insensitive' } },
+            { address: { contains: search, mode: 'insensitive' } },
+            { website: { contains: search, mode: 'insensitive' } },
+            { taxId: { contains: search, mode: 'insensitive' } },
+            { paymentTerms: { contains: search, mode: 'insensitive' } },
+            { notes: { contains: search, mode: 'insensitive' } },
           ],
         }
       : {}),
   };
+
+  if (pagination.isPaginated) {
+    const [items, total] = await Promise.all([
+      prisma.vendor.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.take,
+        orderBy: { name: 'asc' },
+      }),
+      prisma.vendor.count({ where }),
+    ]);
+    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    return;
+  }
 
   const vendors = await prisma.vendor.findMany({
     where,
@@ -137,4 +164,3 @@ router.get(
 );
 
 export default router;
-

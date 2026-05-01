@@ -94,6 +94,48 @@ export default function GRNDetailPage() {
   const progress = grn.lines?.length > 0 ? Math.round((inspectedCount / grn.lines.length) * 100) : 0;
   const statusTone = STATUS_TONES[grn.status] ?? '';
 
+  // Aggregate rejected quantities per line (from inspectionRecords)
+  const rejectedLines = (grn.lines ?? [])
+    .map((line: any) => {
+      const records = line.inspectionRecords ?? [];
+      const totalRejected = records.reduce((sum: number, ir: any) => sum + (ir.rejectedQuantity ?? 0), 0);
+      const damageClassifications = Array.from(new Set(records.map((ir: any) => ir.damageClassification).filter(Boolean)));
+      const latestInspection = records[records.length - 1];
+      return {
+        line,
+        totalRejected,
+        damageClassifications,
+        latestInspectionId: latestInspection?.id ?? null,
+      };
+    })
+    .filter((entry: any) => entry.totalRejected > 0);
+
+  const handleCreatePRN = () => {
+    if (rejectedLines.length === 0) return;
+    const damageReasons = Array.from(new Set(rejectedLines.flatMap((e: any) => e.damageClassifications)));
+    const inspectionRecordId = rejectedLines.length === 1 ? rejectedLines[0].latestInspectionId : null;
+    navigate('/prns', {
+      state: {
+        prefill: {
+          supplierId: grn.supplierId,
+          floorId: grn.floorId,
+          shelfId: grn.shelfId,
+          inspectionRecordId,
+          returnReason: damageReasons.length > 0 ? damageReasons.join(', ') : 'Damaged on receipt',
+          notes: `Returning damaged items from GRN ${grn.invoiceReference ?? grn.id.slice(0, 8)}`,
+          lines: rejectedLines.map((e: any) => ({
+            skuId: e.line.skuId,
+            variantId: e.line.variantId,
+            batchId: e.line.batchId,
+            returnQuantity: e.totalRejected,
+            notes: e.damageClassifications.join(', ') || undefined,
+          })),
+          banner: `Pre-filled from GRN ${grn.invoiceReference ?? grn.id.slice(0, 8)}: ${rejectedLines.length} damaged line(s).`,
+        },
+      },
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Page header */}
@@ -108,16 +150,23 @@ export default function GRNDetailPage() {
             <p className="page-subtitle font-mono text-xs">{grn.id?.slice(0, 8)}…</p>
           </div>
         </div>
-        {grn.status === GRNStatus.Draft && (
-          <div className="flex items-center gap-3">
-            {!grn.shelfId && (
-              <span className="text-xs text-amber-600 font-medium">⚠️ A shelf must be assigned before submitting</span>
-            )}
-            <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting || !grn.shelfId}>
-              {isSubmitting ? '⏳ Submitting…' : '📤 Submit GRN'}
+        <div className="flex items-center gap-3">
+          {rejectedLines.length > 0 && grn.status !== GRNStatus.Draft && (
+            <button className="btn-secondary" onClick={handleCreatePRN}>
+              ↩️ Create PRN ({rejectedLines.length} damaged)
             </button>
-          </div>
-        )}
+          )}
+          {grn.status === GRNStatus.Draft && (
+            <>
+              {!grn.shelfId && (
+                <span className="text-xs text-amber-600 font-medium">⚠️ A shelf must be assigned before submitting</span>
+              )}
+              <button className="btn-primary" onClick={handleSubmit} disabled={isSubmitting || !grn.shelfId}>
+                {isSubmitting ? '⏳ Submitting…' : '📤 Submit GRN'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Metadata card */}

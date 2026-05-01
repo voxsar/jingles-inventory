@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { vendorsApi, settingsApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
 import SearchableSelect from '../components/SearchableSelect';
 
 const defaultForm = {
@@ -25,6 +25,7 @@ export default function SuppliersPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [websiteFilter, setWebsiteFilter] = useState('');
 
   const load = async () => {
     try {
@@ -53,6 +54,12 @@ export default function SuppliersPage() {
 
   useEffect(() => { loadVendorTypes(); }, []);
   useEffect(() => { load(); }, [typeFilter, searchTerm, statusFilter]);
+
+  const filteredSuppliers = suppliers.filter((supplier: any) => {
+    if (websiteFilter === 'true' && !supplier.website) return false;
+    if (websiteFilter === 'false' && supplier.website) return false;
+    return true;
+  });
 
   const openCreate = () => {
     setEditingSupplier(null);
@@ -189,15 +196,28 @@ export default function SuppliersPage() {
               isClearable={false}
             />
           </div>
-          {(searchTerm || typeFilter || statusFilter) && (
-            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); }}>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Websites' },
+                { value: 'true', label: 'Has Website' },
+                { value: 'false', label: 'No Website' },
+              ]}
+              value={websiteFilter}
+              onChange={(value) => setWebsiteFilter(value)}
+              placeholder="All Websites"
+              isClearable={false}
+            />
+          </div>
+          {(searchTerm || typeFilter || statusFilter || websiteFilter) && (
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); setWebsiteFilter(''); }}>
               ✕ Clear filters
             </button>
           )}
         </div>
-        <DataTable
+        <PaginatedDataTable
           columns={columns}
-          data={suppliers}
+          data={filteredSuppliers}
           isLoading={isLoading}
           emptyMessage="No suppliers found"
         />

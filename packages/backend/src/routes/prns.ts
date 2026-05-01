@@ -13,7 +13,17 @@ router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
-		const { status, search, supplierId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+		const {
+			status,
+			search,
+			supplierId,
+			branchId,
+			floorId,
+			fromDate,
+			toDate,
+			page = '1',
+			pageSize = '50',
+		} = req.query as Record<string, string>;
 		const user = req.user!;
 		const pageNum = parseInt(page);
 		const pageSizeNum = parseInt(pageSize);
@@ -21,8 +31,23 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		const where: Prisma.PRNWhereInput = {};
 		if (status) where.status = status;
 		if (supplierId) where.supplierId = supplierId;
+		if (floorId) {
+			where.floorId = floorId;
+		} else if (branchId) {
+			where.floor = { branchId };
+		}
+		if (fromDate || toDate) {
+			where.createdAt = {};
+			if (fromDate) where.createdAt.gte = new Date(fromDate);
+			if (toDate) {
+				const end = new Date(toDate);
+				end.setHours(23, 59, 59, 999);
+				where.createdAt.lte = end;
+			}
+		}
 		if (search) {
 			where.OR = [
+				{ id: { contains: search, mode: 'insensitive' } },
 				{ returnReason: { contains: search, mode: 'insensitive' } },
 				{ supplier: { name: { contains: search, mode: 'insensitive' } } },
 				{ notes: { contains: search, mode: 'insensitive' } },

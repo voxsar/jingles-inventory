@@ -2,12 +2,28 @@ import { Router, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/', async (_req, res: Response): Promise<void> => {
+router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  const pagination = getPagination(req.query);
+  if (pagination.isPaginated) {
+    const [items, total] = await Promise.all([
+      prisma.branch.findMany({
+        skip: pagination.skip,
+        take: pagination.take,
+        orderBy: { name: 'asc' },
+        include: { _count: { select: { floors: true } } },
+      }),
+      prisma.branch.count(),
+    ]);
+    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    return;
+  }
+
   const branches = await prisma.branch.findMany({
     orderBy: { name: 'asc' },
     include: { _count: { select: { floors: true } } },

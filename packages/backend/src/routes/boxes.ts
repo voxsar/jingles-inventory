@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -23,6 +24,22 @@ router.get(
     const where: Record<string, unknown> = { isActive: true };
     if (req.query?.shelfId) where.shelfId = req.query.shelfId as string;
     if (req.query?.floorId) where.floorId = req.query.floorId as string;
+    const pagination = getPagination(req.query);
+    if (pagination.isPaginated) {
+      const [items, total] = await Promise.all([
+        prisma.storageBox.findMany({
+          where,
+          skip: pagination.skip,
+          take: pagination.take,
+          include: { barcodes: true, shelf: true, floor: true },
+          orderBy: [{ stackOrder: 'asc' }, { createdAt: 'asc' }],
+        }),
+        prisma.storageBox.count({ where }),
+      ]);
+      res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+      return;
+    }
+
     const boxes = await prisma.storageBox.findMany({
       where,
       include: { barcodes: true, shelf: true, floor: true },

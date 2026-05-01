@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { grnsApi, vendorsApi, floorsApi } from '../../api/client';
-import { GRNStatus } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -50,7 +50,6 @@ export default function GRNSpreadsheetPage() {
 
   const vendorOptions = vendors.map(v => ({ value: v.id, label: v.name }));
   const floorOptions = floors.map(f => ({ value: f.id, label: `${f.name} (${f.branch?.name || ''})` }));
-  const statusOptions = Object.values(GRNStatus).map(s => ({ value: s, label: s }));
 
   const columns: ColumnDefinition<any>[] = [
     {
@@ -82,10 +81,8 @@ export default function GRNSpreadsheetPage() {
     {
       key: 'status',
       header: 'Status',
-
-      options: statusOptions,
       width: '140px',
-
+      readOnly: true,
       render: (value) => String(value || ''),
     },
     {
@@ -98,12 +95,11 @@ export default function GRNSpreadsheetPage() {
       render: (value, row) => String(value || ""),
     },
     {
-      key: 'actualDeliveryDate',
-      header: 'Actual Date',
-      
+      key: 'deliveryDate',
+      header: 'Delivery Date',
       width: '120px',
-      getValue: (row) => row.actualDeliveryDate || '',
-      setValue: (row, value) => ({ actualDeliveryDate: value || null }),
+      readOnly: true,
+      getValue: (row) => row.deliveryDate || '',
       render: (value, row) => String(value || ""),
     },
     {
@@ -117,8 +113,10 @@ export default function GRNSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await grnsApi.update(row.id, changes);
-      await loadData();
+      const response = await grnsApi.update(row.id, changes);
+      setGrns(current => current.map(grn => (
+        grn.id === row.id ? mergeUpdatedRow(grn, changes, response) : grn
+      )));
     } catch (err) {
       console.error('Failed to save GRN:', err);
       throw err;
@@ -128,7 +126,8 @@ export default function GRNSpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await grnsApi.delete(row.id);
-      await loadData();
+      setGrns(current => current.filter(grn => grn.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete GRN:', err);
       throw err;

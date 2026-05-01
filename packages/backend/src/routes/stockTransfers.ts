@@ -18,12 +18,43 @@ const lineInclude = {
 router.get(
   '/',
   async (req: AuthRequest, res: Response): Promise<void> => {
-    const { status, fromBranchId, toBranchId, page = '1', pageSize = '20' } = req.query as Record<string, string>;
+    const {
+      status,
+      fromBranchId,
+      toBranchId,
+      fromFloorId,
+      toFloorId,
+      search,
+      requestedFrom,
+      requestedTo,
+      page = '1',
+      pageSize = '20',
+    } = req.query as Record<string, string>;
     const skip = (parseInt(page) - 1) * parseInt(pageSize);
     const where: Prisma.StockTransferWhereInput = {};
     if (status) where.status = status;
     if (fromBranchId) where.fromBranchId = fromBranchId;
     if (toBranchId) where.toBranchId = toBranchId;
+    if (fromFloorId) where.fromFloorId = fromFloorId;
+    if (toFloorId) where.toFloorId = toFloorId;
+    if (search) {
+      where.OR = [
+        { referenceNumber: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+        { fromBranch: { name: { contains: search, mode: 'insensitive' } } },
+        { toBranch: { name: { contains: search, mode: 'insensitive' } } },
+        { requester: { email: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+    if (requestedFrom || requestedTo) {
+      where.requestedAt = {};
+      if (requestedFrom) where.requestedAt.gte = new Date(requestedFrom);
+      if (requestedTo) {
+        const end = new Date(requestedTo);
+        end.setHours(23, 59, 59, 999);
+        where.requestedAt.lte = end;
+      }
+    }
 
     const [items, total] = await Promise.all([
       prisma.stockTransfer.findMany({
@@ -45,7 +76,7 @@ router.get(
 
     res.json({
       success: true,
-      data: { items, total, page: parseInt(page), pageSize: parseInt(pageSize) },
+      data: { items, total, page: parseInt(page), pageSize: parseInt(pageSize), totalPages: Math.ceil(total / parseInt(pageSize)) },
     });
   }
 );

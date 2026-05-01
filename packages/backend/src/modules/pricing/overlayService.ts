@@ -65,12 +65,20 @@ export async function createOverlay(params: CreateOverlayParams) {
  * List pricing overlays with optional filters
  */
 export async function listOverlays(params: {
+	search?: string;
 	status?: string;
 	type?: string;
 	page?: number;
 	pageSize?: number;
 }) {
 	const where: any = {};
+
+	if (params.search) {
+		where.OR = [
+			{ name: { contains: params.search, mode: 'insensitive' } },
+			{ description: { contains: params.search, mode: 'insensitive' } },
+		];
+	}
 
 	if (params.status) {
 		where.status = params.status;

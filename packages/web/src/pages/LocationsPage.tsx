@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { floorsApi, branchesApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
 import SearchableSelect from '../components/SearchableSelect';
 
 type View = 'floors' | 'shelves' | 'boxes';
@@ -467,9 +467,9 @@ export default function LocationsPage() {
 
 			{/* Table section */}
 			<div className="content-section">
-				{view === 'floors' && <DataTable columns={floorColumns} data={floors} isLoading={isLoading} emptyMessage="No floors found" emptyIcon="🏢" />}
-				{view === 'shelves' && <DataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelves found on this floor" emptyIcon="🗄" />}
-				{view === 'boxes' && <DataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes found" emptyIcon="📦" />}
+				{view === 'floors' && <PaginatedDataTable columns={floorColumns} data={floors} isLoading={isLoading} emptyMessage="No floors found" emptyIcon="🏢" />}
+				{view === 'shelves' && <PaginatedDataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelves found on this floor" emptyIcon="🗄" />}
+				{view === 'boxes' && <PaginatedDataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes found" emptyIcon="📦" />}
 			</div>
 
 			{/* Products in Floor panel */}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { categoriesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
+import Pagination from '../components/Pagination';
 import { buildHierarchicalCategoryOptions } from '../utils/categoryHelpers';
 
 interface Category {
@@ -28,6 +29,8 @@ const defaultForm = {
   parentId: '',
   sortOrder: '0',
 };
+
+const PAGE_SIZE = 20;
 
 function CategoryRow({
   category,
@@ -87,6 +90,11 @@ export default function CategoriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [form, setForm] = useState(defaultForm);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [levelFilter, setLevelFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
   const load = async () => {
     try {
@@ -163,6 +171,43 @@ export default function CategoriesPage() {
     }
   };
 
+  const matchesCategory = (category: Category, depth: number) => {
+    if (searchTerm) {
+      const needle = searchTerm.toLowerCase();
+      const haystacks = [category.name, category.slug, category.description ?? ''];
+      if (!haystacks.some((value) => value.toLowerCase().includes(needle))) {
+        return false;
+      }
+    }
+    if (statusFilter === 'true' && !category.isActive) return false;
+    if (statusFilter === 'false' && category.isActive) return false;
+    if (levelFilter === 'root' && depth !== 0) return false;
+    if (levelFilter === 'child' && depth === 0) return false;
+    return true;
+  };
+
+  const filterTree = (items: Category[], depth = 0): Category[] =>
+    items.reduce<Category[]>((acc, category) => {
+      const filteredChildren = filterTree(category.children ?? [], depth + 1);
+      if (matchesCategory(category, depth) || filteredChildren.length > 0) {
+        acc.push({ ...category, children: filteredChildren });
+      }
+      return acc;
+    }, []);
+
+  const filteredCategories = filterTree(categories);
+  const total = filteredCategories.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const pagedCategories = filteredCategories.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, levelFilter]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(Math.max(1, current), totalPages));
+  }, [totalPages]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Page header */}
@@ -176,6 +221,46 @@ export default function CategoriesPage() {
 
       {/* Table section */}
       <div className="content-section">
+        <div className="filter-bar">
+          <input
+            type="search"
+            className="filter-input-wide"
+            placeholder="Search categories by name, slug, or description…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'true', label: 'Active' },
+                { value: 'false', label: 'Inactive' },
+              ]}
+              value={statusFilter}
+              onChange={(value) => setStatusFilter(value)}
+              placeholder="All Statuses"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Levels' },
+                { value: 'root', label: 'Top Level' },
+                { value: 'child', label: 'Sub-category' },
+              ]}
+              value={levelFilter}
+              onChange={(value) => setLevelFilter(value)}
+              placeholder="All Levels"
+              isClearable={false}
+            />
+          </div>
+          {(searchTerm || statusFilter || levelFilter) && (
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setStatusFilter(''); setLevelFilter(''); }}>
+              ✕ Clear filters
+            </button>
+          )}
+        </div>
         {isLoading ? (
           <div className="px-6 py-8 text-gray-500 text-sm">Loading…</div>
         ) : (
@@ -192,14 +277,14 @@ export default function CategoriesPage() {
                 </tr>
               </thead>
               <tbody>
-                {categories.length === 0 ? (
+                {filteredCategories.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
-                      No categories yet. Click "+ New Category" to create one.
+                      No categories match the current filters.
                     </td>
                   </tr>
                 ) : (
-                  categories.map(cat => (
+                  pagedCategories.map(cat => (
                     <CategoryRow
                       key={cat.id}
                       category={cat}
@@ -212,6 +297,16 @@ export default function CategoriesPage() {
                 )}
               </tbody>
             </table>
+            {!isLoading && total > 0 && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                total={total}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+              />
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { batchesApi, skusApi, pricingOverlaysApi } from '../api/client';
+import { batchesApi, vendorsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import SearchableSelect from '../components/SearchableSelect';
 import Pagination from '../components/Pagination';
@@ -14,7 +14,10 @@ export default function PricingPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(PAGE_SIZE);
-	const [skuFilter, setSkuFilter] = useState('');
+	const [searchTerm, setSearchTerm] = useState('');
+	const [vendorFilter, setVendorFilter] = useState('');
+	const [activeFilter, setActiveFilter] = useState('');
+	const [vendors, setVendors] = useState<any[]>([]);
 	const [showBulkPricingModal, setShowBulkPricingModal] = useState(false);
 	const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
 	const [bulkOperation, setBulkOperation] = useState<'set' | 'increase_fixed' | 'increase_percentage'>('set');
@@ -35,13 +38,19 @@ export default function PricingPage() {
 		setIsLoading(true);
 		try {
 			const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
-			if (skuFilter) params.skuId = skuFilter;
+			if (searchTerm) params.search = searchTerm;
+			if (vendorFilter) params.vendorId = vendorFilter;
+			if (activeFilter) params.isActive = activeFilter;
 
-			const res = await batchesApi.list(params);
-			const data = res.data?.data ?? res.data;
+			const [batchRes, vendorRes] = await Promise.all([
+				batchesApi.list(params),
+				vendorsApi.list(),
+			]);
+			const data = batchRes.data?.data ?? batchRes.data;
 			setBatches(data.items ?? []);
 			setTotal(data.total ?? 0);
 			setTotalPages(data.totalPages ?? 1);
+			setVendors(vendorRes.data?.data?.items ?? vendorRes.data?.data ?? vendorRes.data ?? []);
 		} catch (err) {
 			console.error('Failed to load batches', err);
 		} finally {
@@ -51,7 +60,7 @@ export default function PricingPage() {
 
 	useEffect(() => {
 		loadBatches();
-	}, [page, pageSize, skuFilter]);
+	}, [page, pageSize, searchTerm, vendorFilter, activeFilter]);
 
 	const handleBulkPricingSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -204,12 +213,42 @@ export default function PricingPage() {
 			{/* Filters */}
 			<div className="filter-bar">
 				<input
-					type="text"
-					placeholder="Filter by SKU ID..."
-					className="filter-select"
-					value={skuFilter}
-					onChange={(e) => setSkuFilter(e.target.value)}
+					type="search"
+					placeholder="Search batch, SKU, vendor, variant…"
+					className="filter-input-wide"
+					value={searchTerm}
+					onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
 				/>
+				<div style={{ width: '220px' }}>
+					<SearchableSelect
+						options={[
+							{ value: '', label: 'All Vendors' },
+							...vendors.map((vendor: any) => ({ value: vendor.id, label: vendor.name }))
+						]}
+						value={vendorFilter}
+						onChange={(value) => { setVendorFilter(value); setPage(1); }}
+						placeholder="All Vendors"
+						isClearable={false}
+					/>
+				</div>
+				<div style={{ width: '180px' }}>
+					<SearchableSelect
+						options={[
+							{ value: '', label: 'All Statuses' },
+							{ value: 'true', label: 'Active' },
+							{ value: 'false', label: 'Inactive' },
+						]}
+						value={activeFilter}
+						onChange={(value) => { setActiveFilter(value); setPage(1); }}
+						placeholder="All Statuses"
+						isClearable={false}
+					/>
+				</div>
+				{(searchTerm || vendorFilter || activeFilter) && (
+					<button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setVendorFilter(''); setActiveFilter(''); setPage(1); }}>
+						✕ Clear filters
+					</button>
+				)}
 			</div>
 
 			{/* Table */}

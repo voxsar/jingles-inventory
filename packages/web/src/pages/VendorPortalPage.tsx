@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { vendorsApi, reportsApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
 
 export default function VendorPortalPage() {
 	const { user } = useAuthStore();
@@ -48,11 +48,11 @@ export default function VendorPortalPage() {
 			<s-heading>Vendor Portal</s-heading>
 
 			<s-section heading="My Products">
-				<DataTable columns={productColumns} data={products} isLoading={isLoading} emptyMessage="No products found" />
+				<PaginatedDataTable columns={productColumns} data={products} isLoading={isLoading} emptyMessage="No products found" />
 			</s-section>
 
 			<s-section heading="Inventory Status">
-				<DataTable columns={valuationColumns} data={valuation} isLoading={isLoading} emptyMessage="No inventory data" />
+				<PaginatedDataTable columns={valuationColumns} data={valuation} isLoading={isLoading} emptyMessage="No inventory data" />
 			</s-section>
 		</>
 	);

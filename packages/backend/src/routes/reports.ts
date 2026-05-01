@@ -5,10 +5,11 @@ import { getInventoryValuation, getFloorPerformance, getSalesSummary } from '../
 import {
   getGRNReport,
   getPRNReport,
-  getStockAdjustmentReport,
-  getStockBalanceReport,
-  getStockMovementReport,
-  getTOGReport,
+	getStockAdjustmentReport,
+	getStockBalanceReport,
+	getStockMovementReport,
+	getTOGReport,
+	getGenericReport,
 } from '../modules/reports/reportService';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
@@ -16,6 +17,43 @@ import logger from '../utils/logger';
 const router = Router();
 
 router.use(authenticate);
+
+const buildCatalogFilters = (query: Record<string, string>) => {
+  const {
+    fromDate,
+    toDate,
+    supplierId,
+    branchId,
+    floorId,
+    skuId,
+    status,
+    eventType,
+    groupBy,
+    search,
+    daysToExpiry,
+    page,
+    pageSize,
+  } = query;
+
+  const filters: any = {
+    supplierId: supplierId || undefined,
+    branchId: branchId || undefined,
+    floorId: floorId || undefined,
+    skuId: skuId || undefined,
+    status: status || undefined,
+    eventType: eventType || undefined,
+    groupBy: groupBy || undefined,
+    search: search || undefined,
+    daysToExpiry: daysToExpiry ? parseInt(daysToExpiry, 10) : undefined,
+    page: page ? parseInt(page, 10) : undefined,
+    pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
+  };
+
+  if (fromDate) filters.fromDate = new Date(fromDate);
+  if (toDate) filters.toDate = new Date(toDate);
+
+  return filters;
+};
 
 router.get('/inventory-valuation', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -227,6 +265,33 @@ router.get('/tog', async (req: AuthRequest, res: Response): Promise<void> => {
   } catch (error) {
     logger.error('TOG report error', error);
     res.status(500).json({ success: false, error: 'Failed to generate TOG report' });
+  }
+});
+
+// Extended report catalog endpoint. This feeds the comprehensive reports workbench
+// for inventory, stock, management, and sales reports that are derivable from the
+// current inventory schema.
+router.get('/catalog/:reportId', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const filters = buildCatalogFilters(req.query as Record<string, string>);
+    const data = await getGenericReport(req.params.reportId, filters);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('Extended report catalog error', error);
+    res.status(500).json({ success: false, error: 'Failed to generate report' });
+  }
+});
+
+// Compatibility route for integrations that call /api/reports/<report-id>
+// directly instead of going through /api/reports/catalog/<report-id>.
+router.get('/:reportId', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const filters = buildCatalogFilters(req.query as Record<string, string>);
+    const data = await getGenericReport(req.params.reportId, filters);
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('Extended report slug error', error);
+    res.status(500).json({ success: false, error: 'Failed to generate report' });
   }
 });
 

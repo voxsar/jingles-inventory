@@ -29,6 +29,10 @@ export default function GRNPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const [floorFilter, setFloorFilter] = useState('');
+  const [fromDateFilter, setFromDateFilter] = useState('');
+  const [toDateFilter, setToDateFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [editingGrn, setEditingGrn] = useState<any>(null);
@@ -85,6 +89,10 @@ export default function GRNPage() {
       if (debouncedSearch) params.search = debouncedSearch;
       if (statusFilter) params.status = statusFilter;
       if (supplierFilter) params.supplierId = supplierFilter;
+      if (branchFilter) params.branchId = branchFilter;
+      if (floorFilter) params.floorId = floorFilter;
+      if (fromDateFilter) params.fromDate = fromDateFilter;
+      if (toDateFilter) params.toDate = toDateFilter;
       const [grnRes, vendorRes, locationRes] = await Promise.all([
         grnsApi.list(params),
         vendorsApi.list(),
@@ -101,7 +109,7 @@ export default function GRNPage() {
     } finally { setIsLoading(false); }
   };
 
-  useEffect(() => { loadData(); }, [page, pageSize, debouncedSearch, statusFilter, supplierFilter]);
+  useEffect(() => { loadData(); }, [page, pageSize, debouncedSearch, statusFilter, supplierFilter, branchFilter, floorFilter, fromDateFilter, toDateFilter]);
 
   useEffect(() => {
     if (!showForm) return;
@@ -409,7 +417,19 @@ export default function GRNPage() {
     },
   ];
 
-  const hasFilters = searchTerm || statusFilter || supplierFilter;
+  const branchOptions = Array.from(
+    new Map(
+      locations
+        .filter((loc: any) => loc.branch?.id)
+        .map((loc: any) => [loc.branch.id, { value: loc.branch.id, label: loc.branch.name }])
+    ).values()
+  );
+
+  const visibleLocations = branchFilter
+    ? locations.filter((loc: any) => loc.branchId === branchFilter || loc.branch?.id === branchFilter)
+    : locations;
+
+  const hasFilters = searchTerm || statusFilter || supplierFilter || branchFilter || floorFilter || fromDateFilter || toDateFilter;
 
   return (
     <div className="flex flex-col gap-4">
@@ -457,8 +477,46 @@ export default function GRNPage() {
               isClearable={false}
             />
           </div>
+          <div style={{ width: '180px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Branches' },
+                ...branchOptions,
+              ]}
+              value={branchFilter}
+              onChange={(value) => { setBranchFilter(value); setFloorFilter(''); setPage(1); }}
+              placeholder="All Branches"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '200px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Floors' },
+                ...visibleLocations.map((loc: any) => ({ value: loc.id, label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : loc.name }))
+              ]}
+              value={floorFilter}
+              onChange={(value) => { setFloorFilter(value); setPage(1); }}
+              placeholder="All Floors"
+              isClearable={false}
+            />
+          </div>
+          <input
+            type="date"
+            className="filter-select"
+            value={fromDateFilter}
+            onChange={(e) => { setFromDateFilter(e.target.value); setPage(1); }}
+            title="Created from"
+          />
+          <input
+            type="date"
+            className="filter-select"
+            value={toDateFilter}
+            onChange={(e) => { setToDateFilter(e.target.value); setPage(1); }}
+            title="Created to"
+          />
           {hasFilters && (
-            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setStatusFilter(''); setSupplierFilter(''); setPage(1); }}>
+            <button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setDebouncedSearch(''); setStatusFilter(''); setSupplierFilter(''); setBranchFilter(''); setFloorFilter(''); setFromDateFilter(''); setToDateFilter(''); setPage(1); }}>
               ✕ Clear filters
             </button>
           )}
@@ -1024,5 +1082,4 @@ export default function GRNPage() {
     </div>
   );
 }
-
 

@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@jingles/shared';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -17,33 +18,53 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     role?: string;
     isActive?: string;
     search?: string;
+    vendorId?: string;
   };
+  const pagination = getPagination(req.query);
 
   const where: Prisma.UserWhereInput = {
     ...(role ? { role } : {}),
+    ...(req.query.vendorId ? { vendorId: req.query.vendorId as string } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
     ...(search
       ? { email: { contains: search, mode: 'insensitive' } }
       : {}),
   };
 
+  const select = {
+    id: true,
+    email: true,
+    role: true,
+    vendorId: true,
+    createdAt: true,
+    isActive: true,
+    vendor: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+  };
+
+  if (pagination.isPaginated) {
+    const [items, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.take,
+        orderBy: { createdAt: 'desc' },
+        select,
+      }),
+      prisma.user.count({ where }),
+    ]);
+    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    return;
+  }
+
   const users = await prisma.user.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      vendorId: true,
-      createdAt: true,
-      isActive: true,
-      vendor: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
+    select,
   });
 
   res.json(users);

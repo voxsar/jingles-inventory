@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -19,6 +20,29 @@ router.get(
     }
     const where: Record<string, unknown> = { isActive: true };
     if (req.query?.floorId) where.floorId = req.query.floorId as string;
+    const pagination = getPagination(req.query);
+    if (pagination.isPaginated) {
+      const [items, total] = await Promise.all([
+        prisma.rack.findMany({
+          where,
+          skip: pagination.skip,
+          take: pagination.take,
+          include: {
+            floor: { include: { branch: { select: { id: true, name: true } } } },
+            shelves: {
+              where: { isActive: true },
+              include: { boxes: { where: { isActive: true } } },
+              orderBy: { createdAt: 'asc' },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        }),
+        prisma.rack.count({ where }),
+      ]);
+      res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+      return;
+    }
+
     const racks = await prisma.rack.findMany({
       where,
       include: {

@@ -8,6 +8,8 @@ import DashboardPage from './pages/DashboardPage';
 import InventoryPage from './pages/InventoryPage';
 import GRNPage from './pages/GRNPage';
 import GRNDetailPage from './pages/GRNDetailPage';
+import PRNPage from './pages/PRNPage';
+import PRNDetailPage from './pages/PRNDetailPage';
 import SKUPage from './pages/SKUPage';
 import ReportsPage from './pages/ReportsPage';
 import VendorPortalPage from './pages/VendorPortalPage';
@@ -55,6 +57,8 @@ function AppRoutes() {
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="grns" element={<GRNPage />} />
         <Route path="grns/:id" element={<GRNDetailPage />} />
+        <Route path="prns" element={<PRNPage />} />
+        <Route path="prns/:id" element={<PRNDetailPage />} />
         <Route path="skus" element={<SKUPage />} />
         <Route path="locations" element={<Navigate to="/branches" replace />} />
         <Route path="reports" element={<ReportsPage />} />

@@ -4,6 +4,7 @@ import { settingsApi } from '../../api/client';
 import { UnitType } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -36,7 +37,7 @@ export default function UnitSpreadsheetPage() {
   }, [page, pageSize]);
 
   const typeOptions = Object.values(UnitType).map(t => ({ value: t, label: t }));
-  const baseUnitOptions = units.map(u => ({ value: u.id, label: `${u.name} (${u.abbreviation})` }));
+  const baseUnitOptions = units.map(u => ({ value: u.name, label: `${u.name} (${u.abbreviation})` }));
 
   const columns: ColumnDefinition<any>[] = [
     {
@@ -99,8 +100,10 @@ export default function UnitSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await settingsApi.updateUnit(row.id, changes);
-      await loadData();
+      const response = await settingsApi.updateUnit(row.id, changes);
+      setUnits(current => current.map(unit => (
+        unit.id === row.id ? mergeUpdatedRow(unit, changes, response) : unit
+      )));
     } catch (err) {
       console.error('Failed to save unit:', err);
       throw err;
@@ -110,7 +113,8 @@ export default function UnitSpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await settingsApi.deleteUnit(row.id);
-      await loadData();
+      setUnits(current => current.filter(unit => unit.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete unit:', err);
       throw err;
@@ -119,8 +123,9 @@ export default function UnitSpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await settingsApi.createUnit(data);
-      await loadData();
+      const response = await settingsApi.createUnit(data);
+      setUnits(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
+      setTotal(current => current + 1);
     } catch (err) {
       console.error('Failed to create unit:', err);
       throw err;

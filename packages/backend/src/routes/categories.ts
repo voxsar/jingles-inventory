@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -22,8 +23,37 @@ function buildTree(categories: any[]): any[] {
   return roots;
 }
 
-router.get('/', async (_req, res: Response): Promise<void> => {
+router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  const { search, isActive, parentId } = req.query as { search?: string; isActive?: string; parentId?: string };
+  const pagination = getPagination(req.query);
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { slug: { contains: search, mode: 'insensitive' } },
+      { description: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (isActive !== undefined) where.isActive = isActive === 'true';
+  if (parentId === 'root') where.parentId = null;
+  else if (parentId) where.parentId = parentId;
+
+  if (pagination.isPaginated) {
+    const [items, total] = await Promise.all([
+      prisma.category.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.take,
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      }),
+      prisma.category.count({ where }),
+    ]);
+    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    return;
+  }
+
   const categories = await prisma.category.findMany({
+    where,
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
   });
   res.json({ success: true, data: categories });

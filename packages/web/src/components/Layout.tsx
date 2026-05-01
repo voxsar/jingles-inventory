@@ -6,6 +6,7 @@ const navItems = [
   { to: '/dashboard', label: '📊 Dashboard' },
   { to: '/inventory', label: '📦 Inventory' },
   { to: '/grns', label: '📋 GRNs' },
+  { to: '/prns', label: '↩️ PRNs' },
   { to: '/skus', label: '🎵 Products (SKUs)' },
   { to: '/pricing', label: '💰 Batch Pricing' },
   { to: '/pricing-overlays', label: '🎯 Pricing Overlays' },

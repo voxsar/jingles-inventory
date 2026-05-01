@@ -249,6 +249,8 @@ export const reportsApi = {
     api.get('/reports/stock-movement', { params }),
   tog: (params?: Record<string, string>) =>
     api.get('/reports/tog', { params }),
+  catalog: (reportId: string, params?: Record<string, string>) =>
+    api.get(`/reports/catalog/${reportId}`, { params }),
 };
 
 // Barcode
@@ -328,4 +330,3 @@ export const usersApi = {
   updatePassword: (id: string, password: string) => api.put(`/users/${id}/password`, { password }),
   delete: (id: string) => api.delete(`/users/${id}`),
 };
-

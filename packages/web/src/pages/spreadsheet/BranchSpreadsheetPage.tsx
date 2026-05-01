@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { branchesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
+import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -105,8 +106,10 @@ export default function BranchSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await branchesApi.update(row.id, changes);
-      await loadData();
+      const response = await branchesApi.update(row.id, changes);
+      setBranches(current => current.map(branch => (
+        branch.id === row.id ? mergeUpdatedRow(branch, changes, response) : branch
+      )));
     } catch (err) {
       console.error('Failed to save branch:', err);
       throw err;
@@ -116,7 +119,8 @@ export default function BranchSpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await branchesApi.delete(row.id);
-      await loadData();
+      setBranches(current => current.filter(branch => branch.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete branch:', err);
       throw err;
@@ -125,8 +129,9 @@ export default function BranchSpreadsheetPage() {
 
   const handleAdd = async (data: Partial<any>) => {
     try {
-      await branchesApi.create(data);
-      await loadData();
+      const response = await branchesApi.create(data);
+      setBranches(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
+      setTotal(current => current + 1);
     } catch (err) {
       console.error('Failed to create branch:', err);
       throw err;

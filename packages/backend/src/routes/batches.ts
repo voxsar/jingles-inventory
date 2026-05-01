@@ -15,6 +15,8 @@ router.get(
 	[
 		query('skuId').optional().isUUID(),
 		query('variantId').optional().isUUID(),
+		query('vendorId').optional().isUUID(),
+		query('search').optional().isString(),
 		query('isActive').optional().isBoolean(),
 		query('page').optional().isInt({ min: 1 }).toInt(),
 		query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
@@ -29,6 +31,8 @@ router.get(
 			const result = await batchService.listBatches({
 				skuId: req.query.skuId as string,
 				variantId: req.query.variantId as string,
+				vendorId: req.query.vendorId as string,
+				search: req.query.search as string,
 				isActive:
 					req.query.isActive === undefined
 						? undefined

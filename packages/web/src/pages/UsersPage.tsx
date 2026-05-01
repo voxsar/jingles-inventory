@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usersApi, vendorsApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
+import SearchableSelect from '../components/SearchableSelect';
 
 const defaultUserForm = {
   email: '',
@@ -24,6 +25,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [vendorFilter, setVendorFilter] = useState('');
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -32,6 +34,7 @@ export default function UsersPage() {
       if (roleFilter) params.role = roleFilter;
       if (activeFilter) params.isActive = activeFilter;
       if (searchTerm) params.search = searchTerm;
+      if (vendorFilter) params.vendorId = vendorFilter;
 
       const res = await usersApi.list(params);
       const data = res.data?.data ?? res.data ?? [];
@@ -53,7 +56,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     loadUsers();
-  }, [roleFilter, activeFilter, searchTerm]);
+  }, [roleFilter, activeFilter, searchTerm, vendorFilter]);
 
   useEffect(() => {
     loadVendors();
@@ -238,34 +241,59 @@ export default function UsersPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Roles</option>
-          {roleOptions.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
-        <select
-          value={activeFilter}
-          onChange={(e) => setActiveFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Status</option>
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
+        <div style={{ width: '180px' }}>
+          <SearchableSelect
+            options={[
+              { value: '', label: 'All Roles' },
+              ...roleOptions.map((role) => ({ value: role, label: role })),
+            ]}
+            value={roleFilter}
+            onChange={(value) => setRoleFilter(value)}
+            placeholder="All Roles"
+            isClearable={false}
+          />
+        </div>
+        <div style={{ width: '180px' }}>
+          <SearchableSelect
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'true', label: 'Active' },
+              { value: 'false', label: 'Inactive' },
+            ]}
+            value={activeFilter}
+            onChange={(value) => setActiveFilter(value)}
+            placeholder="All Statuses"
+            isClearable={false}
+          />
+        </div>
+        <div style={{ width: '220px' }}>
+          <SearchableSelect
+            options={[
+              { value: '', label: 'All Vendors' },
+              ...vendors.map((vendor: any) => ({ value: vendor.id, label: vendor.name })),
+            ]}
+            value={vendorFilter}
+            onChange={(value) => setVendorFilter(value)}
+            placeholder="All Vendors"
+            isClearable={false}
+          />
+        </div>
+        {(searchTerm || roleFilter || activeFilter || vendorFilter) && (
+          <button
+            type="button"
+            onClick={() => { setSearchTerm(''); setRoleFilter(''); setActiveFilter(''); setVendorFilter(''); }}
+            className="btn-secondary text-xs"
+          >
+            ✕ Clear filters
+          </button>
+        )}
       </div>
 
       <div className="content-section">
         {isLoading ? (
           <p className="text-center text-gray-600">Loading...</p>
         ) : (
-          <DataTable columns={userColumns} data={users} />
+          <PaginatedDataTable columns={userColumns} data={users} />
         )}
       </div>
 

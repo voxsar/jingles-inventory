@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { inventoryApi, floorsApi, branchesApi, skusApi, racksApi, shelvesApi, boxesApi } from '../../api/client';
+import { inventoryApi, floorsApi, skusApi, racksApi, shelvesApi, boxesApi } from '../../api/client';
 import { InventoryState } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import Pagination from '../../components/Pagination';
 import StateBadge from '../../components/StateBadge';
+import { mergeUpdatedRow } from './spreadsheetPageUtils';
 
 const PAGE_SIZE = 50;
 
@@ -18,7 +19,6 @@ export default function InventorySpreadsheetPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [skus, setSkus] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
-  const [branches, setBranches] = useState<any[]>([]);
   const [racks, setRacks] = useState<any[]>([]);
   const [shelves, setShelves] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
@@ -26,11 +26,10 @@ export default function InventorySpreadsheetPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [invRes, skuRes, floorRes, branchRes, rackRes, shelfRes, boxRes] = await Promise.all([
+      const [invRes, skuRes, floorRes, rackRes, shelfRes, boxRes] = await Promise.all([
         inventoryApi.list({ page: String(page), pageSize: String(pageSize) }),
         skusApi.list({ pageSize: '1000' }),
         floorsApi.list(),
-        branchesApi.list(),
         fetch('/api/racks').then(r => r.json()).catch(() => ({ data: [] })),
         fetch('/api/shelves').then(r => r.json()).catch(() => ({ data: [] })),
         fetch('/api/boxes').then(r => r.json()).catch(() => ({ data: [] })),
@@ -46,9 +45,6 @@ export default function InventorySpreadsheetPage() {
 
       const floorData = floorRes.data?.data?.items ?? floorRes.data?.data ?? floorRes.data ?? [];
       setFloors(Array.isArray(floorData) ? floorData : []);
-
-      const branchData = branchRes.data?.data?.items ?? branchRes.data?.data ?? branchRes.data ?? [];
-      setBranches(Array.isArray(branchData) ? branchData : []);
 
       const rackData = rackRes.data?.data?.items ?? rackRes.data?.data ?? rackRes.data ?? [];
       setRacks(Array.isArray(rackData) ? rackData : []);
@@ -69,7 +65,6 @@ export default function InventorySpreadsheetPage() {
     loadData();
   }, [page, pageSize]);
 
-  const skuOptions = skus.map(s => ({ value: s.id, label: `${s.skuCode} - ${s.name}` }));
   const floorOptions = floors.map(f => ({ value: f.id, label: `${f.name} (${f.branch?.name || ''})` }));
   const rackOptions = racks.map(r => ({ value: r.id, label: r.name || r.id }));
   const shelfOptions = shelves.map(s => ({ value: s.id, label: s.name || s.id }));
@@ -78,9 +73,11 @@ export default function InventorySpreadsheetPage() {
 
   const columns: ColumnDefinition<any>[] = [
     {
-      key: 'sku',
+      key: 'skuId',
       header: 'SKU',
       width: '200px',
+      readOnly: true,
+      getValue: (row) => row.skuId || '',
       render: (value, row) => {
         const sku = skus.find(s => s.id === row.skuId);
         return sku ? `${sku.skuCode} - ${sku.name}` : '';
@@ -118,12 +115,10 @@ export default function InventorySpreadsheetPage() {
     {
       key: 'rackId',
       header: 'Rack',
-      
       options: rackOptions,
       width: '140px',
-      getValue: (row) => row.rackId || '',
-      setValue: (row, value) => ({ rackId: value || null }),
-      render: (value, row) => String(value || ""),
+      readOnly: true,
+      getValue: (row) => row.shelf?.rackId || '',
     },
     {
       key: 'shelfId',
@@ -163,8 +158,12 @@ export default function InventorySpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
-      await inventoryApi.update(row.id, changes);
-      await loadData();
+      const response = changes.state !== undefined
+        ? await inventoryApi.transition(row.id, changes.state)
+        : await inventoryApi.update(row.id, changes);
+      setRecords(current => current.map(record => (
+        record.id === row.id ? mergeUpdatedRow(record, changes, response) : record
+      )));
     } catch (err) {
       console.error('Failed to save inventory:', err);
       throw err;
@@ -174,7 +173,8 @@ export default function InventorySpreadsheetPage() {
   const handleDelete = async (row: any) => {
     try {
       await inventoryApi.delete(row.id);
-      await loadData();
+      setRecords(current => current.filter(record => record.id !== row.id));
+      setTotal(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete inventory:', err);
       throw err;

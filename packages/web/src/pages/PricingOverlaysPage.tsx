@@ -15,6 +15,7 @@ export default function PricingOverlaysPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(PAGE_SIZE);
+	const [searchTerm, setSearchTerm] = useState('');
 	const [statusFilter, setStatusFilter] = useState('');
 	const [typeFilter, setTypeFilter] = useState('');
 	const [showCreateModal, setShowCreateModal] = useState(false);
@@ -76,6 +77,7 @@ export default function PricingOverlaysPage() {
 		setIsLoading(true);
 		try {
 			const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
+			if (searchTerm) params.search = searchTerm;
 			if (statusFilter) params.status = statusFilter;
 			if (typeFilter) params.type = typeFilter;
 
@@ -93,7 +95,7 @@ export default function PricingOverlaysPage() {
 
 	useEffect(() => {
 		loadOverlays();
-	}, [page, pageSize, statusFilter, typeFilter]);
+	}, [page, pageSize, searchTerm, statusFilter, typeFilter]);
 
 	const resetForm = () => {
 		setFormData({
@@ -324,6 +326,13 @@ export default function PricingOverlaysPage() {
 
 			{/* Filters */}
 			<div className="filter-bar">
+				<input
+					type="search"
+					className="filter-input-wide"
+					placeholder="Search overlay name or description…"
+					value={searchTerm}
+					onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+				/>
 				<div style={{ width: '180px' }}>
 					<SearchableSelect
 						options={[
@@ -334,7 +343,7 @@ export default function PricingOverlaysPage() {
 							{ value: PricingOverlayStatus.Expired, label: 'Expired' }
 						]}
 						value={statusFilter}
-						onChange={(value) => setStatusFilter(value)}
+						onChange={(value) => { setStatusFilter(value); setPage(1); }}
 						placeholder="All Statuses"
 						isClearable={false}
 					/>
@@ -350,11 +359,16 @@ export default function PricingOverlaysPage() {
 							{ value: PricingOverlayType.FixedMarkup, label: 'Fixed Markup' }
 						]}
 						value={typeFilter}
-						onChange={(value) => setTypeFilter(value)}
+						onChange={(value) => { setTypeFilter(value); setPage(1); }}
 						placeholder="All Types"
 						isClearable={false}
 					/>
 				</div>
+				{(searchTerm || statusFilter || typeFilter) && (
+					<button className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setStatusFilter(''); setTypeFilter(''); setPage(1); }}>
+						✕ Clear filters
+					</button>
+				)}
 			</div>
 
 			{/* Table */}

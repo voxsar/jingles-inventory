@@ -11,6 +11,7 @@
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:seed": "ts-node src/prisma/seed.ts",
 		"prisma:seed-stress": "ts-node src/prisma/seed-stress.ts",
+		"import:recovered-catalog": "ts-node src/scripts/importRecoveredCatalog.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage"
@@ -26,6 +27,7 @@
 		"express-validator": "^7.0.1",
 		"jsonwebtoken": "^9.0.2",
 		"multer": "^2.1.1",
+		"xlsx": "^0.18.5",
 		"typesense": "^3.0.3",
 		"uuid": "^9.0.0",
 		"winston": "^3.11.0"

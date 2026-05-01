@@ -7,12 +7,27 @@ import { testTypesenseConnection } from '../modules/typesense/client';
 import { startSyncJob } from '../modules/typesense/syncService';
 import { getJob, getAllJobs } from '../modules/typesense/jobTracker';
 import logger from '../utils/logger';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.get('/units', async (_req, res: Response): Promise<void> => {
+router.get('/units', async (req: AuthRequest, res: Response): Promise<void> => {
+	const pagination = getPagination(req.query);
+	if (pagination.isPaginated) {
+		const [items, total] = await Promise.all([
+			prisma.unitOfMeasure.findMany({
+				skip: pagination.skip,
+				take: pagination.take,
+				orderBy: [{ type: 'asc' }, { name: 'asc' }],
+			}),
+			prisma.unitOfMeasure.count(),
+		]);
+		res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+		return;
+	}
+
 	const units = await prisma.unitOfMeasure.findMany({
 		orderBy: [{ type: 'asc' }, { name: 'asc' }],
 	});
@@ -109,8 +124,23 @@ const VALID_ENTITY_TYPES = ['inventory', 'product', 'location', 'branch', 'suppl
 
 router.get('/statuses', async (req: AuthRequest, res: Response): Promise<void> => {
 	const { entityType } = req.query as { entityType?: string };
+	const pagination = getPagination(req.query);
 	const where: Prisma.StatusOptionWhereInput = { isActive: true };
 	if (entityType) where.entityType = entityType;
+	if (pagination.isPaginated) {
+		const [items, total] = await Promise.all([
+			prisma.statusOption.findMany({
+				where,
+				skip: pagination.skip,
+				take: pagination.take,
+				orderBy: [{ entityType: 'asc' }, { sortOrder: 'asc' }, { label: 'asc' }],
+			}),
+			prisma.statusOption.count({ where }),
+		]);
+		res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+		return;
+	}
+
 	const statuses = await prisma.statusOption.findMany({
 		where,
 		orderBy: [{ entityType: 'asc' }, { sortOrder: 'asc' }, { label: 'asc' }],

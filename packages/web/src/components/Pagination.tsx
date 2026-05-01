@@ -18,26 +18,41 @@ export default function Pagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: PaginationProps) {
   const safePage = Math.max(1, page);
+  const fallbackTotalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 1;
+  const safeTotalPages = Math.max(1, totalPages || 0, fallbackTotalPages);
   const start = total === 0 ? 0 : (safePage - 1) * pageSize + 1;
   const end = Math.min(safePage * pageSize, total);
 
   const pages: (number | '...')[] = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  if (safeTotalPages <= 7) {
+    for (let i = 1; i <= safeTotalPages; i++) pages.push(i);
   } else {
     pages.push(1);
     if (safePage > 3) pages.push('...');
-    for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++) {
+    for (let i = Math.max(2, safePage - 1); i <= Math.min(safeTotalPages - 1, safePage + 1); i++) {
       pages.push(i);
     }
-    if (safePage < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
+    if (safePage < safeTotalPages - 2) pages.push('...');
+    pages.push(safeTotalPages);
   }
 
   return (
-    <s-stack direction="inline" gap="base" style={{ padding: '12px 16px', borderTop: '1px solid #e1e3e5', alignItems: 'center', justifyContent: 'space-between' }}>
-      <s-stack direction="inline" gap="small">
-        <s-text>{total === 0 ? 'No results' : `Showing ${start}–${end} of ${total}`}</s-text>
+    <div
+      className="pagination-bar"
+      style={{
+        display: 'flex',
+        gap: '12px',
+        padding: '12px 16px',
+        borderTop: '1px solid #e1e3e5',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <span style={{ color: '#4b5563', fontSize: '14px' }}>
+          {total === 0 ? 'No results' : `Showing ${start}-${end} of ${total}`}
+        </span>
         {onPageSizeChange && (
           <select
             value={pageSize}
@@ -49,26 +64,41 @@ export default function Pagination({
             ))}
           </select>
         )}
-      </s-stack>
-      {totalPages > 1 && (
-        <s-stack direction="inline" gap="small-100">
-          <s-button onClick={() => onPageChange(safePage - 1)} disabled={safePage <= 1}>← Prev</s-button>
+      </div>
+      {safeTotalPages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn-secondary text-xs"
+            onClick={() => onPageChange(safePage - 1)}
+            disabled={safePage <= 1}
+          >
+            Prev
+          </button>
           {pages.map((p, i) =>
             p === '...' ? (
               <span key={`ellipsis-${i}`} style={{ padding: '6px 8px', color: '#6d7175' }}>…</span>
             ) : (
-              <s-button
+              <button
+                type="button"
                 key={p}
-                variant={p === safePage ? 'primary' : undefined}
+                className={p === safePage ? 'btn-primary text-xs' : 'btn-secondary text-xs'}
                 onClick={() => onPageChange(p as number)}
               >
                 {String(p)}
-              </s-button>
+              </button>
             )
           )}
-          <s-button onClick={() => onPageChange(safePage + 1)} disabled={safePage >= totalPages}>Next →</s-button>
-        </s-stack>
+          <button
+            type="button"
+            className="btn-secondary text-xs"
+            onClick={() => onPageChange(safePage + 1)}
+            disabled={safePage >= safeTotalPages}
+          >
+            Next
+          </button>
+        </div>
       )}
-    </s-stack>
+    </div>
   );
 }

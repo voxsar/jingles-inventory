@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { branchesApi, floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
 
 // ── Form defaults ─────────────────────────────────────────────────────────────
 const defaultBranchForm = { name: '', code: '', address: '', phone: '', email: '', isDefault: false };
@@ -491,13 +491,13 @@ export default function BranchesPage() {
 			{/* ── Content ─────────────────────────────────────────────────────── */}
 			<div className="content-section">
 				{view === 'branches' && (
-					<DataTable columns={branchColumns} data={branches} isLoading={isLoading} emptyMessage="No branches found" />
+					<PaginatedDataTable columns={branchColumns} data={branches} isLoading={isLoading} emptyMessage="No branches found" />
 				)}
 
 				{view === 'floors' && (
 					<>
 						<p className="text-sm text-gray-500 mb-3">Storage zones are physical areas within <strong>{selectedBranch?.name}</strong> (floors, zones, sections).</p>
-						<DataTable columns={floorColumns} data={floors} isLoading={isLoading} emptyMessage="No storage zones yet. Create one to start." />
+						<PaginatedDataTable columns={floorColumns} data={floors} isLoading={isLoading} emptyMessage="No storage zones yet. Create one to start." />
 					</>
 				)}
 
@@ -507,7 +507,7 @@ export default function BranchesPage() {
 						<div>
 							<h2 className="text-base font-semibold text-gray-700 mb-2">🗂 Racks on this floor</h2>
 							<p className="text-xs text-gray-500 mb-2">Racks are physical shelving units. Dimensions are in centimetres (metric). Their 3D positions are editable in the Warehouse 3D view.</p>
-							<DataTable columns={rackColumns} data={racks} isLoading={isLoading} emptyMessage="No racks yet." />
+							<PaginatedDataTable columns={rackColumns} data={racks} isLoading={isLoading} emptyMessage="No racks yet." />
 						</div>
 
 						{/* Floor-level boxes */}
@@ -542,7 +542,7 @@ export default function BranchesPage() {
 							Shelf levels inside rack <strong>{selectedRack?.name}</strong>.
 							Each shelf is a horizontal level with its own dimensions (height = clearance, width/length = usable area). All in cm.
 						</p>
-						<DataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelf levels yet." />
+						<PaginatedDataTable columns={shelfColumns} data={shelves} isLoading={isLoading} emptyMessage="No shelf levels yet." />
 					</div>
 				)}
 
@@ -551,7 +551,7 @@ export default function BranchesPage() {
 						<div>
 							<h2 className="text-base font-semibold text-gray-700 mb-2">📦 Boxes on this shelf</h2>
 							<p className="text-xs text-gray-500 mb-2">Boxes can be stacked. Dimensions in cm. Position in the 3D view is saved to the database when you move them.</p>
-							<DataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes yet." />
+							<PaginatedDataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes yet." />
 						</div>
 						{shelfInventory.length > 0 && (
 							<div>

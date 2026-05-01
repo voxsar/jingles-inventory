@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -16,6 +17,22 @@ router.get('/', [query('floorId').optional().isUUID(), query('rackId').optional(
   const where: Record<string, unknown> = { isActive: true };
   if (req.query?.floorId) where.floorId = req.query.floorId as string;
   if (req.query?.rackId) where.rackId = req.query.rackId as string;
+  const pagination = getPagination(req.query);
+  if (pagination.isPaginated) {
+    const [items, total] = await Promise.all([
+      prisma.shelf.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.take,
+        include: { floor: { include: { branch: { select: { id: true, name: true } } } }, rack: true, boxes: { where: { isActive: true }, include: { barcodes: true } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.shelf.count({ where }),
+    ]);
+    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    return;
+  }
+
   const shelves = await prisma.shelf.findMany({
     where,
     include: { floor: { include: { branch: { select: { id: true, name: true } } } }, rack: true, boxes: { where: { isActive: true }, include: { barcodes: true } } },

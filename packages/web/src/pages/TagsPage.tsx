@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { tagsApi } from '../api/client';
-import DataTable from '../components/DataTable';
+import PaginatedDataTable from '../components/PaginatedDataTable';
 
 const defaultTagForm = { name: '', color: '' };
 
@@ -11,11 +11,16 @@ export default function TagsPage() {
   const [editingTag, setEditingTag] = useState<any>(null);
   const [tagForm, setTagForm] = useState(defaultTagForm);
   const [searchTerm, setSearchTerm] = useState('');
+  const [colorFilter, setColorFilter] = useState('');
+  const [usageFilter, setUsageFilter] = useState('');
 
   const loadTags = async () => {
     setIsLoading(true);
     try {
-      const res = await tagsApi.list(searchTerm ? { search: searchTerm } : undefined);
+      const params: Record<string, string> = {};
+      if (searchTerm) params.search = searchTerm;
+      if (colorFilter) params.hasColor = colorFilter;
+      const res = await tagsApi.list(Object.keys(params).length > 0 ? params : undefined);
       const data = res.data?.data ?? res.data ?? [];
       setTags(Array.isArray(data) ? data : []);
     } finally {
@@ -25,7 +30,13 @@ export default function TagsPage() {
 
   useEffect(() => {
     loadTags();
-  }, [searchTerm]);
+  }, [searchTerm, colorFilter]);
+
+  const filteredTags = tags.filter((tag) => {
+    if (usageFilter === 'used' && !(tag.skuCount > 0)) return false;
+    if (usageFilter === 'unused' && (tag.skuCount > 0)) return false;
+    return true;
+  });
 
   const openCreateModal = () => {
     setEditingTag(null);
@@ -148,13 +159,36 @@ export default function TagsPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
+        <select
+          value={colorFilter}
+          onChange={(e) => setColorFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">All Colors</option>
+          <option value="true">Has Color</option>
+          <option value="false">No Color</option>
+        </select>
+        <select
+          value={usageFilter}
+          onChange={(e) => setUsageFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="">All Usage</option>
+          <option value="used">Used on Products</option>
+          <option value="unused">Unused</option>
+        </select>
+        {(searchTerm || colorFilter || usageFilter) && (
+          <button type="button" className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setColorFilter(''); setUsageFilter(''); }}>
+            ✕ Clear filters
+          </button>
+        )}
       </div>
 
       <div className="content-section">
         {isLoading ? (
           <p className="text-center text-gray-600">Loading...</p>
         ) : (
-          <DataTable columns={tagColumns} data={tags} />
+          <PaginatedDataTable columns={tagColumns} data={filteredTags} />
         )}
       </div>
 

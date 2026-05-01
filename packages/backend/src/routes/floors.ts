@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -16,6 +17,25 @@ router.get('/', [query('branchId').optional().isUUID()], async (req: AuthRequest
 	}
 	const where: Prisma.FloorWhereInput = { isActive: true };
 	if (req.query?.branchId) where.branchId = req.query.branchId as string;
+	const pagination = getPagination(req.query);
+	if (pagination.isPaginated) {
+		const [items, total] = await Promise.all([
+			prisma.floor.findMany({
+				where,
+				skip: pagination.skip,
+				take: pagination.take,
+				include: {
+					branch: { select: { id: true, name: true, code: true } },
+					_count: { select: { inventoryRecords: true, shelves: true } },
+				},
+				orderBy: [{ branch: { name: 'asc' } }, { name: 'asc' }],
+			}),
+			prisma.floor.count({ where }),
+		]);
+		res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+		return;
+	}
+
 	const floors = await prisma.floor.findMany({
 		where,
 		include: {

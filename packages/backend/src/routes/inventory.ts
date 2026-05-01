@@ -17,7 +17,20 @@ router.use(authenticate);
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
-		const { state, skuId, branchId, floorId, rackId, shelfId, boxId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
+		const {
+			state,
+			skuId,
+			vendorId,
+			categoryId,
+			branchId,
+			floorId,
+			rackId,
+			shelfId,
+			boxId,
+			search,
+			page = '1',
+			pageSize = '50',
+		} = req.query as Record<string, string>;
 		const user = req.user!;
 		const pageNum = parseInt(page);
 		const pageSizeNum = parseInt(pageSize);
@@ -25,6 +38,19 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		const where: Prisma.InventoryRecordWhereInput = {};
 		if (state) where.state = state as InventoryState;
 		if (skuId) where.skuId = skuId;
+		if (vendorId || categoryId || search) {
+			const skuWhere: Prisma.SKUWhereInput = {};
+			if (vendorId) skuWhere.vendorId = vendorId;
+			if (categoryId) skuWhere.categoryId = categoryId;
+			if (search) {
+				skuWhere.OR = [
+					{ skuCode: { contains: search, mode: 'insensitive' } },
+					{ name: { contains: search, mode: 'insensitive' } },
+					{ description: { contains: search, mode: 'insensitive' } },
+				];
+			}
+			where.sku = skuWhere;
+		}
 		if (shelfId) {
 			where.shelfId = shelfId;
 		} else if (rackId) {
@@ -35,10 +61,23 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			where.floor = { branchId };
 		}
 		if (boxId) where.boxId = boxId;
+		if (search) {
+			where.OR = [
+				{ batch: { batchNumber: { contains: search, mode: 'insensitive' } } },
+				{ box: { code: { contains: search, mode: 'insensitive' } } },
+				{ shelf: { code: { contains: search, mode: 'insensitive' } } },
+				{ floor: { name: { contains: search, mode: 'insensitive' } } },
+			];
+		}
 
 		if (user.role === UserRole.Vendor) {
 			const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
-			if (dbUser?.vendorId) where.sku = { vendorId: dbUser.vendorId };
+			if (dbUser?.vendorId) {
+				where.sku = {
+					...(where.sku as Prisma.SKUWhereInput | undefined),
+					vendorId: dbUser.vendorId,
+				} as Prisma.SKUWhereInput;
+			}
 		}
 
 		const [items, total] = await Promise.all([

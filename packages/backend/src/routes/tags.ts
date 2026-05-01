@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
@@ -10,28 +11,55 @@ router.use(authenticate);
 
 // GET /api/tags - List all tags
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { search } = req.query as { search?: string };
+  const { search, hasColor, usage } = req.query as { search?: string; hasColor?: string; usage?: string };
+  const pagination = getPagination(req.query);
 
-  const where: Prisma.TagWhereInput = search
-    ? { name: { contains: search, mode: 'insensitive' } }
-    : {};
+  const where: Prisma.TagWhereInput = {
+    ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+    ...(hasColor === 'true'
+      ? { color: { not: null } }
+      : hasColor === 'false'
+        ? { color: null }
+        : {}),
+    ...(usage === 'used'
+      ? { skus: { some: {} } }
+      : usage === 'unused'
+        ? { skus: { none: {} } }
+        : {}),
+  };
 
-  const tags = await prisma.tag.findMany({
-    where,
-    orderBy: { name: 'asc' },
-    include: {
-      skus: {
-        select: {
-          sku: { select: { id: true, name: true, skuCode: true } },
-        },
+  const include = {
+    skus: {
+      select: {
+        sku: { select: { id: true, name: true, skuCode: true } },
       },
     },
-  });
+  };
+
+  const tags = pagination.isPaginated
+    ? await prisma.tag.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.take,
+        orderBy: { name: 'asc' },
+        include,
+      })
+    : await prisma.tag.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        include,
+      });
 
   const tagsWithCount = tags.map((tag) => ({
     ...tag,
     skuCount: tag.skus.length,
   }));
+
+  if (pagination.isPaginated) {
+    const total = await prisma.tag.count({ where });
+    res.json({ success: true, data: paginatedPayload(tagsWithCount, total, pagination.page, pagination.pageSize) });
+    return;
+  }
 
   res.json(tagsWithCount);
 });

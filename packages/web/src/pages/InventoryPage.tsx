@@ -37,6 +37,7 @@ export default function InventoryPage() {
   const [shelfFilter, setShelfFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [skuFilter, setSkuFilter] = useState('');
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -72,6 +73,7 @@ export default function InventoryPage() {
     try {
       const params: Record<string, string> = { page: String(page), pageSize: String(pageSize) };
       if (stateFilter) params.state = stateFilter;
+      if (skuFilter) params.skuId = skuFilter;
       if (shelfFilter) params.shelfId = shelfFilter;
       else if (rackFilter) params.rackId = rackFilter;
       else if (locationFilter) params.floorId = locationFilter;
@@ -131,7 +133,7 @@ export default function InventoryPage() {
   };
 
   useEffect(() => { fetchLocations(); fetchSkus(); fetchBranches(); }, []);
-  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, branchFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
+  useEffect(() => { fetchInventory(); }, [page, pageSize, stateFilter, skuFilter, branchFilter, locationFilter, rackFilter, shelfFilter, debouncedSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -324,6 +326,7 @@ export default function InventoryPage() {
 
   const clearFilters = () => {
     setStateFilter('');
+    setSkuFilter('');
     setBranchFilter('');
     setLocationFilter('');
     setRackFilter('');
@@ -335,7 +338,7 @@ export default function InventoryPage() {
     setPage(1);
   };
 
-  const hasFilters = stateFilter || branchFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
+  const hasFilters = stateFilter || skuFilter || branchFilter || locationFilter || rackFilter || shelfFilter || searchTerm;
 
   // Floors visible in dropdowns: filter by selected branch when applicable
   const visibleLocations = branchFilter
@@ -390,6 +393,18 @@ export default function InventoryPage() {
               value={stateFilter}
               onChange={(value) => { setStateFilter(value); setPage(1); }}
               placeholder="All States"
+              isClearable={false}
+            />
+          </div>
+          <div style={{ width: '220px' }}>
+            <SearchableSelect
+              options={[
+                { value: '', label: 'All Products' },
+                ...skus.map((sku: any) => ({ value: sku.id, label: `${sku.skuCode} - ${sku.name}` }))
+              ]}
+              value={skuFilter}
+              onChange={(value) => { setSkuFilter(value); setPage(1); }}
+              placeholder="All Products"
               isClearable={false}
             />
           </div>
@@ -827,4 +842,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-

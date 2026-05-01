@@ -13,6 +13,7 @@ router.use(authenticate);
 router.get(
 	'/',
 	[
+		query('search').optional().isString(),
 		query('status').optional().isIn(Object.values(PricingOverlayStatus)),
 		query('type').optional().isIn(Object.values(PricingOverlayType)),
 		query('page').optional().isInt({ min: 1 }).toInt(),
@@ -26,6 +27,7 @@ router.get(
 		}
 		try {
 			const result = await overlayService.listOverlays({
+				search: req.query.search as string,
 				status: req.query.status as string,
 				type: req.query.type as string,
 				page: req.query.page ? parseInt(req.query.page as string) : undefined,
