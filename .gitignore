@@ -22,6 +22,8 @@ release/
 
 # Large data files
 *.dump
+/Dump*.sql
+/total_data.sql
 *.sql.gz
 *.tar.gz
 *.zip
