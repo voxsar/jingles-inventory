@@ -10,7 +10,7 @@ jingles-inventory/
 │   ├── shared/         # TypeScript types, enums, interfaces
 │   ├── backend/        # Express + Prisma REST API
 │   ├── web/            # React + Vite web frontend
-│   └── electron/       # Electron desktop app
+│   └── electron/       # Electron desktop shell around the shared web frontend
 └── package.json        # npm workspaces root
 ```
 
@@ -168,7 +168,7 @@ npm run dev:web       # Port 5173
 | **shared** | TypeScript, enums, interfaces, state machine rules |
 | **backend** | Node.js, Express, TypeScript, Prisma ORM, PostgreSQL, JWT, bcryptjs |
 | **web** | React 18, TypeScript, Vite, TailwindCSS, Zustand, Axios, React Router v6 |
-| **electron** | Electron, better-sqlite3, TypeScript, React 18 |
+| **electron** | Electron, better-sqlite3, TypeScript, preload + offline/sync shell |
 
 ## Prerequisites
 
@@ -226,6 +226,8 @@ npm run dev:web
 ```bash
 npm run dev:electron
 ```
+
+`npm run dev:electron` now starts the shared web frontend and the Electron shell together, so desktop and browser flows use the same React app.
 
 ## Domain Model
 

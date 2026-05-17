@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { vendorsApi, reportsApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
+import { formatQuantity } from '../utils/quantity';
 
 export default function VendorPortalPage() {
 	const { user } = useAuthStore();
@@ -34,7 +35,7 @@ export default function VendorPortalPage() {
 	const valuationColumns = [
 		{ key: 'skuCode', header: 'SKU Code' },
 		{ key: 'name', header: 'Name' },
-		{ key: 'totalQuantity', header: 'Total Qty', sortable: true },
+		{ key: 'totalQuantity', header: 'Total Qty', sortable: true, render: (r: any) => formatQuantity(r.totalQuantity) },
 	];
 
 	if (!user?.vendorId) {

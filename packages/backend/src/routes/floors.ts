@@ -17,6 +17,16 @@ router.get('/', [query('branchId').optional().isUUID()], async (req: AuthRequest
 	}
 	const where: Prisma.FloorWhereInput = { isActive: true };
 	if (req.query?.branchId) where.branchId = req.query.branchId as string;
+	if (typeof req.query?.search === 'string' && req.query.search.trim()) {
+		const search = req.query.search.trim();
+		where.OR = [
+			{ name: { contains: search, mode: 'insensitive' } },
+			{ code: { contains: search, mode: 'insensitive' } },
+			{ notes: { contains: search, mode: 'insensitive' } },
+			{ branch: { name: { contains: search, mode: 'insensitive' } } },
+			{ branch: { code: { contains: search, mode: 'insensitive' } } },
+		];
+	}
 	const pagination = getPagination(req.query);
 	if (pagination.isPaginated) {
 		const [items, total] = await Promise.all([

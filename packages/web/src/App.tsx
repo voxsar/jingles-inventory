@@ -22,6 +22,7 @@ import WarehouseVisualizerPage from './pages/WarehouseVisualizerPage';
 import PricingPage from './pages/PricingPage';
 import PricingOverlaysPage from './pages/PricingOverlaysPage';
 import SpreadsheetPage from './pages/SpreadsheetPage';
+import ImportsPage from './pages/ImportsPage';
 import SKUSpreadsheetPage from './pages/spreadsheet/SKUSpreadsheetPage';
 import InventorySpreadsheetPage from './pages/spreadsheet/InventorySpreadsheetPage';
 import VendorSpreadsheetPage from './pages/spreadsheet/VendorSpreadsheetPage';
@@ -81,6 +82,11 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
         <Route path="spreadsheet" element={<SpreadsheetPage />} />
+        <Route path="imports" element={
+          <ProtectedRoute roles={['Admin', 'Manager', 'Staff']}>
+            <ImportsPage />
+          </ProtectedRoute>
+        } />
         <Route path="spreadsheet/skus" element={<SKUSpreadsheetPage />} />
         <Route path="spreadsheet/inventory" element={<InventorySpreadsheetPage />} />
         <Route path="spreadsheet/vendors" element={<VendorSpreadsheetPage />} />
@@ -111,4 +117,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

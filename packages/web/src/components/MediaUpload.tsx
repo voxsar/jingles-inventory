@@ -3,9 +3,12 @@ import axios from 'axios';
 
 interface MediaUploadProps {
 	skuId: string;
+	variantId?: string | null;
 	onUploadComplete: () => void;
 	apiBaseUrl: string;
 	authToken: string;
+	allowVideo?: boolean;
+	scopeLabel?: string;
 }
 
 interface UploadedImage {
@@ -16,7 +19,15 @@ interface UploadedImage {
 	sortOrder: number;
 }
 
-export default function MediaUpload({ skuId, onUploadComplete, apiBaseUrl, authToken }: MediaUploadProps) {
+export default function MediaUpload({
+	skuId,
+	variantId = null,
+	onUploadComplete,
+	apiBaseUrl,
+	authToken,
+	allowVideo = true,
+	scopeLabel = 'product',
+}: MediaUploadProps) {
 	const [isDragging, setIsDragging] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
@@ -59,10 +70,15 @@ export default function MediaUpload({ skuId, onUploadComplete, apiBaseUrl, authT
 
 	const handleFiles = async (files: File[]) => {
 		const imageFiles = files.filter(f => f.type.startsWith('image/'));
-		const videoFiles = files.filter(f => f.type.startsWith('video/'));
+		const videoFiles = allowVideo ? files.filter(f => f.type.startsWith('video/')) : [];
+		const blockedVideoFiles = allowVideo ? [] : files.filter(f => f.type.startsWith('video/'));
+
+		if (blockedVideoFiles.length > 0) {
+			alert('Video uploads are product-level only. Select Product media to upload a video.');
+		}
 
 		if (imageFiles.length === 0 && videoFiles.length === 0) {
-			alert('Please select image or video files');
+			alert(allowVideo ? 'Please select image or video files' : 'Please select image files');
 			return;
 		}
 
@@ -76,6 +92,9 @@ export default function MediaUpload({ skuId, onUploadComplete, apiBaseUrl, authT
 					formData.append('images', file);
 					setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
 				});
+				if (variantId) {
+					formData.append('variantId', variantId);
+				}
 
 				await axios.post(`${apiBaseUrl}/api/uploads/images/${skuId}`, formData, {
 					headers: {
@@ -149,7 +168,7 @@ export default function MediaUpload({ skuId, onUploadComplete, apiBaseUrl, authT
 					ref={fileInputRef}
 					type="file"
 					multiple
-					accept="image/*,video/*"
+					accept={allowVideo ? 'image/*,video/*' : 'image/*'}
 					onChange={handleFileSelect}
 					className="hidden"
 				/>
@@ -185,10 +204,12 @@ export default function MediaUpload({ skuId, onUploadComplete, apiBaseUrl, authT
 								Drag & drop files here
 							</p>
 							<p className="text-sm text-gray-500">
-								or click to browse
+								or click to browse for {scopeLabel} media
 							</p>
 							<p className="text-xs text-gray-400 mt-2">
-								Supports: Images (JPG, PNG, GIF, WebP) and Videos (MP4, WebM, MOV, AVI)
+								{allowVideo
+									? 'Supports: Images (JPG, PNG, GIF, WebP) and Videos (MP4, WebM, MOV, AVI)'
+									: 'Supports: Images (JPG, PNG, GIF, WebP)'}
 							</p>
 							<p className="text-xs text-gray-400">
 								Max file size: 50MB

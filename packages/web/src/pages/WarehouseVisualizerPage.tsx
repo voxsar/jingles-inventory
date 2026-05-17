@@ -23,6 +23,131 @@ const BOX_COLOURS = ['#E8A838', '#D4943F', '#F0C060', '#C68A2A', '#DCA030'];
 const FLOOR_COLOUR = '#B8D4A8';
 const GRID_COLOUR = '#8EBE7E';
 
+type WarehouseShelf = IShelf & { boxes?: IStorageBox[] };
+type WarehouseRack = IRack & { shelves?: WarehouseShelf[] };
+
+interface FloorSceneData {
+	racks: WarehouseRack[];
+	rackShelves: Record<string, IShelf[]>;
+	shelfBoxes: Record<string, IStorageBox[]>;
+	floorBoxes: IStorageBox[];
+	warnings: string[];
+}
+
+function extractList<T>(payload: any): T[] {
+	const value = payload?.data?.items ?? payload?.data ?? payload?.items ?? payload;
+	return Array.isArray(value) ? value : [];
+}
+
+function appendUnique<T extends { id: string }>(items: T[], item: T): T[] {
+	return items.some(existing => existing.id === item.id) ? items : [...items, item];
+}
+
+function groupRackShelves(racks: WarehouseRack[]) {
+	const rackShelves: Record<string, IShelf[]> = {};
+	const shelfBoxes: Record<string, IStorageBox[]> = {};
+
+	racks.forEach((rack) => {
+		const shelves = Array.isArray(rack.shelves) ? rack.shelves : [];
+		rackShelves[rack.id] = shelves;
+		shelves.forEach((shelf) => {
+			shelfBoxes[shelf.id] = Array.isArray(shelf.boxes) ? shelf.boxes : [];
+		});
+	});
+
+	return { rackShelves, shelfBoxes };
+}
+
+function mergeShelves(
+	baseRackShelves: Record<string, IShelf[]>,
+	baseShelfBoxes: Record<string, IStorageBox[]>,
+	shelves: WarehouseShelf[],
+) {
+	const nextRackShelves: Record<string, IShelf[]> = { ...baseRackShelves };
+	const nextShelfBoxes: Record<string, IStorageBox[]> = { ...baseShelfBoxes };
+
+	shelves.forEach((shelf) => {
+		if (shelf.rackId) {
+			nextRackShelves[shelf.rackId] = appendUnique(nextRackShelves[shelf.rackId] ?? [], shelf);
+		}
+		nextShelfBoxes[shelf.id] = Array.isArray(shelf.boxes) ? shelf.boxes : (nextShelfBoxes[shelf.id] ?? []);
+	});
+
+	return { rackShelves: nextRackShelves, shelfBoxes: nextShelfBoxes };
+}
+
+function mergeBoxesByLocation(
+	baseShelfBoxes: Record<string, IStorageBox[]>,
+	boxes: IStorageBox[],
+) {
+	const shelfBoxes: Record<string, IStorageBox[]> = { ...baseShelfBoxes };
+	let floorBoxes: IStorageBox[] = [];
+
+	boxes.forEach((box) => {
+		if (box.shelfId) {
+			shelfBoxes[box.shelfId] = appendUnique(shelfBoxes[box.shelfId] ?? [], box);
+		} else {
+			floorBoxes = appendUnique(floorBoxes, box);
+		}
+	});
+
+	return { shelfBoxes, floorBoxes };
+}
+
+const floorSceneRequests = new Map<string, Promise<FloorSceneData>>();
+
+function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
+	const existing = floorSceneRequests.get(floorId);
+	if (existing) return existing;
+
+	const request = (async () => {
+		const warnings: string[] = [];
+		const [racksResult, boxesResult] = await Promise.allSettled([
+			racksApi.list({ floorId }),
+			boxesApi.list({ floorId }),
+		]);
+
+		if (racksResult.status === 'rejected' && boxesResult.status === 'rejected') {
+			throw racksResult.reason;
+		}
+
+		if (racksResult.status === 'rejected') warnings.push('Racks could not be loaded for this zone.');
+		if (boxesResult.status === 'rejected') warnings.push('Boxes could not be loaded from the zone box index.');
+
+		const racks: WarehouseRack[] = racksResult.status === 'fulfilled' ? extractList<WarehouseRack>(racksResult.value.data) : [];
+		const floorBoxIndex: IStorageBox[] = boxesResult.status === 'fulfilled' ? extractList<IStorageBox>(boxesResult.value.data) : [];
+		let { rackShelves, shelfBoxes } = groupRackShelves(racks);
+
+		const racksIncludeShelves = racks.some(rack => Array.isArray(rack.shelves));
+		if (!racksIncludeShelves && racks.length > 0) {
+			try {
+				const shelvesRes = await shelvesApi.list({ floorId });
+				const shelves = extractList<WarehouseShelf>(shelvesRes.data);
+				({ rackShelves, shelfBoxes } = mergeShelves(rackShelves, shelfBoxes, shelves));
+			} catch {
+				warnings.push('Shelves could not be loaded for this zone.');
+			}
+		}
+
+		const groupedBoxes = mergeBoxesByLocation(shelfBoxes, floorBoxIndex);
+		return {
+			racks,
+			rackShelves,
+			shelfBoxes: groupedBoxes.shelfBoxes,
+			floorBoxes: groupedBoxes.floorBoxes,
+			warnings,
+		};
+	})();
+
+	floorSceneRequests.set(floorId, request);
+	request.then(() => {
+		if (floorSceneRequests.get(floorId) === request) floorSceneRequests.delete(floorId);
+	}, () => {
+		if (floorSceneRequests.get(floorId) === request) floorSceneRequests.delete(floorId);
+	});
+	return request;
+}
+
 // ── A-Frame lazy loader ─────────────────────────────────────────────────────
 let aframeLoaded = false;
 function ensureAframe(): Promise<void> {
@@ -236,6 +361,8 @@ export default function WarehouseVisualizerPage() {
 	const [rackPos, setRackPos] = useState<Record<string, { x: number; z: number; rotY: number }>>({});
 	const [selectedRack, setSelectedRack] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [floorLoading, setFloorLoading] = useState(false);
+	const [sceneError, setSceneError] = useState<string | null>(null);
 
 	// Camera state: free-fly position + look direction
 	const [camPos, setCamPos] = useState<{ x: number; y: number; z: number }>({ x: 4, y: 8, z: 7 });
@@ -303,9 +430,13 @@ export default function WarehouseVisualizerPage() {
 		setLoading(true);
 		floorsApi.list()
 			.then(res => {
-				const list: IFloor[] = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
+				const list = extractList<IFloor>(res.data);
 				setFloors(list);
 				if (list.length > 0) setSelectedFloor(list[0].id);
+			})
+			.catch(() => {
+				setFloors([]);
+				setSceneError('Storage zones could not be loaded.');
 			})
 			.finally(() => setLoading(false));
 	}, []);
@@ -313,70 +444,43 @@ export default function WarehouseVisualizerPage() {
 	// ── Load racks + floor boxes when floor changes ───────────────────────────
 	useEffect(() => {
 		if (!selectedFloor) return;
+		let cancelled = false;
 		setRacks([]);
 		setRackShelves({});
 		setShelfBoxes({});
 		setFloorBoxes([]);
 		setSelectedRack(null);
-		Promise.all([
-			racksApi.list({ floorId: selectedFloor }),
-			boxesApi.list({ floorId: selectedFloor }),
-		]).then(([racksRes, fbRes]) => {
-			const rackList: IRack[] = racksRes.data?.data?.items ?? racksRes.data?.data ?? racksRes.data ?? [];
-			const fbList: IStorageBox[] = fbRes.data?.data?.items ?? fbRes.data?.data ?? fbRes.data ?? [];
-			setRacks(rackList);
-			setFloorBoxes(fbList.filter((b: IStorageBox) => !b.shelfId));
-			// Initialise rackPos from DB values
-			const pos: Record<string, { x: number; z: number; rotY: number }> = {};
-			rackList.forEach((r, i) => {
-				pos[r.id] = {
-					x: r.posX ?? snap((i % 5) * 3),
-					z: r.posZ ?? snap(Math.floor(i / 5) * 3),
-					rotY: r.rotY ?? 0,
-				};
+		setFloorLoading(true);
+		setSceneError(null);
+
+		fetchFloorSceneData(selectedFloor)
+			.then((data) => {
+				if (cancelled) return;
+				setRacks(data.racks);
+				setRackShelves(data.rackShelves);
+				setShelfBoxes(data.shelfBoxes);
+				setFloorBoxes(data.floorBoxes);
+				setSceneError(data.warnings[0] ?? null);
+				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
+				data.racks.forEach((r, i) => {
+					pos[r.id] = {
+						x: r.posX ?? snap((i % 5) * 3),
+						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						rotY: r.rotY ?? 0,
+					};
+				});
+				setRackPos(pos);
+			})
+			.catch(() => {
+				if (cancelled) return;
+				setSceneError('Warehouse 3D data could not be loaded for this zone.');
+			})
+			.finally(() => {
+				if (!cancelled) setFloorLoading(false);
 			});
-			setRackPos(pos);
-		});
+
+		return () => { cancelled = true; };
 	}, [selectedFloor]);
-
-	// ── Load shelves for each rack ────────────────────────────────────────────
-	useEffect(() => {
-		if (racks.length === 0) return;
-		Promise.all(
-			racks.map(rack =>
-				shelvesApi.list({ rackId: rack.id })
-					.then(res => {
-						const list: IShelf[] = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-						return { rackId: rack.id, shelves: list };
-					})
-					.catch(() => ({ rackId: rack.id, shelves: [] as IShelf[] }))
-			)
-		).then(results => {
-			const next: Record<string, IShelf[]> = {};
-			results.forEach(r => { next[r.rackId] = r.shelves; });
-			setRackShelves(next);
-		});
-	}, [racks]);
-
-	// ── Load boxes for each shelf ─────────────────────────────────────────────
-	useEffect(() => {
-		const allShelves = Object.values(rackShelves).flat();
-		if (allShelves.length === 0) return;
-		Promise.all(
-			allShelves.map(s =>
-				boxesApi.list({ shelfId: s.id })
-					.then(res => {
-						const list: IStorageBox[] = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-						return { shelfId: s.id, boxes: list };
-					})
-					.catch(() => ({ shelfId: s.id, boxes: [] as IStorageBox[] }))
-			)
-		).then(results => {
-			const next: Record<string, IStorageBox[]> = {};
-			results.forEach(r => { next[r.shelfId] = r.boxes; });
-			setShelfBoxes(next);
-		});
-	}, [rackShelves]);
 
 	// ── Keyboard handler ──────────────────────────────────────────────────────
 	useEffect(() => {
@@ -723,27 +827,42 @@ export default function WarehouseVisualizerPage() {
 	const loadOverview = useCallback(async () => {
 		if (floors.length === 0) return;
 		setOverviewLoading(true);
+		setSceneError(null);
 		try {
-			const results = await Promise.all(
-				floors.map(async (floor) => {
-					const racksRes = await racksApi.list({ floorId: floor.id });
-					const rackList: IRack[] = racksRes.data?.data?.items ?? racksRes.data?.data ?? racksRes.data ?? [];
-					const pos: Record<string, { x: number; z: number; rotY: number }> = {};
-					rackList.forEach((r, i) => {
-						pos[r.id] = {
-							x: r.posX ?? snap((i % 5) * 3),
-							z: r.posZ ?? snap(Math.floor(i / 5) * 3),
-							rotY: r.rotY ?? 0,
-						};
-					});
-					return { floor, racks: rackList, rackPos: pos };
-				})
-			);
+			const racksRes = await racksApi.list();
+			const allRacks = extractList<WarehouseRack>(racksRes.data);
+			const results = floors.map((floor) => {
+				const rackList = allRacks.filter(rack => rack.floorId === floor.id);
+				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
+				rackList.forEach((r, i) => {
+					pos[r.id] = {
+						x: r.posX ?? snap((i % 5) * 3),
+						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						rotY: r.rotY ?? 0,
+					};
+				});
+				return { floor, racks: rackList, rackPos: pos };
+			});
 			setOverviewData(results);
+		} catch {
+			setSceneError('All-floor overview could not be loaded.');
+			const fallback = floors.map((floor) => {
+				const rackList = floor.id === selectedFloor ? racks : [];
+				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
+				rackList.forEach((r, i) => {
+					pos[r.id] = {
+						x: r.posX ?? snap((i % 5) * 3),
+						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						rotY: r.rotY ?? 0,
+					};
+				});
+				return { floor, racks: rackList, rackPos: pos };
+			});
+			setOverviewData(fallback);
 		} finally {
 			setOverviewLoading(false);
 		}
-	}, [floors]);
+	}, [floors, racks, selectedFloor]);
 
 	// ── Switch to overview mode ───────────────────────────────────────────────
 	const enterOverview = useCallback(() => {
@@ -887,6 +1006,12 @@ export default function WarehouseVisualizerPage() {
 				className="flex-1 relative select-none"
 				style={{ minHeight: 0, cursor: 'grab' }}
 			>
+				{(floorLoading || sceneError) && (
+					<div className="absolute left-3 top-3 z-10 rounded bg-gray-950/85 px-3 py-2 text-xs text-gray-100 shadow">
+						{floorLoading ? 'Loading zone layout…' : sceneError}
+					</div>
+				)}
+
 				{aframeReady && (
 					<a-scene
 						ref={sceneRef as any}

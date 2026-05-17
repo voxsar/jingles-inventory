@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
+import DesktopStatusBanner from './DesktopStatusBanner';
 
 const navItems = [
   { to: '/dashboard', label: '📊 Dashboard' },
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/stock-transfers', label: '🔄 Stock Transfers' },
   { to: '/suppliers', label: '🤝 Suppliers' },
   { to: '/users', label: '👥 Users', roles: ['Admin', 'Manager'] },
+  { to: '/imports', label: '📥 AI Imports', roles: ['Admin', 'Manager', 'Staff'] },
   { to: '/spreadsheet', label: '📊 Spreadsheet Interface' },
   { to: '/reports', label: '📈 Reports' },
   { to: '/settings', label: '⚙️ Settings' },
@@ -101,6 +103,8 @@ export default function Layout() {
           <h1 className="text-lg font-semibold text-gray-800">{branding.appHeaderTitle}</h1>
         </header>
 
+        <DesktopStatusBanner />
+
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
@@ -109,4 +113,3 @@ export default function Layout() {
     </div>
   );
 }
-

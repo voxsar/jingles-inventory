@@ -42,11 +42,34 @@ const router = Router();
 
 router.use(authenticate);
 
+const getOptionalVariantId = (value: unknown) => {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim();
+	return trimmed.length > 0 ? trimmed : null;
+};
+
+const cleanupFiles = (files: Express.Multer.File[] | undefined) => {
+	files?.forEach(file => {
+		if (fs.existsSync(file.path)) {
+			fs.unlinkSync(file.path);
+		}
+	});
+};
+
+const variantBelongsToSku = async (skuId: string, variantId: string) => {
+	const variant = await prisma.sKUVariant.findFirst({
+		where: { id: variantId, skuId },
+		select: { id: true },
+	});
+	return Boolean(variant);
+};
+
 // Upload image(s) for a SKU
 router.post('/images/:skuId', upload.array('images', 10), async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
 		const { skuId } = req.params;
 		const files = req.files as Express.Multer.File[];
+		const variantId = getOptionalVariantId(req.body?.variantId ?? req.query.variantId);
 
 		if (!files || files.length === 0) {
 			res.status(400).json({ success: false, error: 'No files uploaded' });
@@ -57,14 +80,20 @@ router.post('/images/:skuId', upload.array('images', 10), async (req: AuthReques
 		const sku = await prisma.sKU.findUnique({ where: { id: skuId } });
 		if (!sku) {
 			// Clean up uploaded files
-			files.forEach(file => fs.unlinkSync(file.path));
+			cleanupFiles(files);
 			res.status(404).json({ success: false, error: 'SKU not found' });
+			return;
+		}
+
+		if (variantId && !(await variantBelongsToSku(skuId, variantId))) {
+			cleanupFiles(files);
+			res.status(400).json({ success: false, error: 'Variant does not belong to this SKU' });
 			return;
 		}
 
 		// Get current max sortOrder
 		const maxSort = await prisma.productImage.findFirst({
-			where: { skuId },
+			where: { skuId, variantId },
 			orderBy: { sortOrder: 'desc' },
 			select: { sortOrder: true },
 		});
@@ -73,7 +102,7 @@ router.post('/images/:skuId', upload.array('images', 10), async (req: AuthReques
 
 		// Check if SKU already has a primary image
 		const hasPrimary = await prisma.productImage.findFirst({
-			where: { skuId, isPrimary: true },
+			where: { skuId, variantId, isPrimary: true },
 		});
 
 		// Create image records
@@ -85,6 +114,7 @@ router.post('/images/:skuId', upload.array('images', 10), async (req: AuthReques
 				return prisma.productImage.create({
 					data: {
 						skuId,
+						variantId,
 						url,
 						altText: file.originalname,
 						isPrimary,
@@ -94,20 +124,13 @@ router.post('/images/:skuId', upload.array('images', 10), async (req: AuthReques
 			})
 		);
 
-		logger.info(`Uploaded ${images.length} images for SKU ${skuId} by user ${req.user?.id}`);
+		logger.info(`Uploaded ${images.length} images for SKU ${skuId}${variantId ? ` variant ${variantId}` : ''} by user ${req.user?.id}`);
 		res.json({ success: true, data: images });
 	} catch (error: any) {
 		logger.error('Image upload failed:', error);
 
 		// Clean up files on error
-		const files = req.files as Express.Multer.File[];
-		if (files) {
-			files.forEach(file => {
-				if (fs.existsSync(file.path)) {
-					fs.unlinkSync(file.path);
-				}
-			});
-		}
+		cleanupFiles(req.files as Express.Multer.File[] | undefined);
 
 		if (error.message?.includes('Only image')) {
 			res.status(400).json({ success: false, error: error.message });
@@ -124,7 +147,7 @@ router.put('/images/:imageId/primary', async (req: AuthRequest, res: Response): 
 
 		const image = await prisma.productImage.findUnique({
 			where: { id: imageId },
-			select: { skuId: true },
+			select: { skuId: true, variantId: true },
 		});
 
 		if (!image) {
@@ -135,7 +158,7 @@ router.put('/images/:imageId/primary', async (req: AuthRequest, res: Response): 
 		// Transaction to unset all primary flags and set new one
 		await prisma.$transaction([
 			prisma.productImage.updateMany({
-				where: { skuId: image.skuId },
+				where: { skuId: image.skuId, variantId: image.variantId },
 				data: { isPrimary: false },
 			}),
 			prisma.productImage.update({
@@ -180,7 +203,7 @@ router.delete('/images/:imageId', async (req: AuthRequest, res: Response): Promi
 		// If this was primary, make the first remaining image primary
 		if (image.isPrimary) {
 			const firstImage = await prisma.productImage.findFirst({
-				where: { skuId: image.skuId },
+				where: { skuId: image.skuId, variantId: image.variantId },
 				orderBy: { sortOrder: 'asc' },
 			});
 
@@ -207,6 +230,33 @@ router.put('/images/reorder', async (req: AuthRequest, res: Response): Promise<v
 
 		if (!Array.isArray(imageIds)) {
 			res.status(400).json({ success: false, error: 'imageIds must be an array' });
+			return;
+		}
+
+		if (imageIds.length === 0) {
+			res.json({ success: true });
+			return;
+		}
+
+		if (new Set(imageIds).size !== imageIds.length) {
+			res.status(400).json({ success: false, error: 'imageIds must be unique' });
+			return;
+		}
+
+		const existingImages = await prisma.productImage.findMany({
+			where: { id: { in: imageIds } },
+			select: { id: true, skuId: true, variantId: true },
+		});
+
+		if (existingImages.length !== imageIds.length) {
+			res.status(404).json({ success: false, error: 'One or more images were not found' });
+			return;
+		}
+
+		const [scope] = existingImages;
+		const hasMixedScope = existingImages.some(image => image.skuId !== scope.skuId || image.variantId !== scope.variantId);
+		if (hasMixedScope) {
+			res.status(400).json({ success: false, error: 'Images can only be reordered within the same product or variant gallery' });
 			return;
 		}
 

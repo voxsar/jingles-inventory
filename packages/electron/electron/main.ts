@@ -18,7 +18,7 @@ function createWindow() {
     show: false,
   });
 
-  // Load the web app
+  // Load the shared web frontend for both browser and desktop builds.
   if (!app.isPackaged) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi, batchesApi } from '../api/client';
+import { skusApi, vendorsApi, categoriesApi, settingsApi, inventoryApi, attributesApi, variantsApi, batchesApi, floorsApi, shelvesApi, boxesApi, grnsApi } from '../api/client';
 import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -10,9 +10,13 @@ import { branding } from '../config/branding';
 import SearchableSelect from '../components/SearchableSelect';
 import MultiSearchableSelect from '../components/MultiSearchableSelect';
 import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
+import { formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
 
 const PAGE_SIZE = 20;
 const defaultTransitionForm = { toState: '', reason: '' };
+const defaultInventoryAssignmentForm = { variantId: '', floorId: '', shelfId: '', boxId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultQuickInventoryForm = { variantId: '', floorId: '', shelfId: '', boxId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
+const defaultQuickGrnForm = { supplierId: '', variantId: '', floorId: '', shelfId: '', quantity: '1', invoiceReference: '', expectedDeliveryDate: new Date().toISOString().split('T')[0], createNewBatch: true, batchId: '', costPrice: '', sellingPrice: '' };
 
 const defaultForm = {
 	skuCode: '',
@@ -38,10 +42,12 @@ const defaultForm = {
 	shelfLifeDays: '',
 };
 
-type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'images' | 'pricing';
+type ModalTab = 'details' | 'tags' | 'barcodes' | 'locations' | 'variants' | 'duplicates' | 'images' | 'pricing';
+type PageTab = 'products' | 'duplicates';
 
 export default function SKUPage() {
 	const [skus, setSkus] = useState<any[]>([]);
+	const [pageTab, setPageTab] = useState<PageTab>('products');
 	const [total, setTotal] = useState(0);
 	const [totalPages, setTotalPages] = useState(1);
 	const [vendors, setVendors] = useState<any[]>([]);
@@ -72,6 +78,13 @@ export default function SKUPage() {
 	const [newBarcode, setNewBarcode] = useState({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '' });
 	const [inventoryLocations, setInventoryLocations] = useState<any[]>([]);
 	const [locationsLoading, setLocationsLoading] = useState(false);
+	const [isAssigningInventory, setIsAssigningInventory] = useState(false);
+	const [assignmentForm, setAssignmentForm] = useState(defaultInventoryAssignmentForm);
+	const [assignmentFloors, setAssignmentFloors] = useState<any[]>([]);
+	const [assignmentShelves, setAssignmentShelves] = useState<any[]>([]);
+	const [assignmentBoxes, setAssignmentBoxes] = useState<any[]>([]);
+	const [assignmentVariants, setAssignmentVariants] = useState<any[]>([]);
+	const [assignmentBatches, setAssignmentBatches] = useState<any[]>([]);
 	const [transitioningInv, setTransitioningInv] = useState<string | null>(null);
 	const [transitionRecord, setTransitionRecord] = useState<any>(null);
 	const [transitionForm, setTransitionForm] = useState(defaultTransitionForm);
@@ -83,10 +96,16 @@ export default function SKUPage() {
 	const [variantsLoading, setVariantsLoading] = useState(false);
 	const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string[]>>({});
 
+	// Duplicates tab state
+	const [duplicateCandidates, setDuplicateCandidates] = useState<any[]>([]);
+	const [duplicatesLoading, setDuplicatesLoading] = useState(false);
+	const [duplicateActionId, setDuplicateActionId] = useState<string | null>(null);
+
 	// Images tab state
 	const [skuImages, setSkuImages] = useState<any[]>([]);
 	const [skuVideoUrl, setSkuVideoUrl] = useState<string | null>(null);
 	const [imagesLoading, setImagesLoading] = useState(false);
+	const [selectedImageVariantId, setSelectedImageVariantId] = useState('');
 
 	// Pricing tab state
 	const [batchPrices, setBatchPrices] = useState<any[]>([]);
@@ -101,6 +120,23 @@ export default function SKUPage() {
 	const [variantsBySkuId, setVariantsBySkuId] = useState<Record<string, any[]>>({});
 	const [variantsLoadingIds, setVariantsLoadingIds] = useState<Set<string>>(new Set());
 	const fetchingSkuIds = useRef<Set<string>>(new Set());
+
+	// Page-level duplicates
+	const [duplicateGroups, setDuplicateGroups] = useState<any[]>([]);
+	const [duplicateGroupsLoading, setDuplicateGroupsLoading] = useState(false);
+	const [duplicateGroupsLoaded, setDuplicateGroupsLoaded] = useState(false);
+
+	// Quick stock / GRN actions
+	const [quickInventorySku, setQuickInventorySku] = useState<any>(null);
+	const [quickInventoryForm, setQuickInventoryForm] = useState(defaultQuickInventoryForm);
+	const [quickGrnSku, setQuickGrnSku] = useState<any>(null);
+	const [quickGrnForm, setQuickGrnForm] = useState(defaultQuickGrnForm);
+	const [quickFloors, setQuickFloors] = useState<any[]>([]);
+	const [quickShelves, setQuickShelves] = useState<any[]>([]);
+	const [quickBoxes, setQuickBoxes] = useState<any[]>([]);
+	const [quickVariants, setQuickVariants] = useState<any[]>([]);
+	const [quickBatches, setQuickBatches] = useState<any[]>([]);
+	const [quickSaving, setQuickSaving] = useState(false);
 
 	const load = async () => {
 		setIsLoading(true);
@@ -133,6 +169,24 @@ export default function SKUPage() {
 	};
 
 	useEffect(() => { load(); }, [page, pageSize, debouncedSearch, categoryFilter, vendorFilter, unitFilter, activeFilter]);
+
+	const loadDuplicateGroups = async () => {
+		setDuplicateGroupsLoading(true);
+		try {
+			const res = await skusApi.getDuplicateGroups({ minScore: '72', limit: '1000' });
+			setDuplicateGroups(res.data?.data?.items ?? []);
+			setDuplicateGroupsLoaded(true);
+		} catch {
+			setDuplicateGroups([]);
+			setDuplicateGroupsLoaded(true);
+		} finally {
+			setDuplicateGroupsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		if (pageTab === 'duplicates' && !duplicateGroupsLoaded) loadDuplicateGroups();
+	}, [pageTab, duplicateGroupsLoaded]);
 
 	const toggleSkuExpand = async (skuId: string, variantCount: number) => {
 		if (variantCount === 0) return;
@@ -211,8 +265,17 @@ export default function SKUPage() {
 		setSaveSuccess(false);
 		setBarcodes([]);
 		setInventoryLocations([]);
+		setAssignmentForm(defaultInventoryAssignmentForm);
+		setAssignmentShelves([]);
+		setAssignmentBoxes([]);
+		setAssignmentBatches([]);
+		setAssignmentVariants([]);
+		setDuplicateCandidates([]);
+		setDuplicateActionId(null);
+		setSkuVariants(sku.variants ?? []);
 		setSkuImages((sku.images ?? []).slice().sort((a: any, b: any) => a.sortOrder - b.sortOrder));
 		setSkuVideoUrl(sku.videoUrl ?? null);
+		setSelectedImageVariantId('');
 	};
 
 	const openCreateForm = async () => {
@@ -400,14 +463,272 @@ export default function SKUPage() {
 		await loadBarcodes();
 	};
 
+	const responseItems = (payload: any) => {
+		const data = payload?.data?.data?.items ?? payload?.data?.data ?? payload?.data ?? [];
+		return Array.isArray(data) ? data : [];
+	};
+
+	const getSkuVendorIds = (sku: any) =>
+		sku?.skuVendors?.map((sv: any) => sv.vendorId ?? sv.vendor?.id).filter(Boolean)
+		?? (sku?.vendorId ? [sku.vendorId] : []);
+
+	const fetchQuickShelves = async (floorId: string) => {
+		if (!floorId) {
+			setQuickShelves([]);
+			return;
+		}
+		try {
+			const res = await shelvesApi.list({ floorId });
+			setQuickShelves(responseItems(res));
+		} catch {
+			setQuickShelves([]);
+		}
+	};
+
+	const fetchQuickBoxes = async (params: { shelfId?: string; floorId?: string }) => {
+		if (!params.shelfId && !params.floorId) {
+			setQuickBoxes([]);
+			return;
+		}
+		try {
+			const res = await boxesApi.list(params as Record<string, string>);
+			setQuickBoxes(responseItems(res));
+		} catch {
+			setQuickBoxes([]);
+		}
+	};
+
+	const fetchQuickBatches = async (skuId: string, variantId = '') => {
+		if (!skuId) {
+			setQuickBatches([]);
+			return;
+		}
+		try {
+			const params: Record<string, string> = { skuId, isActive: 'true' };
+			if (variantId) params.variantId = variantId;
+			const res = await batchesApi.list(params);
+			setQuickBatches(responseItems(res));
+		} catch {
+			setQuickBatches([]);
+		}
+	};
+
+	const loadQuickOptions = async (sku: any) => {
+		const [floorRes, variantRes, batchRes] = await Promise.all([
+			floorsApi.list(),
+			variantsApi.list(sku.id),
+			batchesApi.list({ skuId: sku.id, isActive: 'true' }),
+		]);
+		setQuickFloors(responseItems(floorRes));
+		setQuickVariants(variantRes.data?.data ?? []);
+		setQuickBatches(responseItems(batchRes));
+		setQuickShelves([]);
+		setQuickBoxes([]);
+	};
+
+	const openQuickInventory = async (sku: any) => {
+		setQuickInventorySku(sku);
+		setQuickInventoryForm(defaultQuickInventoryForm);
+		try {
+			await loadQuickOptions(sku);
+		} catch {
+			setQuickFloors([]);
+			setQuickVariants([]);
+			setQuickBatches([]);
+		}
+	};
+
+	const openQuickGrn = async (sku: any) => {
+		const vendorIds = getSkuVendorIds(sku);
+		setQuickGrnSku(sku);
+		setQuickGrnForm({
+			...defaultQuickGrnForm,
+			supplierId: vendorIds[0] ?? '',
+			expectedDeliveryDate: new Date().toISOString().split('T')[0],
+		});
+		try {
+			await loadQuickOptions(sku);
+		} catch {
+			setQuickFloors([]);
+			setQuickVariants([]);
+			setQuickBatches([]);
+		}
+	};
+
+	const closeQuickInventory = () => {
+		setQuickInventorySku(null);
+		setQuickInventoryForm(defaultQuickInventoryForm);
+		setQuickShelves([]);
+		setQuickBoxes([]);
+		setQuickBatches([]);
+	};
+
+	const closeQuickGrn = () => {
+		setQuickGrnSku(null);
+		setQuickGrnForm(defaultQuickGrnForm);
+		setQuickShelves([]);
+		setQuickBoxes([]);
+		setQuickBatches([]);
+	};
+
+	const handleQuickInventorySubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!quickInventorySku) return;
+		const quantity = parsePositiveQuantity(quickInventoryForm.quantity);
+		if (quantity === undefined) { alert('Quantity must be greater than 0.'); return; }
+		if (!quickInventoryForm.floorId) { alert('Select a floor before adding inventory.'); return; }
+		setQuickSaving(true);
+		try {
+			await inventoryApi.create({
+				skuId: quickInventorySku.id,
+				variantId: quickInventoryForm.variantId || undefined,
+				floorId: quickInventoryForm.floorId || undefined,
+				shelfId: quickInventoryForm.shelfId || undefined,
+				boxId: quickInventoryForm.boxId || undefined,
+				quantity,
+				state: quickInventoryForm.state,
+				batchId: quickInventoryForm.batchId || undefined,
+			});
+			closeQuickInventory();
+			await load();
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to add inventory');
+		} finally {
+			setQuickSaving(false);
+		}
+	};
+
+	const handleQuickGrnSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!quickGrnSku) return;
+		const quantity = parseInt(quickGrnForm.quantity);
+		if (!quickGrnForm.supplierId) { alert('Select a supplier.'); return; }
+		if (Number.isNaN(quantity) || quantity < 1) { alert('Quantity must be at least 1.'); return; }
+		setQuickSaving(true);
+		try {
+			await grnsApi.create({
+				supplierId: quickGrnForm.supplierId,
+				floorId: quickGrnForm.floorId || undefined,
+				shelfId: quickGrnForm.shelfId || undefined,
+				invoiceReference: quickGrnForm.invoiceReference || undefined,
+				expectedDeliveryDate: quickGrnForm.expectedDeliveryDate || undefined,
+				lines: [{
+					skuId: quickGrnSku.id,
+					variantId: quickGrnForm.variantId || undefined,
+					expectedQuantity: quantity,
+					batchId: quickGrnForm.createNewBatch ? undefined : (quickGrnForm.batchId || undefined),
+					createNewBatch: quickGrnForm.createNewBatch,
+					costPrice: quickGrnForm.costPrice ? parseFloat(quickGrnForm.costPrice) : undefined,
+					sellingPrice: quickGrnForm.sellingPrice ? parseFloat(quickGrnForm.sellingPrice) : undefined,
+				}],
+			});
+			closeQuickGrn();
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to create GRN');
+		} finally {
+			setQuickSaving(false);
+		}
+	};
+
+	const fetchAssignmentShelves = async (floorId: string) => {
+		if (!floorId) {
+			setAssignmentShelves([]);
+			return;
+		}
+		try {
+			const res = await shelvesApi.list({ floorId });
+			setAssignmentShelves(responseItems(res));
+		} catch {
+			setAssignmentShelves([]);
+		}
+	};
+
+	const fetchAssignmentBoxes = async (params: { shelfId?: string; floorId?: string }) => {
+		if (!params.shelfId && !params.floorId) {
+			setAssignmentBoxes([]);
+			return;
+		}
+		try {
+			const res = await boxesApi.list(params as Record<string, string>);
+			setAssignmentBoxes(responseItems(res));
+		} catch {
+			setAssignmentBoxes([]);
+		}
+	};
+
+	const fetchAssignmentBatches = async (variantId = assignmentForm.variantId) => {
+		if (!editingSku) return;
+		try {
+			const params: Record<string, string> = { skuId: editingSku.id, isActive: 'true' };
+			if (variantId) params.variantId = variantId;
+			const res = await batchesApi.list(params);
+			setAssignmentBatches(responseItems(res));
+		} catch {
+			setAssignmentBatches([]);
+		}
+	};
+
 	const loadLocations = async () => {
 		if (!editingSku) return;
 		setLocationsLoading(true);
 		try {
-			const res = await skusApi.getInventoryLocations(editingSku.id);
-			setInventoryLocations(res.data?.data?.items ?? []);
+			const [inventoryRes, floorRes, variantRes, batchRes] = await Promise.all([
+				skusApi.getInventoryLocations(editingSku.id),
+				floorsApi.list(),
+				variantsApi.list(editingSku.id),
+				batchesApi.list({ skuId: editingSku.id, isActive: 'true' }),
+			]);
+			setInventoryLocations(inventoryRes.data?.data?.items ?? []);
+			setAssignmentFloors(responseItems(floorRes));
+			setAssignmentVariants(variantRes.data?.data ?? []);
+			setAssignmentBatches(responseItems(batchRes));
 		} catch { setInventoryLocations([]); }
 		finally { setLocationsLoading(false); }
+	};
+
+	const handleAssignInventory = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!editingSku) return;
+		const quantity = parsePositiveQuantity(assignmentForm.quantity);
+		if (!assignmentForm.floorId) { alert('Select a floor before assigning inventory.'); return; }
+		if (quantity === undefined) { alert('Quantity must be greater than 0.'); return; }
+		setIsAssigningInventory(true);
+		try {
+			await inventoryApi.create({
+				skuId: editingSku.id,
+				variantId: assignmentForm.variantId || undefined,
+				floorId: assignmentForm.floorId || undefined,
+				shelfId: assignmentForm.shelfId || undefined,
+				boxId: assignmentForm.boxId || undefined,
+				quantity,
+				state: assignmentForm.state,
+				batchId: assignmentForm.batchId || undefined,
+			});
+			setAssignmentForm((current) => ({
+				...defaultInventoryAssignmentForm,
+				variantId: current.variantId,
+				floorId: current.floorId,
+				shelfId: current.shelfId,
+				boxId: current.boxId,
+				state: current.state,
+			}));
+			await loadLocations();
+			await load();
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to assign inventory');
+		} finally {
+			setIsAssigningInventory(false);
+		}
+	};
+
+	const formatInventoryLocation = (record: any) => {
+		const parts: string[] = [];
+		if (record.floor) {
+			parts.push(record.floor.branch?.name ? `${record.floor.branch.name} › ${record.floor.name}` : `${record.floor.name} (${record.floor.code})`);
+		}
+		if (record.shelf) parts.push(`${record.shelf.name} (${record.shelf.code})`);
+		if (record.box) parts.push(`${record.box.name} (${record.box.code})`);
+		return parts.length > 0 ? parts.join(' › ') : 'No Location';
 	};
 
 	const loadVariants = async () => {
@@ -459,11 +780,99 @@ export default function SKUPage() {
 		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to delete variant'); }
 	};
 
-	const loadImages = async () => {
+	const refreshEditingSku = async () => {
+		if (!editingSku) return;
+		try {
+			const skuRes = await skusApi.get(editingSku.id);
+			setEditingSku(skuRes.data?.data ?? editingSku);
+		} catch {
+			// Keep the current modal state if the refresh fails.
+		}
+	};
+
+	const loadDuplicates = async () => {
+		if (!editingSku) return;
+		setDuplicatesLoading(true);
+		try {
+			const res = await skusApi.getDuplicates(editingSku.id);
+			setDuplicateCandidates(res.data?.data?.items ?? []);
+		} catch {
+			setDuplicateCandidates([]);
+		} finally {
+			setDuplicatesLoading(false);
+		}
+	};
+
+	const handleMergeDuplicate = async (candidate: any) => {
+		if (!editingSku) return;
+		await handleMergeDuplicateFor(editingSku, candidate);
+	};
+
+	const handleVariantizeDuplicate = async (candidate: any) => {
+		if (!editingSku) return;
+		await handleVariantizeDuplicateFor(editingSku, candidate);
+	};
+
+	const handleMergeDuplicateFor = async (targetSku: any, candidate: any) => {
+		if (!confirm(`Merge "${candidate.sku.name}" into "${targetSku.name}"? Inventory, batches, barcodes, images, tags, and history lines will move to the target product.`)) return;
+		setDuplicateActionId(candidate.sku.id);
+		try {
+			const res = await skusApi.mergeDuplicate(targetSku.id, candidate.sku.id);
+			const data = res.data?.data;
+			alert(`Merged ${data?.mergedSkuCode ?? candidate.sku.skuCode}. Moved ${data?.movedInventoryRecords ?? 0} inventory record(s), ${data?.movedBatches ?? 0} batch(es), and ${data?.movedVariants ?? 0} variant(s).`);
+			setExpandedSkuIds(new Set());
+			setVariantsBySkuId({});
+			await Promise.all([
+				load(),
+				editingSku?.id === targetSku.id ? loadDuplicates() : Promise.resolve(),
+				editingSku?.id === targetSku.id ? refreshEditingSku() : Promise.resolve(),
+				loadDuplicateGroups(),
+			]);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to merge duplicate');
+		} finally {
+			setDuplicateActionId(null);
+		}
+	};
+
+	const handleVariantizeDuplicateFor = async (targetSku: any, candidate: any) => {
+		if (!confirm(`Convert "${candidate.sku.name}" into a variant of "${targetSku.name}"? Its inventory and batches will move to the new variant.`)) return;
+		setDuplicateActionId(candidate.sku.id);
+		try {
+			const res = await skusApi.variantizeDuplicate(targetSku.id, candidate.sku.id);
+			const data = res.data?.data;
+			alert(`Created variant ${data?.variantCode ?? candidate.sku.skuCode}. Moved ${data?.movedInventoryRecords ?? 0} inventory record(s) and ${data?.movedBatches ?? 0} batch(es).`);
+			setExpandedSkuIds(new Set());
+			setVariantsBySkuId({});
+			await Promise.all([
+				load(),
+				editingSku?.id === targetSku.id ? loadDuplicates() : Promise.resolve(),
+				editingSku?.id === targetSku.id ? loadVariants() : Promise.resolve(),
+				editingSku?.id === targetSku.id ? refreshEditingSku() : Promise.resolve(),
+				loadDuplicateGroups(),
+			]);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to variantize product');
+		} finally {
+			setDuplicateActionId(null);
+		}
+	};
+
+	const loadImageVariants = async () => {
+		if (!editingSku) return;
+		try {
+			const res = await variantsApi.list(editingSku.id);
+			setSkuVariants(res.data?.data ?? []);
+		} catch {
+			setSkuVariants([]);
+		}
+	};
+
+	const loadImages = async (variantId = selectedImageVariantId) => {
 		if (!editingSku) return;
 		setImagesLoading(true);
 		try {
-			const res = await skusApi.getImages(editingSku.id);
+			const res = await skusApi.getImages(editingSku.id, variantId || null);
 			setSkuImages(res.data?.data ?? []);
 			// Also refresh video URL from latest SKU data
 			const skuRes = await skusApi.get(editingSku.id);
@@ -557,7 +966,11 @@ export default function SKUPage() {
 		if (tab === 'barcodes') loadBarcodes();
 		if (tab === 'locations') loadLocations();
 		if (tab === 'variants') loadVariants();
-		if (tab === 'images') loadImages();
+		if (tab === 'duplicates') loadDuplicates();
+		if (tab === 'images') {
+			loadImageVariants();
+			loadImages(selectedImageVariantId);
+		}
 		if (tab === 'pricing') loadPricing();
 	};
 
@@ -587,6 +1000,10 @@ export default function SKUPage() {
 
 	const getTagName = (id: string) => allTags.find((t: any) => t.id === id)?.name ?? id;
 	const authToken = localStorage.getItem(branding.tokenStorageKey) ?? '';
+	const selectedImageVariant = skuVariants.find((variant: any) => variant.id === selectedImageVariantId);
+	const imageScopeLabel = selectedImageVariant
+		? `variant ${selectedImageVariant.name ?? selectedImageVariant.variantCode}`
+		: 'product';
 
 	const skuTableHeaders = ['', 'SKU Code', 'Product Name', 'Category', 'Vendor', 'UoM', 'Tags', 'Low Stock', 'Fragile', 'Status', ''];
 
@@ -601,9 +1018,28 @@ export default function SKUPage() {
 				<button className="btn-primary" onClick={openCreateForm}>+ New Product</button>
 			</div>
 
-			<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-				🖼️ Creating a product now flows straight into the full editor, so you can upload images and video immediately after the first save.
+			<div className="flex gap-2 border-b border-gray-200">
+				<button
+					type="button"
+					onClick={() => setPageTab('products')}
+					className={`px-4 py-2 text-sm font-medium border-b-2 ${pageTab === 'products' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+				>
+					Products
+				</button>
+				<button
+					type="button"
+					onClick={() => setPageTab('duplicates')}
+					className={`px-4 py-2 text-sm font-medium border-b-2 ${pageTab === 'duplicates' ? 'border-primary-600 text-primary-700' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+				>
+					Duplicates
+				</button>
 			</div>
+
+			{pageTab === 'products' && (
+				<>
+					<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+						🖼️ Creating a product now flows straight into the full editor, so you can upload images and video immediately after the first save.
+					</div>
 			{/* Table section */}
 			<div className="content-section">
 				{/* Filter bar */}
@@ -737,7 +1173,13 @@ export default function SKUPage() {
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <s-badge tone="warning">⚠️ Fragile</s-badge> : <s-text>No</s-text>}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge>}</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><s-button onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</s-button></td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+													<div className="flex gap-1">
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickGrn(sku); }}>Create GRN</button>
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</button>
+													</div>
+												</td>
 											</tr>
 											{isExpanded && (
 												isLoadingVariants ? (
@@ -776,6 +1218,346 @@ export default function SKUPage() {
 				</div>
 				<Pagination page={page} totalPages={totalPages} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
 			</div>
+				</>
+			)}
+
+			{pageTab === 'duplicates' && (
+				<div className="content-section">
+					<div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+						<div>
+							<p className="text-sm font-semibold text-gray-700">Duplicate and variant candidates</p>
+							<p className="text-xs text-gray-500 mt-1">Review imported products that look like duplicates or standalone variants, then merge or variantize them into the chosen target product.</p>
+						</div>
+						<button className="btn-secondary text-sm" onClick={loadDuplicateGroups} disabled={duplicateGroupsLoading}>
+							{duplicateGroupsLoading ? 'Scanning…' : 'Rescan'}
+						</button>
+					</div>
+					{duplicateGroupsLoading ? (
+						<p className="px-4 py-8 text-sm text-gray-400">Scanning products…</p>
+					) : duplicateGroups.length === 0 ? (
+						<div className="text-center py-10">
+							<div className="text-4xl mb-2">🔎</div>
+							<p className="text-sm text-gray-400">No likely duplicate groups found.</p>
+						</div>
+					) : (
+						<div className="flex flex-col divide-y divide-gray-100">
+							{duplicateGroups.map((group: any) => {
+								const target = group.target;
+								const vendorNames = target.skuVendors?.length > 0
+									? target.skuVendors.map((sv: any) => sv.vendor?.name).filter(Boolean).join(', ')
+									: target.vendor?.name;
+								return (
+									<div key={target.id} className="p-4">
+										<div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+											<div>
+												<div className="flex items-center gap-2">
+													<span className="font-semibold text-gray-800">{target.name}</span>
+													<span className="font-mono text-xs text-gray-500">{target.skuCode}</span>
+												</div>
+												<div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
+													<span>{target.category?.name ?? 'No category'}</span>
+													{vendorNames && <span>{vendorNames}</span>}
+													<span>{target._count?.inventoryRecords ?? 0} inventory</span>
+													<span>{target._count?.variants ?? 0} variants</span>
+												</div>
+											</div>
+											<button className="btn-sm text-xs" onClick={() => openEdit(target)}>Open Target</button>
+										</div>
+										<table className="w-full text-sm border-collapse">
+											<thead>
+												<tr className="bg-gray-50">
+													{['Candidate', 'Match', 'Counts', 'Variant Values', 'Actions'].map((header) => (
+														<th key={header} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{header}</th>
+													))}
+												</tr>
+											</thead>
+											<tbody>
+												{group.items.map((candidate: any) => {
+													const sku = candidate.sku;
+													const candidateVendorNames = sku.skuVendors?.length > 0
+														? sku.skuVendors.map((sv: any) => sv.vendor?.name).filter(Boolean).join(', ')
+														: sku.vendor?.name;
+													const isWorking = duplicateActionId === sku.id;
+													return (
+														<tr key={sku.id} className="border-b border-gray-100 last:border-0 align-top">
+															<td className="px-3 py-3">
+																<div className="font-medium text-gray-800">{sku.name}</div>
+																<div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
+																	<span className="font-mono">{sku.skuCode}</span>
+																	<span>{sku.category?.name ?? 'No category'}</span>
+																	{candidateVendorNames && <span>{candidateVendorNames}</span>}
+																</div>
+															</td>
+															<td className="px-3 py-3">
+																<span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${candidate.relationship === 'variant' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'}`}>
+																	{candidate.relationship === 'variant' ? 'Variant' : 'Duplicate'}
+																</span>
+																<div className="text-xs text-gray-500 mt-1">{candidate.score}% match</div>
+																<div className="text-xs text-gray-400">{candidate.reason}</div>
+															</td>
+															<td className="px-3 py-3 text-xs text-gray-500">
+																<div>{sku._count?.inventoryRecords ?? 0} inventory</div>
+																<div>{sku._count?.batches ?? 0} batches</div>
+																<div>{sku._count?.variants ?? 0} variants</div>
+															</td>
+															<td className="px-3 py-3">
+																<div className="flex flex-wrap gap-1">
+																	{candidate.matchedVariantValues?.length > 0 ? candidate.matchedVariantValues.map((value: any) => (
+																		<span key={`${sku.id}-${value.attributeValueId}`} className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
+																			{value.attributeName}: {value.label}
+																		</span>
+																	)) : <span className="text-xs text-gray-400">None detected</span>}
+																</div>
+															</td>
+															<td className="px-3 py-3">
+																<div className="flex flex-wrap gap-2">
+																	<button className="btn-sm text-xs" disabled={isWorking || (sku._count?.variants ?? 0) > 0} onClick={() => handleVariantizeDuplicateFor(target, candidate)}>
+																		{isWorking ? 'Working…' : 'Variantize'}
+																	</button>
+																	<button className="btn-sm text-red-600 text-xs" disabled={isWorking} onClick={() => handleMergeDuplicateFor(target, candidate)}>
+																		Merge
+																	</button>
+																</div>
+															</td>
+														</tr>
+													);
+												})}
+											</tbody>
+										</table>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</div>
+			)}
+
+			{quickInventorySku && (
+				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeQuickInventory()}>
+					<div className="modal-panel-md">
+						<div className="modal-header">
+							<div>
+								<h2 className="modal-title">Add Inventory</h2>
+								<p className="text-xs text-gray-400 font-mono">{quickInventorySku.skuCode} — {quickInventorySku.name}</p>
+							</div>
+							<button className="modal-close" onClick={closeQuickInventory}>✕</button>
+						</div>
+						<form onSubmit={handleQuickInventorySubmit}>
+							<div className="modal-body form-stack">
+								{quickVariants.length > 0 && (
+									<div className="form-group">
+										<label className="form-label">Variant</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— Base Product —' }, ...quickVariants.map((variant: any) => ({ value: variant.id, label: `${variant.name || variant.variantCode} (${variant.variantCode})` }))]}
+											value={quickInventoryForm.variantId}
+											onChange={(value) => {
+												setQuickInventoryForm((form) => ({ ...form, variantId: value, batchId: '' }));
+												fetchQuickBatches(quickInventorySku.id, value);
+											}}
+											placeholder="Base Product"
+											isClearable={false}
+										/>
+									</div>
+								)}
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Quantity *</label>
+										<input className="input-field" type="number" min={QUANTITY_INPUT_MIN} step={QUANTITY_INPUT_STEP} required value={quickInventoryForm.quantity} onChange={(e) => setQuickInventoryForm((form) => ({ ...form, quantity: e.target.value }))} />
+									</div>
+									<div className="form-group">
+										<label className="form-label">State</label>
+										<SearchableSelect
+											options={Object.values(InventoryState).map((state) => ({ value: state, label: state }))}
+											value={quickInventoryForm.state}
+											onChange={(value) => setQuickInventoryForm((form) => ({ ...form, state: value }))}
+											placeholder="Select State"
+											isClearable={false}
+										/>
+									</div>
+								</div>
+								<div className="form-group">
+									<label className="form-label">Floor *</label>
+									<SearchableSelect
+										options={[{ value: '', label: '— Select Floor —' }, ...quickFloors.map((floor: any) => ({ value: floor.id, label: floor.branch?.name ? `${floor.branch.name} › ${floor.name}` : `${floor.name} (${floor.code})` }))]}
+										value={quickInventoryForm.floorId}
+										onChange={(value) => {
+											setQuickInventoryForm((form) => ({ ...form, floorId: value, shelfId: '', boxId: '' }));
+											fetchQuickShelves(value);
+											if (value) fetchQuickBoxes({ floorId: value });
+											else setQuickBoxes([]);
+										}}
+										placeholder="Select Floor"
+										isClearable={false}
+									/>
+								</div>
+								{quickInventoryForm.floorId && (
+									<div className="form-group">
+										<label className="form-label">Shelf</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— No Shelf —' }, ...quickShelves.map((shelf: any) => ({ value: shelf.id, label: `${shelf.name} (${shelf.code})${shelf.rack ? ` · ${shelf.rack.name}` : ''}` }))]}
+											value={quickInventoryForm.shelfId}
+											onChange={(value) => {
+												setQuickInventoryForm((form) => ({ ...form, shelfId: value, boxId: '' }));
+												if (value) fetchQuickBoxes({ shelfId: value });
+												else fetchQuickBoxes({ floorId: quickInventoryForm.floorId });
+											}}
+											placeholder="No Shelf"
+											isClearable={false}
+										/>
+									</div>
+								)}
+								{quickInventoryForm.floorId && quickBoxes.length > 0 && (
+									<div className="form-group">
+										<label className="form-label">Box</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— No Box —' }, ...quickBoxes.map((box: any) => ({ value: box.id, label: `${box.name} (${box.code})` }))]}
+											value={quickInventoryForm.boxId}
+											onChange={(value) => setQuickInventoryForm((form) => ({ ...form, boxId: value }))}
+											placeholder="No Box"
+											isClearable={false}
+										/>
+									</div>
+								)}
+								<div className="form-group">
+									<label className="form-label">Batch</label>
+									<SearchableSelect
+										options={[{ value: '', label: '— No Batch —' }, ...quickBatches.map((batch: any) => ({ value: batch.id, label: `${batch.batchNumber}${batch.expiryDate ? ` · Exp ${new Date(batch.expiryDate).toLocaleDateString()}` : ''}` }))]}
+										value={quickInventoryForm.batchId}
+										onChange={(value) => setQuickInventoryForm((form) => ({ ...form, batchId: value }))}
+										placeholder="No Batch"
+										isClearable={false}
+									/>
+								</div>
+							</div>
+							<div className="modal-footer">
+								<button type="button" className="btn-secondary" onClick={closeQuickInventory}>Cancel</button>
+								<button type="submit" className="btn-primary" disabled={quickSaving}>{quickSaving ? 'Saving…' : 'Add Inventory'}</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
+
+			{quickGrnSku && (
+				<div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && closeQuickGrn()}>
+					<div className="modal-panel-md">
+						<div className="modal-header">
+							<div>
+								<h2 className="modal-title">Create GRN</h2>
+								<p className="text-xs text-gray-400 font-mono">{quickGrnSku.skuCode} — {quickGrnSku.name}</p>
+							</div>
+							<button className="modal-close" onClick={closeQuickGrn}>✕</button>
+						</div>
+						<form onSubmit={handleQuickGrnSubmit}>
+							<div className="modal-body form-stack">
+								<div className="form-group">
+									<label className="form-label">Supplier *</label>
+									<SearchableSelect
+										options={[{ value: '', label: '— Select Supplier —' }, ...vendors.map((vendor: any) => ({ value: vendor.id, label: vendor.name }))]}
+										value={quickGrnForm.supplierId}
+										onChange={(value) => setQuickGrnForm((form) => ({ ...form, supplierId: value }))}
+										placeholder="Select Supplier"
+										isClearable={false}
+									/>
+								</div>
+								{quickVariants.length > 0 && (
+									<div className="form-group">
+										<label className="form-label">Variant</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— Base Product —' }, ...quickVariants.map((variant: any) => ({ value: variant.id, label: `${variant.name || variant.variantCode} (${variant.variantCode})` }))]}
+											value={quickGrnForm.variantId}
+											onChange={(value) => {
+												setQuickGrnForm((form) => ({ ...form, variantId: value, batchId: '' }));
+												fetchQuickBatches(quickGrnSku.id, value);
+											}}
+											placeholder="Base Product"
+											isClearable={false}
+										/>
+									</div>
+								)}
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Expected Quantity *</label>
+										<input className="input-field" type="number" min="1" required value={quickGrnForm.quantity} onChange={(e) => setQuickGrnForm((form) => ({ ...form, quantity: e.target.value }))} />
+									</div>
+									<div className="form-group">
+										<label className="form-label">Expected Delivery</label>
+										<input className="input-field" type="date" value={quickGrnForm.expectedDeliveryDate} onChange={(e) => setQuickGrnForm((form) => ({ ...form, expectedDeliveryDate: e.target.value }))} />
+									</div>
+								</div>
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Floor</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— No Floor —' }, ...quickFloors.map((floor: any) => ({ value: floor.id, label: floor.branch?.name ? `${floor.branch.name} › ${floor.name}` : `${floor.name} (${floor.code})` }))]}
+											value={quickGrnForm.floorId}
+											onChange={(value) => {
+												setQuickGrnForm((form) => ({ ...form, floorId: value, shelfId: '' }));
+												fetchQuickShelves(value);
+											}}
+											placeholder="No Floor"
+											isClearable={false}
+										/>
+									</div>
+									{quickGrnForm.floorId && (
+										<div className="form-group">
+											<label className="form-label">Shelf</label>
+											<SearchableSelect
+												options={[{ value: '', label: '— No Shelf —' }, ...quickShelves.map((shelf: any) => ({ value: shelf.id, label: `${shelf.name} (${shelf.code})${shelf.rack ? ` · ${shelf.rack.name}` : ''}` }))]}
+												value={quickGrnForm.shelfId}
+												onChange={(value) => setQuickGrnForm((form) => ({ ...form, shelfId: value }))}
+												placeholder="No Shelf"
+												isClearable={false}
+											/>
+										</div>
+									)}
+								</div>
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Invoice Reference</label>
+										<input className="input-field" value={quickGrnForm.invoiceReference} onChange={(e) => setQuickGrnForm((form) => ({ ...form, invoiceReference: e.target.value }))} />
+									</div>
+									<div className="form-group">
+										<label className="form-label">Batch Mode</label>
+										<label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 mt-2">
+											<input type="checkbox" checked={quickGrnForm.createNewBatch} onChange={(e) => setQuickGrnForm((form) => ({ ...form, createNewBatch: e.target.checked, batchId: '' }))} />
+											Create new batch
+										</label>
+									</div>
+								</div>
+								{!quickGrnForm.createNewBatch && (
+									<div className="form-group">
+										<label className="form-label">Existing Batch</label>
+										<SearchableSelect
+											options={[{ value: '', label: '— No Batch —' }, ...quickBatches.map((batch: any) => ({ value: batch.id, label: `${batch.batchNumber}${batch.expiryDate ? ` · Exp ${new Date(batch.expiryDate).toLocaleDateString()}` : ''}` }))]}
+											value={quickGrnForm.batchId}
+											onChange={(value) => setQuickGrnForm((form) => ({ ...form, batchId: value }))}
+											placeholder="No Batch"
+											isClearable={false}
+										/>
+									</div>
+								)}
+								{quickGrnForm.createNewBatch && (
+									<div className="form-grid-2">
+										<div className="form-group">
+											<label className="form-label">Cost Price</label>
+											<input className="input-field" type="number" step="0.01" value={quickGrnForm.costPrice} onChange={(e) => setQuickGrnForm((form) => ({ ...form, costPrice: e.target.value }))} />
+										</div>
+										<div className="form-group">
+											<label className="form-label">Selling Price</label>
+											<input className="input-field" type="number" step="0.01" value={quickGrnForm.sellingPrice} onChange={(e) => setQuickGrnForm((form) => ({ ...form, sellingPrice: e.target.value }))} />
+										</div>
+									</div>
+								)}
+							</div>
+							<div className="modal-footer">
+								<button type="button" className="btn-secondary" onClick={closeQuickGrn}>Cancel</button>
+								<button type="submit" className="btn-primary" disabled={quickSaving}>{quickSaving ? 'Saving…' : 'Create GRN'}</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
 
 			{/* Create Product Modal */}
 			{showCreateForm && (
@@ -1076,7 +1858,7 @@ export default function SKUPage() {
 						</div>
 						{/* Tab nav */}
 						<div className="flex gap-1 px-6 pt-3 pb-0 border-b border-gray-200 bg-white">
-							{(['details', 'tags', 'barcodes', 'locations', 'variants', 'images', 'pricing'] as ModalTab[]).map((tab) => (
+							{(['details', 'tags', 'barcodes', 'locations', 'variants', 'duplicates', 'images', 'pricing'] as ModalTab[]).map((tab) => (
 								<button
 									key={tab}
 									type="button"
@@ -1091,6 +1873,7 @@ export default function SKUPage() {
 									{tab === 'barcodes' && '📊 '}
 									{tab === 'locations' && '📍 '}
 									{tab === 'variants' && '🧩 '}
+									{tab === 'duplicates' && '🔁 '}
 									{tab === 'images' && '🖼️ '}
 									{tab === 'pricing' && '💲 '}
 									{tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1336,59 +2119,193 @@ export default function SKUPage() {
 								</div>
 							)}
 							{modalTab === 'locations' && (
-								<div>
-									<p className="text-sm text-gray-500 mb-4">Current inventory by location for this product. Click Transition to change state.</p>
-									{locationsLoading ? (
-										<p className="text-sm text-gray-400">Loading…</p>
-									) : inventoryLocations.length === 0 ? (
-										<div className="text-center py-8">
-											<div className="text-4xl mb-2">📭</div>
-											<p className="text-sm text-gray-400">No inventory records found</p>
+								<div className="flex flex-col gap-5">
+									<form onSubmit={handleAssignInventory} className="border border-gray-200 rounded-lg p-4 bg-gray-50 form-stack">
+										<div className="flex items-start justify-between gap-3">
+											<div>
+												<p className="text-sm font-semibold text-gray-700">Assign stock to a location</p>
+												<p className="text-xs text-gray-500 mt-1">Create an inventory record for this product on a floor, shelf, or box.</p>
+											</div>
 										</div>
-									) : (
-										<div className="flex flex-col gap-3">
-											{Object.entries(
-												inventoryLocations.reduce((acc: any, r: any) => {
-													const loc = r.location ? [r.location.floor, r.location.section, r.location.shelf, r.location.zone].filter(Boolean).join('-') : 'Unlocated';
-													if (!acc[loc]) acc[loc] = { location: r.location, records: [] };
-													acc[loc].records.push(r);
-													return acc;
-												}, {})
-											).map(([locKey, val]: [string, any]) => {
-												const totalQty = val.records.reduce((s: number, r: any) => s + (r.quantity || 0), 0);
-												const isLowStock = editingSku?.lowStockThreshold != null && totalQty <= editingSku.lowStockThreshold;
-												return (
-													<div key={locKey} className="border border-gray-200 rounded-lg overflow-hidden">
-														<div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
-															<span className="font-medium text-sm">📍 {val.location ? [val.location.floor, val.location.section, val.location.shelf, val.location.zone].filter(Boolean).join(' › ') : 'No Location'}</span>
-															<div className="flex items-center gap-2">
-																{isLowStock && <s-badge tone="warning">⚠️ Low Stock</s-badge>}
-																<s-badge tone="info">{totalQty} units</s-badge>
+										<div className="form-grid-2">
+											{assignmentVariants.length > 0 && (
+												<div className="form-group">
+													<label className="form-label">Variant</label>
+													<SearchableSelect
+														options={[
+															{ value: '', label: '— Base Product —' },
+															...assignmentVariants.map((variant: any) => ({ value: variant.id, label: `${variant.name || variant.variantCode} (${variant.variantCode})` }))
+														]}
+														value={assignmentForm.variantId}
+														onChange={(value) => {
+															setAssignmentForm((form) => ({ ...form, variantId: value, batchId: '' }));
+															fetchAssignmentBatches(value);
+														}}
+														placeholder="Base Product"
+														isClearable={false}
+													/>
+												</div>
+											)}
+											<div className="form-group">
+												<label className="form-label">Quantity *</label>
+												<input
+													className="input-field"
+													type="number"
+													min={QUANTITY_INPUT_MIN}
+													step={QUANTITY_INPUT_STEP}
+													required
+													value={assignmentForm.quantity}
+													onChange={(e) => setAssignmentForm((form) => ({ ...form, quantity: e.target.value }))}
+												/>
+											</div>
+											<div className="form-group">
+												<label className="form-label">State</label>
+												<SearchableSelect
+													options={Object.values(InventoryState).map((state) => ({ value: state, label: state }))}
+													value={assignmentForm.state}
+													onChange={(value) => setAssignmentForm((form) => ({ ...form, state: value }))}
+													placeholder="Select State"
+													isClearable={false}
+												/>
+											</div>
+											<div className="form-group">
+												<label className="form-label">Floor *</label>
+												<SearchableSelect
+													options={[
+														{ value: '', label: '— Select Floor —' },
+														...assignmentFloors.map((floor: any) => ({
+															value: floor.id,
+															label: floor.branch?.name ? `${floor.branch.name} › ${floor.name}` : `${floor.name} (${floor.code})`
+														}))
+													]}
+													value={assignmentForm.floorId}
+													onChange={(value) => {
+														setAssignmentForm((form) => ({ ...form, floorId: value, shelfId: '', boxId: '' }));
+														fetchAssignmentShelves(value);
+														if (value) fetchAssignmentBoxes({ floorId: value });
+														else setAssignmentBoxes([]);
+													}}
+													placeholder="Select Floor"
+													isClearable={false}
+												/>
+											</div>
+											{assignmentForm.floorId && (
+												<div className="form-group">
+													<label className="form-label">Shelf</label>
+													<SearchableSelect
+														options={[
+															{ value: '', label: '— No Shelf —' },
+															...assignmentShelves.map((shelf: any) => ({
+																value: shelf.id,
+																label: `${shelf.name} (${shelf.code})${shelf.rack ? ` · ${shelf.rack.name}` : ''}`
+															}))
+														]}
+														value={assignmentForm.shelfId}
+														onChange={(value) => {
+															setAssignmentForm((form) => ({ ...form, shelfId: value, boxId: '' }));
+															if (value) fetchAssignmentBoxes({ shelfId: value });
+															else fetchAssignmentBoxes({ floorId: assignmentForm.floorId });
+														}}
+														placeholder="No Shelf"
+														isClearable={false}
+													/>
+												</div>
+											)}
+											{assignmentForm.floorId && assignmentBoxes.length > 0 && (
+												<div className="form-group">
+													<label className="form-label">Box</label>
+													<SearchableSelect
+														options={[
+															{ value: '', label: '— No Box —' },
+															...assignmentBoxes.map((box: any) => ({ value: box.id, label: `${box.name} (${box.code})` }))
+														]}
+														value={assignmentForm.boxId}
+														onChange={(value) => setAssignmentForm((form) => ({ ...form, boxId: value }))}
+														placeholder="No Box"
+														isClearable={false}
+													/>
+												</div>
+											)}
+											<div className="form-group">
+												<label className="form-label">Batch</label>
+												<SearchableSelect
+													options={[
+														{ value: '', label: '— No Batch —' },
+														...assignmentBatches.map((batch: any) => ({
+															value: batch.id,
+															label: `${batch.batchNumber}${batch.expiryDate ? ` · Exp ${new Date(batch.expiryDate).toLocaleDateString()}` : ''}`
+														}))
+													]}
+													value={assignmentForm.batchId}
+													onChange={(value) => setAssignmentForm((form) => ({ ...form, batchId: value }))}
+													placeholder="No Batch"
+													isClearable={false}
+												/>
+											</div>
+										</div>
+										{assignmentFloors.length === 0 && (
+											<p className="text-xs text-amber-600">No active floors are available. Create floors, shelves, and boxes from Locations first.</p>
+										)}
+										<button type="submit" className="btn-primary self-start" disabled={isAssigningInventory || assignmentFloors.length === 0}>
+											{isAssigningInventory ? 'Saving…' : 'Assign Stock'}
+										</button>
+									</form>
+
+									<div>
+										<p className="text-sm text-gray-500 mb-4">Current inventory by location for this product. Click Transition to change state.</p>
+										{locationsLoading ? (
+											<p className="text-sm text-gray-400">Loading…</p>
+										) : inventoryLocations.length === 0 ? (
+											<div className="text-center py-8">
+												<div className="text-4xl mb-2">📭</div>
+												<p className="text-sm text-gray-400">No inventory records found</p>
+											</div>
+										) : (
+											<div className="flex flex-col gap-3">
+												{Object.entries(
+													inventoryLocations.reduce((acc: any, record: any) => {
+														const locationName = formatInventoryLocation(record);
+														if (!acc[locationName]) acc[locationName] = { locationName, records: [] };
+														acc[locationName].records.push(record);
+														return acc;
+													}, {})
+												).map(([locKey, val]: [string, any]) => {
+													const totalQty = val.records.reduce((sum: number, record: any) => sum + (record.quantity || 0), 0);
+													const isLowStock = editingSku?.lowStockThreshold != null && totalQty <= editingSku.lowStockThreshold;
+													return (
+														<div key={locKey} className="border border-gray-200 rounded-lg overflow-hidden">
+															<div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+																<span className="font-medium text-sm">📍 {val.locationName}</span>
+																<div className="flex items-center gap-2">
+																	{isLowStock && <s-badge tone="warning">⚠️ Low Stock</s-badge>}
+																	<s-badge tone="info">{formatQuantity(totalQty)} units</s-badge>
+																</div>
 															</div>
+															{val.records.map((record: any) => (
+																<div key={record.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-gray-100 last:border-0">
+																	<div className="flex items-center gap-3">
+																		<s-badge>{record.state}</s-badge>
+																		{record.variant && <span className="text-xs text-indigo-600">Variant: {record.variant.name ?? record.variant.variantCode}</span>}
+																		{record.batch && <span className="text-xs text-gray-500">Batch: {record.batch.batchNumber}</span>}
+																	</div>
+																	<div className="flex items-center gap-3">
+																		<span className="font-medium">{formatQuantity(record.quantity)} {editingSku?.unitOfMeasure}</span>
+																		<button
+																			className="btn-sm"
+																			disabled={transitioningInv === record.id}
+																			onClick={() => openTransitionModal(record)}
+																		>
+																			{transitioningInv === record.id ? '…' : 'Transition'}
+																		</button>
+																	</div>
+																</div>
+															))}
 														</div>
-														{val.records.map((r: any) => (
-															<div key={r.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-gray-100 last:border-0">
-																<div className="flex items-center gap-3">
-																	<s-badge>{r.state}</s-badge>
-																	{r.batch && <span className="text-xs text-gray-500">Batch: {r.batch.batchNumber}</span>}
-																</div>
-																<div className="flex items-center gap-3">
-																	<span className="font-medium">{r.quantity} {editingSku?.unitOfMeasure}</span>
-																	<button
-																		className="btn-sm"
-																		disabled={transitioningInv === r.id}
-																		onClick={() => openTransitionModal(r)}
-																	>
-																		{transitioningInv === r.id ? '…' : 'Transition'}
-																	</button>
-																</div>
-															</div>
-														))}
-													</div>
-												);
-											})}
-										</div>
-									)}
+													);
+												})}
+											</div>
+										)}
+									</div>
 								</div>
 							)}
 							{modalTab === 'variants' && (
@@ -1486,19 +2403,148 @@ export default function SKUPage() {
 									)}
 								</div>
 							)}
+							{modalTab === 'duplicates' && (
+								<div className="flex flex-col gap-4">
+									<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+										Products imported as standalone SKUs can be merged into this product or converted into variants while preserving inventory, batches, barcodes, images, vendors, tags, GRN/PRN lines, and stock transfer lines.
+									</div>
+									{duplicatesLoading ? (
+										<p className="text-sm text-gray-400">Scanning for similar products…</p>
+									) : duplicateCandidates.length === 0 ? (
+										<div className="text-center py-8">
+											<div className="text-4xl mb-2">🔎</div>
+											<p className="text-sm text-gray-400">No likely duplicates found for this product.</p>
+										</div>
+									) : (
+										<table className="w-full text-sm border-collapse">
+											<thead>
+												<tr className="bg-gray-50">
+													{['Product', 'Match', 'Counts', 'Variant Values', ''].map(h => (
+														<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+													))}
+												</tr>
+											</thead>
+											<tbody>
+												{duplicateCandidates.map((candidate: any) => {
+													const sku = candidate.sku;
+													const isWorking = duplicateActionId === sku.id;
+													const vendorNames = sku.skuVendors?.length > 0
+														? sku.skuVendors.map((sv: any) => sv.vendor?.name).filter(Boolean).join(', ')
+														: sku.vendor?.name;
+													return (
+														<tr key={sku.id} className="border-b border-gray-100 hover:bg-gray-50 align-top">
+															<td className="px-3 py-3">
+																<div className="font-medium text-gray-800">{sku.name}</div>
+																<div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
+																	<span className="font-mono">{sku.skuCode}</span>
+																	<span>{sku.category?.name ?? 'No category'}</span>
+																	{vendorNames && <span>{vendorNames}</span>}
+																</div>
+															</td>
+															<td className="px-3 py-3">
+																<div className="flex flex-col gap-1">
+																	<span className={`self-start rounded-full px-2 py-0.5 text-xs font-medium ${candidate.relationship === 'variant' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'}`}>
+																		{candidate.relationship === 'variant' ? 'Variant candidate' : 'Duplicate candidate'}
+																	</span>
+																	<span className="text-xs text-gray-500">{candidate.score}% match</span>
+																	<span className="text-xs text-gray-400">{candidate.reason}</span>
+																</div>
+															</td>
+															<td className="px-3 py-3 text-xs text-gray-500">
+																<div>{sku._count?.inventoryRecords ?? 0} inventory</div>
+																<div>{sku._count?.batches ?? 0} batches</div>
+																<div>{sku._count?.variants ?? 0} variants</div>
+															</td>
+															<td className="px-3 py-3">
+																<div className="flex flex-wrap gap-1">
+																	{candidate.matchedVariantValues?.length > 0 ? (
+																		candidate.matchedVariantValues.map((value: any) => (
+																			<span key={`${sku.id}-${value.attributeValueId}`} className="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
+																				{value.attributeType === 'color' && value.representedValue && (
+																					<span className="inline-block w-3 h-3 rounded-full border border-indigo-200" style={{ background: value.representedValue }} />
+																				)}
+																				{value.attributeName}: {value.label}
+																			</span>
+																		))
+																	) : (
+																		<span className="text-xs text-gray-400">No attribute values detected</span>
+																	)}
+																</div>
+															</td>
+															<td className="px-3 py-3">
+																<div className="flex flex-col gap-2 items-start">
+																	<button
+																		type="button"
+																		className="btn-sm text-xs"
+																		disabled={isWorking || (sku._count?.variants ?? 0) > 0}
+																		onClick={() => handleVariantizeDuplicate(candidate)}
+																		title={(sku._count?.variants ?? 0) > 0 ? 'Products that already have variants must be merged instead.' : 'Convert this product into a variant of the current product'}
+																	>
+																		{isWorking ? 'Working…' : 'Variantize'}
+																	</button>
+																	<button
+																		type="button"
+																		className="btn-sm text-red-600 text-xs"
+																		disabled={isWorking}
+																		onClick={() => handleMergeDuplicate(candidate)}
+																		title="Merge this duplicate into the current product"
+																	>
+																		Merge
+																	</button>
+																</div>
+															</td>
+														</tr>
+													);
+												})}
+											</tbody>
+										</table>
+									)}
+								</div>
+							)}
 							{modalTab === 'images' && (
 								<div className="flex flex-col gap-6">
+									<div className="border border-gray-200 rounded-lg p-4">
+										<p className="text-sm font-semibold text-gray-700 mb-2">Media Scope</p>
+										<div className="max-w-md">
+											<SearchableSelect
+												options={[
+													{ value: '', label: 'Product media' },
+													...skuVariants.map((variant: any) => ({
+														value: variant.id,
+														label: `${variant.name ?? variant.variantCode} (${variant.variantCode})`,
+													})),
+												]}
+												value={selectedImageVariantId}
+												onChange={(value) => {
+													setSelectedImageVariantId(value);
+													loadImages(value);
+												}}
+												placeholder="Product media"
+												isClearable={false}
+											/>
+										</div>
+										<p className="text-xs text-gray-500 mt-2">
+											Product media is used by default. Select a variant to manage images only for that variant.
+										</p>
+									</div>
 									<div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-										<p className="text-sm font-semibold text-gray-700 mb-2">Upload Images / Video</p>
+										<p className="text-sm font-semibold text-gray-700 mb-2">
+											Upload {selectedImageVariantId ? 'Variant Images' : 'Product Images / Video'}
+										</p>
 										<MediaUpload
 											skuId={editingSku.id}
-											onUploadComplete={loadImages}
+											variantId={selectedImageVariantId || null}
+											onUploadComplete={() => loadImages(selectedImageVariantId)}
 											apiBaseUrl=""
 											authToken={authToken}
+											allowVideo={!selectedImageVariantId}
+											scopeLabel={imageScopeLabel}
 										/>
 									</div>
 									<div className="border border-gray-200 rounded-lg p-4">
-										<p className="text-sm font-semibold text-gray-700 mb-3">Gallery</p>
+										<p className="text-sm font-semibold text-gray-700 mb-3">
+											{selectedImageVariantId ? 'Variant Gallery' : 'Product Gallery'}
+										</p>
 										{imagesLoading ? (
 											<p className="text-sm text-gray-400">Loading images…</p>
 										) : (
@@ -1508,12 +2554,11 @@ export default function SKUPage() {
 												videoUrl={skuVideoUrl}
 												apiBaseUrl=""
 												authToken={authToken}
-												onUpdate={loadImages}
+												onUpdate={() => loadImages(selectedImageVariantId)}
+												showVideo={!selectedImageVariantId}
+												imageHeading={selectedImageVariantId ? 'Variant Images' : 'Product Images'}
 											/>
 										)}
-									</div>
-									<div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-										Variant-specific images are not available yet in backend schema. Current uploads apply at the product level.
 									</div>
 								</div>
 							)}

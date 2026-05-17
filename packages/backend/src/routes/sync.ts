@@ -12,6 +12,17 @@ const router = Router();
 
 router.use(authenticate);
 
+function normalizeQuantityInput(value: unknown) {
+	if (typeof value === 'number' && Number.isFinite(value)) return value;
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		if (!trimmed) return undefined;
+		const parsed = Number(trimmed);
+		return Number.isFinite(parsed) ? parsed : undefined;
+	}
+	return undefined;
+}
+
 router.post('/push', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
 		const { clientId, operations } = req.body as { clientId: string; operations: SyncOperation[] };
@@ -46,6 +57,7 @@ router.post('/push', async (req: AuthRequest, res: Response): Promise<void> => {
 					const existing = payload.id
 						? await prisma.inventoryRecord.findUnique({ where: { id: payload.id } })
 						: null;
+					const normalizedQuantity = normalizeQuantityInput(payload.quantity);
 
 					if (existing && existing.version > (payload.version ?? 0)) {
 						conflictFlag = true;
@@ -53,7 +65,11 @@ router.post('/push', async (req: AuthRequest, res: Response): Promise<void> => {
 					} else if (existing && payload.id) {
 						await prisma.inventoryRecord.update({
 							where: { id: payload.id },
-							data: { quantity: payload.quantity, state: payload.state, version: { increment: 1 } },
+							data: {
+								quantity: normalizedQuantity ?? existing.quantity,
+								state: payload.state,
+								version: { increment: 1 },
+							},
 						});
 					}
 				}

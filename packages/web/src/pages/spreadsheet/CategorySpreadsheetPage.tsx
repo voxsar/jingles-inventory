@@ -1,39 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { buildCreatedRow, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function CategorySpreadsheetPage() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await categoriesApi.list({ page: String(page), pageSize: String(pageSize) });
-      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setCategories(Array.isArray(data) ? data : []);
-      setTotal(res.data?.data?.total ?? 0);
-      setTotalPages(res.data?.data?.totalPages ?? 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    rows: categories,
+    setRows: setCategories,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(categoriesApi.list, { searchTerm });
 
   const parentOptions = categories
     .filter(c => !c.parentId)
@@ -113,7 +96,7 @@ export default function CategorySpreadsheetPage() {
     try {
       await categoriesApi.delete(row.id);
       setCategories(current => current.filter(category => category.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete category:', err);
       throw err;
@@ -123,8 +106,8 @@ export default function CategorySpreadsheetPage() {
   const handleAdd = async (data: Partial<any>) => {
     try {
       const response = await categoriesApi.create(data);
-      setCategories(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setCategories(current => [buildCreatedRow(data, response), ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create category:', err);
       throw err;
@@ -154,25 +137,17 @@ export default function CategorySpreadsheetPage() {
           columns={columns}
           data={categories}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
-
-      {!isLoading && categories.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

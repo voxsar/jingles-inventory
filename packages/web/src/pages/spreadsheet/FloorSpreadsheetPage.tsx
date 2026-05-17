@@ -2,46 +2,35 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { floorsApi, branchesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { buildCreatedRow, fetchAllSpreadsheetRows, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function FloorSpreadsheetPage() {
   const navigate = useNavigate();
-  const [floors, setFloors] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [branches, setBranches] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [floorRes, branchRes] = await Promise.all([
-        floorsApi.list({ page: String(page), pageSize: String(pageSize) }),
-        branchesApi.list(),
-      ]);
-
-      const floorData = floorRes.data?.data?.items ?? floorRes.data?.data ?? floorRes.data ?? [];
-      setFloors(Array.isArray(floorData) ? floorData : []);
-      setTotal(floorRes.data?.data?.total ?? 0);
-      setTotalPages(floorRes.data?.data?.totalPages ?? 1);
-
-      const branchData = branchRes.data?.data?.items ?? branchRes.data?.data ?? branchRes.data ?? [];
-      setBranches(Array.isArray(branchData) ? branchData : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    rows: floors,
+    setRows: setFloors,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(floorsApi.list, { searchTerm });
 
   useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+    const loadBranches = async () => {
+      try {
+        const branchData = await fetchAllSpreadsheetRows<any>(branchesApi.list);
+        setBranches(Array.isArray(branchData) ? branchData : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadBranches();
+  }, []);
 
   const branchOptions = branches.map(b => ({ value: b.id, label: b.name }));
 
@@ -132,7 +121,7 @@ export default function FloorSpreadsheetPage() {
     try {
       await floorsApi.delete(row.id);
       setFloors(current => current.filter(floor => floor.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete floor:', err);
       throw err;
@@ -142,8 +131,8 @@ export default function FloorSpreadsheetPage() {
   const handleAdd = async (data: Partial<any>) => {
     try {
       const response = await floorsApi.create(data);
-      setFloors(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setFloors(current => [buildCreatedRow(data, response), ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create floor:', err);
       throw err;
@@ -173,25 +162,17 @@ export default function FloorSpreadsheetPage() {
           columns={columns}
           data={floors}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
-
-      {!isLoading && floors.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

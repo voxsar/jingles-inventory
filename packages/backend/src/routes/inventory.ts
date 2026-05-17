@@ -14,6 +14,19 @@ const router = Router();
 
 router.use(authenticate);
 
+function normalizeQuantityInput(value: unknown) {
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return value;
+	}
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		if (!trimmed) return undefined;
+		const parsed = Number(trimmed);
+		return Number.isFinite(parsed) ? parsed : undefined;
+	}
+	return undefined;
+}
+
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
@@ -152,15 +165,20 @@ router.post(
 				floorId?: string;
 				shelfId?: string;
 				boxId?: string;
-				quantity: number;
+				quantity: number | string;
 				state?: string;
 				batchId?: string;
 				terminalId?: string;
 			};
 			const user = req.user!;
+			const normalizedQuantity = normalizeQuantityInput(quantity);
 
-			if (!skuId || quantity === undefined) {
+			if (!skuId || normalizedQuantity === undefined) {
 				res.status(400).json({ success: false, error: 'skuId and quantity are required' });
+				return;
+			}
+			if (normalizedQuantity <= 0) {
+				res.status(400).json({ success: false, error: 'quantity must be greater than 0' });
 				return;
 			}
 
@@ -174,7 +192,7 @@ router.post(
 					floorId,
 					shelfId,
 					boxId,
-					quantity,
+					quantity: normalizedQuantity,
 					state: state ?? defaultUninspectedState,
 					batchId,
 					terminalId,
@@ -187,9 +205,9 @@ router.post(
 			await recordEvent({
 				eventType: InventoryEventType.MANUAL_ADJUSTMENT,
 				parentEntityId: record.id,
-				quantityDelta: quantity,
+				quantityDelta: normalizedQuantity,
 				beforeQuantity: 0,
-				afterQuantity: quantity,
+				afterQuantity: normalizedQuantity,
 				userId: user.id,
 				terminalId,
 			});
@@ -213,13 +231,18 @@ router.post(
 		try {
 			const { inventoryRecordId, quantityToOpen, targetFloorId } = req.body as {
 				inventoryRecordId: string;
-				quantityToOpen: number;
+				quantityToOpen: number | string;
 				targetFloorId?: string;
 			};
 			const user = req.user!;
+			const normalizedQuantityToOpen = normalizeQuantityInput(quantityToOpen);
 
-			if (!inventoryRecordId || !quantityToOpen) {
+			if (!inventoryRecordId || normalizedQuantityToOpen === undefined) {
 				res.status(400).json({ success: false, error: 'inventoryRecordId and quantityToOpen are required' });
+				return;
+			}
+			if (normalizedQuantityToOpen <= 0) {
+				res.status(400).json({ success: false, error: 'quantityToOpen must be greater than 0' });
 				return;
 			}
 
@@ -246,7 +269,7 @@ router.post(
 				res.status(400).json({ success: false, error: 'Record must be in UnopenedBox or ShelfReady state' });
 				return;
 			}
-			if (boxRecord.quantity < quantityToOpen) {
+			if (boxRecord.quantity < normalizedQuantityToOpen) {
 				res.status(400).json({ success: false, error: 'Insufficient quantity' });
 				return;
 			}
@@ -259,13 +282,13 @@ router.post(
 				// use default
 			}
 
-			const totalPieces = quantityToOpen * piecesPerBox;
+			const totalPieces = normalizedQuantityToOpen * piecesPerBox;
 
 			const [updatedBox, pieceRecord] = await prisma.$transaction([
 				prisma.inventoryRecord.update({
 					where: { id: inventoryRecordId },
 					data: {
-						quantity: boxRecord.quantity - quantityToOpen,
+						quantity: boxRecord.quantity - normalizedQuantityToOpen,
 						version: { increment: 1 },
 						updatedAt: new Date(),
 					},
@@ -286,11 +309,11 @@ router.post(
 			await recordEvent({
 				eventType: InventoryEventType.BOX_OPENED,
 				parentEntityId: inventoryRecordId,
-				quantityDelta: -quantityToOpen,
+				quantityDelta: -normalizedQuantityToOpen,
 				beforeQuantity: boxRecord.quantity,
-				afterQuantity: boxRecord.quantity - quantityToOpen,
+				afterQuantity: boxRecord.quantity - normalizedQuantityToOpen,
 				userId: user.id,
-				metadata: { boxesOpened: quantityToOpen, piecesCreated: totalPieces, newRecordId: pieceRecord.id },
+				metadata: { boxesOpened: normalizedQuantityToOpen, piecesCreated: totalPieces, newRecordId: pieceRecord.id },
 			});
 
 			// Queue dashboard stats refresh in background
@@ -315,7 +338,7 @@ router.put(
 				floorId?: string | null;
 				shelfId?: string | null;
 				boxId?: string | null;
-				quantity?: number;
+				quantity?: number | string;
 				batchId?: string | null;
 			};
 			const user = req.user!;
@@ -331,11 +354,16 @@ router.put(
 			if (shelfId !== undefined) updateData.shelfId = shelfId || null;
 			if (boxId !== undefined) updateData.boxId = boxId || null;
 			if (quantity !== undefined) {
-				if (quantity < 1) {
-					res.status(400).json({ success: false, error: 'quantity must be at least 1' });
+				const normalizedQuantity = normalizeQuantityInput(quantity);
+				if (normalizedQuantity === undefined) {
+					res.status(400).json({ success: false, error: 'quantity must be a valid number' });
 					return;
 				}
-				updateData.quantity = quantity;
+				if (normalizedQuantity <= 0) {
+					res.status(400).json({ success: false, error: 'quantity must be greater than 0' });
+					return;
+				}
+				updateData.quantity = normalizedQuantity;
 			}
 			if (batchId !== undefined) updateData.batchId = batchId || null;
 
@@ -345,13 +373,14 @@ router.put(
 				include: { sku: true, floor: true, shelf: true, box: true },
 			});
 
-			if (quantity !== undefined && quantity !== existing.quantity) {
+			const normalizedQuantity = quantity !== undefined ? normalizeQuantityInput(quantity) : undefined;
+			if (normalizedQuantity !== undefined && normalizedQuantity !== existing.quantity) {
 				await recordEvent({
 					eventType: InventoryEventType.MANUAL_ADJUSTMENT,
 					parentEntityId: id,
-					quantityDelta: quantity - existing.quantity,
+					quantityDelta: normalizedQuantity - existing.quantity,
 					beforeQuantity: existing.quantity,
-					afterQuantity: quantity,
+					afterQuantity: normalizedQuantity,
 					userId: user.id,
 				});
 			}

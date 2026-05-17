@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { branchesApi, floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
+import { formatQuantity } from '../utils/quantity';
 
 // ── Form defaults ─────────────────────────────────────────────────────────────
 const defaultBranchForm = { name: '', code: '', address: '', phone: '', email: '', isDefault: false };
@@ -568,7 +569,7 @@ export default function BranchesPage() {
 												<tr key={inv.id} className="border-t border-gray-100">
 													<td className="px-3 py-1.5">{inv.sku?.name ?? inv.skuId}</td>
 													<td className="px-3 py-1.5">{inv.state}</td>
-													<td className="px-3 py-1.5 text-right">{inv.quantity}</td>
+													<td className="px-3 py-1.5 text-right">{formatQuantity(inv.quantity)}</td>
 												</tr>
 											))}
 										</tbody>

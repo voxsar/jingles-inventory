@@ -1,55 +1,71 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, floorsApi } from '../../api/client';
+import { grnsApi, vendorsApi, floorsApi, shelvesApi, branchesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { fetchAllSpreadsheetRows, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function GRNSpreadsheetPage() {
   const navigate = useNavigate();
-  const [grns, setGrns] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLookupsLoading, setIsLookupsLoading] = useState(true);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [grnRes, vendorRes, floorRes] = await Promise.all([
-        grnsApi.list({ page: String(page), pageSize: String(pageSize) }),
-        vendorsApi.list(),
-        floorsApi.list(),
-      ]);
-
-      const grnData = grnRes.data?.data?.items ?? grnRes.data?.data ?? grnRes.data ?? [];
-      setGrns(Array.isArray(grnData) ? grnData : []);
-      setTotal(grnRes.data?.data?.total ?? 0);
-      setTotalPages(grnRes.data?.data?.totalPages ?? 1);
-
-      const vendorData = vendorRes.data?.data?.items ?? vendorRes.data?.data ?? vendorRes.data ?? [];
-      setVendors(Array.isArray(vendorData) ? vendorData : []);
-
-      const floorData = floorRes.data?.data?.items ?? floorRes.data?.data ?? floorRes.data ?? [];
-      setFloors(Array.isArray(floorData) ? floorData : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [shelves, setShelves] = useState<any[]>([]);
+  const {
+    rows: grns,
+    setRows: setGrns,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(grnsApi.list, { searchTerm });
 
   useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+    const loadLookups = async () => {
+      setIsLookupsLoading(true);
+      try {
+        const [vendorData, branchData, floorData, shelfData] = await Promise.all([
+          fetchAllSpreadsheetRows<any>(vendorsApi.list),
+          fetchAllSpreadsheetRows<any>(branchesApi.list),
+          fetchAllSpreadsheetRows<any>(floorsApi.list),
+          fetchAllSpreadsheetRows<any>(shelvesApi.list),
+        ]);
 
+        setVendors(Array.isArray(vendorData) ? vendorData : []);
+        setBranches(Array.isArray(branchData) ? branchData : []);
+        setFloors(Array.isArray(floorData) ? floorData : []);
+        setShelves(Array.isArray(shelfData) ? shelfData : []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLookupsLoading(false);
+      }
+    };
+
+    loadLookups();
+  }, []);
+
+  const getFloorBranchId = (floor: any) => floor?.branchId ?? floor?.branch?.id ?? '';
+  const getRowBranchId = (row: any) => (
+    row.floor?.branch?.id
+    ?? floors.find(floor => floor.id === row.floorId)?.branchId
+    ?? floors.find(floor => floor.id === row.floorId)?.branch?.id
+    ?? ''
+  );
+  const getShelfFloorId = (shelf: any) => shelf?.floorId ?? shelf?.floor?.id ?? '';
   const vendorOptions = vendors.map(v => ({ value: v.id, label: v.name }));
-  const floorOptions = floors.map(f => ({ value: f.id, label: `${f.name} (${f.branch?.name || ''})` }));
+  const branchOptions = branches.map(b => ({ value: b.id, label: b.name }));
+  const floorOptions = floors.map(f => ({
+    value: f.id,
+    label: f.branch?.name ? `${f.branch.name} › ${f.name}` : f.name,
+  }));
+  const shelfOptions = shelves.map(s => ({
+    value: s.id,
+    label: s.floor?.branch?.name ? `${s.floor.branch.name} › ${s.floor.name} › ${s.name}` : s.name || s.id,
+  }));
 
   const columns: ColumnDefinition<any>[] = [
     {
@@ -69,13 +85,49 @@ export default function GRNSpreadsheetPage() {
       render: (value, row) => String(value || ""),
     },
     {
+      key: 'branchId',
+      header: 'Branch',
+      options: branchOptions,
+      width: '180px',
+      getValue: getRowBranchId,
+      setValue: (row, value) => {
+        if (!value) return { floorId: null, shelfId: null };
+
+        const currentFloor = floors.find(floor => floor.id === row.floorId);
+        const currentFloorStillValid = currentFloor && getFloorBranchId(currentFloor) === value;
+        const nextFloorId = currentFloorStillValid
+          ? currentFloor.id
+          : floors.find(floor => getFloorBranchId(floor) === value)?.id ?? null;
+
+        return { floorId: nextFloorId, shelfId: null };
+      },
+      validate: (value) => !value || floors.some(floor => getFloorBranchId(floor) === value)
+        ? null
+        : 'Selected branch has no floors',
+    },
+    {
       key: 'floorId',
       header: 'Floor',
       
       options: floorOptions,
       width: '180px',
       getValue: (row) => row.floorId || '',
-      setValue: (row, value) => ({ floorId: value || null }),
+      setValue: (_row, value) => ({ floorId: value || null, shelfId: null }),
+      render: (value, row) => String(value || ""),
+    },
+    {
+      key: 'shelfId',
+      header: 'Shelf',
+      options: shelfOptions,
+      width: '180px',
+      getValue: (row) => row.shelfId || '',
+      setValue: (_row, value) => {
+        const shelf = shelves.find(item => item.id === value);
+        return {
+          floorId: shelf ? getShelfFloorId(shelf) || null : null,
+          shelfId: value || null,
+        };
+      },
       render: (value, row) => String(value || ""),
     },
     {
@@ -127,7 +179,7 @@ export default function GRNSpreadsheetPage() {
     try {
       await grnsApi.delete(row.id);
       setGrns(current => current.filter(grn => grn.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete GRN:', err);
       throw err;
@@ -147,7 +199,7 @@ export default function GRNSpreadsheetPage() {
           </button>
           <div>
             <h1 className="page-title">📋 GRNs Spreadsheet</h1>
-            <p className="page-subtitle">Manage Goods Receipt Notes with supplier and floor selection</p>
+            <p className="page-subtitle">Manage Goods Receipt Notes with supplier, branch, floor, and shelf selection</p>
           </div>
         </div>
       </div>
@@ -156,26 +208,18 @@ export default function GRNSpreadsheetPage() {
         <ReactSpreadsheetWrapper
           columns={columns}
           data={grns}
-          isLoading={isLoading}
+          isLoading={isLoading || isLookupsLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
           canAdd={false}
         />
       </div>
-
-      {!isLoading && grns.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

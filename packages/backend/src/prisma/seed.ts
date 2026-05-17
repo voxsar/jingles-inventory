@@ -1,5 +1,10 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import {
+	upsertDefaultAttributes,
+	upsertDefaultTags,
+	upsertDefaultUnits,
+} from './catalogDefaults';
 
 const prisma = new PrismaClient();
 
@@ -13,21 +18,6 @@ type StatusSeedEntry = {
 	sortOrder: number;
 	isDefault: boolean;
 	specialKey?: string;
-};
-
-type UnitSeedEntry = {
-	name: string;
-	abbreviation: string;
-	type: string;
-	baseUnit?: string;
-	conversionFactor?: number;
-	isSystem: boolean;
-};
-
-type AttributeSeedEntry = {
-	name: string;
-	type?: string;
-	values: { display: string; value: string; sortOrder?: number }[];
 };
 
 type CategorySeed = {
@@ -129,54 +119,6 @@ const STATUS_SEED_DATA: StatusSeedEntry[] = [
 	{ entityType: 'vendor_type', value: 'Vendor', label: 'Vendor', sortOrder: 0, isDefault: false, specialKey: 'VENDOR_TYPE_VENDOR' },
 	{ entityType: 'vendor_type', value: 'Supplier', label: 'Supplier', sortOrder: 1, isDefault: true, specialKey: 'VENDOR_TYPE_SUPPLIER' },
 	{ entityType: 'vendor_type', value: 'Both', label: 'Both', sortOrder: 2, isDefault: false, specialKey: 'VENDOR_TYPE_BOTH' },
-];
-
-const UNIT_SEED_DATA: UnitSeedEntry[] = [
-	{ name: 'Unit', abbreviation: 'unit', type: 'Count', isSystem: true },
-	{ name: 'Piece', abbreviation: 'pc', type: 'Count', isSystem: true },
-	{ name: 'Pack', abbreviation: 'pack', type: 'Count', baseUnit: 'Piece', conversionFactor: 6, isSystem: true },
-	{ name: 'Box', abbreviation: 'box', type: 'Count', baseUnit: 'Piece', conversionFactor: 12, isSystem: true },
-	{ name: 'Set', abbreviation: 'set', type: 'Count', isSystem: true },
-	{ name: 'Kilogram', abbreviation: 'kg', type: 'Weight', baseUnit: 'Gram', conversionFactor: 1000, isSystem: true },
-	{ name: 'Gram', abbreviation: 'g', type: 'Weight', isSystem: true },
-	{ name: 'Liter', abbreviation: 'L', type: 'Volume', baseUnit: 'Milliliter', conversionFactor: 1000, isSystem: true },
-	{ name: 'Milliliter', abbreviation: 'ml', type: 'Volume', isSystem: true },
-];
-
-const TAG_SEED = [
-	{ name: 'New Arrival', color: '#22c55e' },
-	{ name: 'Premium', color: '#8b5cf6' },
-	{ name: 'Fragile', color: '#f97316' },
-	{ name: 'Best Seller', color: '#f59e0b' },
-];
-
-const ATTRIBUTE_SEED: AttributeSeedEntry[] = [
-	{
-		name: 'Color',
-		type: 'color',
-		values: [
-			{ display: 'Carbon Black', value: 'black', sortOrder: 0 },
-			{ display: 'Arctic White', value: 'white', sortOrder: 1 },
-			{ display: 'Midnight Blue', value: 'blue', sortOrder: 2 },
-		],
-	},
-	{
-		name: 'Size',
-		type: 'dropdown',
-		values: [
-			{ display: 'Compact', value: 'compact', sortOrder: 0 },
-			{ display: 'Standard', value: 'standard', sortOrder: 1 },
-			{ display: 'Extended', value: 'extended', sortOrder: 2 },
-		],
-	},
-	{
-		name: 'Voltage',
-		type: 'dropdown',
-		values: [
-			{ display: '110V', value: '110v' },
-			{ display: '220V', value: '220v' },
-		],
-	},
 ];
 
 const CATEGORY_SEED: CategorySeed[] = [
@@ -398,53 +340,19 @@ async function upsertStatuses() {
 }
 
 async function upsertUnits() {
-	const unitMap = new Map<string, string>();
-	for (const entry of UNIT_SEED_DATA) {
-		const unit = await prisma.unitOfMeasure.upsert({
-			where: { name: entry.name },
-			update: { abbreviation: entry.abbreviation, baseUnit: entry.baseUnit ?? null, conversionFactor: entry.conversionFactor ?? null, type: entry.type, isSystem: entry.isSystem, isActive: true },
-			create: { ...entry, baseUnit: entry.baseUnit ?? null, conversionFactor: entry.conversionFactor ?? null, isActive: true },
-		});
-		unitMap.set(entry.name, unit.id);
-	}
+	const unitMap = await upsertDefaultUnits(prisma);
 	console.log('Seed: units of measure ready');
 	return unitMap;
 }
 
 async function upsertTags() {
-	const tagMap = new Map<string, string>();
-	for (const tag of TAG_SEED) {
-		const created = await prisma.tag.upsert({
-			where: { name: tag.name },
-			update: { color: tag.color },
-			create: { name: tag.name, color: tag.color },
-		});
-		tagMap.set(tag.name, created.id);
-	}
+	const tagMap = await upsertDefaultTags(prisma);
+	console.log('Seed: tags ready');
 	return tagMap;
 }
 
 async function upsertAttributes() {
-	const attributeMap = new Map<string, string>();
-	const valueMap = new Map<string, Map<string, string>>();
-	for (const attr of ATTRIBUTE_SEED) {
-		const attribute = await prisma.attribute.upsert({
-			where: { name: attr.name },
-			update: { type: attr.type ?? 'dropdown', isActive: true },
-			create: { name: attr.name, type: attr.type ?? 'dropdown', isActive: true },
-		});
-		attributeMap.set(attr.name, attribute.id);
-		const valuesForAttr = new Map<string, string>();
-		for (const val of attr.values) {
-			const createdValue = await prisma.attributeValue.upsert({
-				where: { attributeId_representedValue: { attributeId: attribute.id, representedValue: val.value } },
-				update: { displayName: val.display, sortOrder: val.sortOrder ?? 0, isActive: true },
-				create: { attributeId: attribute.id, displayName: val.display, representedValue: val.value, sortOrder: val.sortOrder ?? 0, isActive: true },
-			});
-			valuesForAttr.set(val.display, createdValue.id);
-		}
-		valueMap.set(attr.name, valuesForAttr);
-	}
+	const { attributeMap, valueMap } = await upsertDefaultAttributes(prisma);
 	console.log('Seed: attributes ready');
 	return { attributeMap, valueMap };
 }
@@ -689,11 +597,20 @@ async function seedSkus(options: {
 			}
 		}
 
-		await prisma.productImage.upsert({
-			where: { skuId_sortOrder: { skuId: sku.id, sortOrder: 0 } },
-			update: { url: `https://picsum.photos/seed/${skuDef.skuCode}/640/480`, altText: skuDef.name, isPrimary: true },
-			create: { skuId: sku.id, url: `https://picsum.photos/seed/${skuDef.skuCode}/640/480`, altText: skuDef.name, isPrimary: true, sortOrder: 0 },
+		const seededImage = await prisma.productImage.findFirst({
+			where: { skuId: sku.id, variantId: null, sortOrder: 0 },
+			select: { id: true },
 		});
+		if (seededImage) {
+			await prisma.productImage.update({
+				where: { id: seededImage.id },
+				data: { url: `https://picsum.photos/seed/${skuDef.skuCode}/640/480`, altText: skuDef.name, isPrimary: true },
+			});
+		} else {
+			await prisma.productImage.create({
+				data: { skuId: sku.id, url: `https://picsum.photos/seed/${skuDef.skuCode}/640/480`, altText: skuDef.name, isPrimary: true, sortOrder: 0 },
+			});
+		}
 
 		if (skuDef.variants?.length) {
 			for (const variantDef of skuDef.variants) {

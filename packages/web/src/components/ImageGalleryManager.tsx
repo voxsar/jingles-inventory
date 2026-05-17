@@ -16,6 +16,8 @@ interface ImageGalleryManagerProps {
 	apiBaseUrl: string;
 	authToken: string;
 	onUpdate: () => void;
+	showVideo?: boolean;
+	imageHeading?: string;
 }
 
 export default function ImageGalleryManager({
@@ -25,6 +27,8 @@ export default function ImageGalleryManager({
 	apiBaseUrl,
 	authToken,
 	onUpdate,
+	showVideo = true,
+	imageHeading = 'Product Images',
 }: ImageGalleryManagerProps) {
 	const [images, setImages] = useState<ProductImage[]>(initialImages);
 	const [videoUrl, setVideoUrl] = useState<string | null>(initialVideoUrl);
@@ -47,7 +51,7 @@ export default function ImageGalleryManager({
 	};
 
 	useEffect(() => {
-		setImages(initialImages.sort((a, b) => a.sortOrder - b.sortOrder));
+		setImages([...initialImages].sort((a, b) => a.sortOrder - b.sortOrder));
 	}, [initialImages]);
 
 	useEffect(() => {
@@ -133,10 +137,10 @@ export default function ImageGalleryManager({
 		}
 	};
 
-	if (images.length === 0 && !videoUrl) {
+	if (images.length === 0 && (!showVideo || !videoUrl)) {
 		return (
 			<div className="text-center py-8 text-gray-500">
-				<p>No images or video uploaded yet</p>
+				<p>{showVideo ? 'No images or video uploaded yet' : 'No images uploaded yet'}</p>
 			</div>
 		);
 	}
@@ -146,7 +150,7 @@ export default function ImageGalleryManager({
 			{/* Images Grid */}
 			{images.length > 0 && (
 				<div>
-					<h4 className="font-medium text-gray-700 mb-3">Product Images</h4>
+					<h4 className="font-medium text-gray-700 mb-3">{imageHeading}</h4>
 					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 						{images.map((image, index) => (
 							<div
@@ -221,7 +225,7 @@ export default function ImageGalleryManager({
 			)}
 
 			{/* Video Section */}
-			{videoUrl && (
+			{showVideo && videoUrl && (
 				<div>
 					<h4 className="font-medium text-gray-700 mb-3">Product Video</h4>
 					<div className="relative inline-block">

@@ -1,0 +1,19 @@
+ALTER TABLE "inventory_records"
+ALTER COLUMN "quantity" TYPE DOUBLE PRECISION
+USING "quantity"::DOUBLE PRECISION;
+
+ALTER TABLE "inventory_events"
+ALTER COLUMN "quantity_delta" TYPE DOUBLE PRECISION
+USING "quantity_delta"::DOUBLE PRECISION,
+ALTER COLUMN "before_quantity" TYPE DOUBLE PRECISION
+USING "before_quantity"::DOUBLE PRECISION,
+ALTER COLUMN "after_quantity" TYPE DOUBLE PRECISION
+USING "after_quantity"::DOUBLE PRECISION;
+
+ALTER TABLE "dashboard_stats"
+ALTER COLUMN "total_items" TYPE DOUBLE PRECISION
+USING "total_items"::DOUBLE PRECISION,
+ALTER COLUMN "shelf_ready_items" TYPE DOUBLE PRECISION
+USING "shelf_ready_items"::DOUBLE PRECISION,
+ALTER COLUMN "damaged_items" TYPE DOUBLE PRECISION
+USING "damaged_items"::DOUBLE PRECISION;

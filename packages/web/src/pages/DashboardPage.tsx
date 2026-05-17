@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { dashboardApi } from '../api/client';
 import { InventoryState, GRNStatus } from '@jingles/shared';
+import { formatQuantity } from '../utils/quantity';
 
 interface StatCard {
   label: string;
@@ -40,10 +41,10 @@ export default function DashboardPage() {
   }, []);
 
   const cards: StatCard[] = stats ? [
-    { label: 'Total Items', value: stats.totalItems.toLocaleString(), color: 'bg-blue-500', icon: '📦' },
-    { label: 'Shelf Ready', value: stats.shelfReadyItems.toLocaleString(), color: 'bg-green-500', icon: '✅' },
+    { label: 'Total Items', value: formatQuantity(stats.totalItems), color: 'bg-blue-500', icon: '📦' },
+    { label: 'Shelf Ready', value: formatQuantity(stats.shelfReadyItems), color: 'bg-green-500', icon: '✅' },
     { label: 'Open GRNs', value: stats.openGRNs, color: 'bg-yellow-500', icon: '📋' },
-    { label: 'Damaged Items', value: stats.damagedItems.toLocaleString(), color: 'bg-red-500', icon: '⚠️' },
+    { label: 'Damaged Items', value: formatQuantity(stats.damagedItems), color: 'bg-red-500', icon: '⚠️' },
   ] : [];
 
   // Build inventory by state array from stats
@@ -107,7 +108,7 @@ export default function DashboardPage() {
                   style={{ width: `${totalItems > 0 ? (quantity / totalItems) * 100 : 0}%` }}
                 />
               </div>
-              <span className="text-sm font-medium text-gray-700 w-16 text-right">{quantity.toLocaleString()}</span>
+              <span className="text-sm font-medium text-gray-700 w-16 text-right">{formatQuantity(quantity)}</span>
             </div>
           ))}
           {statsByState.length === 0 && (

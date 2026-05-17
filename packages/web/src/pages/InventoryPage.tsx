@@ -6,6 +6,7 @@ import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
 import BarcodeInput from '../components/BarcodeInput';
 import SearchableSelect from '../components/SearchableSelect';
+import { applyQuantityDelta, formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
 
 const PAGE_SIZE = 20;
 
@@ -22,10 +23,6 @@ const QTY_SHORTCUTS = [
   { label: '+100', delta: 100, cls: 'bg-blue-600 hover:bg-blue-700' },
   { label: '+500', delta: 500, cls: 'bg-indigo-600 hover:bg-indigo-700' },
 ] as const;
-
-function applyQtyDelta(current: string, delta: number): string {
-  return String(Math.max(1, (parseInt(current) || 0) + delta));
-}
 
 export default function InventoryPage() {
   const [records, setRecords] = useState<any[]>([]);
@@ -167,8 +164,8 @@ export default function InventoryPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const qty = parseInt(newForm.quantity);
-    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
+    const qty = parsePositiveQuantity(newForm.quantity);
+    if (qty === undefined) { alert('Quantity must be greater than 0.'); return; }
     setIsSaving(true);
     try {
       await inventoryApi.create({
@@ -258,8 +255,8 @@ export default function InventoryPage() {
 
   const handleSaveEdit = async () => {
     if (!editingRecord) return;
-    const qty = parseInt(editForm.quantity);
-    if (isNaN(qty) || qty < 1) { alert('Quantity must be a positive number'); return; }
+    const qty = parsePositiveQuantity(editForm.quantity);
+    if (qty === undefined) { alert('Quantity must be greater than 0.'); return; }
     setIsSaving(true);
     try {
       await inventoryApi.update(editingRecord.id, {
@@ -297,7 +294,7 @@ export default function InventoryPage() {
         {r.variant && <div className="text-xs text-indigo-600 mt-0.5">🧩 {r.variant.name}</div>}
       </div>
     )},
-    { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.quantity}</span> },
+    { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{formatQuantity(r.quantity)}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
     { key: 'floor', header: 'Location', render: (r: any) => <s-text>{formatLocation(r)}</s-text> },
     { key: 'batchId', header: 'Batch', render: (r: any) => r.batch ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batch.batchNumber}</span> : <s-text>—</s-text> },
@@ -558,10 +555,10 @@ export default function InventoryPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Quantity *</label>
-                    <input className="input-field" type="number" min="1" required value={newForm.quantity} onChange={(e) => setNewForm(f => ({ ...f, quantity: e.target.value }))} />
+                    <input className="input-field" type="number" min={QUANTITY_INPUT_MIN} step={QUANTITY_INPUT_STEP} required value={newForm.quantity} onChange={(e) => setNewForm(f => ({ ...f, quantity: e.target.value }))} />
                     <div className="flex flex-wrap gap-1 mt-1">
                       {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
-                        <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setNewForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                        <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setNewForm(f => ({ ...f, quantity: applyQuantityDelta(f.quantity, delta) }))}>{label}</button>
                       ))}
                     </div>
                   </div>
@@ -736,10 +733,10 @@ export default function InventoryPage() {
               )}
               <div className="form-group">
                 <label className="form-label">Quantity</label>
-                <input className="input-field" type="number" min="1" value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
+                <input className="input-field" type="number" min={QUANTITY_INPUT_MIN} step={QUANTITY_INPUT_STEP} value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />
                 <div className="flex flex-wrap gap-1 mt-1">
                   {QTY_SHORTCUTS.map(({ label, delta, cls }) => (
-                    <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setEditForm(f => ({ ...f, quantity: applyQtyDelta(f.quantity, delta) }))}>{label}</button>
+                    <button key={label} type="button" className={`px-2 py-0.5 text-xs text-white rounded font-medium transition-colors ${cls}`} onClick={() => setEditForm(f => ({ ...f, quantity: applyQuantityDelta(f.quantity, delta) }))}>{label}</button>
                   ))}
                 </div>
               </div>

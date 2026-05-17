@@ -46,12 +46,18 @@ export const skusApi = {
   create: (data: any) => api.post('/skus', data),
   update: (id: string, data: any) => api.put(`/skus/${id}`, data),
   delete: (id: string) => api.delete(`/skus/${id}`),
+  // Duplicate consolidation
+  getDuplicateGroups: (params?: Record<string, string>) => api.get('/skus/duplicates', { params }),
+  getDuplicates: (id: string) => api.get(`/skus/${id}/duplicates`),
+  mergeDuplicate: (id: string, sourceId: string) => api.post(`/skus/${id}/duplicates/${sourceId}/merge`),
+  variantizeDuplicate: (id: string, sourceId: string) => api.post(`/skus/${id}/duplicates/${sourceId}/variantize`),
   // Barcodes
   getBarcodes: (id: string) => api.get(`/skus/${id}/barcodes`),
   addBarcode: (id: string, data: any) => api.post(`/skus/${id}/barcodes`, data),
   deleteBarcode: (id: string, bcId: string) => api.delete(`/skus/${id}/barcodes/${bcId}`),
   // Images
-  getImages: (id: string) => api.get(`/skus/${id}/images`),
+  getImages: (id: string, variantId?: string | null) =>
+    api.get(`/skus/${id}/images`, { params: variantId ? { variantId } : undefined }),
   addImage: (id: string, data: any) => api.post(`/skus/${id}/images`, data),
   deleteImage: (id: string, imgId: string) => api.delete(`/skus/${id}/images/${imgId}`),
   // Tags
@@ -101,6 +107,27 @@ export const prnsApi = {
     api.put(`/prns/${id}/submit`, { pickupDate }),
   pickup: (id: string) => api.put(`/prns/${id}/pickup`),
   delete: (id: string) => api.delete(`/prns/${id}`),
+};
+
+// AI Imports
+export const importsApi = {
+  list: (params?: Record<string, string>) => api.get('/imports', { params }),
+  get: (id: string) => api.get(`/imports/${id}`),
+  create: (formData: FormData) =>
+    api.post('/imports', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  listRecords: (id: string, params?: Record<string, string>) =>
+    api.get(`/imports/${id}/records`, { params }),
+  updateSelection: (jobId: string, data: Record<string, any>) =>
+    api.patch(`/imports/${jobId}/records/selection`, data),
+  updateRecordSelection: (jobId: string, recordId: string, selected: boolean) =>
+    api.patch(`/imports/${jobId}/records/selection`, { selected, recordIds: [recordId] }),
+  bulkUpdateSelection: (jobId: string, data: Record<string, any>) =>
+    api.patch(`/imports/${jobId}/records/selection`, data),
+  approve: (jobId: string) => api.post(`/imports/${jobId}/approve`),
+  reject: (jobId: string, data?: { recordIds?: string[]; selectedOnly?: boolean }) =>
+    api.post(`/imports/${jobId}/reject`, data ?? {}),
 };
 
 // Locations

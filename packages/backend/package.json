@@ -12,6 +12,7 @@
 		"prisma:seed": "ts-node src/prisma/seed.ts",
 		"prisma:seed-stress": "ts-node src/prisma/seed-stress.ts",
 		"import:recovered-catalog": "ts-node src/scripts/importRecoveredCatalog.ts",
+		"restore:catalog-defaults": "ts-node src/scripts/restoreCatalogDefaults.ts",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage"

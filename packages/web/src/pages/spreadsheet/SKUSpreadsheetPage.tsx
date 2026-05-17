@@ -2,12 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { skusApi, vendorsApi, categoriesApi, settingsApi, tagsApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
 import { buildHierarchicalCategoryOptionsFromFlat } from '../../utils/categoryHelpers';
-
-const PAGE_SIZE = 50;
-
-const unwrapList = (payload: any) => payload?.data?.data?.items ?? payload?.data?.data ?? payload?.data ?? [];
+import { fetchAllSpreadsheetRows, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 const joinUnique = (values: Array<string | null | undefined>) => (
   Array.from(new Set(values.filter(Boolean) as string[])).join(', ')
@@ -49,54 +45,47 @@ const getResponseData = (response: any) => response?.data?.data ?? response?.dat
 
 export default function SKUSpreadsheetPage() {
   const navigate = useNavigate();
-  const [skus, setSkus] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLookupsLoading, setIsLookupsLoading] = useState(true);
   const [vendors, setVendors] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [tags, setTags] = useState<any[]>([]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [skuRes, vendorRes, catRes, unitRes, tagRes] = await Promise.all([
-        skusApi.list({ page: String(page), pageSize: String(pageSize) }),
-        vendorsApi.list({ pageSize: '1000' }),
-        categoriesApi.list({ pageSize: '1000' }),
-        settingsApi.listUnits({ pageSize: '1000' }),
-        tagsApi.list(),
-      ]);
-
-      const skuData = unwrapList(skuRes);
-      setSkus(Array.isArray(skuData) ? skuData : []);
-      setTotal(skuRes.data?.data?.total ?? 0);
-      setTotalPages(skuRes.data?.data?.totalPages ?? 1);
-
-      const vendorData = unwrapList(vendorRes);
-      setVendors(Array.isArray(vendorData) ? vendorData : []);
-
-      const catData = unwrapList(catRes);
-      setCategories(Array.isArray(catData) ? catData : []);
-
-      const unitData = unwrapList(unitRes);
-      setUnits(Array.isArray(unitData) ? unitData : []);
-
-      const tagData = unwrapList(tagRes);
-      setTags(Array.isArray(tagData) ? tagData : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    rows: skus,
+    setRows: setSkus,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(skusApi.list, { searchTerm });
 
   useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+    const loadLookups = async () => {
+      setIsLookupsLoading(true);
+      try {
+        const [vendorData, catData, unitData, tagData] = await Promise.all([
+          fetchAllSpreadsheetRows<any>(vendorsApi.list),
+          fetchAllSpreadsheetRows<any>(categoriesApi.list),
+          fetchAllSpreadsheetRows<any>(settingsApi.listUnits),
+          fetchAllSpreadsheetRows<any>(tagsApi.list),
+        ]);
+
+        setVendors(Array.isArray(vendorData) ? vendorData : []);
+        setCategories(Array.isArray(catData) ? catData : []);
+        setUnits(Array.isArray(unitData) ? unitData : []);
+        setTags(Array.isArray(tagData) ? tagData : []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLookupsLoading(false);
+      }
+    };
+
+    loadLookups();
+  }, []);
 
   const vendorOptions = vendors.map(v => ({ value: v.id, label: v.name }));
   const categoryOptions = buildHierarchicalCategoryOptionsFromFlat(categories);
@@ -407,7 +396,7 @@ export default function SKUSpreadsheetPage() {
     try {
       await skusApi.delete(row.id);
       setSkus(current => current.filter(sku => sku.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete SKU:', err);
       throw err;
@@ -419,8 +408,8 @@ export default function SKUSpreadsheetPage() {
       const response = await skusApi.create(data);
       const apiRow = getResponseData(response);
       const created = decorateSkuRow(apiRow, data, apiRow);
-      setSkus(current => [created, ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setSkus(current => [created, ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create SKU:', err);
       throw err;
@@ -451,27 +440,19 @@ export default function SKUSpreadsheetPage() {
         <ReactSpreadsheetWrapper
           columns={columns}
           data={skus}
-          isLoading={isLoading}
+          isLoading={isLoading || isLookupsLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
 
-      {/* Pagination */}
-      {!isLoading && skus.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

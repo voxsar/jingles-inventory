@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { branchesApi, floorsApi, reportsApi, skusApi, vendorsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import { formatQuantity } from '../utils/quantity';
 
 type ReportId =
 	| 'purchase-order'
@@ -123,7 +124,7 @@ const currency = (value: any) => {
 	return number.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const quantity = (value: any) => Number(value ?? 0).toLocaleString();
+const quantity = (value: any) => formatQuantity(value, '0');
 
 const dateOnly = (value: any) => {
 	if (!value) return '';
@@ -389,6 +390,40 @@ const getColumns = (reportId: ReportId): ExportColumn[] => {
 		case 'credit-card-sales':
 		case 'issued-receipts':
 			return commonSalesColumns;
+		case 'paid-in-out':
+			return [
+				{ key: 'date', header: 'Date', value: (row) => row.date, render: (row) => dateTime(row.date), sortable: true },
+				textColumn('reference', 'Reference', ['reference']),
+				{ key: 'direction', header: 'Direction', value: (row) => row.direction, render: (row) => badge(row.direction), sortable: true },
+				textColumn('unit', 'POS Unit', ['unit', 'terminalId']),
+				textColumn('reason', 'Reason', ['reason']),
+				textColumn('description', 'Description', ['description']),
+				moneyColumn('amount', 'Amount', (row) => row.amount),
+				textColumn('user', 'User', ['user.email']),
+			];
+		case 'salesmen-commission':
+			return [
+				textColumn('salesman', 'Salesman', ['salesman']),
+				numberColumn('transactionCount', 'Transactions', (row) => row.transactionCount),
+				numberColumn('quantity', 'Qty Sold', (row) => row.quantity),
+				moneyColumn('revenue', 'Revenue', (row) => row.revenue),
+				moneyColumn('grossProfit', 'Gross Profit', (row) => row.grossProfit),
+				moneyColumn('commissionableAmount', 'Commissionable', (row) => row.commissionableAmount),
+				{ key: 'effectiveCommissionRate', header: 'Rate %', value: (row) => row.effectiveCommissionRate, render: (row) => `${currency(row.effectiveCommissionRate)}%`, align: 'right', sortable: true },
+				moneyColumn('commissionAmount', 'Commission', (row) => row.commissionAmount),
+			];
+		case 'advanced-receipts':
+			return [
+				{ key: 'date', header: 'Date', value: (row) => row.date, render: (row) => dateTime(row.date), sortable: true },
+				textColumn('reference', 'Reference', ['reference']),
+				textColumn('receiptNumber', 'Receipt', ['receiptNumber']),
+				{ key: 'status', header: 'Status', value: (row) => row.status, render: (row) => badge(row.status), sortable: true },
+				textColumn('customer', 'Customer', ['customer']),
+				textColumn('unit', 'POS Unit', ['unit', 'terminalId']),
+				moneyColumn('amount', 'Advance Amount', (row) => row.amount),
+				moneyColumn('balanceAmount', 'Balance', (row) => row.balanceAmount),
+				textColumn('user', 'User', ['user.email']),
+			];
 		default:
 			return [
 				textColumn('reference', 'Reference', ['reference', 'id']),

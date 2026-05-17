@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { body, param, validationResult } from 'express-validator';
+import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { getPagination, paginatedPayload } from '../utils/pagination';
@@ -9,22 +10,37 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+  const { search } = req.query as { search?: string };
   const pagination = getPagination(req.query);
+  const where: Prisma.BranchWhereInput | undefined = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { code: { contains: search, mode: 'insensitive' } },
+          { address: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : undefined;
+
   if (pagination.isPaginated) {
     const [items, total] = await Promise.all([
       prisma.branch.findMany({
+        where,
         skip: pagination.skip,
         take: pagination.take,
         orderBy: { name: 'asc' },
         include: { _count: { select: { floors: true } } },
       }),
-      prisma.branch.count(),
+      prisma.branch.count({ where }),
     ]);
     res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
     return;
   }
 
   const branches = await prisma.branch.findMany({
+    where,
     orderBy: { name: 'asc' },
     include: { _count: { select: { floors: true } } },
   });

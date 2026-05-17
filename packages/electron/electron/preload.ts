@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { ElectronAPI } from '@jingles/shared';
 
 // Expose safe IPC API to renderer process
-contextBridge.exposeInMainWorld('electronAPI', {
+const electronAPI: ElectronAPI = {
   // Barcode scanner
   barcode: {
     onScan: (callback: (barcode: string) => void) => {
@@ -49,46 +50,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   network: {
     isOnline: () => navigator.onLine,
     onStatusChange: (callback: (online: boolean) => void) => {
-      window.addEventListener('online', () => callback(true));
-      window.addEventListener('offline', () => callback(false));
+      const handleOnline = () => callback(true);
+      const handleOffline = () => callback(false);
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
     },
   },
-});
+};
+
+contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
 // Type declaration for renderer
 declare global {
   interface Window {
-    electronAPI: {
-      barcode: {
-        onScan: (callback: (barcode: string) => void) => void;
-        offScan: () => void;
-        startListening: (port?: string) => Promise<{ success: boolean; mode: string }>;
-        stopListening: () => Promise<{ success: boolean }>;
-      };
-      db: {
-        getInventory: (filters?: Record<string, any>) => Promise<any[]>;
-        upsertInventory: (record: any) => Promise<any>;
-        getGRNs: (filters?: Record<string, any>) => Promise<any[]>;
-        upsertGRN: (grn: any) => Promise<any>;
-        getSKUs: () => Promise<any[]>;
-        upsertSKU: (sku: any) => Promise<any>;
-        getSyncQueue: () => Promise<any[]>;
-        addToSyncQueue: (operation: any) => Promise<any>;
-        clearProcessed: () => Promise<void>;
-      };
-      sync: {
-        push: () => Promise<any>;
-        pull: () => Promise<any>;
-        getStatus: () => Promise<any>;
-      };
-      app: {
-        version: () => Promise<string>;
-        openExternal: (url: string) => Promise<void>;
-      };
-      network: {
-        isOnline: () => boolean;
-        onStatusChange: (callback: (online: boolean) => void) => void;
-      };
-    };
+    electronAPI?: ElectronAPI;
   }
 }

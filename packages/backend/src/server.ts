@@ -34,6 +34,7 @@ import batchRoutes from './routes/batches';
 import pricingOverlayRoutes from './routes/pricing-overlays';
 import tagRoutes from './routes/tags';
 import userRoutes from './routes/users';
+import importRoutes from './routes/imports';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 
 const app = express();
@@ -93,6 +94,7 @@ app.use('/api/batches', batchRoutes);
 app.use('/api/pricing-overlays', pricingOverlayRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/imports', importRoutes);
 
 app.use(errorHandler);
 
@@ -110,4 +112,3 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
-

@@ -1,39 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { branchesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { buildCreatedRow, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function BranchSpreadsheetPage() {
   const navigate = useNavigate();
-  const [branches, setBranches] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await branchesApi.list({ page: String(page), pageSize: String(pageSize) });
-      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setBranches(Array.isArray(data) ? data : []);
-      setTotal(res.data?.data?.total ?? 0);
-      setTotalPages(res.data?.data?.totalPages ?? 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    rows: branches,
+    setRows: setBranches,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(branchesApi.list, { searchTerm });
 
   const columns: ColumnDefinition<any>[] = [
     {
@@ -120,7 +103,7 @@ export default function BranchSpreadsheetPage() {
     try {
       await branchesApi.delete(row.id);
       setBranches(current => current.filter(branch => branch.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete branch:', err);
       throw err;
@@ -130,8 +113,8 @@ export default function BranchSpreadsheetPage() {
   const handleAdd = async (data: Partial<any>) => {
     try {
       const response = await branchesApi.create(data);
-      setBranches(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setBranches(current => [buildCreatedRow(data, response), ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create branch:', err);
       throw err;
@@ -163,26 +146,17 @@ export default function BranchSpreadsheetPage() {
           columns={columns}
           data={branches}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
-
-      {/* Pagination */}
-      {!isLoading && branches.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

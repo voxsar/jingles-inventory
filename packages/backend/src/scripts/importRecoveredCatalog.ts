@@ -7,6 +7,7 @@ import XLSX from 'xlsx';
 import prisma from '../prisma/client';
 import { refreshDashboardStats } from '../modules/dashboard/dashboardService';
 import { syncAll } from '../modules/typesense/syncService';
+import { upsertDefaultAttributes, upsertDefaultTags, upsertDefaultUnits } from '../prisma/catalogDefaults';
 
 type WorkbookRow = {
 	skuCode: string;
@@ -264,8 +265,14 @@ async function createUnits(tx: DbTx, rows: NormalizedRow[]) {
 
 	for (const unitName of unitNames) {
 		const definition = unitDefinition(unitName);
-		await tx.unitOfMeasure.create({
-			data: {
+		await tx.unitOfMeasure.upsert({
+			where: { name: unitName },
+			update: {
+				abbreviation: definition.abbreviation,
+				type: definition.type,
+				isActive: true,
+			},
+			create: {
 				name: unitName,
 				abbreviation: definition.abbreviation,
 				type: definition.type,
@@ -565,6 +572,9 @@ async function main() {
 	const importSummary = await prisma.$transaction(
 		async (tx) => {
 			await resetCatalogDomain(tx);
+			await upsertDefaultUnits(tx);
+			await upsertDefaultTags(tx);
+			await upsertDefaultAttributes(tx);
 			const unitMap = await createUnits(tx, rows);
 			const vendorMap = await createVendors(tx, rows);
 			const categoryMap = await createCategories(tx, rows);

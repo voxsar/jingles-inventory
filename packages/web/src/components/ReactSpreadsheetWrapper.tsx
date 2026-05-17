@@ -17,9 +17,14 @@ interface ReactSpreadsheetWrapperProps<T extends Record<string, any>> {
   columns: ColumnDefinition<T>[];
   data: T[];
   isLoading?: boolean;
+  isLoadingMore?: boolean;
+  totalRows?: number;
+  hasMoreRows?: boolean;
   onSave?: (row: T, changes: Partial<T>) => Promise<void>;
   onDelete?: (row: T) => Promise<void>;
   onAdd?: (row: Partial<T>) => Promise<void>;
+  onLoadMore?: () => Promise<void> | void;
+  onSearchChange?: (value: string) => void;
   getRowKey: (row: T) => string;
   canAdd?: boolean;
   canEdit?: boolean;
@@ -217,9 +222,14 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
   columns,
   data,
   isLoading,
+  isLoadingMore = false,
+  totalRows,
+  hasMoreRows = false,
   onSave,
   onDelete,
   onAdd,
+  onLoadMore,
+  onSearchChange,
   getRowKey,
   canAdd = true,
   canEdit = true,
@@ -241,6 +251,7 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
   const [isDeletingRow, setIsDeletingRow] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  const isServerSearch = !!onSearchChange;
 
   const columnModels = useMemo(
     () => buildColumnModels(columns, data, canEdit),
@@ -296,7 +307,9 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
 
   const applySearch = (value: string) => {
     setSearchTerm(value);
-    worksheetRef.current?.search(value);
+    if (!isServerSearch) {
+      worksheetRef.current?.search(value);
+    }
   };
 
   const revertCell = (instance: WorksheetInstance, colIndex: number, rowIndex: number) => {
@@ -429,12 +442,12 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
     });
 
     worksheetRef.current = worksheets[0] ?? null;
-    if (searchTermRef.current) worksheetRef.current?.search(searchTermRef.current);
+    if (!isServerSearch && searchTermRef.current) worksheetRef.current?.search(searchTermRef.current);
 
     return () => {
       destroySpreadsheet();
     };
-  }, [canEdit, columns.length, isLoading, schemaSignature]);
+  }, [canEdit, columns.length, isLoading, isServerSearch, schemaSignature]);
 
   useEffect(() => {
     const worksheet = worksheetRef.current;
@@ -454,12 +467,26 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
         : current
     ));
 
-    if (searchTermRef.current) worksheet.search(searchTermRef.current);
+    if (!isServerSearch && searchTermRef.current) worksheet.search(searchTermRef.current);
   }, [data.length, dataSignature, serializedRows]);
 
   useEffect(() => {
-    worksheetRef.current?.search(searchTerm);
-  }, [searchTerm]);
+    if (!isServerSearch) {
+      worksheetRef.current?.search(searchTerm);
+    }
+  }, [isServerSearch, searchTerm]);
+
+  useEffect(() => {
+    if (!onSearchChange) return;
+
+    const timeoutId = window.setTimeout(() => {
+      onSearchChange(searchTerm);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [onSearchChange, searchTerm]);
 
   const handleAddRow = () => {
     const worksheet = worksheetRef.current;
@@ -557,6 +584,10 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
       : saveState === 'error'
         ? 'Save failed'
         : 'Ready';
+  const loadedRows = data.length;
+  const metaLabel = typeof totalRows === 'number' && totalRows >= loadedRows
+    ? `${loadedRows} of ${totalRows} rows`
+    : `${loadedRows} rows`;
 
   return (
     <div className="spreadsheet-shell">
@@ -587,7 +618,7 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
               </span>
             </div>
             <div className="spreadsheet-toolbar-right">
-              <span className="spreadsheet-meta">{data.length} rows</span>
+              <span className="spreadsheet-meta">{metaLabel}</span>
               {selectedRowIndex !== null && (
                 <span className="spreadsheet-meta">Row {selectedRowIndex + 1}</span>
               )}
@@ -622,6 +653,26 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
             </div>
           )}
           <div ref={containerRef} className="spreadsheet-grid" />
+          {hasMoreRows && pendingRowIndex === null && (
+            <div className="spreadsheet-toolbar" style={{ borderTop: '1px solid #e5e7eb' }}>
+              <div className="spreadsheet-toolbar-left">
+                <span className="spreadsheet-meta">
+                  {isLoadingMore ? 'Loading more rows...' : 'More rows available'}
+                </span>
+              </div>
+              <div className="spreadsheet-toolbar-right">
+                <button
+                  type="button"
+                  onClick={() => void onLoadMore?.()}
+                  className="spreadsheet-action-button"
+                  disabled={isLoadingMore}
+                >
+                  <span className="material-icons">{isLoadingMore ? 'hourglass_empty' : 'expand_more'}</span>
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

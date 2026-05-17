@@ -1,40 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsApi } from '../../api/client';
 import { UnitType } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { buildCreatedRow, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function UnitSpreadsheetPage() {
   const navigate = useNavigate();
-  const [units, setUnits] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await settingsApi.listUnits({ page: String(page), pageSize: String(pageSize) });
-      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setUnits(Array.isArray(data) ? data : []);
-      setTotal(res.data?.data?.total ?? 0);
-      setTotalPages(res.data?.data?.totalPages ?? 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    rows: units,
+    setRows: setUnits,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(settingsApi.listUnits, { searchTerm });
 
   const typeOptions = Object.values(UnitType).map(t => ({ value: t, label: t }));
   const baseUnitOptions = units.map(u => ({ value: u.name, label: `${u.name} (${u.abbreviation})` }));
@@ -114,7 +97,7 @@ export default function UnitSpreadsheetPage() {
     try {
       await settingsApi.deleteUnit(row.id);
       setUnits(current => current.filter(unit => unit.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete unit:', err);
       throw err;
@@ -124,8 +107,8 @@ export default function UnitSpreadsheetPage() {
   const handleAdd = async (data: Partial<any>) => {
     try {
       const response = await settingsApi.createUnit(data);
-      setUnits(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setUnits(current => [buildCreatedRow(data, response), ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create unit:', err);
       throw err;
@@ -155,25 +138,17 @@ export default function UnitSpreadsheetPage() {
           columns={columns}
           data={units}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
-
-      {!isLoading && units.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

@@ -1,74 +1,85 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { inventoryApi, floorsApi, skusApi, racksApi, shelvesApi, boxesApi } from '../../api/client';
+import { inventoryApi, floorsApi, skusApi, racksApi, shelvesApi, boxesApi, branchesApi } from '../../api/client';
 import { InventoryState } from '@jingles/shared';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import StateBadge from '../../components/StateBadge';
-import { mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { fetchAllSpreadsheetRows, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function InventorySpreadsheetPage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-  const [skus, setSkus] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLookupsLoading, setIsLookupsLoading] = useState(true);
+  const [branches, setBranches] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
   const [racks, setRacks] = useState<any[]>([]);
   const [shelves, setShelves] = useState<any[]>([]);
   const [boxes, setBoxes] = useState<any[]>([]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [invRes, skuRes, floorRes, rackRes, shelfRes, boxRes] = await Promise.all([
-        inventoryApi.list({ page: String(page), pageSize: String(pageSize) }),
-        skusApi.list({ pageSize: '1000' }),
-        floorsApi.list(),
-        fetch('/api/racks').then(r => r.json()).catch(() => ({ data: [] })),
-        fetch('/api/shelves').then(r => r.json()).catch(() => ({ data: [] })),
-        fetch('/api/boxes').then(r => r.json()).catch(() => ({ data: [] })),
-      ]);
-
-      const invData = invRes.data?.data?.items ?? invRes.data?.data ?? invRes.data ?? [];
-      setRecords(Array.isArray(invData) ? invData : []);
-      setTotal(invRes.data?.data?.total ?? 0);
-      setTotalPages(invRes.data?.data?.totalPages ?? 1);
-
-      const skuData = skuRes.data?.data?.items ?? skuRes.data?.data ?? skuRes.data ?? [];
-      setSkus(Array.isArray(skuData) ? skuData : []);
-
-      const floorData = floorRes.data?.data?.items ?? floorRes.data?.data ?? floorRes.data ?? [];
-      setFloors(Array.isArray(floorData) ? floorData : []);
-
-      const rackData = rackRes.data?.data?.items ?? rackRes.data?.data ?? rackRes.data ?? [];
-      setRacks(Array.isArray(rackData) ? rackData : []);
-
-      const shelfData = shelfRes.data?.data?.items ?? shelfRes.data?.data ?? shelfRes.data ?? [];
-      setShelves(Array.isArray(shelfData) ? shelfData : []);
-
-      const boxData = boxRes.data?.data?.items ?? boxRes.data?.data ?? boxRes.data ?? [];
-      setBoxes(Array.isArray(boxData) ? boxData : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    rows: records,
+    setRows: setRecords,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(inventoryApi.list, { searchTerm });
 
   useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+    const loadLookups = async () => {
+      setIsLookupsLoading(true);
+      try {
+        const [branchData, floorData, rackData, shelfData, boxData] = await Promise.all([
+          fetchAllSpreadsheetRows<any>(branchesApi.list),
+          fetchAllSpreadsheetRows<any>(floorsApi.list),
+          fetchAllSpreadsheetRows<any>(racksApi.list),
+          fetchAllSpreadsheetRows<any>(shelvesApi.list),
+          fetchAllSpreadsheetRows<any>(boxesApi.list),
+        ]);
 
-  const floorOptions = floors.map(f => ({ value: f.id, label: `${f.name} (${f.branch?.name || ''})` }));
-  const rackOptions = racks.map(r => ({ value: r.id, label: r.name || r.id }));
-  const shelfOptions = shelves.map(s => ({ value: s.id, label: s.name || s.id }));
-  const boxOptions = boxes.map(b => ({ value: b.id, label: b.name || b.id }));
+        setBranches(Array.isArray(branchData) ? branchData : []);
+        setFloors(Array.isArray(floorData) ? floorData : []);
+        setRacks(Array.isArray(rackData) ? rackData : []);
+        setShelves(Array.isArray(shelfData) ? shelfData : []);
+        setBoxes(Array.isArray(boxData) ? boxData : []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLookupsLoading(false);
+      }
+    };
+
+    loadLookups();
+  }, []);
+
+  const getFloorBranchId = (floor: any) => floor?.branchId ?? floor?.branch?.id ?? '';
+  const getRowBranchId = (row: any) => (
+    row.floor?.branch?.id
+    ?? floors.find(floor => floor.id === row.floorId)?.branchId
+    ?? floors.find(floor => floor.id === row.floorId)?.branch?.id
+    ?? ''
+  );
+  const getShelfFloorId = (shelf: any) => shelf?.floorId ?? shelf?.floor?.id ?? '';
+  const getBoxShelfId = (box: any) => box?.shelfId ?? box?.shelf?.id ?? '';
+  const getBoxFloorId = (box: any) => box?.floorId ?? box?.floor?.id ?? shelves.find(shelf => shelf.id === getBoxShelfId(box))?.floorId ?? '';
+
+  const branchOptions = branches.map(b => ({ value: b.id, label: b.name }));
+  const floorOptions = floors.map(f => ({
+    value: f.id,
+    label: f.branch?.name ? `${f.branch.name} › ${f.name}` : f.name,
+  }));
+  const rackOptions = racks.map(r => ({
+    value: r.id,
+    label: r.floor?.branch?.name ? `${r.floor.branch.name} › ${r.floor.name} › ${r.name}` : r.name || r.id,
+  }));
+  const shelfOptions = shelves.map(s => ({
+    value: s.id,
+    label: s.floor?.branch?.name ? `${s.floor.branch.name} › ${s.floor.name} › ${s.name}` : s.name || s.id,
+  }));
+  const boxOptions = boxes.map(b => ({
+    value: b.id,
+    label: b.shelf?.name ? `${b.shelf.name} › ${b.name || b.code || b.id}` : b.name || b.code || b.id,
+  }));
   const stateOptions = Object.values(InventoryState).map(s => ({ value: s, label: s }));
 
   const columns: ColumnDefinition<any>[] = [
@@ -79,7 +90,7 @@ export default function InventorySpreadsheetPage() {
       readOnly: true,
       getValue: (row) => row.skuId || '',
       render: (value, row) => {
-        const sku = skus.find(s => s.id === row.skuId);
+        const sku = row.sku;
         return sku ? `${sku.skuCode} - ${sku.name}` : '';
       },
     },
@@ -103,13 +114,34 @@ export default function InventorySpreadsheetPage() {
       render: (value) => String(value || ''),
     },
     {
+      key: 'branchId',
+      header: 'Branch',
+      options: branchOptions,
+      width: '180px',
+      getValue: getRowBranchId,
+      setValue: (row, value) => {
+        if (!value) return { floorId: null, shelfId: null, boxId: null };
+
+        const currentFloor = floors.find(floor => floor.id === row.floorId);
+        const currentFloorStillValid = currentFloor && getFloorBranchId(currentFloor) === value;
+        const nextFloorId = currentFloorStillValid
+          ? currentFloor.id
+          : floors.find(floor => getFloorBranchId(floor) === value)?.id ?? null;
+
+        return { floorId: nextFloorId, shelfId: null, boxId: null };
+      },
+      validate: (value) => !value || floors.some(floor => getFloorBranchId(floor) === value)
+        ? null
+        : 'Selected branch has no floors',
+    },
+    {
       key: 'floorId',
       header: 'Floor',
       
       options: floorOptions,
       width: '180px',
       getValue: (row) => row.floorId || '',
-      setValue: (row, value) => ({ floorId: value || null }),
+      setValue: (_row, value) => ({ floorId: value || null, shelfId: null, boxId: null }),
       render: (value, row) => String(value || ""),
     },
     {
@@ -117,8 +149,17 @@ export default function InventorySpreadsheetPage() {
       header: 'Rack',
       options: rackOptions,
       width: '140px',
-      readOnly: true,
       getValue: (row) => row.shelf?.rackId || '',
+      setValue: (_row, value) => {
+        if (!value) return { shelfId: null, boxId: null };
+        const rack = racks.find(item => item.id === value);
+        const shelf = shelves.find(item => item.rackId === value);
+        return {
+          floorId: shelf ? getShelfFloorId(shelf) || null : rack?.floorId ?? rack?.floor?.id ?? null,
+          shelfId: shelf?.id ?? null,
+          boxId: null,
+        };
+      },
     },
     {
       key: 'shelfId',
@@ -127,7 +168,14 @@ export default function InventorySpreadsheetPage() {
       options: shelfOptions,
       width: '140px',
       getValue: (row) => row.shelfId || '',
-      setValue: (row, value) => ({ shelfId: value || null }),
+      setValue: (_row, value) => {
+        const shelf = shelves.find(item => item.id === value);
+        return {
+          floorId: shelf ? getShelfFloorId(shelf) || null : null,
+          shelfId: value || null,
+          boxId: null,
+        };
+      },
       render: (value, row) => String(value || ""),
     },
     {
@@ -137,7 +185,15 @@ export default function InventorySpreadsheetPage() {
       options: boxOptions,
       width: '140px',
       getValue: (row) => row.boxId || '',
-      setValue: (row, value) => ({ boxId: value || null }),
+      setValue: (_row, value) => {
+        const box = boxes.find(item => item.id === value);
+        const shelfId = box ? getBoxShelfId(box) || null : null;
+        return {
+          floorId: box ? getBoxFloorId(box) || null : null,
+          shelfId,
+          boxId: value || null,
+        };
+      },
       render: (value, row) => String(value || ""),
     },
     {
@@ -174,7 +230,7 @@ export default function InventorySpreadsheetPage() {
     try {
       await inventoryApi.delete(row.id);
       setRecords(current => current.filter(record => record.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete inventory:', err);
       throw err;
@@ -205,27 +261,18 @@ export default function InventorySpreadsheetPage() {
         <ReactSpreadsheetWrapper
           columns={columns}
           data={records}
-          isLoading={isLoading}
+          isLoading={isLoading || isLookupsLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
           canAdd={false}
         />
       </div>
-
-      {/* Pagination */}
-      {!isLoading && records.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

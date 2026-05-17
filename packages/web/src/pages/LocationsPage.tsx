@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { floorsApi, branchesApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
 import SearchableSelect from '../components/SearchableSelect';
+import { formatQuantity } from '../utils/quantity';
 
 type View = 'floors' | 'shelves' | 'boxes';
 
@@ -498,7 +499,7 @@ export default function LocationsPage() {
 											}, {})
 										).map(([state, qty]) => (
 											<span key={state} className="text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700">
-												{state}: {qty}
+												{state}: {formatQuantity(qty)}
 											</span>
 										))}
 									</div>
@@ -518,12 +519,12 @@ export default function LocationsPage() {
 														<span>📦</span>
 														<span className="font-mono text-xs text-gray-500">{sku?.skuCode}</span>
 														<span>{sku?.name}</span>
-														<span className="ml-auto text-sm font-semibold text-indigo-700">Qty: {totalQty}</span>
+														<span className="ml-auto text-sm font-semibold text-indigo-700">Qty: {formatQuantity(totalQty)}</span>
 													</div>
 													{records.map((r: any) => (
 														<div key={r.id} className="flex items-center gap-3 px-6 py-1.5 border-t border-gray-100 text-xs text-gray-600">
 															<span className="text-gray-400">└</span>
-															<span className="font-medium text-gray-700">×{r.quantity}</span>
+															<span className="font-medium text-gray-700">×{formatQuantity(r.quantity)}</span>
 															<span className="px-1.5 py-0.5 rounded-full text-xs font-medium" style={{ background: '#e0e7ff', color: '#3730a3' }}>{r.state}</span>
 															{r.batch && <span className="font-mono text-gray-400">{r.batch.batchNumber}</span>}
 															{r.shelf && <span className="text-gray-400">🗄 {r.shelf.name}</span>}

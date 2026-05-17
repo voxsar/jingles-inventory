@@ -86,11 +86,13 @@ export interface IBranch {
 export interface IProductImage {
 	id: string;
 	skuId: string;
+	variantId?: string | null;
 	url: string;
 	altText?: string | null;
 	isPrimary: boolean;
 	sortOrder: number;
 	createdAt: Date;
+	variant?: ISKUVariant | null;
 }
 
 export interface IProductBarcode {
@@ -244,6 +246,7 @@ export interface ISKUVariant {
 	updatedAt: Date;
 	sku?: ISKU;
 	attributeValues?: ISKUVariantValue[];
+	images?: IProductImage[];
 }
 
 export interface ISKUVariantValue {

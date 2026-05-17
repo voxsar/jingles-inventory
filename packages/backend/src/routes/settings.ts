@@ -14,21 +14,34 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/units', async (req: AuthRequest, res: Response): Promise<void> => {
+	const { search } = req.query as { search?: string };
 	const pagination = getPagination(req.query);
+	const where: Prisma.UnitOfMeasureWhereInput | undefined = search
+		? {
+			OR: [
+				{ name: { contains: search, mode: 'insensitive' } },
+				{ abbreviation: { contains: search, mode: 'insensitive' } },
+				{ type: { contains: search, mode: 'insensitive' } },
+				{ baseUnit: { contains: search, mode: 'insensitive' } },
+			],
+		}
+		: undefined;
 	if (pagination.isPaginated) {
 		const [items, total] = await Promise.all([
 			prisma.unitOfMeasure.findMany({
+				where,
 				skip: pagination.skip,
 				take: pagination.take,
 				orderBy: [{ type: 'asc' }, { name: 'asc' }],
 			}),
-			prisma.unitOfMeasure.count(),
+			prisma.unitOfMeasure.count({ where }),
 		]);
 		res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
 		return;
 	}
 
 	const units = await prisma.unitOfMeasure.findMany({
+		where,
 		orderBy: [{ type: 'asc' }, { name: 'asc' }],
 	});
 	res.json({ success: true, data: units });

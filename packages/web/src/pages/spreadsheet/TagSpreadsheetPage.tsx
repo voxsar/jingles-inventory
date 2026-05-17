@@ -1,39 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tagsApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import Pagination from '../../components/Pagination';
-import { buildCreatedRow, mergeUpdatedRow } from './spreadsheetPageUtils';
-
-const PAGE_SIZE = 50;
+import { buildCreatedRow, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 
 export default function TagSpreadsheetPage() {
   const navigate = useNavigate();
-  const [tags, setTags] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await tagsApi.list({ page: String(page), pageSize: String(pageSize) });
-      const data = res.data?.data?.items ?? res.data?.data ?? res.data ?? [];
-      setTags(Array.isArray(data) ? data : []);
-      setTotal(res.data?.data?.total ?? 0);
-      setTotalPages(res.data?.data?.totalPages ?? 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, [page, pageSize]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const {
+    rows: tags,
+    setRows: setTags,
+    isLoading,
+    isLoadingMore,
+    totalRows,
+    setTotalRows,
+    hasMoreRows,
+    loadMoreRows,
+  } = useLazySpreadsheetRows<any>(tagsApi.list, { searchTerm });
 
   const columns: ColumnDefinition<any>[] = [
     {
@@ -74,7 +57,7 @@ export default function TagSpreadsheetPage() {
     try {
       await tagsApi.delete(row.id);
       setTags(current => current.filter(tag => tag.id !== row.id));
-      setTotal(current => Math.max(0, current - 1));
+      setTotalRows(current => Math.max(0, current - 1));
     } catch (err) {
       console.error('Failed to delete tag:', err);
       throw err;
@@ -84,8 +67,8 @@ export default function TagSpreadsheetPage() {
   const handleAdd = async (data: Partial<any>) => {
     try {
       const response = await tagsApi.create(data);
-      setTags(current => [buildCreatedRow(data, response), ...current].slice(0, pageSize));
-      setTotal(current => current + 1);
+      setTags(current => [buildCreatedRow(data, response), ...current]);
+      setTotalRows(current => current + 1);
     } catch (err) {
       console.error('Failed to create tag:', err);
       throw err;
@@ -115,25 +98,17 @@ export default function TagSpreadsheetPage() {
           columns={columns}
           data={tags}
           isLoading={isLoading}
+          isLoadingMore={isLoadingMore}
+          totalRows={totalRows}
+          hasMoreRows={hasMoreRows}
           onSave={handleSave}
           onDelete={handleDelete}
           onAdd={handleAdd}
+          onLoadMore={loadMoreRows}
+          onSearchChange={setSearchTerm}
           getRowKey={(row) => row.id}
         />
       </div>
-
-      {!isLoading && tags.length > 0 && (
-        <div style={{ marginTop: '16px' }}>
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-          />
-        </div>
-      )}
     </div>
   );
 }

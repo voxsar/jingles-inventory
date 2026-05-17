@@ -540,9 +540,18 @@ type CommonReportFilters = {
 	pageSize?: number;
 };
 
-const emptySourceReport = (reportName: string, filters: CommonReportFilters = {}) => {
+type SourceRequirement = {
+	module: string;
+	tables: string[];
+	requiredFields: string[];
+	relationships?: string[];
+	notes?: string[];
+};
+
+const emptySourceReport = (reportName: string, filters: CommonReportFilters = {}, requirement?: SourceRequirement) => {
 	const page = filters.page ?? 1;
 	const pageSize = filters.pageSize ?? 50;
+	const missingTables = requirement?.tables?.join(', ');
 	return {
 		items: [],
 		total: 0,
@@ -553,8 +562,12 @@ const emptySourceReport = (reportName: string, filters: CommonReportFilters = {}
 			reportName,
 			sourceStatus: 'Source table not configured',
 			availableRows: 0,
+			...(missingTables ? { missingTables } : {}),
 		},
-		notice: `${reportName} needs its source module/table connected before live rows can be displayed.`,
+		missingSource: requirement,
+		notice: requirement
+			? `${reportName} is not connected because the ${requirement.module} source is missing. Add/connect table(s): ${missingTables}. Required fields: ${requirement.requiredFields.join(', ')}.`
+			: `${reportName} needs its source module/table connected before live rows can be displayed.`,
 	};
 };
 
@@ -566,6 +579,38 @@ const addDateRange = (where: any, field: string, fromDate?: Date, toDate?: Date)
 };
 
 const normalizeSearch = (value?: string) => value?.trim();
+
+const metadataRecord = (value: unknown): Record<string, any> => {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+	return value as Record<string, any>;
+};
+
+const stringFrom = (...values: any[]) => {
+	const value = values.find((item) => item !== undefined && item !== null && item !== '');
+	return value === undefined ? '' : String(value);
+};
+
+const numberFrom = (...values: any[]) => {
+	for (const value of values) {
+		if (value === undefined || value === null || value === '') continue;
+		const number = Number(value);
+		if (Number.isFinite(number)) return number;
+	}
+	return 0;
+};
+
+const paginateRows = <T>(rows: T[], filters: CommonReportFilters) => {
+	const page = filters.page ?? 1;
+	const pageSize = filters.pageSize ?? 50;
+	const start = (page - 1) * pageSize;
+	return {
+		items: rows.slice(start, start + pageSize),
+		total: rows.length,
+		page,
+		pageSize,
+		totalPages: Math.ceil(rows.length / pageSize),
+	};
+};
 
 const getInventoryEventRows = async (
 	eventTypes: string[],
@@ -1029,6 +1074,241 @@ export async function getSalesAggregateReport(filters: CommonReportFilters, sort
 	return { items: pagedItems, total: items.length, page, pageSize, totalPages: Math.ceil(items.length / pageSize), summary };
 }
 
+const purchaseOrderSourceRequirement: SourceRequirement = {
+	module: 'purchase order',
+	tables: ['purchase_orders', 'purchase_order_lines'],
+	requiredFields: [
+		'referenceNumber',
+		'supplierId',
+		'status',
+		'orderDate',
+		'expectedDeliveryDate',
+		'createdBy',
+		'skuId',
+		'quantity',
+		'unitCost',
+	],
+	relationships: ['supplier/vendor', 'creator/user', 'sku', 'variant', 'batch'],
+	notes: ['A GRN is receipt-side data only; it cannot reliably stand in for a purchase order note.'],
+};
+
+const quotationSourceRequirement: SourceRequirement = {
+	module: 'quotation',
+	tables: ['quotations', 'quotation_lines'],
+	requiredFields: [
+		'referenceNumber',
+		'supplierId',
+		'status',
+		'quotationDate',
+		'validUntil',
+		'createdBy',
+		'skuId',
+		'quantity',
+		'quotedCost',
+	],
+	relationships: ['supplier/vendor', 'creator/user', 'sku', 'variant', 'batch'],
+	notes: ['No quotation model, route, or Prisma relation exists in the current codebase.'],
+};
+
+export async function getPaidInOutReport(filters: CommonReportFilters) {
+	const { fromDate, toDate, status, search } = filters;
+	const where: any = {
+		OR: [
+			{ eventType: { in: ['PAID_IN', 'PAID_OUT', 'CASH_IN', 'CASH_OUT', 'POS_PAID_IN', 'POS_PAID_OUT', 'POS_CASH_IN', 'POS_CASH_OUT'] } },
+			{ reasonCode: { contains: 'paid', mode: 'insensitive' } },
+			{ reasonCode: { contains: 'cash', mode: 'insensitive' } },
+		],
+	};
+	addDateRange(where, 'timestamp', fromDate, toDate);
+
+	const events = await prisma.inventoryEvent.findMany({
+		where,
+		take: 10000,
+		orderBy: { timestamp: 'desc' },
+		include: { user: { select: { id: true, email: true, role: true } } },
+	});
+
+	const needle = normalizeSearch(search)?.toLowerCase();
+	const rows = events.map((event) => {
+		const metadata = metadataRecord(event.metadata);
+		const typeText = stringFrom(metadata.direction, metadata.type, metadata.transactionType, metadata.cashMovementType, event.eventType, event.reasonCode);
+		const signedAmount = numberFrom(metadata.amount, metadata.cashAmount, metadata.value, metadata.totalAmount, event.quantityDelta);
+		const direction = /out|withdraw|expense|payout|paid[-_ ]?out/i.test(typeText)
+			? 'Out'
+			: /in|deposit|income|payin|paid[-_ ]?in/i.test(typeText)
+				? 'In'
+				: signedAmount < 0 ? 'Out' : 'In';
+		return {
+			id: event.id,
+			date: event.timestamp,
+			reference: stringFrom(metadata.reference, metadata.receiptNumber, metadata.receiptNo, metadata.posReference, event.parentEntityId, event.id),
+			status: stringFrom(metadata.status, direction),
+			direction,
+			unit: stringFrom(metadata.unit, metadata.posUnit, event.terminalId),
+			terminalId: stringFrom(event.terminalId, metadata.terminalId),
+			reason: stringFrom(metadata.reason, event.reasonCode),
+			description: stringFrom(metadata.description, metadata.notes, metadata.memo),
+			amount: Math.abs(signedAmount),
+			user: event.user,
+			metadata,
+		};
+	}).filter((row) => {
+		if (status && row.status.toLowerCase() !== status.toLowerCase() && row.direction.toLowerCase() !== status.toLowerCase()) return false;
+		if (!needle) return true;
+		return [row.reference, row.status, row.direction, row.unit, row.terminalId, row.reason, row.description, row.user?.email].join(' ').toLowerCase().includes(needle);
+	});
+
+	const summary = rows.reduce((acc, row) => {
+		acc.totalRows += 1;
+		if (row.direction === 'Out') acc.totalPaidOut += row.amount;
+		else acc.totalPaidIn += row.amount;
+		acc.netCashMovement = acc.totalPaidIn - acc.totalPaidOut;
+		return acc;
+	}, { sourceStatus: 'Derived from inventory_events cash movement events', totalRows: 0, totalPaidIn: 0, totalPaidOut: 0, netCashMovement: 0 });
+
+	const paged = paginateRows(rows, filters);
+	return {
+		...paged,
+		summary,
+		notice: rows.length === 0
+			? 'No paid-in/out rows were found in inventory_events. For full live data, connect a POS cash movement table/module or write PAID_IN/PAID_OUT events with amount, direction, POS unit, reference, reason, and user metadata.'
+			: undefined,
+	};
+}
+
+export async function getSalesmenCommissionReport(filters: CommonReportFilters) {
+	const eventData = await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], { ...filters, page: 1, pageSize: 10000 });
+	const groups = new Map<string, any>();
+	const needle = normalizeSearch(filters.search)?.toLowerCase();
+
+	for (const row of eventData.rows) {
+		const metadata = metadataRecord(row.metadata);
+		const salesman = stringFrom(row.salesman, metadata.salesmanId, metadata.salesPersonId, 'Unassigned');
+		if (needle && ![salesman, row.reference, row.receiptNumber, row.productName, row.skuCode].join(' ').toLowerCase().includes(needle)) continue;
+		const commissionRate = numberFrom(metadata.commissionRate, metadata.commissionPercent, metadata.salesmanCommissionRate);
+		const commissionAmount = numberFrom(metadata.commissionAmount, metadata.salesmanCommissionAmount, commissionRate ? (row.revenue * commissionRate) / 100 : 0);
+		if (!groups.has(salesman)) {
+			groups.set(salesman, {
+				id: salesman,
+				salesman,
+				transactionCount: 0,
+				quantity: 0,
+				revenue: 0,
+				grossProfit: 0,
+				commissionableAmount: 0,
+				commissionAmount: 0,
+				commissionRate,
+			});
+		}
+		const group = groups.get(salesman);
+		group.transactionCount += 1;
+		group.quantity += row.quantity;
+		group.revenue += row.revenue;
+		group.grossProfit += row.grossProfit;
+		group.commissionableAmount += numberFrom(metadata.commissionableAmount, row.revenue);
+		group.commissionAmount += commissionAmount;
+		if (!group.commissionRate && commissionRate) group.commissionRate = commissionRate;
+	}
+
+	const rows = Array.from(groups.values()).map((row) => ({
+		...row,
+		effectiveCommissionRate: row.commissionableAmount ? (row.commissionAmount / row.commissionableAmount) * 100 : row.commissionRate,
+	})).sort((a, b) => b.commissionAmount - a.commissionAmount || b.revenue - a.revenue);
+
+	const summary = rows.reduce((acc, row) => {
+		acc.totalSalesmen += 1;
+		acc.totalTransactions += row.transactionCount;
+		acc.totalRevenue += row.revenue;
+		acc.totalCommission += row.commissionAmount;
+		return acc;
+	}, { sourceStatus: 'Derived from SALE_DEDUCTED inventory_events metadata', totalSalesmen: 0, totalTransactions: 0, totalRevenue: 0, totalCommission: 0 });
+
+	const paged = paginateRows(rows, filters);
+	return {
+		...paged,
+		summary,
+		notice: rows.length === 0
+			? 'No sales rows were found for commission reporting. For full live commissions, connect a salesman commission policy/table or write commissionRate/commissionAmount and salesman metadata on SALE_DEDUCTED events.'
+			: undefined,
+	};
+}
+
+export async function getAdvancedReceiptsReport(filters: CommonReportFilters) {
+	const { fromDate, toDate, status, search } = filters;
+	const where: any = {
+		OR: [
+			{ eventType: { in: ['ADVANCE_RECEIPT', 'ADVANCED_RECEIPT', 'POS_ADVANCE_RECEIPT', 'ADVANCE_PAYMENT', 'RECEIPT_RECALLED'] } },
+			{ eventType: InventoryEventType.SALE_DEDUCTED },
+			{ reasonCode: { contains: 'advance', mode: 'insensitive' } },
+			{ reasonCode: { contains: 'receipt', mode: 'insensitive' } },
+		],
+	};
+	addDateRange(where, 'timestamp', fromDate, toDate);
+
+	const events = await prisma.inventoryEvent.findMany({
+		where,
+		take: 10000,
+		orderBy: { timestamp: 'desc' },
+		include: { user: { select: { id: true, email: true, role: true } } },
+	});
+
+	const needle = normalizeSearch(search)?.toLowerCase();
+	const rows = events.map((event) => {
+		const metadata = metadataRecord(event.metadata);
+		const advanceAmount = numberFrom(metadata.advanceAmount, metadata.advancedAmount, metadata.depositAmount, metadata.amount, metadata.totalAmount);
+		const isAdvanceReceipt = Boolean(
+			metadata.isAdvanceReceipt
+			|| metadata.advanceReceipt
+			|| metadata.advancedReceipt
+			|| metadata.advanceAmount
+			|| metadata.depositAmount
+			|| /advance/i.test(`${event.eventType} ${event.reasonCode ?? ''}`)
+		);
+		if (!isAdvanceReceipt) return null;
+		const statusText = metadata.recalled
+			? 'Recalled'
+			: stringFrom(metadata.status, metadata.receiptStatus, metadata.pending ? 'Pending' : '', /recalled/i.test(event.eventType) ? 'Recalled' : 'Issued');
+		return {
+			id: event.id,
+			date: event.timestamp,
+			reference: stringFrom(metadata.reference, metadata.posReference, metadata.receiptNumber, metadata.receiptNo, event.parentEntityId, event.id),
+			receiptNumber: stringFrom(metadata.receiptNumber, metadata.receiptNo),
+			status: statusText,
+			customer: stringFrom(metadata.customerName, metadata.customer, metadata.customerId),
+			unit: stringFrom(metadata.unit, metadata.posUnit, event.terminalId),
+			terminalId: stringFrom(event.terminalId, metadata.terminalId),
+			amount: advanceAmount,
+			balanceAmount: numberFrom(metadata.balanceAmount, metadata.remainingAmount, metadata.pendingAmount),
+			recalledAt: metadata.recalledAt ?? null,
+			user: event.user,
+			metadata,
+		};
+	}).filter((row): row is NonNullable<typeof row> => {
+		if (!row) return false;
+		if (status && !['all', 'any'].includes(status.toLowerCase()) && row.status.toLowerCase() !== status.toLowerCase()) return false;
+		if (!needle) return true;
+		return [row.reference, row.receiptNumber, row.status, row.customer, row.unit, row.terminalId, row.user?.email].join(' ').toLowerCase().includes(needle);
+	});
+
+	const summary = rows.reduce((acc, row) => {
+		acc.totalReceipts += 1;
+		acc.totalAdvanceAmount += row.amount;
+		acc.totalBalanceAmount += row.balanceAmount;
+		if (row.status.toLowerCase() === 'pending') acc.pending += 1;
+		if (row.status.toLowerCase() === 'recalled') acc.recalled += 1;
+		return acc;
+	}, { sourceStatus: 'Derived from inventory_events advance receipt metadata', totalReceipts: 0, pending: 0, recalled: 0, totalAdvanceAmount: 0, totalBalanceAmount: 0 });
+
+	const paged = paginateRows(rows, filters);
+	return {
+		...paged,
+		summary,
+		notice: rows.length === 0
+			? 'No advanced receipt rows were found in inventory_events. For full live data, connect a POS advance receipt table/module or write advance receipt events with receipt number, status, customer, amount, balance, POS unit, and recalled metadata.'
+			: undefined,
+	};
+}
+
 export async function getCreditorsDebtorsReport(filters: CommonReportFilters) {
 	const { supplierId, fromDate, toDate, search } = filters;
 	const where: any = {};
@@ -1105,9 +1385,9 @@ export async function getCreditorsDebtorsReport(filters: CommonReportFilters) {
 export async function getGenericReport(reportId: string, filters: CommonReportFilters & { daysToExpiry?: number }) {
 	switch (reportId) {
 		case 'purchase-order':
-			return emptySourceReport('Purchase order note report', filters);
+			return emptySourceReport('Purchase order note report', filters, purchaseOrderSourceRequirement);
 		case 'quotation':
-			return emptySourceReport('Quotation report', filters);
+			return emptySourceReport('Quotation report', filters, quotationSourceRequirement);
 		case 'sales-return':
 			return getSalesEventReport(filters, { returnsOnly: true });
 		case 'tog-product-wise':
@@ -1127,7 +1407,7 @@ export async function getGenericReport(reportId: string, filters: CommonReportFi
 		case 'pos-sales':
 			return getSalesEventReport(filters);
 		case 'paid-in-out':
-			return emptySourceReport('Paid in and out report', filters);
+			return getPaidInOutReport(filters);
 		case 'product-exchange':
 			return getSalesEventReport(filters, { exchangeOnly: true });
 		case 'credit-card-sales':
@@ -1141,9 +1421,9 @@ export async function getGenericReport(reportId: string, filters: CommonReportFi
 		case 'top-sales':
 			return getSalesAggregateReport(filters, 'top');
 		case 'salesmen-commission':
-			return emptySourceReport('Salesmen commission report', filters);
+			return getSalesmenCommissionReport(filters);
 		case 'advanced-receipts':
-			return emptySourceReport('Advanced receipt reports', filters);
+			return getAdvancedReceiptsReport(filters);
 		default:
 			return emptySourceReport(reportId, filters);
 	}

@@ -39,6 +39,28 @@ describe('recordEvent', () => {
     );
   });
 
+  it('preserves fractional quantity changes for decimal inventory', async () => {
+    prismaMock.inventoryEvent.create.mockResolvedValue({ id: 'ev-decimal' });
+
+    await recordEvent({
+      eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+      parentEntityId: 'inv-001',
+      quantityDelta: 0.375,
+      beforeQuantity: 1.125,
+      afterQuantity: 1.5,
+    });
+
+    expect(prismaMock.inventoryEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          quantityDelta: 0.375,
+          beforeQuantity: 1.125,
+          afterQuantity: 1.5,
+        }),
+      })
+    );
+  });
+
   it('defaults overrideFlag to false when not provided', async () => {
     prismaMock.inventoryEvent.create.mockResolvedValue({ id: 'ev-001', overrideFlag: false });
 
