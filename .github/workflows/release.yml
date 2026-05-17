@@ -78,6 +78,8 @@ jobs:
         shell: bash
         working-directory: packages/electron
         run: |
+          mkdir -p node_modules
+
           case "${{ inputs.windows_target }}" in
             exe)
               TARGETS="nsis"
