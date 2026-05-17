@@ -1,4 +1,4 @@
-name: Release Windows Executable
+name: Release Windows Build
 
 on:
   workflow_dispatch:
@@ -17,6 +17,15 @@ on:
         required: false
         default: false
         type: boolean
+      windows_target:
+        description: 'Windows artifact(s) to package and attach'
+        required: true
+        default: 'exe'
+        type: choice
+        options:
+          - exe
+          - msi
+          - exe+msi
 
 permissions:
   contents: write
@@ -26,7 +35,7 @@ env:
 
 jobs:
   release:
-    name: Build & Release Windows Executable
+    name: Build & Release Windows Build
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,12 +68,33 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
-      - name: Build electron TypeScript
-        run: npm run build:electron
+      - name: Build shared web frontend
+        run: npm run build:web
 
-      - name: Package Windows executable
+      - name: Build electron TypeScript
+        run: npm run build --workspace=packages/electron
+
+      - name: Package selected Windows artifacts
+        shell: bash
         working-directory: packages/electron
-        run: npx electron-builder --win
+        run: |
+          case "${{ inputs.windows_target }}" in
+            exe)
+              TARGETS="nsis"
+              ;;
+            msi)
+              TARGETS="msi"
+              ;;
+            exe+msi)
+              TARGETS="nsis msi"
+              ;;
+            *)
+              echo "Unsupported windows_target: ${{ inputs.windows_target }}"
+              exit 1
+              ;;
+          esac
+
+          npx electron-builder --win $TARGETS --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,15 +112,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "v${{ steps.version.outputs.version }}"
-          $exeFiles = Get-ChildItem -Path "packages/electron/release" -Filter "*.exe" -Recurse |
-            Select-Object -ExpandProperty FullName
-          if (-not $exeFiles) {
-            Write-Error "No .exe files found in packages/electron/release"
+          $patterns = switch ("${{ inputs.windows_target }}") {
+            "exe" { @("*.exe") }
+            "msi" { @("*.msi") }
+            "exe+msi" { @("*.exe", "*.msi") }
+            default { throw "Unsupported windows_target: ${{ inputs.windows_target }}" }
+          }
+
+          $releaseFiles = foreach ($pattern in $patterns) {
+            Get-ChildItem -Path "packages/electron/release" -Filter $pattern -Recurse |
+              Select-Object -ExpandProperty FullName
+          }
+
+          $releaseFiles = $releaseFiles | Sort-Object -Unique
+
+          if (-not $releaseFiles) {
+            Write-Error "No release assets found in packages/electron/release for target ${{ inputs.windows_target }}"
             exit 1
           }
+
           $ghArgs = @("release", "create", $tag, "--title", $tag, "--generate-notes")
           if ("${{ inputs.prerelease }}" -eq "true") {
             $ghArgs += "--prerelease"
           }
-          $ghArgs += $exeFiles
+          $ghArgs += $releaseFiles
           gh @ghArgs

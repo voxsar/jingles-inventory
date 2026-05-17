@@ -23,7 +23,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@jingles/shared": [
-				"../shared/src"
+				"../shared/src/index.ts"
 			],
 			"@jingles/shared/*": [
 				"../shared/src/*"

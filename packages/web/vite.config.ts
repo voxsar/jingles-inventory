@@ -5,9 +5,16 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@jingles/shared': path.resolve(__dirname, '../shared/src'),
-    },
+    alias: [
+      {
+        find: '@jingles/shared',
+        replacement: path.resolve(__dirname, '../shared/src/index.ts'),
+      },
+      {
+        find: /^@jingles\/shared\/(.*)$/,
+        replacement: `${path.resolve(__dirname, '../shared/src')}/$1`,
+      },
+    ],
   },
   server: {
     port: 5173,

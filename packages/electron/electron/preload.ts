@@ -1,8 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ElectronAPI } from '@jingles/shared';
 
 // Expose safe IPC API to renderer process
-const electronAPI: ElectronAPI = {
+const electronAPI = {
   // Barcode scanner
   barcode: {
     onScan: (callback: (barcode: string) => void) => {
@@ -69,6 +68,6 @@ contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 // Type declaration for renderer
 declare global {
   interface Window {
-    electronAPI?: ElectronAPI;
+    electronAPI?: typeof electronAPI;
   }
 }

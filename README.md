@@ -415,6 +415,16 @@ cd packages/electron
 npm run build:electron
 ```
 
+### Manual GitHub Release
+
+The `Release Windows Build` GitHub Actions workflow can be run manually from the Actions tab.
+
+- Choose the version bump: `patch`, `minor`, or `major`
+- Choose whether the GitHub release is a pre-release
+- Choose the Windows artifact target: `exe`, `msi`, or `exe+msi`
+
+The workflow will bump versions, build the Electron app on `windows-latest`, tag the repo, and attach the selected Windows installer files to the GitHub release.
+
 ### Database Seeding
 
 The seed script creates:
