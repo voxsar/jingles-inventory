@@ -3,7 +3,7 @@ import { param, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@jingles/shared';
-import { createPRN, submitPRN, markPRNPickedUp } from '../modules/prn/prnService';
+import { createPRN, submitPRN, markPRNPickedUp } from '../modules/purchaseReturns/prnService';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
 

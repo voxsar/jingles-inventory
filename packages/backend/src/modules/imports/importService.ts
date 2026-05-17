@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '../../prisma/client';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
 import { createGRN } from '../grn/grnService';
-import { createPRN } from '../prn/prnService';
+import { createPRN } from '../purchaseReturns/prnService';
 import { preparePromptContent } from './fileExtractor';
 import { mapImportDocumentWithClaude } from './claudeClient';
 import { prepareImportRecords } from './previewBuilder';

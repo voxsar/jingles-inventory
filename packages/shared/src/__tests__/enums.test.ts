@@ -31,6 +31,7 @@ describe('InventoryEventType enum', () => {
   it('contains all required event types', () => {
     const types = Object.values(InventoryEventType);
     expect(types).toContain('GRN_CREATED');
+    expect(types).toContain('PRN_CREATED');
     expect(types).toContain('BOX_OPENED');
     expect(types).toContain('INSPECTION_APPROVED');
     expect(types).toContain('LOCATION_TRANSFER');
@@ -41,8 +42,8 @@ describe('InventoryEventType enum', () => {
     expect(types).toContain('DAMAGE_RECORDED');
   });
 
-  it('has exactly 9 event types', () => {
-    expect(Object.values(InventoryEventType)).toHaveLength(9);
+  it('has exactly 10 event types', () => {
+    expect(Object.values(InventoryEventType)).toHaveLength(10);
   });
 });
 
