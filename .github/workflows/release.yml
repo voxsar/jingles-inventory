@@ -78,6 +78,10 @@ jobs:
         shell: bash
         working-directory: packages/electron
         run: |
+          unset GH_TOKEN GITHUB_TOKEN
+
+          mkdir -p node_modules
+
           case "${{ inputs.windows_target }}" in
             exe)
               TARGETS="nsis"
@@ -95,8 +99,6 @@ jobs:
           esac
 
           npx electron-builder --win $TARGETS --publish never
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit & tag version bump
         shell: bash
