@@ -5,15 +5,12 @@ import fs from 'fs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
+import { getProductsUploadRoot, getStorageRoot } from '../utils/runtimePaths';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
 	destination: (_req, _file, cb) => {
-		const uploadDir = path.join(process.cwd(), 'uploads', 'products');
-		if (!fs.existsSync(uploadDir)) {
-			fs.mkdirSync(uploadDir, { recursive: true });
-		}
-		cb(null, uploadDir);
+		cb(null, getProductsUploadRoot());
 	},
 	filename: (_req, file, cb) => {
 		const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
@@ -195,7 +192,7 @@ router.delete('/images/:imageId', async (req: AuthRequest, res: Response): Promi
 		});
 
 		// Delete physical file
-		const filePath = path.join(process.cwd(), image.url);
+		const filePath = path.join(getStorageRoot(), image.url);
 		if (fs.existsSync(filePath)) {
 			fs.unlinkSync(filePath);
 		}
@@ -300,7 +297,7 @@ router.post('/video/:skuId', upload.single('video'), async (req: AuthRequest, re
 
 		// If SKU already has a video, delete the old one
 		if (sku.videoUrl) {
-			const oldVideoPath = path.join(process.cwd(), sku.videoUrl);
+			const oldVideoPath = path.join(getStorageRoot(), sku.videoUrl);
 			if (fs.existsSync(oldVideoPath)) {
 				fs.unlinkSync(oldVideoPath);
 			}
@@ -352,7 +349,7 @@ router.delete('/video/:skuId', async (req: AuthRequest, res: Response): Promise<
 		}
 
 		// Delete physical file
-		const filePath = path.join(process.cwd(), sku.videoUrl);
+		const filePath = path.join(getStorageRoot(), sku.videoUrl);
 		if (fs.existsSync(filePath)) {
 			fs.unlinkSync(filePath);
 		}

@@ -4,10 +4,10 @@
   "main": "dist/electron/main.js",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"tsc -w\" \"wait-on dist/electron/main.js http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"tsc -w\" \"wait-on dist/electron/main.js http://localhost:5173 && node scripts/launch-electron.cjs .\"",
     "build": "tsc",
-    "build:electron": "electron-builder",
-    "start": "electron .",
+    "build:electron": "node scripts/verify-package-inputs.cjs && electron-builder",
+    "start": "node scripts/launch-electron.cjs .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -15,6 +15,7 @@
   "dependencies": {
     "axios": "^1.6.2",
     "better-sqlite3": "^12.10.0",
+    "dotenv": "^16.3.1",
     "uuid": "^9.0.0",
     "vite": "8.0.13"
   },
@@ -26,6 +27,8 @@
     "concurrently": "^8.2.2",
     "electron": "^38.8.6",
     "electron-builder": "^26.8.1",
+    "electronmon": "^2.0.4",
+    "nodemon": "^3.1.14",
     "typescript": "^5.3.3",
     "wait-on": "^7.2.0"
   },
@@ -39,6 +42,24 @@
     "files": [
       "dist/**/*",
       "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web/dist"
+      },
+      {
+        "from": "../backend/dist",
+        "to": "backend/dist"
+      },
+      {
+        "from": "../backend/prisma",
+        "to": "backend/prisma"
+      },
+      {
+        "from": "../backend/generated",
+        "to": "backend/generated"
+      }
     ],
     "mac": {
       "category": "public.app-category.business"

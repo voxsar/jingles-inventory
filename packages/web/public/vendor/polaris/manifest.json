@@ -1,0 +1,15 @@
+{
+  "downloadedAt": "2026-05-17T18:49:56.211Z",
+  "source": {
+    "polarisScriptUrl": "https://cdn.shopify.com/shopifycloud/polaris.js",
+    "fontStylesheetUrl": "https://cdn.shopify.com/static/fonts/inter/v4/styles.css",
+    "iconBaseUrl": "https://cdn.shopify.com/shopifycloud/admin-ui-foundations/icons/",
+    "internalIconBaseUrl": "https://cdn.shopify.com/shopifycloud/admin-ui-foundations/internal-only/"
+  },
+  "counts": {
+    "icons": 515,
+    "internalIcons": 111,
+    "fontFiles": 7
+  },
+  "previousDownloadedAt": null
+}

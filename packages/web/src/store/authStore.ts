@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { IUser } from '@jingles/shared';
 import { authApi } from '../api/client';
 import { branding } from '../config/branding';
+import { clearDesktopAuthCache, persistDesktopAuthCache } from '../utils/runtime';
 
 interface AuthState {
 	user: IUser | null;
@@ -27,6 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 			const responseData = res.data?.data ?? res.data;
 			const { token, user } = responseData;
 			localStorage.setItem(branding.tokenStorageKey, token);
+			persistDesktopAuthCache(token, user);
 			set({ token, user, isLoading: false });
 		} catch (err: any) {
 			set({
@@ -39,6 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 	logout: () => {
 		localStorage.removeItem(branding.tokenStorageKey);
+		clearDesktopAuthCache();
 		set({ user: null, token: null });
 	},
 
@@ -50,9 +53,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 			const res = await authApi.me();
 			// Handle potential response structure variations
 			const user = res.data?.data ?? res.data;
+			persistDesktopAuthCache(token, user);
 			set({ user, isLoading: false });
 		} catch {
 			localStorage.removeItem(branding.tokenStorageKey);
+			clearDesktopAuthCache();
 			set({ user: null, token: null, isLoading: false });
 		}
 	},

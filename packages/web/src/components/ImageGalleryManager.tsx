@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl, resolveBackendUrl } from '../utils/runtime';
 
 interface ProductImage {
 	id: string;
@@ -33,21 +34,10 @@ export default function ImageGalleryManager({
 	const [images, setImages] = useState<ProductImage[]>(initialImages);
 	const [videoUrl, setVideoUrl] = useState<string | null>(initialVideoUrl);
 	const [isDeleting, setIsDeleting] = useState<string | null>(null);
+	const resolvedApiBaseUrl = apiBaseUrl || getApiBaseUrl();
 
 	const resolveMediaUrl = (rawUrl: string) => {
-		if (!rawUrl) return rawUrl;
-		if (rawUrl.startsWith('/uploads/')) return `${window.location.origin}${rawUrl}`;
-		if (/^https?:\/\//i.test(rawUrl)) {
-			try {
-				const parsed = new URL(rawUrl);
-				if (parsed.pathname.startsWith('/uploads/')) {
-					return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
-				}
-			} catch {
-				return rawUrl;
-			}
-		}
-		return `${apiBaseUrl}${rawUrl}`;
+		return resolveBackendUrl(rawUrl, resolvedApiBaseUrl);
 	};
 
 	useEffect(() => {
@@ -61,7 +51,7 @@ export default function ImageGalleryManager({
 	const setPrimary = async (imageId: string) => {
 		try {
 			await axios.put(
-				`${apiBaseUrl}/api/uploads/images/${imageId}/primary`,
+				resolveBackendUrl(`/api/uploads/images/${imageId}/primary`, resolvedApiBaseUrl),
 				{},
 				{
 					headers: { Authorization: `Bearer ${authToken}` },
@@ -79,7 +69,7 @@ export default function ImageGalleryManager({
 
 		setIsDeleting(imageId);
 		try {
-			await axios.delete(`${apiBaseUrl}/api/uploads/images/${imageId}`, {
+			await axios.delete(resolveBackendUrl(`/api/uploads/images/${imageId}`, resolvedApiBaseUrl), {
 				headers: { Authorization: `Bearer ${authToken}` },
 			});
 			onUpdate();
@@ -95,7 +85,7 @@ export default function ImageGalleryManager({
 		if (!confirm('Are you sure you want to delete this video?')) return;
 
 		try {
-			await axios.delete(`${apiBaseUrl}/api/uploads/video/${skuId}`, {
+			await axios.delete(resolveBackendUrl(`/api/uploads/video/${skuId}`, resolvedApiBaseUrl), {
 				headers: { Authorization: `Bearer ${authToken}` },
 			});
 			onUpdate();
@@ -124,7 +114,7 @@ export default function ImageGalleryManager({
 	const saveImageOrder = async (imageIds: string[]) => {
 		try {
 			await axios.put(
-				`${apiBaseUrl}/api/uploads/images/reorder`,
+				resolveBackendUrl('/api/uploads/images/reorder', resolvedApiBaseUrl),
 				{ imageIds },
 				{
 					headers: { Authorization: `Bearer ${authToken}` },

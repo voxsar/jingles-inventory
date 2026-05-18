@@ -1,5 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+const DESKTOP_LOCAL_API_HOST = process.env.ELECTRON_LOCAL_API_HOST ?? '127.0.0.1';
+const DESKTOP_LOCAL_API_PORT = process.env.ELECTRON_LOCAL_API_PORT ?? '3630';
+const DESKTOP_LOCAL_API_URL =
+  process.env.ELECTRON_LOCAL_API_URL ?? `http://${DESKTOP_LOCAL_API_HOST}:${DESKTOP_LOCAL_API_PORT}`;
+
 // Expose safe IPC API to renderer process
 const electronAPI = {
   // Barcode scanner
@@ -41,8 +46,12 @@ const electronAPI = {
 
   // App info
   app: {
+    backendUrl: DESKTOP_LOCAL_API_URL,
     version: () => ipcRenderer.invoke('app:version'),
     openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
+    setAuthCache: (auth: { token: string; user: unknown }) =>
+      ipcRenderer.invoke('app:set-auth-cache', auth),
+    clearAuthCache: () => ipcRenderer.invoke('app:clear-auth-cache'),
   },
 
   // Online/offline detection

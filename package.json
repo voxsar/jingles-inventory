@@ -9,10 +9,11 @@
 		"dev:backend": "npm run dev --workspace=packages/backend",
 		"dev:web": "npm run dev --workspace=packages/web",
 		"dev:electron": "concurrently \"npm run dev --workspace=packages/web\" \"npm run dev --workspace=packages/electron\"",
+		"vendor:polaris": "node scripts/vendor-polaris.mjs",
 		"build:shared": "npm run build --workspace=packages/shared",
 		"build:backend": "npm run build --workspace=packages/backend",
 		"build:web": "npm run build --workspace=packages/web",
-		"build:electron": "npm run build:web && npm run build --workspace=packages/electron && npm run build:electron --workspace=packages/electron",
+		"build:electron": "npm run build:shared && npm run build:backend && npm run build:web && npm run build --workspace=packages/electron && npm run build:electron --workspace=packages/electron",
 		"build": "npm run build:shared && npm run build:backend && npm run build:web",
 		"deploy:backend": "npm run deploy --workspace=packages/backend",
 		"lint": "npm run lint --workspaces --if-present",
@@ -25,6 +26,7 @@
 		"test:ci": "npm run test --workspaces --if-present"
 	},
 	"devDependencies": {
+		"electron": "^38.8.6",
 		"typescript": "^5.3.3"
 	}
 }

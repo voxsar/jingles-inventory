@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { branding } from '../config/branding';
+import { clearDesktopAuthCache, redirectToLogin, resolveBackendUrl } from '../utils/runtime';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: resolveBackendUrl('/api'),
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -17,7 +18,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(branding.tokenStorageKey);
-      window.location.href = '/login';
+      clearDesktopAuthCache();
+      redirectToLogin();
     }
     return Promise.reject(error);
   }

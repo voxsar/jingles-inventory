@@ -8,6 +8,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { getPagination, paginatedPayload } from '../utils/pagination';
 import logger from '../utils/logger';
 import { getSupportedImportMimeType, isSupportedImportFile } from '../modules/imports/fileExtractor';
+import { getImportsUploadRoot } from '../utils/runtimePaths';
 import {
 	approveImportJob,
 	isImportEntityType,
@@ -20,10 +21,7 @@ const router = Router();
 
 router.use(authenticate);
 
-const uploadDir = path.join(process.cwd(), 'uploads', 'imports');
-if (!fs.existsSync(uploadDir)) {
-	fs.mkdirSync(uploadDir, { recursive: true });
-}
+const uploadDir = getImportsUploadRoot();
 
 const upload = multer({
 	storage: multer.diskStorage({

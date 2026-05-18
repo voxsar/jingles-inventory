@@ -1,5 +1,6 @@
 import { useState, useRef, DragEvent } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl, resolveBackendUrl } from '../utils/runtime';
 
 interface MediaUploadProps {
 	skuId: string;
@@ -32,6 +33,7 @@ export default function MediaUpload({
 	const [isUploading, setIsUploading] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const resolvedApiBaseUrl = apiBaseUrl || getApiBaseUrl();
 
 	const handleDragEnter = (e: DragEvent) => {
 		e.preventDefault();
@@ -96,7 +98,7 @@ export default function MediaUpload({
 					formData.append('variantId', variantId);
 				}
 
-				await axios.post(`${apiBaseUrl}/api/uploads/images/${skuId}`, formData, {
+				await axios.post(resolveBackendUrl(`/api/uploads/images/${skuId}`, resolvedApiBaseUrl), formData, {
 					headers: {
 						'Content-Type': 'multipart/form-data',
 						Authorization: `Bearer ${authToken}`,
@@ -119,7 +121,7 @@ export default function MediaUpload({
 				formData.append('video', videoFile);
 				setUploadProgress(prev => ({ ...prev, [videoFile.name]: 0 }));
 
-				await axios.post(`${apiBaseUrl}/api/uploads/video/${skuId}`, formData, {
+				await axios.post(resolveBackendUrl(`/api/uploads/video/${skuId}`, resolvedApiBaseUrl), formData, {
 					headers: {
 						'Content-Type': 'multipart/form-data',
 						Authorization: `Bearer ${authToken}`,

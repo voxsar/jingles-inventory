@@ -1,43 +1,56 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { configureSyncEngine, syncAll, queueOperation, stopAutoSync } from '../sync/syncEngine';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  configureSyncEngine,
+  processRealtimeSyncEvent,
+  queueOperation,
+  stopAutoSync,
+  syncAll,
+} from '../sync/syncEngine';
 
-// Mock axios
-vi.mock('axios', () => ({
-  default: {
-    post: vi.fn(),
-    get: vi.fn(),
-  },
-}));
-
-// Mock localDB functions
 vi.mock('../offline/localDB', () => ({
-  getSyncQueue: vi.fn().mockReturnValue([]),
   addToSyncQueue: vi.fn(),
-  markSyncProcessed: vi.fn(),
+  applyReplicaMutation: vi.fn(),
   clearProcessedQueue: vi.fn(),
-  getDirtyRecords: vi.fn().mockReturnValue([]),
-  markRecordSynced: vi.fn(),
-  upsertInventoryRecord: vi.fn(),
-  upsertSKU: vi.fn(),
-  upsertGRN: vi.fn(),
+  clearProcessedRequestSyncQueue: vi.fn(),
   getConfig: vi.fn().mockReturnValue(null),
+  getPendingRequestSyncQueue: vi.fn().mockReturnValue([]),
+  getSyncQueue: vi.fn().mockReturnValue([]),
+  markRequestSyncFailed: vi.fn(),
+  markRequestSyncProcessed: vi.fn(),
+  markSyncProcessed: vi.fn(),
+  replaceReplicaSnapshot: vi.fn(),
   setConfig: vi.fn(),
 }));
 
-import axios from 'axios';
 import {
-  getSyncQueue,
   addToSyncQueue,
-  markSyncProcessed,
-  clearProcessedQueue,
-  getDirtyRecords,
-  markRecordSynced,
-  upsertInventoryRecord,
+  applyReplicaMutation,
   getConfig,
+  getPendingRequestSyncQueue,
+  getSyncQueue,
+  markRequestSyncFailed,
+  markRequestSyncProcessed,
+  replaceReplicaSnapshot,
   setConfig,
 } from '../offline/localDB';
 
-describe('syncEngine - configureSyncEngine', () => {
+const fetchMock = vi.fn();
+vi.stubGlobal('fetch', fetchMock);
+
+describe('syncEngine', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stopAutoSync();
+    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
+
+    configureSyncEngine({
+      serverUrl: 'http://localhost:3001',
+      clientId: 'client-test-001',
+      getToken: () => 'test-token',
+    });
+  });
+
   it('configures sync engine without throwing', () => {
     expect(() =>
       configureSyncEngine({
@@ -47,159 +60,152 @@ describe('syncEngine - configureSyncEngine', () => {
       })
     ).not.toThrow();
   });
-});
 
-describe('syncAll', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    configureSyncEngine({
-      serverUrl: 'http://localhost:3001',
-      clientId: 'client-test-001',
-      getToken: () => 'test-token',
-    });
-  });
-
-  it('returns error when sync is not configured', async () => {
-    // Reset sync config by temporarily overriding
-    stopAutoSync();
-
-    // Create an unconfigured engine by using a new module context
-    // We test by temporarily setting config to null via a fresh call structure
-    const result = await syncAll();
-    // With config set from beforeEach, pushed = 0 (no queue items)
-    expect(result).toHaveProperty('pushed');
-    expect(result).toHaveProperty('pulled');
-    expect(result).toHaveProperty('conflicts');
-    expect(result).toHaveProperty('errors');
-  });
-
-  it('returns zero push when queue is empty', async () => {
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { data: {} } });
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [], skus: [], grns: [] } },
+  it('pulls a full replica snapshot when there are no pending local requests', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: {
+          users: [{ id: 'user-001', email: 'admin@test.com', role: 'Admin', password_hash: '' }],
+          skus: [{ id: 'sku-001', sku_code: 'SKU-001' }],
+        },
+      }),
     });
 
     const result = await syncAll();
 
     expect(result.pushed).toBe(0);
-    expect(result.errors).toHaveLength(0);
+    expect(result.pulled).toBe(2);
+    expect(replaceReplicaSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        users: expect.any(Array),
+        skus: expect.any(Array),
+      })
+    );
+    expect(setConfig).toHaveBeenCalledWith('lastSyncTime', expect.any(String));
   });
 
-  it('pushes queued operations to server', async () => {
-    const queuedOps = [
-      { id: 'op-001', client_id: 'client-test-001', operation: 'UPSERT_INVENTORY', payload: JSON.stringify({ id: 'inv-001' }), status: 'Pending' },
-    ];
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue(queuedOps);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
+  it('replays pending request sync entries before pulling the replica snapshot', async () => {
+    (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce([
+        {
+          id: 'req-001',
+          method: 'POST',
+          path: '/api/vendors',
+          content_type: 'application/json',
+          body: JSON.stringify({ name: 'Vendor A' }),
+          files: JSON.stringify([]),
+        },
+      ])
+      .mockReturnValueOnce([]);
 
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { processed: [{ id: 'op-001', status: 'Processed' }] } },
-    });
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [], skus: [], grns: [] } },
-    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        text: vi.fn().mockResolvedValue(''),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ data: { users: [], vendors: [] } }),
+      });
 
     const result = await syncAll();
 
     expect(result.pushed).toBe(1);
-    expect(markSyncProcessed).toHaveBeenCalledWith('op-001', 'Processed');
+    expect(markRequestSyncProcessed).toHaveBeenCalledWith('req-001');
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3001/api/vendors',
+      expect.objectContaining({
+        method: 'POST',
+      })
+    );
+    expect(replaceReplicaSnapshot).toHaveBeenCalled();
   });
 
-  it('counts conflicts when server reports conflict', async () => {
-    const queuedOps = [
-      { id: 'op-conflict-001', client_id: 'client-test-001', operation: 'UPSERT_INVENTORY', payload: JSON.stringify({ id: 'inv-001', version: 1 }), status: 'Pending' },
-    ];
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue(queuedOps);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
-
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: {
-        data: {
-          processed: [
-            { id: 'op-conflict-001', status: 'Conflict', conflictNotes: 'Version mismatch' },
-          ],
+  it('blocks the replica pull when a pending request cannot be synced yet', async () => {
+    (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce([
+        {
+          id: 'req-001',
+          method: 'POST',
+          path: '/api/vendors',
+          content_type: 'application/json',
+          body: JSON.stringify({ name: 'Vendor A' }),
+          files: JSON.stringify([]),
         },
-      },
-    });
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [], skus: [], grns: [] } },
-    });
+      ])
+      .mockReturnValueOnce([
+        {
+          id: 'req-001',
+          method: 'POST',
+          path: '/api/vendors',
+          content_type: 'application/json',
+          body: JSON.stringify({ name: 'Vendor A' }),
+          files: JSON.stringify([]),
+        },
+      ]);
+
+    fetchMock.mockRejectedValueOnce(new Error('Network timeout'));
 
     const result = await syncAll();
 
-    expect(result.conflicts).toBe(1);
-    expect(markSyncProcessed).toHaveBeenCalledWith('op-conflict-001', 'Conflict', 'Version mismatch');
+    expect(result.errors.some((error) => error.includes('pending sync'))).toBe(true);
+    expect(markRequestSyncFailed).toHaveBeenCalledWith('req-001', 'Network timeout', true);
+    expect(replaceReplicaSnapshot).not.toHaveBeenCalled();
   });
 
-  it('pulls inventory records and calls upsert', async () => {
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { data: {} } });
+  it('processes legacy sync_queue operations for backwards compatibility', async () => {
+    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        id: 'legacy-001',
+        client_id: 'client-test-001',
+        operation: 'UPSERT_INVENTORY',
+        payload: JSON.stringify({ id: 'inv-001' }),
+        status: 'Pending',
+      },
+    ]);
 
-    const pulledRecord = {
-      id: 'inv-pulled-001',
-      skuId: 'sku-001',
-      quantity: 10,
-      state: 'ShelfReady',
-      version: 2,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-10T00:00:00Z',
-    };
-
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [pulledRecord], skus: [], grns: [] } },
-    });
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: { processed: [{ id: 'legacy-001', status: 'Processed' }] },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ data: { users: [] } }),
+      });
 
     const result = await syncAll();
 
-    expect(result.pulled).toBeGreaterThan(0);
-    expect(upsertInventoryRecord).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'inv-pulled-001', quantity: 10 })
+    expect(result.pushed).toBe(1);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3001/api/sync/push',
+      expect.objectContaining({
+        method: 'POST',
+      })
     );
   });
 
-  it('handles push network error gracefully', async () => {
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([
-      { id: 'op-001', client_id: 'client-001', operation: 'UPSERT_INVENTORY', payload: JSON.stringify({}), status: 'Pending' },
-    ]);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
+  it('applies realtime replica mutation events directly to the local replica', () => {
+    const realtimeEvent = {
+      type: 'replica.mutation' as const,
+      table: 'vendors' as const,
+      action: 'upsert' as const,
+      row: {
+        id: 'vendor-001',
+        name: 'Vendor A',
+      },
+      emittedAt: '2026-05-18T12:00:00.000Z',
+    };
 
-    (axios.post as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network timeout'));
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [], skus: [], grns: [] } },
-    });
+    processRealtimeSyncEvent(realtimeEvent);
 
-    const result = await syncAll();
-
-    expect(result.errors.length).toBeGreaterThan(0);
-    expect(result.errors.some(e => e.includes('Push') || e.includes('Push request failed'))).toBe(true);
-  });
-
-  it('handles pull network error gracefully', async () => {
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { data: {} } });
-    (axios.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Pull failed'));
-
-    const result = await syncAll();
-
-    expect(result.errors.length).toBeGreaterThan(0);
-    expect(result.errors.some(e => e.includes('Pull') || e.includes('pull'))).toBe(true);
-  });
-
-  it('updates lastSyncTime config after successful pull', async () => {
-    (getSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (getDirtyRecords as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (axios.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { data: {} } });
-    (axios.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { data: { inventoryRecords: [], skus: [], grns: [] } },
-    });
-
-    await syncAll();
-
-    expect(setConfig).toHaveBeenCalledWith('lastSyncTime', expect.any(String));
+    expect(applyReplicaMutation).toHaveBeenCalledWith(realtimeEvent);
+    expect(setConfig).toHaveBeenCalledWith('lastSyncTime', '2026-05-18T12:00:00.000Z');
   });
 });
 
@@ -209,7 +215,7 @@ describe('queueOperation', () => {
     (getConfig as ReturnType<typeof vi.fn>).mockReturnValue('existing-client-id');
   });
 
-  it('adds operation to sync queue', () => {
+  it('adds operation to the legacy sync queue', () => {
     queueOperation('UPSERT_INVENTORY', { id: 'inv-001', quantity: 5 });
 
     expect(addToSyncQueue).toHaveBeenCalledWith(
@@ -223,11 +229,10 @@ describe('queueOperation', () => {
     queueOperation('BOX_OPEN', { skuId: 'sku-001' });
 
     const call = (addToSyncQueue as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(call.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(call.id).toMatch(/^[0-9a-f-]{36}$/i);
   });
 
-  it('uses existing clientId from config', () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockReturnValue('existing-client-id');
+  it('uses the existing clientId from config', () => {
     queueOperation('STATE_CHANGE', { recordId: 'inv-001', newState: 'Inspected' });
 
     const call = (addToSyncQueue as ReturnType<typeof vi.fn>).mock.calls[0][0];

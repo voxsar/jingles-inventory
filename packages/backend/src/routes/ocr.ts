@@ -5,9 +5,10 @@ import fs from 'fs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { processInvoiceFile } from '../modules/ocr/ocrProcessor';
 import logger from '../utils/logger';
+import { getOcrUploadRoot } from '../utils/runtimePaths';
 
 const upload = multer({
-  dest: '/tmp/ocr-uploads/',
+  dest: getOcrUploadRoot(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ['.jpg', '.jpeg', '.png', '.pdf', '.txt'];

@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@jingles.com');
+  const [email, setEmail] = useState('admin@theredsun.org');
   const [password, setPassword] = useState('');
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function LoginPage() {
                   name="email"
                   value={email}
                   required
-                  placeholder="admin@jingles.com"
+                  placeholder="admin@theredsun.org"
                   onChange={(e: any) => setEmail(e.currentTarget.value)}
                 />
                 <s-password-field

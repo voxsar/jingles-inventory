@@ -222,6 +222,13 @@ npm run dev:backend
 npm run dev:web
 ```
 
+To run the local frontend against a hosted API, create `packages/web/.env.local`:
+```bash
+VITE_API_BASE_URL=https://inv.theredsun.org
+```
+
+In browser dev, the app keeps using relative `/api` and `/uploads` paths and Vite proxies them to the configured host. Electron uses the configured API base URL directly.
+
 **Electron Desktop App**:
 ```bash
 npm run dev:electron
@@ -403,6 +410,7 @@ packages/backend/src/
 | `JWT_EXPIRES_IN` | Token expiry | `7d` |
 | `PORT` | Server port | `3001` |
 | `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
+| `VITE_API_BASE_URL` | Optional hosted API base URL for the web/electron frontend | unset |
 
 ### Building for Production
 

@@ -39,5 +39,5 @@ vi.mock('@prisma/client', () => {
     this.auditLog = { findMany: vi.fn(), create: vi.fn() };
     this.syncQueue = { findMany: vi.fn(), create: vi.fn(), update: vi.fn() };
   }
-  return { PrismaClient: MockPrismaClient };
+  return { PrismaClient: MockPrismaClient, Prisma: {} };
 });

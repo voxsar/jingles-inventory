@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,6 +34,7 @@ import TagSpreadsheetPage from './pages/spreadsheet/TagSpreadsheetPage';
 import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
 import TagsPage from './pages/TagsPage';
 import UsersPage from './pages/UsersPage';
+import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
   const { loadUser, token } = useAuthStore();
@@ -111,9 +112,11 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const Router = isDesktopRuntime() ? HashRouter : BrowserRouter;
+
   return (
-    <BrowserRouter>
+    <Router>
       <AppRoutes />
-    </BrowserRouter>
+    </Router>
   );
 }

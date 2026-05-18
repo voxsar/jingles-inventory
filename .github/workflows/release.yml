@@ -68,6 +68,9 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
+      - name: Build backend package
+        run: npm run build:backend
+
       - name: Build shared web frontend
         run: npm run build:web
 
@@ -98,7 +101,7 @@ jobs:
               ;;
           esac
 
-          npx electron-builder --win $TARGETS --publish never
+          npm run build:electron -- --win $TARGETS --publish never
 
       - name: Commit & tag version bump
         shell: bash

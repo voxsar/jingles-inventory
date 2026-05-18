@@ -12,3 +12,7 @@ interface ImportMetaEnv {
 interface ImportMeta {
 	readonly env: ImportMetaEnv;
 }
+
+interface Window {
+	__JINGLES_POLARIS_ASSET_BASE__?: string;
+}

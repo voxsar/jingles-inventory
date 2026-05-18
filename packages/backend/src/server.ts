@@ -2,9 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import type { Server } from 'http';
 // import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
+import { localReplicaSyncMiddleware } from './middleware/localReplicaSync';
 import authRoutes from './routes/auth';
 import vendorRoutes from './routes/vendors';
 import skuRoutes from './routes/skus';
@@ -36,78 +38,127 @@ import tagRoutes from './routes/tags';
 import userRoutes from './routes/users';
 import importRoutes from './routes/imports';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
+import { startReplicaRealtime } from './sync/realtime';
+import { getStorageRoot } from './utils/runtimePaths';
 
-const app = express();
+export function createApp() {
+	const app = express();
+	const configuredCorsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+		.split(',')
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+	const allowedCorsOrigins = new Set(['null', ...configuredCorsOrigins]);
 
-// Trust nginx proxy
-app.set('trust proxy', 1);
+	// Trust nginx proxy
+	app.set('trust proxy', 1);
 
-app.use(
-	cors({
-		origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
-		credentials: true,
-	})
-);
-app.use(express.json());
+	app.use(
+		cors({
+			origin: (origin, callback) => {
+				if (!origin || allowedCorsOrigins.has(origin)) {
+					callback(null, true);
+					return;
+				}
 
-// Serve uploaded files statically
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+				callback(new Error(`CORS blocked for origin ${origin}`));
+			},
+			credentials: true,
+		})
+	);
+	app.use(express.json());
+	app.use(localReplicaSyncMiddleware);
 
-// Rate limiting disabled
-// const limiter = rateLimit({
-// 	windowMs: 15 * 60 * 1000,
-// 	max: 1000,
-// 	standardHeaders: true,
-// 	legacyHeaders: false,
-// 	validate: { xForwardedForHeader: false },
-// });
-// app.use(limiter);
+	// Serve uploaded files statically
+	app.use('/uploads', express.static(path.join(getStorageRoot(), 'uploads')));
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+	// Rate limiting disabled
+	// const limiter = rateLimit({
+	// 	windowMs: 15 * 60 * 1000,
+	// 	max: 1000,
+	// 	standardHeaders: true,
+	// 	legacyHeaders: false,
+	// 	validate: { xForwardedForHeader: false },
+	// });
+	// app.use(limiter);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/vendors', vendorRoutes);
-app.use('/api/skus', skuRoutes);
-app.use('/api/skus/:skuId/variants', variantRoutes);
-app.use('/api/floors', floorRoutes);
-app.use('/api/shelves', shelfRoutes);
-app.use('/api/racks', rackRoutes);
-app.use('/api/boxes', boxRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/grns', grnRoutes);
-app.use('/api/prns', prnRoutes);
-app.use('/api/inspections', inspectionRoutes);
-app.use('/api/audit-logs', auditLogRoutes);
-app.use('/api/ocr', ocrRoutes);
-app.use('/api/barcode', barcodeRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/space', spaceRoutes);
-app.use('/api/sync', syncRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/branches', branchRoutes);
-app.use('/api/stock-transfers', stockTransferRoutes);
-app.use('/api/attributes', attributeRoutes);
-app.use('/api/uploads', uploadRoutes);
-app.use('/api/batches', batchRoutes);
-app.use('/api/pricing-overlays', pricingOverlayRoutes);
-app.use('/api/tags', tagRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/imports', importRoutes);
+	app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-app.use(errorHandler);
+	app.use('/api/auth', authRoutes);
+	app.use('/api/vendors', vendorRoutes);
+	app.use('/api/skus', skuRoutes);
+	app.use('/api/skus/:skuId/variants', variantRoutes);
+	app.use('/api/floors', floorRoutes);
+	app.use('/api/shelves', shelfRoutes);
+	app.use('/api/racks', rackRoutes);
+	app.use('/api/boxes', boxRoutes);
+	app.use('/api/inventory', inventoryRoutes);
+	app.use('/api/grns', grnRoutes);
+	app.use('/api/prns', prnRoutes);
+	app.use('/api/inspections', inspectionRoutes);
+	app.use('/api/audit-logs', auditLogRoutes);
+	app.use('/api/ocr', ocrRoutes);
+	app.use('/api/barcode', barcodeRoutes);
+	app.use('/api/reports', reportsRoutes);
+	app.use('/api/dashboard', dashboardRoutes);
+	app.use('/api/space', spaceRoutes);
+	app.use('/api/sync', syncRoutes);
+	app.use('/api/categories', categoryRoutes);
+	app.use('/api/settings', settingsRoutes);
+	app.use('/api/branches', branchRoutes);
+	app.use('/api/stock-transfers', stockTransferRoutes);
+	app.use('/api/attributes', attributeRoutes);
+	app.use('/api/uploads', uploadRoutes);
+	app.use('/api/batches', batchRoutes);
+	app.use('/api/pricing-overlays', pricingOverlayRoutes);
+	app.use('/api/tags', tagRoutes);
+	app.use('/api/users', userRoutes);
+	app.use('/api/imports', importRoutes);
 
-const PORT = Number(process.env.PORT ?? 3001);
-if (process.env.NODE_ENV !== 'test') {
-	app.listen(PORT, async () => {
-		logger.info(`Server running on port ${PORT}`);
-		// Preload status cache for performance
-		try {
-			await preloadStatusCache();
-		} catch (err) {
-			logger.error('Failed to preload status cache', err);
-		}
+	app.use(errorHandler);
+
+	return app;
+}
+
+export const app = createApp();
+
+let activeServer: Server | null = null;
+
+export async function startServer(port = Number(process.env.PORT ?? 3001)) {
+	if (activeServer) {
+		return activeServer;
+	}
+
+	await new Promise<void>((resolve, reject) => {
+		const server = app.listen(port, async () => {
+			activeServer = server;
+			logger.info(`Server running on port ${port}`);
+			try {
+				await preloadStatusCache();
+			} catch (err) {
+				logger.error('Failed to preload status cache', err);
+			}
+			try {
+				await startReplicaRealtime(server);
+			} catch (err) {
+				logger.error('Failed to initialize replica realtime sync', err);
+			}
+			resolve();
+		});
+
+		server.on('error', reject);
+	});
+
+	return activeServer!;
+}
+
+const shouldAutoStart =
+	process.env.NODE_ENV !== 'test' &&
+	(process.env.JINGLES_SERVER_AUTOSTART ?? 'true').trim().toLowerCase() !== 'false';
+
+if (shouldAutoStart) {
+	void startServer().catch((error) => {
+		logger.error('Failed to start server', error);
+		process.exitCode = 1;
 	});
 }
 
