@@ -199,6 +199,26 @@ export type AuditLog = $Result.DefaultSelection<Prisma.$AuditLogPayload>
  */
 export type SyncQueue = $Result.DefaultSelection<Prisma.$SyncQueuePayload>
 /**
+ * Model SyncOperationLog
+ * 
+ */
+export type SyncOperationLog = $Result.DefaultSelection<Prisma.$SyncOperationLogPayload>
+/**
+ * Model SyncConflict
+ * 
+ */
+export type SyncConflict = $Result.DefaultSelection<Prisma.$SyncConflictPayload>
+/**
+ * Model SyncServerSequence
+ * 
+ */
+export type SyncServerSequence = $Result.DefaultSelection<Prisma.$SyncServerSequencePayload>
+/**
+ * Model SyncServerChange
+ * 
+ */
+export type SyncServerChange = $Result.DefaultSelection<Prisma.$SyncServerChangePayload>
+/**
  * Model StatusOption
  * 
  */
@@ -703,6 +723,46 @@ export class PrismaClient<
   get syncQueue(): Prisma.SyncQueueDelegate<ExtArgs>;
 
   /**
+   * `prisma.syncOperationLog`: Exposes CRUD operations for the **SyncOperationLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SyncOperationLogs
+    * const syncOperationLogs = await prisma.syncOperationLog.findMany()
+    * ```
+    */
+  get syncOperationLog(): Prisma.SyncOperationLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.syncConflict`: Exposes CRUD operations for the **SyncConflict** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SyncConflicts
+    * const syncConflicts = await prisma.syncConflict.findMany()
+    * ```
+    */
+  get syncConflict(): Prisma.SyncConflictDelegate<ExtArgs>;
+
+  /**
+   * `prisma.syncServerSequence`: Exposes CRUD operations for the **SyncServerSequence** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SyncServerSequences
+    * const syncServerSequences = await prisma.syncServerSequence.findMany()
+    * ```
+    */
+  get syncServerSequence(): Prisma.SyncServerSequenceDelegate<ExtArgs>;
+
+  /**
+   * `prisma.syncServerChange`: Exposes CRUD operations for the **SyncServerChange** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SyncServerChanges
+    * const syncServerChanges = await prisma.syncServerChange.findMany()
+    * ```
+    */
+  get syncServerChange(): Prisma.SyncServerChangeDelegate<ExtArgs>;
+
+  /**
    * `prisma.statusOption`: Exposes CRUD operations for the **StatusOption** model.
     * Example usage:
     * ```ts
@@ -1199,6 +1259,10 @@ export namespace Prisma {
     ImportRecord: 'ImportRecord',
     AuditLog: 'AuditLog',
     SyncQueue: 'SyncQueue',
+    SyncOperationLog: 'SyncOperationLog',
+    SyncConflict: 'SyncConflict',
+    SyncServerSequence: 'SyncServerSequence',
+    SyncServerChange: 'SyncServerChange',
     StatusOption: 'StatusOption',
     DashboardStats: 'DashboardStats'
   };
@@ -1216,7 +1280,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncQueue" | "statusOption" | "dashboardStats"
+      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncQueue" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3807,6 +3871,286 @@ export namespace Prisma {
           count: {
             args: Prisma.SyncQueueCountArgs<ExtArgs>
             result: $Utils.Optional<SyncQueueCountAggregateOutputType> | number
+          }
+        }
+      }
+      SyncOperationLog: {
+        payload: Prisma.$SyncOperationLogPayload<ExtArgs>
+        fields: Prisma.SyncOperationLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SyncOperationLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SyncOperationLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          findFirst: {
+            args: Prisma.SyncOperationLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SyncOperationLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          findMany: {
+            args: Prisma.SyncOperationLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>[]
+          }
+          create: {
+            args: Prisma.SyncOperationLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          createMany: {
+            args: Prisma.SyncOperationLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SyncOperationLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>[]
+          }
+          delete: {
+            args: Prisma.SyncOperationLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          update: {
+            args: Prisma.SyncOperationLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.SyncOperationLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SyncOperationLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SyncOperationLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncOperationLogPayload>
+          }
+          aggregate: {
+            args: Prisma.SyncOperationLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSyncOperationLog>
+          }
+          groupBy: {
+            args: Prisma.SyncOperationLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SyncOperationLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SyncOperationLogCountArgs<ExtArgs>
+            result: $Utils.Optional<SyncOperationLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      SyncConflict: {
+        payload: Prisma.$SyncConflictPayload<ExtArgs>
+        fields: Prisma.SyncConflictFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SyncConflictFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SyncConflictFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          findFirst: {
+            args: Prisma.SyncConflictFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SyncConflictFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          findMany: {
+            args: Prisma.SyncConflictFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>[]
+          }
+          create: {
+            args: Prisma.SyncConflictCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          createMany: {
+            args: Prisma.SyncConflictCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SyncConflictCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>[]
+          }
+          delete: {
+            args: Prisma.SyncConflictDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          update: {
+            args: Prisma.SyncConflictUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          deleteMany: {
+            args: Prisma.SyncConflictDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SyncConflictUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SyncConflictUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncConflictPayload>
+          }
+          aggregate: {
+            args: Prisma.SyncConflictAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSyncConflict>
+          }
+          groupBy: {
+            args: Prisma.SyncConflictGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SyncConflictGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SyncConflictCountArgs<ExtArgs>
+            result: $Utils.Optional<SyncConflictCountAggregateOutputType> | number
+          }
+        }
+      }
+      SyncServerSequence: {
+        payload: Prisma.$SyncServerSequencePayload<ExtArgs>
+        fields: Prisma.SyncServerSequenceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SyncServerSequenceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SyncServerSequenceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          findFirst: {
+            args: Prisma.SyncServerSequenceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SyncServerSequenceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          findMany: {
+            args: Prisma.SyncServerSequenceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>[]
+          }
+          create: {
+            args: Prisma.SyncServerSequenceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          createMany: {
+            args: Prisma.SyncServerSequenceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SyncServerSequenceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>[]
+          }
+          delete: {
+            args: Prisma.SyncServerSequenceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          update: {
+            args: Prisma.SyncServerSequenceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          deleteMany: {
+            args: Prisma.SyncServerSequenceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SyncServerSequenceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SyncServerSequenceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerSequencePayload>
+          }
+          aggregate: {
+            args: Prisma.SyncServerSequenceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSyncServerSequence>
+          }
+          groupBy: {
+            args: Prisma.SyncServerSequenceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SyncServerSequenceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SyncServerSequenceCountArgs<ExtArgs>
+            result: $Utils.Optional<SyncServerSequenceCountAggregateOutputType> | number
+          }
+        }
+      }
+      SyncServerChange: {
+        payload: Prisma.$SyncServerChangePayload<ExtArgs>
+        fields: Prisma.SyncServerChangeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SyncServerChangeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SyncServerChangeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          findFirst: {
+            args: Prisma.SyncServerChangeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SyncServerChangeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          findMany: {
+            args: Prisma.SyncServerChangeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>[]
+          }
+          create: {
+            args: Prisma.SyncServerChangeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          createMany: {
+            args: Prisma.SyncServerChangeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SyncServerChangeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>[]
+          }
+          delete: {
+            args: Prisma.SyncServerChangeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          update: {
+            args: Prisma.SyncServerChangeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          deleteMany: {
+            args: Prisma.SyncServerChangeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SyncServerChangeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SyncServerChangeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SyncServerChangePayload>
+          }
+          aggregate: {
+            args: Prisma.SyncServerChangeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSyncServerChange>
+          }
+          groupBy: {
+            args: Prisma.SyncServerChangeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SyncServerChangeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SyncServerChangeCountArgs<ExtArgs>
+            result: $Utils.Optional<SyncServerChangeCountAggregateOutputType> | number
           }
         }
       }
@@ -45174,6 +45518,3824 @@ export namespace Prisma {
 
 
   /**
+   * Model SyncOperationLog
+   */
+
+  export type AggregateSyncOperationLog = {
+    _count: SyncOperationLogCountAggregateOutputType | null
+    _avg: SyncOperationLogAvgAggregateOutputType | null
+    _sum: SyncOperationLogSumAggregateOutputType | null
+    _min: SyncOperationLogMinAggregateOutputType | null
+    _max: SyncOperationLogMaxAggregateOutputType | null
+  }
+
+  export type SyncOperationLogAvgAggregateOutputType = {
+    baseVersion: number | null
+    attemptCount: number | null
+    appliedServerSeq: number | null
+  }
+
+  export type SyncOperationLogSumAggregateOutputType = {
+    baseVersion: number | null
+    attemptCount: number | null
+    appliedServerSeq: number | null
+  }
+
+  export type SyncOperationLogMinAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    opType: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    idempotencyKey: string | null
+    payload: string | null
+    baseVersion: number | null
+    status: string | null
+    conflictData: string | null
+    lastError: string | null
+    attemptCount: number | null
+    createdAt: Date | null
+    processedAt: Date | null
+    appliedServerSeq: number | null
+  }
+
+  export type SyncOperationLogMaxAggregateOutputType = {
+    id: string | null
+    clientId: string | null
+    opType: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    idempotencyKey: string | null
+    payload: string | null
+    baseVersion: number | null
+    status: string | null
+    conflictData: string | null
+    lastError: string | null
+    attemptCount: number | null
+    createdAt: Date | null
+    processedAt: Date | null
+    appliedServerSeq: number | null
+  }
+
+  export type SyncOperationLogCountAggregateOutputType = {
+    id: number
+    clientId: number
+    opType: number
+    aggregateType: number
+    aggregateId: number
+    idempotencyKey: number
+    payload: number
+    baseVersion: number
+    status: number
+    conflictData: number
+    lastError: number
+    attemptCount: number
+    createdAt: number
+    processedAt: number
+    appliedServerSeq: number
+    _all: number
+  }
+
+
+  export type SyncOperationLogAvgAggregateInputType = {
+    baseVersion?: true
+    attemptCount?: true
+    appliedServerSeq?: true
+  }
+
+  export type SyncOperationLogSumAggregateInputType = {
+    baseVersion?: true
+    attemptCount?: true
+    appliedServerSeq?: true
+  }
+
+  export type SyncOperationLogMinAggregateInputType = {
+    id?: true
+    clientId?: true
+    opType?: true
+    aggregateType?: true
+    aggregateId?: true
+    idempotencyKey?: true
+    payload?: true
+    baseVersion?: true
+    status?: true
+    conflictData?: true
+    lastError?: true
+    attemptCount?: true
+    createdAt?: true
+    processedAt?: true
+    appliedServerSeq?: true
+  }
+
+  export type SyncOperationLogMaxAggregateInputType = {
+    id?: true
+    clientId?: true
+    opType?: true
+    aggregateType?: true
+    aggregateId?: true
+    idempotencyKey?: true
+    payload?: true
+    baseVersion?: true
+    status?: true
+    conflictData?: true
+    lastError?: true
+    attemptCount?: true
+    createdAt?: true
+    processedAt?: true
+    appliedServerSeq?: true
+  }
+
+  export type SyncOperationLogCountAggregateInputType = {
+    id?: true
+    clientId?: true
+    opType?: true
+    aggregateType?: true
+    aggregateId?: true
+    idempotencyKey?: true
+    payload?: true
+    baseVersion?: true
+    status?: true
+    conflictData?: true
+    lastError?: true
+    attemptCount?: true
+    createdAt?: true
+    processedAt?: true
+    appliedServerSeq?: true
+    _all?: true
+  }
+
+  export type SyncOperationLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncOperationLog to aggregate.
+     */
+    where?: SyncOperationLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncOperationLogs to fetch.
+     */
+    orderBy?: SyncOperationLogOrderByWithRelationInput | SyncOperationLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SyncOperationLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncOperationLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncOperationLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SyncOperationLogs
+    **/
+    _count?: true | SyncOperationLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SyncOperationLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SyncOperationLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SyncOperationLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SyncOperationLogMaxAggregateInputType
+  }
+
+  export type GetSyncOperationLogAggregateType<T extends SyncOperationLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateSyncOperationLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSyncOperationLog[P]>
+      : GetScalarType<T[P], AggregateSyncOperationLog[P]>
+  }
+
+
+
+
+  export type SyncOperationLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SyncOperationLogWhereInput
+    orderBy?: SyncOperationLogOrderByWithAggregationInput | SyncOperationLogOrderByWithAggregationInput[]
+    by: SyncOperationLogScalarFieldEnum[] | SyncOperationLogScalarFieldEnum
+    having?: SyncOperationLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SyncOperationLogCountAggregateInputType | true
+    _avg?: SyncOperationLogAvgAggregateInputType
+    _sum?: SyncOperationLogSumAggregateInputType
+    _min?: SyncOperationLogMinAggregateInputType
+    _max?: SyncOperationLogMaxAggregateInputType
+  }
+
+  export type SyncOperationLogGroupByOutputType = {
+    id: string
+    clientId: string
+    opType: string
+    aggregateType: string
+    aggregateId: string | null
+    idempotencyKey: string
+    payload: string
+    baseVersion: number | null
+    status: string
+    conflictData: string | null
+    lastError: string | null
+    attemptCount: number
+    createdAt: Date
+    processedAt: Date | null
+    appliedServerSeq: number | null
+    _count: SyncOperationLogCountAggregateOutputType | null
+    _avg: SyncOperationLogAvgAggregateOutputType | null
+    _sum: SyncOperationLogSumAggregateOutputType | null
+    _min: SyncOperationLogMinAggregateOutputType | null
+    _max: SyncOperationLogMaxAggregateOutputType | null
+  }
+
+  type GetSyncOperationLogGroupByPayload<T extends SyncOperationLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SyncOperationLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SyncOperationLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SyncOperationLogGroupByOutputType[P]>
+            : GetScalarType<T[P], SyncOperationLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SyncOperationLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    opType?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    idempotencyKey?: boolean
+    payload?: boolean
+    baseVersion?: boolean
+    status?: boolean
+    conflictData?: boolean
+    lastError?: boolean
+    attemptCount?: boolean
+    createdAt?: boolean
+    processedAt?: boolean
+    appliedServerSeq?: boolean
+  }, ExtArgs["result"]["syncOperationLog"]>
+
+  export type SyncOperationLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clientId?: boolean
+    opType?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    idempotencyKey?: boolean
+    payload?: boolean
+    baseVersion?: boolean
+    status?: boolean
+    conflictData?: boolean
+    lastError?: boolean
+    attemptCount?: boolean
+    createdAt?: boolean
+    processedAt?: boolean
+    appliedServerSeq?: boolean
+  }, ExtArgs["result"]["syncOperationLog"]>
+
+  export type SyncOperationLogSelectScalar = {
+    id?: boolean
+    clientId?: boolean
+    opType?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    idempotencyKey?: boolean
+    payload?: boolean
+    baseVersion?: boolean
+    status?: boolean
+    conflictData?: boolean
+    lastError?: boolean
+    attemptCount?: boolean
+    createdAt?: boolean
+    processedAt?: boolean
+    appliedServerSeq?: boolean
+  }
+
+
+  export type $SyncOperationLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SyncOperationLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      clientId: string
+      opType: string
+      aggregateType: string
+      aggregateId: string | null
+      idempotencyKey: string
+      payload: string
+      baseVersion: number | null
+      status: string
+      conflictData: string | null
+      lastError: string | null
+      attemptCount: number
+      createdAt: Date
+      processedAt: Date | null
+      appliedServerSeq: number | null
+    }, ExtArgs["result"]["syncOperationLog"]>
+    composites: {}
+  }
+
+  type SyncOperationLogGetPayload<S extends boolean | null | undefined | SyncOperationLogDefaultArgs> = $Result.GetResult<Prisma.$SyncOperationLogPayload, S>
+
+  type SyncOperationLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SyncOperationLogFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SyncOperationLogCountAggregateInputType | true
+    }
+
+  export interface SyncOperationLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SyncOperationLog'], meta: { name: 'SyncOperationLog' } }
+    /**
+     * Find zero or one SyncOperationLog that matches the filter.
+     * @param {SyncOperationLogFindUniqueArgs} args - Arguments to find a SyncOperationLog
+     * @example
+     * // Get one SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SyncOperationLogFindUniqueArgs>(args: SelectSubset<T, SyncOperationLogFindUniqueArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SyncOperationLog that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SyncOperationLogFindUniqueOrThrowArgs} args - Arguments to find a SyncOperationLog
+     * @example
+     * // Get one SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SyncOperationLogFindUniqueOrThrowArgs>(args: SelectSubset<T, SyncOperationLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SyncOperationLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogFindFirstArgs} args - Arguments to find a SyncOperationLog
+     * @example
+     * // Get one SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SyncOperationLogFindFirstArgs>(args?: SelectSubset<T, SyncOperationLogFindFirstArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SyncOperationLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogFindFirstOrThrowArgs} args - Arguments to find a SyncOperationLog
+     * @example
+     * // Get one SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SyncOperationLogFindFirstOrThrowArgs>(args?: SelectSubset<T, SyncOperationLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SyncOperationLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SyncOperationLogs
+     * const syncOperationLogs = await prisma.syncOperationLog.findMany()
+     * 
+     * // Get first 10 SyncOperationLogs
+     * const syncOperationLogs = await prisma.syncOperationLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const syncOperationLogWithIdOnly = await prisma.syncOperationLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SyncOperationLogFindManyArgs>(args?: SelectSubset<T, SyncOperationLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SyncOperationLog.
+     * @param {SyncOperationLogCreateArgs} args - Arguments to create a SyncOperationLog.
+     * @example
+     * // Create one SyncOperationLog
+     * const SyncOperationLog = await prisma.syncOperationLog.create({
+     *   data: {
+     *     // ... data to create a SyncOperationLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends SyncOperationLogCreateArgs>(args: SelectSubset<T, SyncOperationLogCreateArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SyncOperationLogs.
+     * @param {SyncOperationLogCreateManyArgs} args - Arguments to create many SyncOperationLogs.
+     * @example
+     * // Create many SyncOperationLogs
+     * const syncOperationLog = await prisma.syncOperationLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SyncOperationLogCreateManyArgs>(args?: SelectSubset<T, SyncOperationLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SyncOperationLogs and returns the data saved in the database.
+     * @param {SyncOperationLogCreateManyAndReturnArgs} args - Arguments to create many SyncOperationLogs.
+     * @example
+     * // Create many SyncOperationLogs
+     * const syncOperationLog = await prisma.syncOperationLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SyncOperationLogs and only return the `id`
+     * const syncOperationLogWithIdOnly = await prisma.syncOperationLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SyncOperationLogCreateManyAndReturnArgs>(args?: SelectSubset<T, SyncOperationLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SyncOperationLog.
+     * @param {SyncOperationLogDeleteArgs} args - Arguments to delete one SyncOperationLog.
+     * @example
+     * // Delete one SyncOperationLog
+     * const SyncOperationLog = await prisma.syncOperationLog.delete({
+     *   where: {
+     *     // ... filter to delete one SyncOperationLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SyncOperationLogDeleteArgs>(args: SelectSubset<T, SyncOperationLogDeleteArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SyncOperationLog.
+     * @param {SyncOperationLogUpdateArgs} args - Arguments to update one SyncOperationLog.
+     * @example
+     * // Update one SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SyncOperationLogUpdateArgs>(args: SelectSubset<T, SyncOperationLogUpdateArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SyncOperationLogs.
+     * @param {SyncOperationLogDeleteManyArgs} args - Arguments to filter SyncOperationLogs to delete.
+     * @example
+     * // Delete a few SyncOperationLogs
+     * const { count } = await prisma.syncOperationLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SyncOperationLogDeleteManyArgs>(args?: SelectSubset<T, SyncOperationLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SyncOperationLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SyncOperationLogs
+     * const syncOperationLog = await prisma.syncOperationLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SyncOperationLogUpdateManyArgs>(args: SelectSubset<T, SyncOperationLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SyncOperationLog.
+     * @param {SyncOperationLogUpsertArgs} args - Arguments to update or create a SyncOperationLog.
+     * @example
+     * // Update or create a SyncOperationLog
+     * const syncOperationLog = await prisma.syncOperationLog.upsert({
+     *   create: {
+     *     // ... data to create a SyncOperationLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SyncOperationLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SyncOperationLogUpsertArgs>(args: SelectSubset<T, SyncOperationLogUpsertArgs<ExtArgs>>): Prisma__SyncOperationLogClient<$Result.GetResult<Prisma.$SyncOperationLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SyncOperationLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogCountArgs} args - Arguments to filter SyncOperationLogs to count.
+     * @example
+     * // Count the number of SyncOperationLogs
+     * const count = await prisma.syncOperationLog.count({
+     *   where: {
+     *     // ... the filter for the SyncOperationLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends SyncOperationLogCountArgs>(
+      args?: Subset<T, SyncOperationLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SyncOperationLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SyncOperationLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SyncOperationLogAggregateArgs>(args: Subset<T, SyncOperationLogAggregateArgs>): Prisma.PrismaPromise<GetSyncOperationLogAggregateType<T>>
+
+    /**
+     * Group by SyncOperationLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncOperationLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SyncOperationLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SyncOperationLogGroupByArgs['orderBy'] }
+        : { orderBy?: SyncOperationLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SyncOperationLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSyncOperationLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SyncOperationLog model
+   */
+  readonly fields: SyncOperationLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SyncOperationLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SyncOperationLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SyncOperationLog model
+   */ 
+  interface SyncOperationLogFieldRefs {
+    readonly id: FieldRef<"SyncOperationLog", 'String'>
+    readonly clientId: FieldRef<"SyncOperationLog", 'String'>
+    readonly opType: FieldRef<"SyncOperationLog", 'String'>
+    readonly aggregateType: FieldRef<"SyncOperationLog", 'String'>
+    readonly aggregateId: FieldRef<"SyncOperationLog", 'String'>
+    readonly idempotencyKey: FieldRef<"SyncOperationLog", 'String'>
+    readonly payload: FieldRef<"SyncOperationLog", 'String'>
+    readonly baseVersion: FieldRef<"SyncOperationLog", 'Int'>
+    readonly status: FieldRef<"SyncOperationLog", 'String'>
+    readonly conflictData: FieldRef<"SyncOperationLog", 'String'>
+    readonly lastError: FieldRef<"SyncOperationLog", 'String'>
+    readonly attemptCount: FieldRef<"SyncOperationLog", 'Int'>
+    readonly createdAt: FieldRef<"SyncOperationLog", 'DateTime'>
+    readonly processedAt: FieldRef<"SyncOperationLog", 'DateTime'>
+    readonly appliedServerSeq: FieldRef<"SyncOperationLog", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SyncOperationLog findUnique
+   */
+  export type SyncOperationLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncOperationLog to fetch.
+     */
+    where: SyncOperationLogWhereUniqueInput
+  }
+
+  /**
+   * SyncOperationLog findUniqueOrThrow
+   */
+  export type SyncOperationLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncOperationLog to fetch.
+     */
+    where: SyncOperationLogWhereUniqueInput
+  }
+
+  /**
+   * SyncOperationLog findFirst
+   */
+  export type SyncOperationLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncOperationLog to fetch.
+     */
+    where?: SyncOperationLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncOperationLogs to fetch.
+     */
+    orderBy?: SyncOperationLogOrderByWithRelationInput | SyncOperationLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncOperationLogs.
+     */
+    cursor?: SyncOperationLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncOperationLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncOperationLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncOperationLogs.
+     */
+    distinct?: SyncOperationLogScalarFieldEnum | SyncOperationLogScalarFieldEnum[]
+  }
+
+  /**
+   * SyncOperationLog findFirstOrThrow
+   */
+  export type SyncOperationLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncOperationLog to fetch.
+     */
+    where?: SyncOperationLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncOperationLogs to fetch.
+     */
+    orderBy?: SyncOperationLogOrderByWithRelationInput | SyncOperationLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncOperationLogs.
+     */
+    cursor?: SyncOperationLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncOperationLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncOperationLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncOperationLogs.
+     */
+    distinct?: SyncOperationLogScalarFieldEnum | SyncOperationLogScalarFieldEnum[]
+  }
+
+  /**
+   * SyncOperationLog findMany
+   */
+  export type SyncOperationLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncOperationLogs to fetch.
+     */
+    where?: SyncOperationLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncOperationLogs to fetch.
+     */
+    orderBy?: SyncOperationLogOrderByWithRelationInput | SyncOperationLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SyncOperationLogs.
+     */
+    cursor?: SyncOperationLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncOperationLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncOperationLogs.
+     */
+    skip?: number
+    distinct?: SyncOperationLogScalarFieldEnum | SyncOperationLogScalarFieldEnum[]
+  }
+
+  /**
+   * SyncOperationLog create
+   */
+  export type SyncOperationLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * The data needed to create a SyncOperationLog.
+     */
+    data: XOR<SyncOperationLogCreateInput, SyncOperationLogUncheckedCreateInput>
+  }
+
+  /**
+   * SyncOperationLog createMany
+   */
+  export type SyncOperationLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SyncOperationLogs.
+     */
+    data: SyncOperationLogCreateManyInput | SyncOperationLogCreateManyInput[]
+  }
+
+  /**
+   * SyncOperationLog createManyAndReturn
+   */
+  export type SyncOperationLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SyncOperationLogs.
+     */
+    data: SyncOperationLogCreateManyInput | SyncOperationLogCreateManyInput[]
+  }
+
+  /**
+   * SyncOperationLog update
+   */
+  export type SyncOperationLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * The data needed to update a SyncOperationLog.
+     */
+    data: XOR<SyncOperationLogUpdateInput, SyncOperationLogUncheckedUpdateInput>
+    /**
+     * Choose, which SyncOperationLog to update.
+     */
+    where: SyncOperationLogWhereUniqueInput
+  }
+
+  /**
+   * SyncOperationLog updateMany
+   */
+  export type SyncOperationLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SyncOperationLogs.
+     */
+    data: XOR<SyncOperationLogUpdateManyMutationInput, SyncOperationLogUncheckedUpdateManyInput>
+    /**
+     * Filter which SyncOperationLogs to update
+     */
+    where?: SyncOperationLogWhereInput
+  }
+
+  /**
+   * SyncOperationLog upsert
+   */
+  export type SyncOperationLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * The filter to search for the SyncOperationLog to update in case it exists.
+     */
+    where: SyncOperationLogWhereUniqueInput
+    /**
+     * In case the SyncOperationLog found by the `where` argument doesn't exist, create a new SyncOperationLog with this data.
+     */
+    create: XOR<SyncOperationLogCreateInput, SyncOperationLogUncheckedCreateInput>
+    /**
+     * In case the SyncOperationLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SyncOperationLogUpdateInput, SyncOperationLogUncheckedUpdateInput>
+  }
+
+  /**
+   * SyncOperationLog delete
+   */
+  export type SyncOperationLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+    /**
+     * Filter which SyncOperationLog to delete.
+     */
+    where: SyncOperationLogWhereUniqueInput
+  }
+
+  /**
+   * SyncOperationLog deleteMany
+   */
+  export type SyncOperationLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncOperationLogs to delete
+     */
+    where?: SyncOperationLogWhereInput
+  }
+
+  /**
+   * SyncOperationLog without action
+   */
+  export type SyncOperationLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncOperationLog
+     */
+    select?: SyncOperationLogSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SyncConflict
+   */
+
+  export type AggregateSyncConflict = {
+    _count: SyncConflictCountAggregateOutputType | null
+    _min: SyncConflictMinAggregateOutputType | null
+    _max: SyncConflictMaxAggregateOutputType | null
+  }
+
+  export type SyncConflictMinAggregateOutputType = {
+    id: string | null
+    operationId: string | null
+    clientId: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    status: string | null
+    localPayload: string | null
+    serverPayload: string | null
+    resolutionPayload: string | null
+    createdAt: Date | null
+    resolvedAt: Date | null
+  }
+
+  export type SyncConflictMaxAggregateOutputType = {
+    id: string | null
+    operationId: string | null
+    clientId: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    status: string | null
+    localPayload: string | null
+    serverPayload: string | null
+    resolutionPayload: string | null
+    createdAt: Date | null
+    resolvedAt: Date | null
+  }
+
+  export type SyncConflictCountAggregateOutputType = {
+    id: number
+    operationId: number
+    clientId: number
+    aggregateType: number
+    aggregateId: number
+    status: number
+    localPayload: number
+    serverPayload: number
+    resolutionPayload: number
+    createdAt: number
+    resolvedAt: number
+    _all: number
+  }
+
+
+  export type SyncConflictMinAggregateInputType = {
+    id?: true
+    operationId?: true
+    clientId?: true
+    aggregateType?: true
+    aggregateId?: true
+    status?: true
+    localPayload?: true
+    serverPayload?: true
+    resolutionPayload?: true
+    createdAt?: true
+    resolvedAt?: true
+  }
+
+  export type SyncConflictMaxAggregateInputType = {
+    id?: true
+    operationId?: true
+    clientId?: true
+    aggregateType?: true
+    aggregateId?: true
+    status?: true
+    localPayload?: true
+    serverPayload?: true
+    resolutionPayload?: true
+    createdAt?: true
+    resolvedAt?: true
+  }
+
+  export type SyncConflictCountAggregateInputType = {
+    id?: true
+    operationId?: true
+    clientId?: true
+    aggregateType?: true
+    aggregateId?: true
+    status?: true
+    localPayload?: true
+    serverPayload?: true
+    resolutionPayload?: true
+    createdAt?: true
+    resolvedAt?: true
+    _all?: true
+  }
+
+  export type SyncConflictAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncConflict to aggregate.
+     */
+    where?: SyncConflictWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncConflicts to fetch.
+     */
+    orderBy?: SyncConflictOrderByWithRelationInput | SyncConflictOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SyncConflictWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncConflicts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncConflicts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SyncConflicts
+    **/
+    _count?: true | SyncConflictCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SyncConflictMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SyncConflictMaxAggregateInputType
+  }
+
+  export type GetSyncConflictAggregateType<T extends SyncConflictAggregateArgs> = {
+        [P in keyof T & keyof AggregateSyncConflict]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSyncConflict[P]>
+      : GetScalarType<T[P], AggregateSyncConflict[P]>
+  }
+
+
+
+
+  export type SyncConflictGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SyncConflictWhereInput
+    orderBy?: SyncConflictOrderByWithAggregationInput | SyncConflictOrderByWithAggregationInput[]
+    by: SyncConflictScalarFieldEnum[] | SyncConflictScalarFieldEnum
+    having?: SyncConflictScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SyncConflictCountAggregateInputType | true
+    _min?: SyncConflictMinAggregateInputType
+    _max?: SyncConflictMaxAggregateInputType
+  }
+
+  export type SyncConflictGroupByOutputType = {
+    id: string
+    operationId: string
+    clientId: string
+    aggregateType: string
+    aggregateId: string | null
+    status: string
+    localPayload: string | null
+    serverPayload: string | null
+    resolutionPayload: string | null
+    createdAt: Date
+    resolvedAt: Date | null
+    _count: SyncConflictCountAggregateOutputType | null
+    _min: SyncConflictMinAggregateOutputType | null
+    _max: SyncConflictMaxAggregateOutputType | null
+  }
+
+  type GetSyncConflictGroupByPayload<T extends SyncConflictGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SyncConflictGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SyncConflictGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SyncConflictGroupByOutputType[P]>
+            : GetScalarType<T[P], SyncConflictGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SyncConflictSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    operationId?: boolean
+    clientId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    status?: boolean
+    localPayload?: boolean
+    serverPayload?: boolean
+    resolutionPayload?: boolean
+    createdAt?: boolean
+    resolvedAt?: boolean
+  }, ExtArgs["result"]["syncConflict"]>
+
+  export type SyncConflictSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    operationId?: boolean
+    clientId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    status?: boolean
+    localPayload?: boolean
+    serverPayload?: boolean
+    resolutionPayload?: boolean
+    createdAt?: boolean
+    resolvedAt?: boolean
+  }, ExtArgs["result"]["syncConflict"]>
+
+  export type SyncConflictSelectScalar = {
+    id?: boolean
+    operationId?: boolean
+    clientId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    status?: boolean
+    localPayload?: boolean
+    serverPayload?: boolean
+    resolutionPayload?: boolean
+    createdAt?: boolean
+    resolvedAt?: boolean
+  }
+
+
+  export type $SyncConflictPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SyncConflict"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      operationId: string
+      clientId: string
+      aggregateType: string
+      aggregateId: string | null
+      status: string
+      localPayload: string | null
+      serverPayload: string | null
+      resolutionPayload: string | null
+      createdAt: Date
+      resolvedAt: Date | null
+    }, ExtArgs["result"]["syncConflict"]>
+    composites: {}
+  }
+
+  type SyncConflictGetPayload<S extends boolean | null | undefined | SyncConflictDefaultArgs> = $Result.GetResult<Prisma.$SyncConflictPayload, S>
+
+  type SyncConflictCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SyncConflictFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SyncConflictCountAggregateInputType | true
+    }
+
+  export interface SyncConflictDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SyncConflict'], meta: { name: 'SyncConflict' } }
+    /**
+     * Find zero or one SyncConflict that matches the filter.
+     * @param {SyncConflictFindUniqueArgs} args - Arguments to find a SyncConflict
+     * @example
+     * // Get one SyncConflict
+     * const syncConflict = await prisma.syncConflict.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SyncConflictFindUniqueArgs>(args: SelectSubset<T, SyncConflictFindUniqueArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SyncConflict that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SyncConflictFindUniqueOrThrowArgs} args - Arguments to find a SyncConflict
+     * @example
+     * // Get one SyncConflict
+     * const syncConflict = await prisma.syncConflict.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SyncConflictFindUniqueOrThrowArgs>(args: SelectSubset<T, SyncConflictFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SyncConflict that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictFindFirstArgs} args - Arguments to find a SyncConflict
+     * @example
+     * // Get one SyncConflict
+     * const syncConflict = await prisma.syncConflict.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SyncConflictFindFirstArgs>(args?: SelectSubset<T, SyncConflictFindFirstArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SyncConflict that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictFindFirstOrThrowArgs} args - Arguments to find a SyncConflict
+     * @example
+     * // Get one SyncConflict
+     * const syncConflict = await prisma.syncConflict.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SyncConflictFindFirstOrThrowArgs>(args?: SelectSubset<T, SyncConflictFindFirstOrThrowArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SyncConflicts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SyncConflicts
+     * const syncConflicts = await prisma.syncConflict.findMany()
+     * 
+     * // Get first 10 SyncConflicts
+     * const syncConflicts = await prisma.syncConflict.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const syncConflictWithIdOnly = await prisma.syncConflict.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SyncConflictFindManyArgs>(args?: SelectSubset<T, SyncConflictFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SyncConflict.
+     * @param {SyncConflictCreateArgs} args - Arguments to create a SyncConflict.
+     * @example
+     * // Create one SyncConflict
+     * const SyncConflict = await prisma.syncConflict.create({
+     *   data: {
+     *     // ... data to create a SyncConflict
+     *   }
+     * })
+     * 
+     */
+    create<T extends SyncConflictCreateArgs>(args: SelectSubset<T, SyncConflictCreateArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SyncConflicts.
+     * @param {SyncConflictCreateManyArgs} args - Arguments to create many SyncConflicts.
+     * @example
+     * // Create many SyncConflicts
+     * const syncConflict = await prisma.syncConflict.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SyncConflictCreateManyArgs>(args?: SelectSubset<T, SyncConflictCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SyncConflicts and returns the data saved in the database.
+     * @param {SyncConflictCreateManyAndReturnArgs} args - Arguments to create many SyncConflicts.
+     * @example
+     * // Create many SyncConflicts
+     * const syncConflict = await prisma.syncConflict.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SyncConflicts and only return the `id`
+     * const syncConflictWithIdOnly = await prisma.syncConflict.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SyncConflictCreateManyAndReturnArgs>(args?: SelectSubset<T, SyncConflictCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SyncConflict.
+     * @param {SyncConflictDeleteArgs} args - Arguments to delete one SyncConflict.
+     * @example
+     * // Delete one SyncConflict
+     * const SyncConflict = await prisma.syncConflict.delete({
+     *   where: {
+     *     // ... filter to delete one SyncConflict
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SyncConflictDeleteArgs>(args: SelectSubset<T, SyncConflictDeleteArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SyncConflict.
+     * @param {SyncConflictUpdateArgs} args - Arguments to update one SyncConflict.
+     * @example
+     * // Update one SyncConflict
+     * const syncConflict = await prisma.syncConflict.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SyncConflictUpdateArgs>(args: SelectSubset<T, SyncConflictUpdateArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SyncConflicts.
+     * @param {SyncConflictDeleteManyArgs} args - Arguments to filter SyncConflicts to delete.
+     * @example
+     * // Delete a few SyncConflicts
+     * const { count } = await prisma.syncConflict.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SyncConflictDeleteManyArgs>(args?: SelectSubset<T, SyncConflictDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SyncConflicts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SyncConflicts
+     * const syncConflict = await prisma.syncConflict.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SyncConflictUpdateManyArgs>(args: SelectSubset<T, SyncConflictUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SyncConflict.
+     * @param {SyncConflictUpsertArgs} args - Arguments to update or create a SyncConflict.
+     * @example
+     * // Update or create a SyncConflict
+     * const syncConflict = await prisma.syncConflict.upsert({
+     *   create: {
+     *     // ... data to create a SyncConflict
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SyncConflict we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SyncConflictUpsertArgs>(args: SelectSubset<T, SyncConflictUpsertArgs<ExtArgs>>): Prisma__SyncConflictClient<$Result.GetResult<Prisma.$SyncConflictPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SyncConflicts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictCountArgs} args - Arguments to filter SyncConflicts to count.
+     * @example
+     * // Count the number of SyncConflicts
+     * const count = await prisma.syncConflict.count({
+     *   where: {
+     *     // ... the filter for the SyncConflicts we want to count
+     *   }
+     * })
+    **/
+    count<T extends SyncConflictCountArgs>(
+      args?: Subset<T, SyncConflictCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SyncConflictCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SyncConflict.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SyncConflictAggregateArgs>(args: Subset<T, SyncConflictAggregateArgs>): Prisma.PrismaPromise<GetSyncConflictAggregateType<T>>
+
+    /**
+     * Group by SyncConflict.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncConflictGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SyncConflictGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SyncConflictGroupByArgs['orderBy'] }
+        : { orderBy?: SyncConflictGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SyncConflictGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSyncConflictGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SyncConflict model
+   */
+  readonly fields: SyncConflictFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SyncConflict.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SyncConflictClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SyncConflict model
+   */ 
+  interface SyncConflictFieldRefs {
+    readonly id: FieldRef<"SyncConflict", 'String'>
+    readonly operationId: FieldRef<"SyncConflict", 'String'>
+    readonly clientId: FieldRef<"SyncConflict", 'String'>
+    readonly aggregateType: FieldRef<"SyncConflict", 'String'>
+    readonly aggregateId: FieldRef<"SyncConflict", 'String'>
+    readonly status: FieldRef<"SyncConflict", 'String'>
+    readonly localPayload: FieldRef<"SyncConflict", 'String'>
+    readonly serverPayload: FieldRef<"SyncConflict", 'String'>
+    readonly resolutionPayload: FieldRef<"SyncConflict", 'String'>
+    readonly createdAt: FieldRef<"SyncConflict", 'DateTime'>
+    readonly resolvedAt: FieldRef<"SyncConflict", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SyncConflict findUnique
+   */
+  export type SyncConflictFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncConflict to fetch.
+     */
+    where: SyncConflictWhereUniqueInput
+  }
+
+  /**
+   * SyncConflict findUniqueOrThrow
+   */
+  export type SyncConflictFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncConflict to fetch.
+     */
+    where: SyncConflictWhereUniqueInput
+  }
+
+  /**
+   * SyncConflict findFirst
+   */
+  export type SyncConflictFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncConflict to fetch.
+     */
+    where?: SyncConflictWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncConflicts to fetch.
+     */
+    orderBy?: SyncConflictOrderByWithRelationInput | SyncConflictOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncConflicts.
+     */
+    cursor?: SyncConflictWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncConflicts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncConflicts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncConflicts.
+     */
+    distinct?: SyncConflictScalarFieldEnum | SyncConflictScalarFieldEnum[]
+  }
+
+  /**
+   * SyncConflict findFirstOrThrow
+   */
+  export type SyncConflictFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncConflict to fetch.
+     */
+    where?: SyncConflictWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncConflicts to fetch.
+     */
+    orderBy?: SyncConflictOrderByWithRelationInput | SyncConflictOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncConflicts.
+     */
+    cursor?: SyncConflictWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncConflicts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncConflicts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncConflicts.
+     */
+    distinct?: SyncConflictScalarFieldEnum | SyncConflictScalarFieldEnum[]
+  }
+
+  /**
+   * SyncConflict findMany
+   */
+  export type SyncConflictFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncConflicts to fetch.
+     */
+    where?: SyncConflictWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncConflicts to fetch.
+     */
+    orderBy?: SyncConflictOrderByWithRelationInput | SyncConflictOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SyncConflicts.
+     */
+    cursor?: SyncConflictWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncConflicts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncConflicts.
+     */
+    skip?: number
+    distinct?: SyncConflictScalarFieldEnum | SyncConflictScalarFieldEnum[]
+  }
+
+  /**
+   * SyncConflict create
+   */
+  export type SyncConflictCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * The data needed to create a SyncConflict.
+     */
+    data: XOR<SyncConflictCreateInput, SyncConflictUncheckedCreateInput>
+  }
+
+  /**
+   * SyncConflict createMany
+   */
+  export type SyncConflictCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SyncConflicts.
+     */
+    data: SyncConflictCreateManyInput | SyncConflictCreateManyInput[]
+  }
+
+  /**
+   * SyncConflict createManyAndReturn
+   */
+  export type SyncConflictCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SyncConflicts.
+     */
+    data: SyncConflictCreateManyInput | SyncConflictCreateManyInput[]
+  }
+
+  /**
+   * SyncConflict update
+   */
+  export type SyncConflictUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * The data needed to update a SyncConflict.
+     */
+    data: XOR<SyncConflictUpdateInput, SyncConflictUncheckedUpdateInput>
+    /**
+     * Choose, which SyncConflict to update.
+     */
+    where: SyncConflictWhereUniqueInput
+  }
+
+  /**
+   * SyncConflict updateMany
+   */
+  export type SyncConflictUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SyncConflicts.
+     */
+    data: XOR<SyncConflictUpdateManyMutationInput, SyncConflictUncheckedUpdateManyInput>
+    /**
+     * Filter which SyncConflicts to update
+     */
+    where?: SyncConflictWhereInput
+  }
+
+  /**
+   * SyncConflict upsert
+   */
+  export type SyncConflictUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * The filter to search for the SyncConflict to update in case it exists.
+     */
+    where: SyncConflictWhereUniqueInput
+    /**
+     * In case the SyncConflict found by the `where` argument doesn't exist, create a new SyncConflict with this data.
+     */
+    create: XOR<SyncConflictCreateInput, SyncConflictUncheckedCreateInput>
+    /**
+     * In case the SyncConflict was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SyncConflictUpdateInput, SyncConflictUncheckedUpdateInput>
+  }
+
+  /**
+   * SyncConflict delete
+   */
+  export type SyncConflictDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+    /**
+     * Filter which SyncConflict to delete.
+     */
+    where: SyncConflictWhereUniqueInput
+  }
+
+  /**
+   * SyncConflict deleteMany
+   */
+  export type SyncConflictDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncConflicts to delete
+     */
+    where?: SyncConflictWhereInput
+  }
+
+  /**
+   * SyncConflict without action
+   */
+  export type SyncConflictDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncConflict
+     */
+    select?: SyncConflictSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SyncServerSequence
+   */
+
+  export type AggregateSyncServerSequence = {
+    _count: SyncServerSequenceCountAggregateOutputType | null
+    _avg: SyncServerSequenceAvgAggregateOutputType | null
+    _sum: SyncServerSequenceSumAggregateOutputType | null
+    _min: SyncServerSequenceMinAggregateOutputType | null
+    _max: SyncServerSequenceMaxAggregateOutputType | null
+  }
+
+  export type SyncServerSequenceAvgAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type SyncServerSequenceSumAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type SyncServerSequenceMinAggregateOutputType = {
+    seq: number | null
+    operationId: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    createdAt: Date | null
+  }
+
+  export type SyncServerSequenceMaxAggregateOutputType = {
+    seq: number | null
+    operationId: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    createdAt: Date | null
+  }
+
+  export type SyncServerSequenceCountAggregateOutputType = {
+    seq: number
+    operationId: number
+    aggregateType: number
+    aggregateId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type SyncServerSequenceAvgAggregateInputType = {
+    seq?: true
+  }
+
+  export type SyncServerSequenceSumAggregateInputType = {
+    seq?: true
+  }
+
+  export type SyncServerSequenceMinAggregateInputType = {
+    seq?: true
+    operationId?: true
+    aggregateType?: true
+    aggregateId?: true
+    createdAt?: true
+  }
+
+  export type SyncServerSequenceMaxAggregateInputType = {
+    seq?: true
+    operationId?: true
+    aggregateType?: true
+    aggregateId?: true
+    createdAt?: true
+  }
+
+  export type SyncServerSequenceCountAggregateInputType = {
+    seq?: true
+    operationId?: true
+    aggregateType?: true
+    aggregateId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type SyncServerSequenceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncServerSequence to aggregate.
+     */
+    where?: SyncServerSequenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerSequences to fetch.
+     */
+    orderBy?: SyncServerSequenceOrderByWithRelationInput | SyncServerSequenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SyncServerSequenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerSequences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerSequences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SyncServerSequences
+    **/
+    _count?: true | SyncServerSequenceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SyncServerSequenceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SyncServerSequenceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SyncServerSequenceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SyncServerSequenceMaxAggregateInputType
+  }
+
+  export type GetSyncServerSequenceAggregateType<T extends SyncServerSequenceAggregateArgs> = {
+        [P in keyof T & keyof AggregateSyncServerSequence]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSyncServerSequence[P]>
+      : GetScalarType<T[P], AggregateSyncServerSequence[P]>
+  }
+
+
+
+
+  export type SyncServerSequenceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SyncServerSequenceWhereInput
+    orderBy?: SyncServerSequenceOrderByWithAggregationInput | SyncServerSequenceOrderByWithAggregationInput[]
+    by: SyncServerSequenceScalarFieldEnum[] | SyncServerSequenceScalarFieldEnum
+    having?: SyncServerSequenceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SyncServerSequenceCountAggregateInputType | true
+    _avg?: SyncServerSequenceAvgAggregateInputType
+    _sum?: SyncServerSequenceSumAggregateInputType
+    _min?: SyncServerSequenceMinAggregateInputType
+    _max?: SyncServerSequenceMaxAggregateInputType
+  }
+
+  export type SyncServerSequenceGroupByOutputType = {
+    seq: number
+    operationId: string | null
+    aggregateType: string | null
+    aggregateId: string | null
+    createdAt: Date
+    _count: SyncServerSequenceCountAggregateOutputType | null
+    _avg: SyncServerSequenceAvgAggregateOutputType | null
+    _sum: SyncServerSequenceSumAggregateOutputType | null
+    _min: SyncServerSequenceMinAggregateOutputType | null
+    _max: SyncServerSequenceMaxAggregateOutputType | null
+  }
+
+  type GetSyncServerSequenceGroupByPayload<T extends SyncServerSequenceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SyncServerSequenceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SyncServerSequenceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SyncServerSequenceGroupByOutputType[P]>
+            : GetScalarType<T[P], SyncServerSequenceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SyncServerSequenceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    seq?: boolean
+    operationId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["syncServerSequence"]>
+
+  export type SyncServerSequenceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    seq?: boolean
+    operationId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["syncServerSequence"]>
+
+  export type SyncServerSequenceSelectScalar = {
+    seq?: boolean
+    operationId?: boolean
+    aggregateType?: boolean
+    aggregateId?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $SyncServerSequencePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SyncServerSequence"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      seq: number
+      operationId: string | null
+      aggregateType: string | null
+      aggregateId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["syncServerSequence"]>
+    composites: {}
+  }
+
+  type SyncServerSequenceGetPayload<S extends boolean | null | undefined | SyncServerSequenceDefaultArgs> = $Result.GetResult<Prisma.$SyncServerSequencePayload, S>
+
+  type SyncServerSequenceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SyncServerSequenceFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SyncServerSequenceCountAggregateInputType | true
+    }
+
+  export interface SyncServerSequenceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SyncServerSequence'], meta: { name: 'SyncServerSequence' } }
+    /**
+     * Find zero or one SyncServerSequence that matches the filter.
+     * @param {SyncServerSequenceFindUniqueArgs} args - Arguments to find a SyncServerSequence
+     * @example
+     * // Get one SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SyncServerSequenceFindUniqueArgs>(args: SelectSubset<T, SyncServerSequenceFindUniqueArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SyncServerSequence that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SyncServerSequenceFindUniqueOrThrowArgs} args - Arguments to find a SyncServerSequence
+     * @example
+     * // Get one SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SyncServerSequenceFindUniqueOrThrowArgs>(args: SelectSubset<T, SyncServerSequenceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SyncServerSequence that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceFindFirstArgs} args - Arguments to find a SyncServerSequence
+     * @example
+     * // Get one SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SyncServerSequenceFindFirstArgs>(args?: SelectSubset<T, SyncServerSequenceFindFirstArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SyncServerSequence that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceFindFirstOrThrowArgs} args - Arguments to find a SyncServerSequence
+     * @example
+     * // Get one SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SyncServerSequenceFindFirstOrThrowArgs>(args?: SelectSubset<T, SyncServerSequenceFindFirstOrThrowArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SyncServerSequences that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SyncServerSequences
+     * const syncServerSequences = await prisma.syncServerSequence.findMany()
+     * 
+     * // Get first 10 SyncServerSequences
+     * const syncServerSequences = await prisma.syncServerSequence.findMany({ take: 10 })
+     * 
+     * // Only select the `seq`
+     * const syncServerSequenceWithSeqOnly = await prisma.syncServerSequence.findMany({ select: { seq: true } })
+     * 
+     */
+    findMany<T extends SyncServerSequenceFindManyArgs>(args?: SelectSubset<T, SyncServerSequenceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SyncServerSequence.
+     * @param {SyncServerSequenceCreateArgs} args - Arguments to create a SyncServerSequence.
+     * @example
+     * // Create one SyncServerSequence
+     * const SyncServerSequence = await prisma.syncServerSequence.create({
+     *   data: {
+     *     // ... data to create a SyncServerSequence
+     *   }
+     * })
+     * 
+     */
+    create<T extends SyncServerSequenceCreateArgs>(args: SelectSubset<T, SyncServerSequenceCreateArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SyncServerSequences.
+     * @param {SyncServerSequenceCreateManyArgs} args - Arguments to create many SyncServerSequences.
+     * @example
+     * // Create many SyncServerSequences
+     * const syncServerSequence = await prisma.syncServerSequence.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SyncServerSequenceCreateManyArgs>(args?: SelectSubset<T, SyncServerSequenceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SyncServerSequences and returns the data saved in the database.
+     * @param {SyncServerSequenceCreateManyAndReturnArgs} args - Arguments to create many SyncServerSequences.
+     * @example
+     * // Create many SyncServerSequences
+     * const syncServerSequence = await prisma.syncServerSequence.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SyncServerSequences and only return the `seq`
+     * const syncServerSequenceWithSeqOnly = await prisma.syncServerSequence.createManyAndReturn({ 
+     *   select: { seq: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SyncServerSequenceCreateManyAndReturnArgs>(args?: SelectSubset<T, SyncServerSequenceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SyncServerSequence.
+     * @param {SyncServerSequenceDeleteArgs} args - Arguments to delete one SyncServerSequence.
+     * @example
+     * // Delete one SyncServerSequence
+     * const SyncServerSequence = await prisma.syncServerSequence.delete({
+     *   where: {
+     *     // ... filter to delete one SyncServerSequence
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SyncServerSequenceDeleteArgs>(args: SelectSubset<T, SyncServerSequenceDeleteArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SyncServerSequence.
+     * @param {SyncServerSequenceUpdateArgs} args - Arguments to update one SyncServerSequence.
+     * @example
+     * // Update one SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SyncServerSequenceUpdateArgs>(args: SelectSubset<T, SyncServerSequenceUpdateArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SyncServerSequences.
+     * @param {SyncServerSequenceDeleteManyArgs} args - Arguments to filter SyncServerSequences to delete.
+     * @example
+     * // Delete a few SyncServerSequences
+     * const { count } = await prisma.syncServerSequence.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SyncServerSequenceDeleteManyArgs>(args?: SelectSubset<T, SyncServerSequenceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SyncServerSequences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SyncServerSequences
+     * const syncServerSequence = await prisma.syncServerSequence.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SyncServerSequenceUpdateManyArgs>(args: SelectSubset<T, SyncServerSequenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SyncServerSequence.
+     * @param {SyncServerSequenceUpsertArgs} args - Arguments to update or create a SyncServerSequence.
+     * @example
+     * // Update or create a SyncServerSequence
+     * const syncServerSequence = await prisma.syncServerSequence.upsert({
+     *   create: {
+     *     // ... data to create a SyncServerSequence
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SyncServerSequence we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SyncServerSequenceUpsertArgs>(args: SelectSubset<T, SyncServerSequenceUpsertArgs<ExtArgs>>): Prisma__SyncServerSequenceClient<$Result.GetResult<Prisma.$SyncServerSequencePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SyncServerSequences.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceCountArgs} args - Arguments to filter SyncServerSequences to count.
+     * @example
+     * // Count the number of SyncServerSequences
+     * const count = await prisma.syncServerSequence.count({
+     *   where: {
+     *     // ... the filter for the SyncServerSequences we want to count
+     *   }
+     * })
+    **/
+    count<T extends SyncServerSequenceCountArgs>(
+      args?: Subset<T, SyncServerSequenceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SyncServerSequenceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SyncServerSequence.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SyncServerSequenceAggregateArgs>(args: Subset<T, SyncServerSequenceAggregateArgs>): Prisma.PrismaPromise<GetSyncServerSequenceAggregateType<T>>
+
+    /**
+     * Group by SyncServerSequence.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerSequenceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SyncServerSequenceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SyncServerSequenceGroupByArgs['orderBy'] }
+        : { orderBy?: SyncServerSequenceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SyncServerSequenceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSyncServerSequenceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SyncServerSequence model
+   */
+  readonly fields: SyncServerSequenceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SyncServerSequence.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SyncServerSequenceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SyncServerSequence model
+   */ 
+  interface SyncServerSequenceFieldRefs {
+    readonly seq: FieldRef<"SyncServerSequence", 'Int'>
+    readonly operationId: FieldRef<"SyncServerSequence", 'String'>
+    readonly aggregateType: FieldRef<"SyncServerSequence", 'String'>
+    readonly aggregateId: FieldRef<"SyncServerSequence", 'String'>
+    readonly createdAt: FieldRef<"SyncServerSequence", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SyncServerSequence findUnique
+   */
+  export type SyncServerSequenceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerSequence to fetch.
+     */
+    where: SyncServerSequenceWhereUniqueInput
+  }
+
+  /**
+   * SyncServerSequence findUniqueOrThrow
+   */
+  export type SyncServerSequenceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerSequence to fetch.
+     */
+    where: SyncServerSequenceWhereUniqueInput
+  }
+
+  /**
+   * SyncServerSequence findFirst
+   */
+  export type SyncServerSequenceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerSequence to fetch.
+     */
+    where?: SyncServerSequenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerSequences to fetch.
+     */
+    orderBy?: SyncServerSequenceOrderByWithRelationInput | SyncServerSequenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncServerSequences.
+     */
+    cursor?: SyncServerSequenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerSequences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerSequences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncServerSequences.
+     */
+    distinct?: SyncServerSequenceScalarFieldEnum | SyncServerSequenceScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerSequence findFirstOrThrow
+   */
+  export type SyncServerSequenceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerSequence to fetch.
+     */
+    where?: SyncServerSequenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerSequences to fetch.
+     */
+    orderBy?: SyncServerSequenceOrderByWithRelationInput | SyncServerSequenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncServerSequences.
+     */
+    cursor?: SyncServerSequenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerSequences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerSequences.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncServerSequences.
+     */
+    distinct?: SyncServerSequenceScalarFieldEnum | SyncServerSequenceScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerSequence findMany
+   */
+  export type SyncServerSequenceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerSequences to fetch.
+     */
+    where?: SyncServerSequenceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerSequences to fetch.
+     */
+    orderBy?: SyncServerSequenceOrderByWithRelationInput | SyncServerSequenceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SyncServerSequences.
+     */
+    cursor?: SyncServerSequenceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerSequences from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerSequences.
+     */
+    skip?: number
+    distinct?: SyncServerSequenceScalarFieldEnum | SyncServerSequenceScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerSequence create
+   */
+  export type SyncServerSequenceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * The data needed to create a SyncServerSequence.
+     */
+    data?: XOR<SyncServerSequenceCreateInput, SyncServerSequenceUncheckedCreateInput>
+  }
+
+  /**
+   * SyncServerSequence createMany
+   */
+  export type SyncServerSequenceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SyncServerSequences.
+     */
+    data: SyncServerSequenceCreateManyInput | SyncServerSequenceCreateManyInput[]
+  }
+
+  /**
+   * SyncServerSequence createManyAndReturn
+   */
+  export type SyncServerSequenceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SyncServerSequences.
+     */
+    data: SyncServerSequenceCreateManyInput | SyncServerSequenceCreateManyInput[]
+  }
+
+  /**
+   * SyncServerSequence update
+   */
+  export type SyncServerSequenceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * The data needed to update a SyncServerSequence.
+     */
+    data: XOR<SyncServerSequenceUpdateInput, SyncServerSequenceUncheckedUpdateInput>
+    /**
+     * Choose, which SyncServerSequence to update.
+     */
+    where: SyncServerSequenceWhereUniqueInput
+  }
+
+  /**
+   * SyncServerSequence updateMany
+   */
+  export type SyncServerSequenceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SyncServerSequences.
+     */
+    data: XOR<SyncServerSequenceUpdateManyMutationInput, SyncServerSequenceUncheckedUpdateManyInput>
+    /**
+     * Filter which SyncServerSequences to update
+     */
+    where?: SyncServerSequenceWhereInput
+  }
+
+  /**
+   * SyncServerSequence upsert
+   */
+  export type SyncServerSequenceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * The filter to search for the SyncServerSequence to update in case it exists.
+     */
+    where: SyncServerSequenceWhereUniqueInput
+    /**
+     * In case the SyncServerSequence found by the `where` argument doesn't exist, create a new SyncServerSequence with this data.
+     */
+    create: XOR<SyncServerSequenceCreateInput, SyncServerSequenceUncheckedCreateInput>
+    /**
+     * In case the SyncServerSequence was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SyncServerSequenceUpdateInput, SyncServerSequenceUncheckedUpdateInput>
+  }
+
+  /**
+   * SyncServerSequence delete
+   */
+  export type SyncServerSequenceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+    /**
+     * Filter which SyncServerSequence to delete.
+     */
+    where: SyncServerSequenceWhereUniqueInput
+  }
+
+  /**
+   * SyncServerSequence deleteMany
+   */
+  export type SyncServerSequenceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncServerSequences to delete
+     */
+    where?: SyncServerSequenceWhereInput
+  }
+
+  /**
+   * SyncServerSequence without action
+   */
+  export type SyncServerSequenceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerSequence
+     */
+    select?: SyncServerSequenceSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SyncServerChange
+   */
+
+  export type AggregateSyncServerChange = {
+    _count: SyncServerChangeCountAggregateOutputType | null
+    _avg: SyncServerChangeAvgAggregateOutputType | null
+    _sum: SyncServerChangeSumAggregateOutputType | null
+    _min: SyncServerChangeMinAggregateOutputType | null
+    _max: SyncServerChangeMaxAggregateOutputType | null
+  }
+
+  export type SyncServerChangeAvgAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type SyncServerChangeSumAggregateOutputType = {
+    seq: number | null
+  }
+
+  export type SyncServerChangeMinAggregateOutputType = {
+    id: string | null
+    seq: number | null
+    tableName: string | null
+    rowId: string | null
+    action: string | null
+    createdAt: Date | null
+  }
+
+  export type SyncServerChangeMaxAggregateOutputType = {
+    id: string | null
+    seq: number | null
+    tableName: string | null
+    rowId: string | null
+    action: string | null
+    createdAt: Date | null
+  }
+
+  export type SyncServerChangeCountAggregateOutputType = {
+    id: number
+    seq: number
+    tableName: number
+    rowId: number
+    action: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type SyncServerChangeAvgAggregateInputType = {
+    seq?: true
+  }
+
+  export type SyncServerChangeSumAggregateInputType = {
+    seq?: true
+  }
+
+  export type SyncServerChangeMinAggregateInputType = {
+    id?: true
+    seq?: true
+    tableName?: true
+    rowId?: true
+    action?: true
+    createdAt?: true
+  }
+
+  export type SyncServerChangeMaxAggregateInputType = {
+    id?: true
+    seq?: true
+    tableName?: true
+    rowId?: true
+    action?: true
+    createdAt?: true
+  }
+
+  export type SyncServerChangeCountAggregateInputType = {
+    id?: true
+    seq?: true
+    tableName?: true
+    rowId?: true
+    action?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type SyncServerChangeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncServerChange to aggregate.
+     */
+    where?: SyncServerChangeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerChanges to fetch.
+     */
+    orderBy?: SyncServerChangeOrderByWithRelationInput | SyncServerChangeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SyncServerChangeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerChanges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerChanges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SyncServerChanges
+    **/
+    _count?: true | SyncServerChangeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SyncServerChangeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SyncServerChangeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SyncServerChangeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SyncServerChangeMaxAggregateInputType
+  }
+
+  export type GetSyncServerChangeAggregateType<T extends SyncServerChangeAggregateArgs> = {
+        [P in keyof T & keyof AggregateSyncServerChange]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSyncServerChange[P]>
+      : GetScalarType<T[P], AggregateSyncServerChange[P]>
+  }
+
+
+
+
+  export type SyncServerChangeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SyncServerChangeWhereInput
+    orderBy?: SyncServerChangeOrderByWithAggregationInput | SyncServerChangeOrderByWithAggregationInput[]
+    by: SyncServerChangeScalarFieldEnum[] | SyncServerChangeScalarFieldEnum
+    having?: SyncServerChangeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SyncServerChangeCountAggregateInputType | true
+    _avg?: SyncServerChangeAvgAggregateInputType
+    _sum?: SyncServerChangeSumAggregateInputType
+    _min?: SyncServerChangeMinAggregateInputType
+    _max?: SyncServerChangeMaxAggregateInputType
+  }
+
+  export type SyncServerChangeGroupByOutputType = {
+    id: string
+    seq: number
+    tableName: string
+    rowId: string
+    action: string
+    createdAt: Date
+    _count: SyncServerChangeCountAggregateOutputType | null
+    _avg: SyncServerChangeAvgAggregateOutputType | null
+    _sum: SyncServerChangeSumAggregateOutputType | null
+    _min: SyncServerChangeMinAggregateOutputType | null
+    _max: SyncServerChangeMaxAggregateOutputType | null
+  }
+
+  type GetSyncServerChangeGroupByPayload<T extends SyncServerChangeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SyncServerChangeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SyncServerChangeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SyncServerChangeGroupByOutputType[P]>
+            : GetScalarType<T[P], SyncServerChangeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SyncServerChangeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    seq?: boolean
+    tableName?: boolean
+    rowId?: boolean
+    action?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["syncServerChange"]>
+
+  export type SyncServerChangeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    seq?: boolean
+    tableName?: boolean
+    rowId?: boolean
+    action?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["syncServerChange"]>
+
+  export type SyncServerChangeSelectScalar = {
+    id?: boolean
+    seq?: boolean
+    tableName?: boolean
+    rowId?: boolean
+    action?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $SyncServerChangePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SyncServerChange"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      seq: number
+      tableName: string
+      rowId: string
+      action: string
+      createdAt: Date
+    }, ExtArgs["result"]["syncServerChange"]>
+    composites: {}
+  }
+
+  type SyncServerChangeGetPayload<S extends boolean | null | undefined | SyncServerChangeDefaultArgs> = $Result.GetResult<Prisma.$SyncServerChangePayload, S>
+
+  type SyncServerChangeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<SyncServerChangeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: SyncServerChangeCountAggregateInputType | true
+    }
+
+  export interface SyncServerChangeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SyncServerChange'], meta: { name: 'SyncServerChange' } }
+    /**
+     * Find zero or one SyncServerChange that matches the filter.
+     * @param {SyncServerChangeFindUniqueArgs} args - Arguments to find a SyncServerChange
+     * @example
+     * // Get one SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SyncServerChangeFindUniqueArgs>(args: SelectSubset<T, SyncServerChangeFindUniqueArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one SyncServerChange that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {SyncServerChangeFindUniqueOrThrowArgs} args - Arguments to find a SyncServerChange
+     * @example
+     * // Get one SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SyncServerChangeFindUniqueOrThrowArgs>(args: SelectSubset<T, SyncServerChangeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first SyncServerChange that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeFindFirstArgs} args - Arguments to find a SyncServerChange
+     * @example
+     * // Get one SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SyncServerChangeFindFirstArgs>(args?: SelectSubset<T, SyncServerChangeFindFirstArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first SyncServerChange that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeFindFirstOrThrowArgs} args - Arguments to find a SyncServerChange
+     * @example
+     * // Get one SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SyncServerChangeFindFirstOrThrowArgs>(args?: SelectSubset<T, SyncServerChangeFindFirstOrThrowArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more SyncServerChanges that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SyncServerChanges
+     * const syncServerChanges = await prisma.syncServerChange.findMany()
+     * 
+     * // Get first 10 SyncServerChanges
+     * const syncServerChanges = await prisma.syncServerChange.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const syncServerChangeWithIdOnly = await prisma.syncServerChange.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SyncServerChangeFindManyArgs>(args?: SelectSubset<T, SyncServerChangeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a SyncServerChange.
+     * @param {SyncServerChangeCreateArgs} args - Arguments to create a SyncServerChange.
+     * @example
+     * // Create one SyncServerChange
+     * const SyncServerChange = await prisma.syncServerChange.create({
+     *   data: {
+     *     // ... data to create a SyncServerChange
+     *   }
+     * })
+     * 
+     */
+    create<T extends SyncServerChangeCreateArgs>(args: SelectSubset<T, SyncServerChangeCreateArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many SyncServerChanges.
+     * @param {SyncServerChangeCreateManyArgs} args - Arguments to create many SyncServerChanges.
+     * @example
+     * // Create many SyncServerChanges
+     * const syncServerChange = await prisma.syncServerChange.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SyncServerChangeCreateManyArgs>(args?: SelectSubset<T, SyncServerChangeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SyncServerChanges and returns the data saved in the database.
+     * @param {SyncServerChangeCreateManyAndReturnArgs} args - Arguments to create many SyncServerChanges.
+     * @example
+     * // Create many SyncServerChanges
+     * const syncServerChange = await prisma.syncServerChange.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SyncServerChanges and only return the `id`
+     * const syncServerChangeWithIdOnly = await prisma.syncServerChange.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SyncServerChangeCreateManyAndReturnArgs>(args?: SelectSubset<T, SyncServerChangeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a SyncServerChange.
+     * @param {SyncServerChangeDeleteArgs} args - Arguments to delete one SyncServerChange.
+     * @example
+     * // Delete one SyncServerChange
+     * const SyncServerChange = await prisma.syncServerChange.delete({
+     *   where: {
+     *     // ... filter to delete one SyncServerChange
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SyncServerChangeDeleteArgs>(args: SelectSubset<T, SyncServerChangeDeleteArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one SyncServerChange.
+     * @param {SyncServerChangeUpdateArgs} args - Arguments to update one SyncServerChange.
+     * @example
+     * // Update one SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SyncServerChangeUpdateArgs>(args: SelectSubset<T, SyncServerChangeUpdateArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more SyncServerChanges.
+     * @param {SyncServerChangeDeleteManyArgs} args - Arguments to filter SyncServerChanges to delete.
+     * @example
+     * // Delete a few SyncServerChanges
+     * const { count } = await prisma.syncServerChange.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SyncServerChangeDeleteManyArgs>(args?: SelectSubset<T, SyncServerChangeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SyncServerChanges.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SyncServerChanges
+     * const syncServerChange = await prisma.syncServerChange.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SyncServerChangeUpdateManyArgs>(args: SelectSubset<T, SyncServerChangeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SyncServerChange.
+     * @param {SyncServerChangeUpsertArgs} args - Arguments to update or create a SyncServerChange.
+     * @example
+     * // Update or create a SyncServerChange
+     * const syncServerChange = await prisma.syncServerChange.upsert({
+     *   create: {
+     *     // ... data to create a SyncServerChange
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SyncServerChange we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SyncServerChangeUpsertArgs>(args: SelectSubset<T, SyncServerChangeUpsertArgs<ExtArgs>>): Prisma__SyncServerChangeClient<$Result.GetResult<Prisma.$SyncServerChangePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of SyncServerChanges.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeCountArgs} args - Arguments to filter SyncServerChanges to count.
+     * @example
+     * // Count the number of SyncServerChanges
+     * const count = await prisma.syncServerChange.count({
+     *   where: {
+     *     // ... the filter for the SyncServerChanges we want to count
+     *   }
+     * })
+    **/
+    count<T extends SyncServerChangeCountArgs>(
+      args?: Subset<T, SyncServerChangeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SyncServerChangeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SyncServerChange.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SyncServerChangeAggregateArgs>(args: Subset<T, SyncServerChangeAggregateArgs>): Prisma.PrismaPromise<GetSyncServerChangeAggregateType<T>>
+
+    /**
+     * Group by SyncServerChange.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SyncServerChangeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SyncServerChangeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SyncServerChangeGroupByArgs['orderBy'] }
+        : { orderBy?: SyncServerChangeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SyncServerChangeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSyncServerChangeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SyncServerChange model
+   */
+  readonly fields: SyncServerChangeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SyncServerChange.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SyncServerChangeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SyncServerChange model
+   */ 
+  interface SyncServerChangeFieldRefs {
+    readonly id: FieldRef<"SyncServerChange", 'String'>
+    readonly seq: FieldRef<"SyncServerChange", 'Int'>
+    readonly tableName: FieldRef<"SyncServerChange", 'String'>
+    readonly rowId: FieldRef<"SyncServerChange", 'String'>
+    readonly action: FieldRef<"SyncServerChange", 'String'>
+    readonly createdAt: FieldRef<"SyncServerChange", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SyncServerChange findUnique
+   */
+  export type SyncServerChangeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerChange to fetch.
+     */
+    where: SyncServerChangeWhereUniqueInput
+  }
+
+  /**
+   * SyncServerChange findUniqueOrThrow
+   */
+  export type SyncServerChangeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerChange to fetch.
+     */
+    where: SyncServerChangeWhereUniqueInput
+  }
+
+  /**
+   * SyncServerChange findFirst
+   */
+  export type SyncServerChangeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerChange to fetch.
+     */
+    where?: SyncServerChangeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerChanges to fetch.
+     */
+    orderBy?: SyncServerChangeOrderByWithRelationInput | SyncServerChangeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncServerChanges.
+     */
+    cursor?: SyncServerChangeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerChanges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerChanges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncServerChanges.
+     */
+    distinct?: SyncServerChangeScalarFieldEnum | SyncServerChangeScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerChange findFirstOrThrow
+   */
+  export type SyncServerChangeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerChange to fetch.
+     */
+    where?: SyncServerChangeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerChanges to fetch.
+     */
+    orderBy?: SyncServerChangeOrderByWithRelationInput | SyncServerChangeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SyncServerChanges.
+     */
+    cursor?: SyncServerChangeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerChanges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerChanges.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SyncServerChanges.
+     */
+    distinct?: SyncServerChangeScalarFieldEnum | SyncServerChangeScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerChange findMany
+   */
+  export type SyncServerChangeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter, which SyncServerChanges to fetch.
+     */
+    where?: SyncServerChangeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SyncServerChanges to fetch.
+     */
+    orderBy?: SyncServerChangeOrderByWithRelationInput | SyncServerChangeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SyncServerChanges.
+     */
+    cursor?: SyncServerChangeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SyncServerChanges from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SyncServerChanges.
+     */
+    skip?: number
+    distinct?: SyncServerChangeScalarFieldEnum | SyncServerChangeScalarFieldEnum[]
+  }
+
+  /**
+   * SyncServerChange create
+   */
+  export type SyncServerChangeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * The data needed to create a SyncServerChange.
+     */
+    data: XOR<SyncServerChangeCreateInput, SyncServerChangeUncheckedCreateInput>
+  }
+
+  /**
+   * SyncServerChange createMany
+   */
+  export type SyncServerChangeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SyncServerChanges.
+     */
+    data: SyncServerChangeCreateManyInput | SyncServerChangeCreateManyInput[]
+  }
+
+  /**
+   * SyncServerChange createManyAndReturn
+   */
+  export type SyncServerChangeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many SyncServerChanges.
+     */
+    data: SyncServerChangeCreateManyInput | SyncServerChangeCreateManyInput[]
+  }
+
+  /**
+   * SyncServerChange update
+   */
+  export type SyncServerChangeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * The data needed to update a SyncServerChange.
+     */
+    data: XOR<SyncServerChangeUpdateInput, SyncServerChangeUncheckedUpdateInput>
+    /**
+     * Choose, which SyncServerChange to update.
+     */
+    where: SyncServerChangeWhereUniqueInput
+  }
+
+  /**
+   * SyncServerChange updateMany
+   */
+  export type SyncServerChangeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SyncServerChanges.
+     */
+    data: XOR<SyncServerChangeUpdateManyMutationInput, SyncServerChangeUncheckedUpdateManyInput>
+    /**
+     * Filter which SyncServerChanges to update
+     */
+    where?: SyncServerChangeWhereInput
+  }
+
+  /**
+   * SyncServerChange upsert
+   */
+  export type SyncServerChangeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * The filter to search for the SyncServerChange to update in case it exists.
+     */
+    where: SyncServerChangeWhereUniqueInput
+    /**
+     * In case the SyncServerChange found by the `where` argument doesn't exist, create a new SyncServerChange with this data.
+     */
+    create: XOR<SyncServerChangeCreateInput, SyncServerChangeUncheckedCreateInput>
+    /**
+     * In case the SyncServerChange was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SyncServerChangeUpdateInput, SyncServerChangeUncheckedUpdateInput>
+  }
+
+  /**
+   * SyncServerChange delete
+   */
+  export type SyncServerChangeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+    /**
+     * Filter which SyncServerChange to delete.
+     */
+    where: SyncServerChangeWhereUniqueInput
+  }
+
+  /**
+   * SyncServerChange deleteMany
+   */
+  export type SyncServerChangeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SyncServerChanges to delete
+     */
+    where?: SyncServerChangeWhereInput
+  }
+
+  /**
+   * SyncServerChange without action
+   */
+  export type SyncServerChangeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SyncServerChange
+     */
+    select?: SyncServerChangeSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Model StatusOption
    */
 
@@ -47704,6 +51866,67 @@ export namespace Prisma {
   };
 
   export type SyncQueueScalarFieldEnum = (typeof SyncQueueScalarFieldEnum)[keyof typeof SyncQueueScalarFieldEnum]
+
+
+  export const SyncOperationLogScalarFieldEnum: {
+    id: 'id',
+    clientId: 'clientId',
+    opType: 'opType',
+    aggregateType: 'aggregateType',
+    aggregateId: 'aggregateId',
+    idempotencyKey: 'idempotencyKey',
+    payload: 'payload',
+    baseVersion: 'baseVersion',
+    status: 'status',
+    conflictData: 'conflictData',
+    lastError: 'lastError',
+    attemptCount: 'attemptCount',
+    createdAt: 'createdAt',
+    processedAt: 'processedAt',
+    appliedServerSeq: 'appliedServerSeq'
+  };
+
+  export type SyncOperationLogScalarFieldEnum = (typeof SyncOperationLogScalarFieldEnum)[keyof typeof SyncOperationLogScalarFieldEnum]
+
+
+  export const SyncConflictScalarFieldEnum: {
+    id: 'id',
+    operationId: 'operationId',
+    clientId: 'clientId',
+    aggregateType: 'aggregateType',
+    aggregateId: 'aggregateId',
+    status: 'status',
+    localPayload: 'localPayload',
+    serverPayload: 'serverPayload',
+    resolutionPayload: 'resolutionPayload',
+    createdAt: 'createdAt',
+    resolvedAt: 'resolvedAt'
+  };
+
+  export type SyncConflictScalarFieldEnum = (typeof SyncConflictScalarFieldEnum)[keyof typeof SyncConflictScalarFieldEnum]
+
+
+  export const SyncServerSequenceScalarFieldEnum: {
+    seq: 'seq',
+    operationId: 'operationId',
+    aggregateType: 'aggregateType',
+    aggregateId: 'aggregateId',
+    createdAt: 'createdAt'
+  };
+
+  export type SyncServerSequenceScalarFieldEnum = (typeof SyncServerSequenceScalarFieldEnum)[keyof typeof SyncServerSequenceScalarFieldEnum]
+
+
+  export const SyncServerChangeScalarFieldEnum: {
+    id: 'id',
+    seq: 'seq',
+    tableName: 'tableName',
+    rowId: 'rowId',
+    action: 'action',
+    createdAt: 'createdAt'
+  };
+
+  export type SyncServerChangeScalarFieldEnum = (typeof SyncServerChangeScalarFieldEnum)[keyof typeof SyncServerChangeScalarFieldEnum]
 
 
   export const StatusOptionScalarFieldEnum: {
@@ -51136,6 +55359,305 @@ export namespace Prisma {
     processedAt?: DateTimeNullableWithAggregatesFilter<"SyncQueue"> | Date | string | null
     conflictFlag?: BoolWithAggregatesFilter<"SyncQueue"> | boolean
     conflictNotes?: StringNullableWithAggregatesFilter<"SyncQueue"> | string | null
+  }
+
+  export type SyncOperationLogWhereInput = {
+    AND?: SyncOperationLogWhereInput | SyncOperationLogWhereInput[]
+    OR?: SyncOperationLogWhereInput[]
+    NOT?: SyncOperationLogWhereInput | SyncOperationLogWhereInput[]
+    id?: StringFilter<"SyncOperationLog"> | string
+    clientId?: StringFilter<"SyncOperationLog"> | string
+    opType?: StringFilter<"SyncOperationLog"> | string
+    aggregateType?: StringFilter<"SyncOperationLog"> | string
+    aggregateId?: StringNullableFilter<"SyncOperationLog"> | string | null
+    idempotencyKey?: StringFilter<"SyncOperationLog"> | string
+    payload?: StringFilter<"SyncOperationLog"> | string
+    baseVersion?: IntNullableFilter<"SyncOperationLog"> | number | null
+    status?: StringFilter<"SyncOperationLog"> | string
+    conflictData?: StringNullableFilter<"SyncOperationLog"> | string | null
+    lastError?: StringNullableFilter<"SyncOperationLog"> | string | null
+    attemptCount?: IntFilter<"SyncOperationLog"> | number
+    createdAt?: DateTimeFilter<"SyncOperationLog"> | Date | string
+    processedAt?: DateTimeNullableFilter<"SyncOperationLog"> | Date | string | null
+    appliedServerSeq?: IntNullableFilter<"SyncOperationLog"> | number | null
+  }
+
+  export type SyncOperationLogOrderByWithRelationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    opType?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    idempotencyKey?: SortOrder
+    payload?: SortOrder
+    baseVersion?: SortOrderInput | SortOrder
+    status?: SortOrder
+    conflictData?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    attemptCount?: SortOrder
+    createdAt?: SortOrder
+    processedAt?: SortOrderInput | SortOrder
+    appliedServerSeq?: SortOrderInput | SortOrder
+  }
+
+  export type SyncOperationLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    idempotencyKey?: string
+    AND?: SyncOperationLogWhereInput | SyncOperationLogWhereInput[]
+    OR?: SyncOperationLogWhereInput[]
+    NOT?: SyncOperationLogWhereInput | SyncOperationLogWhereInput[]
+    clientId?: StringFilter<"SyncOperationLog"> | string
+    opType?: StringFilter<"SyncOperationLog"> | string
+    aggregateType?: StringFilter<"SyncOperationLog"> | string
+    aggregateId?: StringNullableFilter<"SyncOperationLog"> | string | null
+    payload?: StringFilter<"SyncOperationLog"> | string
+    baseVersion?: IntNullableFilter<"SyncOperationLog"> | number | null
+    status?: StringFilter<"SyncOperationLog"> | string
+    conflictData?: StringNullableFilter<"SyncOperationLog"> | string | null
+    lastError?: StringNullableFilter<"SyncOperationLog"> | string | null
+    attemptCount?: IntFilter<"SyncOperationLog"> | number
+    createdAt?: DateTimeFilter<"SyncOperationLog"> | Date | string
+    processedAt?: DateTimeNullableFilter<"SyncOperationLog"> | Date | string | null
+    appliedServerSeq?: IntNullableFilter<"SyncOperationLog"> | number | null
+  }, "id" | "idempotencyKey">
+
+  export type SyncOperationLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    opType?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    idempotencyKey?: SortOrder
+    payload?: SortOrder
+    baseVersion?: SortOrderInput | SortOrder
+    status?: SortOrder
+    conflictData?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    attemptCount?: SortOrder
+    createdAt?: SortOrder
+    processedAt?: SortOrderInput | SortOrder
+    appliedServerSeq?: SortOrderInput | SortOrder
+    _count?: SyncOperationLogCountOrderByAggregateInput
+    _avg?: SyncOperationLogAvgOrderByAggregateInput
+    _max?: SyncOperationLogMaxOrderByAggregateInput
+    _min?: SyncOperationLogMinOrderByAggregateInput
+    _sum?: SyncOperationLogSumOrderByAggregateInput
+  }
+
+  export type SyncOperationLogScalarWhereWithAggregatesInput = {
+    AND?: SyncOperationLogScalarWhereWithAggregatesInput | SyncOperationLogScalarWhereWithAggregatesInput[]
+    OR?: SyncOperationLogScalarWhereWithAggregatesInput[]
+    NOT?: SyncOperationLogScalarWhereWithAggregatesInput | SyncOperationLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    clientId?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    opType?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    aggregateType?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    aggregateId?: StringNullableWithAggregatesFilter<"SyncOperationLog"> | string | null
+    idempotencyKey?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    payload?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    baseVersion?: IntNullableWithAggregatesFilter<"SyncOperationLog"> | number | null
+    status?: StringWithAggregatesFilter<"SyncOperationLog"> | string
+    conflictData?: StringNullableWithAggregatesFilter<"SyncOperationLog"> | string | null
+    lastError?: StringNullableWithAggregatesFilter<"SyncOperationLog"> | string | null
+    attemptCount?: IntWithAggregatesFilter<"SyncOperationLog"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"SyncOperationLog"> | Date | string
+    processedAt?: DateTimeNullableWithAggregatesFilter<"SyncOperationLog"> | Date | string | null
+    appliedServerSeq?: IntNullableWithAggregatesFilter<"SyncOperationLog"> | number | null
+  }
+
+  export type SyncConflictWhereInput = {
+    AND?: SyncConflictWhereInput | SyncConflictWhereInput[]
+    OR?: SyncConflictWhereInput[]
+    NOT?: SyncConflictWhereInput | SyncConflictWhereInput[]
+    id?: StringFilter<"SyncConflict"> | string
+    operationId?: StringFilter<"SyncConflict"> | string
+    clientId?: StringFilter<"SyncConflict"> | string
+    aggregateType?: StringFilter<"SyncConflict"> | string
+    aggregateId?: StringNullableFilter<"SyncConflict"> | string | null
+    status?: StringFilter<"SyncConflict"> | string
+    localPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    serverPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    resolutionPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    createdAt?: DateTimeFilter<"SyncConflict"> | Date | string
+    resolvedAt?: DateTimeNullableFilter<"SyncConflict"> | Date | string | null
+  }
+
+  export type SyncConflictOrderByWithRelationInput = {
+    id?: SortOrder
+    operationId?: SortOrder
+    clientId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    localPayload?: SortOrderInput | SortOrder
+    serverPayload?: SortOrderInput | SortOrder
+    resolutionPayload?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    resolvedAt?: SortOrderInput | SortOrder
+  }
+
+  export type SyncConflictWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SyncConflictWhereInput | SyncConflictWhereInput[]
+    OR?: SyncConflictWhereInput[]
+    NOT?: SyncConflictWhereInput | SyncConflictWhereInput[]
+    operationId?: StringFilter<"SyncConflict"> | string
+    clientId?: StringFilter<"SyncConflict"> | string
+    aggregateType?: StringFilter<"SyncConflict"> | string
+    aggregateId?: StringNullableFilter<"SyncConflict"> | string | null
+    status?: StringFilter<"SyncConflict"> | string
+    localPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    serverPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    resolutionPayload?: StringNullableFilter<"SyncConflict"> | string | null
+    createdAt?: DateTimeFilter<"SyncConflict"> | Date | string
+    resolvedAt?: DateTimeNullableFilter<"SyncConflict"> | Date | string | null
+  }, "id">
+
+  export type SyncConflictOrderByWithAggregationInput = {
+    id?: SortOrder
+    operationId?: SortOrder
+    clientId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    localPayload?: SortOrderInput | SortOrder
+    serverPayload?: SortOrderInput | SortOrder
+    resolutionPayload?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    resolvedAt?: SortOrderInput | SortOrder
+    _count?: SyncConflictCountOrderByAggregateInput
+    _max?: SyncConflictMaxOrderByAggregateInput
+    _min?: SyncConflictMinOrderByAggregateInput
+  }
+
+  export type SyncConflictScalarWhereWithAggregatesInput = {
+    AND?: SyncConflictScalarWhereWithAggregatesInput | SyncConflictScalarWhereWithAggregatesInput[]
+    OR?: SyncConflictScalarWhereWithAggregatesInput[]
+    NOT?: SyncConflictScalarWhereWithAggregatesInput | SyncConflictScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SyncConflict"> | string
+    operationId?: StringWithAggregatesFilter<"SyncConflict"> | string
+    clientId?: StringWithAggregatesFilter<"SyncConflict"> | string
+    aggregateType?: StringWithAggregatesFilter<"SyncConflict"> | string
+    aggregateId?: StringNullableWithAggregatesFilter<"SyncConflict"> | string | null
+    status?: StringWithAggregatesFilter<"SyncConflict"> | string
+    localPayload?: StringNullableWithAggregatesFilter<"SyncConflict"> | string | null
+    serverPayload?: StringNullableWithAggregatesFilter<"SyncConflict"> | string | null
+    resolutionPayload?: StringNullableWithAggregatesFilter<"SyncConflict"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"SyncConflict"> | Date | string
+    resolvedAt?: DateTimeNullableWithAggregatesFilter<"SyncConflict"> | Date | string | null
+  }
+
+  export type SyncServerSequenceWhereInput = {
+    AND?: SyncServerSequenceWhereInput | SyncServerSequenceWhereInput[]
+    OR?: SyncServerSequenceWhereInput[]
+    NOT?: SyncServerSequenceWhereInput | SyncServerSequenceWhereInput[]
+    seq?: IntFilter<"SyncServerSequence"> | number
+    operationId?: StringNullableFilter<"SyncServerSequence"> | string | null
+    aggregateType?: StringNullableFilter<"SyncServerSequence"> | string | null
+    aggregateId?: StringNullableFilter<"SyncServerSequence"> | string | null
+    createdAt?: DateTimeFilter<"SyncServerSequence"> | Date | string
+  }
+
+  export type SyncServerSequenceOrderByWithRelationInput = {
+    seq?: SortOrder
+    operationId?: SortOrderInput | SortOrder
+    aggregateType?: SortOrderInput | SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerSequenceWhereUniqueInput = Prisma.AtLeast<{
+    seq?: number
+    AND?: SyncServerSequenceWhereInput | SyncServerSequenceWhereInput[]
+    OR?: SyncServerSequenceWhereInput[]
+    NOT?: SyncServerSequenceWhereInput | SyncServerSequenceWhereInput[]
+    operationId?: StringNullableFilter<"SyncServerSequence"> | string | null
+    aggregateType?: StringNullableFilter<"SyncServerSequence"> | string | null
+    aggregateId?: StringNullableFilter<"SyncServerSequence"> | string | null
+    createdAt?: DateTimeFilter<"SyncServerSequence"> | Date | string
+  }, "seq">
+
+  export type SyncServerSequenceOrderByWithAggregationInput = {
+    seq?: SortOrder
+    operationId?: SortOrderInput | SortOrder
+    aggregateType?: SortOrderInput | SortOrder
+    aggregateId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: SyncServerSequenceCountOrderByAggregateInput
+    _avg?: SyncServerSequenceAvgOrderByAggregateInput
+    _max?: SyncServerSequenceMaxOrderByAggregateInput
+    _min?: SyncServerSequenceMinOrderByAggregateInput
+    _sum?: SyncServerSequenceSumOrderByAggregateInput
+  }
+
+  export type SyncServerSequenceScalarWhereWithAggregatesInput = {
+    AND?: SyncServerSequenceScalarWhereWithAggregatesInput | SyncServerSequenceScalarWhereWithAggregatesInput[]
+    OR?: SyncServerSequenceScalarWhereWithAggregatesInput[]
+    NOT?: SyncServerSequenceScalarWhereWithAggregatesInput | SyncServerSequenceScalarWhereWithAggregatesInput[]
+    seq?: IntWithAggregatesFilter<"SyncServerSequence"> | number
+    operationId?: StringNullableWithAggregatesFilter<"SyncServerSequence"> | string | null
+    aggregateType?: StringNullableWithAggregatesFilter<"SyncServerSequence"> | string | null
+    aggregateId?: StringNullableWithAggregatesFilter<"SyncServerSequence"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"SyncServerSequence"> | Date | string
+  }
+
+  export type SyncServerChangeWhereInput = {
+    AND?: SyncServerChangeWhereInput | SyncServerChangeWhereInput[]
+    OR?: SyncServerChangeWhereInput[]
+    NOT?: SyncServerChangeWhereInput | SyncServerChangeWhereInput[]
+    id?: StringFilter<"SyncServerChange"> | string
+    seq?: IntFilter<"SyncServerChange"> | number
+    tableName?: StringFilter<"SyncServerChange"> | string
+    rowId?: StringFilter<"SyncServerChange"> | string
+    action?: StringFilter<"SyncServerChange"> | string
+    createdAt?: DateTimeFilter<"SyncServerChange"> | Date | string
+  }
+
+  export type SyncServerChangeOrderByWithRelationInput = {
+    id?: SortOrder
+    seq?: SortOrder
+    tableName?: SortOrder
+    rowId?: SortOrder
+    action?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerChangeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: SyncServerChangeWhereInput | SyncServerChangeWhereInput[]
+    OR?: SyncServerChangeWhereInput[]
+    NOT?: SyncServerChangeWhereInput | SyncServerChangeWhereInput[]
+    seq?: IntFilter<"SyncServerChange"> | number
+    tableName?: StringFilter<"SyncServerChange"> | string
+    rowId?: StringFilter<"SyncServerChange"> | string
+    action?: StringFilter<"SyncServerChange"> | string
+    createdAt?: DateTimeFilter<"SyncServerChange"> | Date | string
+  }, "id">
+
+  export type SyncServerChangeOrderByWithAggregationInput = {
+    id?: SortOrder
+    seq?: SortOrder
+    tableName?: SortOrder
+    rowId?: SortOrder
+    action?: SortOrder
+    createdAt?: SortOrder
+    _count?: SyncServerChangeCountOrderByAggregateInput
+    _avg?: SyncServerChangeAvgOrderByAggregateInput
+    _max?: SyncServerChangeMaxOrderByAggregateInput
+    _min?: SyncServerChangeMinOrderByAggregateInput
+    _sum?: SyncServerChangeSumOrderByAggregateInput
+  }
+
+  export type SyncServerChangeScalarWhereWithAggregatesInput = {
+    AND?: SyncServerChangeScalarWhereWithAggregatesInput | SyncServerChangeScalarWhereWithAggregatesInput[]
+    OR?: SyncServerChangeScalarWhereWithAggregatesInput[]
+    NOT?: SyncServerChangeScalarWhereWithAggregatesInput | SyncServerChangeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SyncServerChange"> | string
+    seq?: IntWithAggregatesFilter<"SyncServerChange"> | number
+    tableName?: StringWithAggregatesFilter<"SyncServerChange"> | string
+    rowId?: StringWithAggregatesFilter<"SyncServerChange"> | string
+    action?: StringWithAggregatesFilter<"SyncServerChange"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"SyncServerChange"> | Date | string
   }
 
   export type StatusOptionWhereInput = {
@@ -54888,6 +59410,346 @@ export namespace Prisma {
     conflictNotes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type SyncOperationLogCreateInput = {
+    id?: string
+    clientId: string
+    opType: string
+    aggregateType: string
+    aggregateId?: string | null
+    idempotencyKey: string
+    payload: string
+    baseVersion?: number | null
+    status?: string
+    conflictData?: string | null
+    lastError?: string | null
+    attemptCount?: number
+    createdAt?: Date | string
+    processedAt?: Date | string | null
+    appliedServerSeq?: number | null
+  }
+
+  export type SyncOperationLogUncheckedCreateInput = {
+    id?: string
+    clientId: string
+    opType: string
+    aggregateType: string
+    aggregateId?: string | null
+    idempotencyKey: string
+    payload: string
+    baseVersion?: number | null
+    status?: string
+    conflictData?: string | null
+    lastError?: string | null
+    attemptCount?: number
+    createdAt?: Date | string
+    processedAt?: Date | string | null
+    appliedServerSeq?: number | null
+  }
+
+  export type SyncOperationLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    opType?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    baseVersion?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    conflictData?: NullableStringFieldUpdateOperationsInput | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    attemptCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    appliedServerSeq?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type SyncOperationLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    opType?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    baseVersion?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    conflictData?: NullableStringFieldUpdateOperationsInput | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    attemptCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    appliedServerSeq?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type SyncOperationLogCreateManyInput = {
+    id?: string
+    clientId: string
+    opType: string
+    aggregateType: string
+    aggregateId?: string | null
+    idempotencyKey: string
+    payload: string
+    baseVersion?: number | null
+    status?: string
+    conflictData?: string | null
+    lastError?: string | null
+    attemptCount?: number
+    createdAt?: Date | string
+    processedAt?: Date | string | null
+    appliedServerSeq?: number | null
+  }
+
+  export type SyncOperationLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    opType?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    baseVersion?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    conflictData?: NullableStringFieldUpdateOperationsInput | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    attemptCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    appliedServerSeq?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type SyncOperationLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    opType?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    idempotencyKey?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    baseVersion?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: StringFieldUpdateOperationsInput | string
+    conflictData?: NullableStringFieldUpdateOperationsInput | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    attemptCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    processedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    appliedServerSeq?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type SyncConflictCreateInput = {
+    id?: string
+    operationId: string
+    clientId: string
+    aggregateType: string
+    aggregateId?: string | null
+    status?: string
+    localPayload?: string | null
+    serverPayload?: string | null
+    resolutionPayload?: string | null
+    createdAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type SyncConflictUncheckedCreateInput = {
+    id?: string
+    operationId: string
+    clientId: string
+    aggregateType: string
+    aggregateId?: string | null
+    status?: string
+    localPayload?: string | null
+    serverPayload?: string | null
+    resolutionPayload?: string | null
+    createdAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type SyncConflictUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    operationId?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    localPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    serverPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    resolutionPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type SyncConflictUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    operationId?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    localPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    serverPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    resolutionPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type SyncConflictCreateManyInput = {
+    id?: string
+    operationId: string
+    clientId: string
+    aggregateType: string
+    aggregateId?: string | null
+    status?: string
+    localPayload?: string | null
+    serverPayload?: string | null
+    resolutionPayload?: string | null
+    createdAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type SyncConflictUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    operationId?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    localPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    serverPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    resolutionPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type SyncConflictUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    operationId?: StringFieldUpdateOperationsInput | string
+    clientId?: StringFieldUpdateOperationsInput | string
+    aggregateType?: StringFieldUpdateOperationsInput | string
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    localPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    serverPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    resolutionPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type SyncServerSequenceCreateInput = {
+    operationId?: string | null
+    aggregateType?: string | null
+    aggregateId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SyncServerSequenceUncheckedCreateInput = {
+    seq?: number
+    operationId?: string | null
+    aggregateType?: string | null
+    aggregateId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SyncServerSequenceUpdateInput = {
+    operationId?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateType?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerSequenceUncheckedUpdateInput = {
+    seq?: IntFieldUpdateOperationsInput | number
+    operationId?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateType?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerSequenceCreateManyInput = {
+    seq?: number
+    operationId?: string | null
+    aggregateType?: string | null
+    aggregateId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type SyncServerSequenceUpdateManyMutationInput = {
+    operationId?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateType?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerSequenceUncheckedUpdateManyInput = {
+    seq?: IntFieldUpdateOperationsInput | number
+    operationId?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateType?: NullableStringFieldUpdateOperationsInput | string | null
+    aggregateId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerChangeCreateInput = {
+    id?: string
+    seq: number
+    tableName: string
+    rowId: string
+    action: string
+    createdAt?: Date | string
+  }
+
+  export type SyncServerChangeUncheckedCreateInput = {
+    id?: string
+    seq: number
+    tableName: string
+    rowId: string
+    action: string
+    createdAt?: Date | string
+  }
+
+  export type SyncServerChangeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    tableName?: StringFieldUpdateOperationsInput | string
+    rowId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerChangeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    tableName?: StringFieldUpdateOperationsInput | string
+    rowId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerChangeCreateManyInput = {
+    id?: string
+    seq: number
+    tableName: string
+    rowId: string
+    action: string
+    createdAt?: Date | string
+  }
+
+  export type SyncServerChangeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    tableName?: StringFieldUpdateOperationsInput | string
+    rowId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SyncServerChangeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seq?: IntFieldUpdateOperationsInput | number
+    tableName?: StringFieldUpdateOperationsInput | string
+    rowId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StatusOptionCreateInput = {
     id?: string
     entityType: string
@@ -57492,6 +62354,181 @@ export namespace Prisma {
     processedAt?: SortOrder
     conflictFlag?: SortOrder
     conflictNotes?: SortOrder
+  }
+
+  export type SyncOperationLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    opType?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    idempotencyKey?: SortOrder
+    payload?: SortOrder
+    baseVersion?: SortOrder
+    status?: SortOrder
+    conflictData?: SortOrder
+    lastError?: SortOrder
+    attemptCount?: SortOrder
+    createdAt?: SortOrder
+    processedAt?: SortOrder
+    appliedServerSeq?: SortOrder
+  }
+
+  export type SyncOperationLogAvgOrderByAggregateInput = {
+    baseVersion?: SortOrder
+    attemptCount?: SortOrder
+    appliedServerSeq?: SortOrder
+  }
+
+  export type SyncOperationLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    opType?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    idempotencyKey?: SortOrder
+    payload?: SortOrder
+    baseVersion?: SortOrder
+    status?: SortOrder
+    conflictData?: SortOrder
+    lastError?: SortOrder
+    attemptCount?: SortOrder
+    createdAt?: SortOrder
+    processedAt?: SortOrder
+    appliedServerSeq?: SortOrder
+  }
+
+  export type SyncOperationLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    clientId?: SortOrder
+    opType?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    idempotencyKey?: SortOrder
+    payload?: SortOrder
+    baseVersion?: SortOrder
+    status?: SortOrder
+    conflictData?: SortOrder
+    lastError?: SortOrder
+    attemptCount?: SortOrder
+    createdAt?: SortOrder
+    processedAt?: SortOrder
+    appliedServerSeq?: SortOrder
+  }
+
+  export type SyncOperationLogSumOrderByAggregateInput = {
+    baseVersion?: SortOrder
+    attemptCount?: SortOrder
+    appliedServerSeq?: SortOrder
+  }
+
+  export type SyncConflictCountOrderByAggregateInput = {
+    id?: SortOrder
+    operationId?: SortOrder
+    clientId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    status?: SortOrder
+    localPayload?: SortOrder
+    serverPayload?: SortOrder
+    resolutionPayload?: SortOrder
+    createdAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
+  export type SyncConflictMaxOrderByAggregateInput = {
+    id?: SortOrder
+    operationId?: SortOrder
+    clientId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    status?: SortOrder
+    localPayload?: SortOrder
+    serverPayload?: SortOrder
+    resolutionPayload?: SortOrder
+    createdAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
+  export type SyncConflictMinOrderByAggregateInput = {
+    id?: SortOrder
+    operationId?: SortOrder
+    clientId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    status?: SortOrder
+    localPayload?: SortOrder
+    serverPayload?: SortOrder
+    resolutionPayload?: SortOrder
+    createdAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
+  export type SyncServerSequenceCountOrderByAggregateInput = {
+    seq?: SortOrder
+    operationId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerSequenceAvgOrderByAggregateInput = {
+    seq?: SortOrder
+  }
+
+  export type SyncServerSequenceMaxOrderByAggregateInput = {
+    seq?: SortOrder
+    operationId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerSequenceMinOrderByAggregateInput = {
+    seq?: SortOrder
+    operationId?: SortOrder
+    aggregateType?: SortOrder
+    aggregateId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerSequenceSumOrderByAggregateInput = {
+    seq?: SortOrder
+  }
+
+  export type SyncServerChangeCountOrderByAggregateInput = {
+    id?: SortOrder
+    seq?: SortOrder
+    tableName?: SortOrder
+    rowId?: SortOrder
+    action?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerChangeAvgOrderByAggregateInput = {
+    seq?: SortOrder
+  }
+
+  export type SyncServerChangeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    seq?: SortOrder
+    tableName?: SortOrder
+    rowId?: SortOrder
+    action?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerChangeMinOrderByAggregateInput = {
+    id?: SortOrder
+    seq?: SortOrder
+    tableName?: SortOrder
+    rowId?: SortOrder
+    action?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type SyncServerChangeSumOrderByAggregateInput = {
+    seq?: SortOrder
   }
 
   export type StatusOptionEntityTypeValueCompoundUniqueInput = {
@@ -77893,6 +82930,22 @@ export namespace Prisma {
      * @deprecated Use SyncQueueDefaultArgs instead
      */
     export type SyncQueueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SyncQueueDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SyncOperationLogDefaultArgs instead
+     */
+    export type SyncOperationLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SyncOperationLogDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SyncConflictDefaultArgs instead
+     */
+    export type SyncConflictArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SyncConflictDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SyncServerSequenceDefaultArgs instead
+     */
+    export type SyncServerSequenceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SyncServerSequenceDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use SyncServerChangeDefaultArgs instead
+     */
+    export type SyncServerChangeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SyncServerChangeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use StatusOptionDefaultArgs instead
      */

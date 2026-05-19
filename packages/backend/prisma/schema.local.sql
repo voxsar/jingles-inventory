@@ -599,6 +599,59 @@ CREATE TABLE IF NOT EXISTS "sync_queue" (
 );
 
 -- CreateTable
+CREATE TABLE IF NOT EXISTS "sync_operation_log" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "client_id" TEXT NOT NULL,
+    "op_type" TEXT NOT NULL,
+    "aggregate_type" TEXT NOT NULL,
+    "aggregate_id" TEXT,
+    "idempotency_key" TEXT NOT NULL,
+    "payload" TEXT NOT NULL,
+    "base_version" INTEGER,
+    "status" TEXT NOT NULL DEFAULT 'Pending',
+    "conflict_data" TEXT,
+    "last_error" TEXT,
+    "attempt_count" INTEGER NOT NULL DEFAULT 0,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "processed_at" DATETIME,
+    "applied_server_seq" INTEGER
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "sync_conflicts" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "operation_id" TEXT NOT NULL,
+    "client_id" TEXT NOT NULL,
+    "aggregate_type" TEXT NOT NULL,
+    "aggregate_id" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'Pending',
+    "local_payload" TEXT,
+    "server_payload" TEXT,
+    "resolution_payload" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "resolved_at" DATETIME
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "sync_server_sequence" (
+    "seq" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "operation_id" TEXT,
+    "aggregate_type" TEXT,
+    "aggregate_id" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "sync_server_changes" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "seq" INTEGER NOT NULL,
+    "table_name" TEXT NOT NULL,
+    "row_id" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
 CREATE TABLE IF NOT EXISTS "status_options" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "entity_type" TEXT NOT NULL,
@@ -707,6 +760,30 @@ CREATE INDEX IF NOT EXISTS "import_records_job_id_is_selected_idx" ON "import_re
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "import_records_job_id_source_index_key" ON "import_records"("job_id", "source_index");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "sync_operation_log_idempotency_key_key" ON "sync_operation_log"("idempotency_key");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_operation_log_status_created_at_idx" ON "sync_operation_log"("status", "created_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_operation_log_client_id_created_at_idx" ON "sync_operation_log"("client_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_conflicts_client_id_status_created_at_idx" ON "sync_conflicts"("client_id", "status", "created_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_conflicts_operation_id_idx" ON "sync_conflicts"("operation_id");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_server_sequence_created_at_idx" ON "sync_server_sequence"("created_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_server_changes_seq_table_name_idx" ON "sync_server_changes"("seq", "table_name");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "sync_server_changes_table_name_row_id_idx" ON "sync_server_changes"("table_name", "row_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "status_options_special_key_key" ON "status_options"("special_key");

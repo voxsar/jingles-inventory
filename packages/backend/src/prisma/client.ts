@@ -15,6 +15,8 @@ const JSON_FIELD_MAP: Record<string, Set<string>> = {
   ImportRecord: new Set(['payload', 'relatedRecords', 'warnings', 'errors']),
   AuditLog: new Set(['changes']),
   SyncQueue: new Set(['payload']),
+  SyncOperationLog: new Set(['payload', 'conflictData']),
+  SyncConflict: new Set(['localPayload', 'serverPayload', 'resolutionPayload']),
   DashboardStats: new Set(['inventoryByState']),
 };
 
@@ -175,4 +177,6 @@ const prisma = isLocalReplicaMode()
   ? createLocalReplicaClient()
   : new PostgresPrismaClient();
 
-export default prisma as PostgresPrismaClient;
+type PrismaClientInstance = InstanceType<typeof PostgresPrismaClient>;
+
+export default prisma as PrismaClientInstance;

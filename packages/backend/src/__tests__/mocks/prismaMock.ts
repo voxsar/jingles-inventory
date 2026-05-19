@@ -109,6 +109,23 @@ export const prismaMock = {
 		update: vi.fn(),
 		count: vi.fn(),
 	},
+	syncOperationLog: {
+		findUnique: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+	},
+	syncConflict: {
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+	},
+	syncServerSequence: {
+		create: vi.fn(),
+	},
+	syncServerChange: {
+		findMany: vi.fn(),
+		createMany: vi.fn(),
+	},
 	attribute: {
 		findUnique: vi.fn(),
 		findMany: vi.fn(),

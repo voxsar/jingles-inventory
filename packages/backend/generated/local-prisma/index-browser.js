@@ -602,6 +602,55 @@ exports.Prisma.SyncQueueScalarFieldEnum = {
   conflictNotes: 'conflictNotes'
 };
 
+exports.Prisma.SyncOperationLogScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  opType: 'opType',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  idempotencyKey: 'idempotencyKey',
+  payload: 'payload',
+  baseVersion: 'baseVersion',
+  status: 'status',
+  conflictData: 'conflictData',
+  lastError: 'lastError',
+  attemptCount: 'attemptCount',
+  createdAt: 'createdAt',
+  processedAt: 'processedAt',
+  appliedServerSeq: 'appliedServerSeq'
+};
+
+exports.Prisma.SyncConflictScalarFieldEnum = {
+  id: 'id',
+  operationId: 'operationId',
+  clientId: 'clientId',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  status: 'status',
+  localPayload: 'localPayload',
+  serverPayload: 'serverPayload',
+  resolutionPayload: 'resolutionPayload',
+  createdAt: 'createdAt',
+  resolvedAt: 'resolvedAt'
+};
+
+exports.Prisma.SyncServerSequenceScalarFieldEnum = {
+  seq: 'seq',
+  operationId: 'operationId',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.SyncServerChangeScalarFieldEnum = {
+  id: 'id',
+  seq: 'seq',
+  tableName: 'tableName',
+  rowId: 'rowId',
+  action: 'action',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.StatusOptionScalarFieldEnum = {
   id: 'id',
   entityType: 'entityType',
@@ -675,6 +724,10 @@ exports.Prisma.ModelName = {
   ImportRecord: 'ImportRecord',
   AuditLog: 'AuditLog',
   SyncQueue: 'SyncQueue',
+  SyncOperationLog: 'SyncOperationLog',
+  SyncConflict: 'SyncConflict',
+  SyncServerSequence: 'SyncServerSequence',
+  SyncServerChange: 'SyncServerChange',
   StatusOption: 'StatusOption',
   DashboardStats: 'DashboardStats'
 };

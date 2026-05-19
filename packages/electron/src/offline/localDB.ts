@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
 import type { ReplicaMutationEvent, ReplicaTable } from '../sync/replicaEvents';
 import { REPLICA_TABLES } from '../backend/replicaTables';
@@ -681,6 +682,126 @@ export function markSyncProcessed(id: string, status: 'Processed' | 'Failed' | '
 
 export function clearProcessedQueue() {
   getDB().prepare("DELETE FROM sync_queue WHERE status = 'Processed'").run();
+}
+
+export function getPendingSyncOperationLogs() {
+  return getDB()
+    .prepare(
+      `
+        SELECT *
+        FROM sync_operation_log
+        WHERE status = 'Pending'
+        ORDER BY created_at ASC
+      `
+    )
+    .all();
+}
+
+export function getPendingSyncConflicts() {
+  return getDB()
+    .prepare(
+      `
+        SELECT *
+        FROM sync_conflicts
+        WHERE status = 'Pending'
+        ORDER BY created_at ASC
+      `
+    )
+    .all();
+}
+
+export function markSyncOperationLogProcessed(id: string, serverSeq?: number | null) {
+  getDB()
+    .prepare(
+      `
+        UPDATE sync_operation_log
+        SET status = 'Processed',
+            processed_at = datetime('now'),
+            applied_server_seq = ?,
+            last_error = NULL
+        WHERE id = ?
+      `
+    )
+    .run(serverSeq ?? null, id);
+}
+
+export function markSyncOperationLogConflict(id: string, conflictData: unknown) {
+  const serializedConflict =
+    typeof conflictData === 'string' ? conflictData : JSON.stringify(conflictData ?? null);
+
+  getDB()
+    .prepare(
+      `
+        UPDATE sync_operation_log
+        SET status = 'Conflict',
+            processed_at = datetime('now'),
+            conflict_data = ?,
+            last_error = NULL,
+            attempt_count = attempt_count + 1
+        WHERE id = ?
+      `
+    )
+    .run(serializedConflict, id);
+}
+
+export function markSyncOperationLogFailed(id: string, error: string, keepPending = false) {
+  getDB()
+    .prepare(
+      `
+        UPDATE sync_operation_log
+        SET status = ?,
+            processed_at = CASE WHEN ? THEN processed_at ELSE datetime('now') END,
+            last_error = ?,
+            attempt_count = attempt_count + 1
+        WHERE id = ?
+      `
+    )
+    .run(keepPending ? 'Pending' : 'Failed', keepPending ? 1 : 0, error, id);
+}
+
+export function insertPendingSyncConflict(conflict: {
+  operation_id: string;
+  client_id: string;
+  aggregate_type: string;
+  aggregate_id?: string | null;
+  local_payload?: unknown;
+  server_payload?: unknown;
+}) {
+  const localPayload =
+    typeof conflict.local_payload === 'string'
+      ? conflict.local_payload
+      : JSON.stringify(conflict.local_payload ?? null);
+  const serverPayload =
+    typeof conflict.server_payload === 'string'
+      ? conflict.server_payload
+      : JSON.stringify(conflict.server_payload ?? null);
+
+  getDB()
+    .prepare(
+      `
+        INSERT INTO sync_conflicts (
+          id,
+          operation_id,
+          client_id,
+          aggregate_type,
+          aggregate_id,
+          status,
+          local_payload,
+          server_payload,
+          created_at
+        )
+        VALUES (?, ?, ?, ?, ?, 'Pending', ?, ?, datetime('now'))
+      `
+    )
+    .run(
+      randomUUID(),
+      conflict.operation_id,
+      conflict.client_id,
+      conflict.aggregate_type,
+      conflict.aggregate_id ?? null,
+      localPayload,
+      serverPayload
+    );
 }
 
 export function getDirtyRecords() {

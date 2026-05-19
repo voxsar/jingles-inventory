@@ -4,10 +4,16 @@ import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole, InventoryState, InventoryEventType } from '@jingles/shared';
 import { performTransition } from '../modules/inventory/stateMachine';
-import { recordEvent, getEvents } from '../modules/inventory/eventLedger';
+import { getEvents } from '../modules/inventory/eventLedger';
 import { convert } from '../modules/conversion/unitConverter';
 import { getStatusesByKeys, SpecialStatusKeys } from '../modules/statuses/statusLookup';
 import { queueDashboardStatsRefresh } from '../modules/dashboard/dashboardService';
+import {
+	SYNC_V2_OPERATION_TYPES,
+	enqueueLocalSyncOperation,
+	recordServerSyncChanges,
+	type SyncV2ChangeDescriptor,
+} from '../sync/syncV2';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -185,31 +191,76 @@ router.post(
 			const statusMap = await getStatusesByKeys([SpecialStatusKeys.INVENTORY_UNINSPECTED]);
 			const defaultUninspectedState = statusMap.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)!;
 
-			const record = await prisma.inventoryRecord.create({
-				data: {
-					skuId,
-					variantId: variantId ?? null,
-					floorId,
-					shelfId,
-					boxId,
-					quantity: normalizedQuantity,
-					state: state ?? defaultUninspectedState,
-					batchId,
-					terminalId,
-					userId: user.id,
-					version: 1,
-				},
-				include: { sku: true, variant: { include: { attributeValues: { include: { attribute: true, attributeValue: true } } } }, floor: true, shelf: true, box: true },
-			});
+			const record = await prisma.$transaction(async (tx: any) => {
+				const createdRecord = await tx.inventoryRecord.create({
+					data: {
+						skuId,
+						variantId: variantId ?? null,
+						floorId,
+						shelfId,
+						boxId,
+						quantity: normalizedQuantity,
+						state: state ?? defaultUninspectedState,
+						batchId,
+						terminalId,
+						userId: user.id,
+						version: 1,
+					},
+					include: {
+						sku: true,
+						variant: {
+							include: {
+								attributeValues: {
+									include: { attribute: true, attributeValue: true },
+								},
+							},
+						},
+						floor: true,
+						shelf: true,
+						box: true,
+					},
+				});
 
-			await recordEvent({
-				eventType: InventoryEventType.MANUAL_ADJUSTMENT,
-				parentEntityId: record.id,
-				quantityDelta: normalizedQuantity,
-				beforeQuantity: 0,
-				afterQuantity: normalizedQuantity,
-				userId: user.id,
-				terminalId,
+				const createdEvent = await tx.inventoryEvent.create({
+					data: {
+						eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+						parentEntityId: createdRecord.id,
+						quantityDelta: normalizedQuantity,
+						beforeQuantity: 0,
+						afterQuantity: normalizedQuantity,
+						userId: user.id,
+						terminalId,
+						overrideFlag: false,
+					},
+				});
+
+				await enqueueLocalSyncOperation(tx, {
+					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_CREATE,
+					aggregateId: createdRecord.id,
+					baseVersion: 0,
+					payload: {
+						id: createdRecord.id,
+						skuId,
+						variantId: variantId ?? null,
+						floorId: floorId ?? null,
+						shelfId: shelfId ?? null,
+						boxId: boxId ?? null,
+						quantity: normalizedQuantity,
+						state: state ?? defaultUninspectedState,
+						batchId: batchId ?? null,
+						terminalId: terminalId ?? null,
+					},
+				});
+
+				await recordServerSyncChanges(tx, {
+					aggregateId: createdRecord.id,
+					changes: [
+						{ tableName: 'inventory_records', rowId: createdRecord.id, action: 'upsert' },
+						{ tableName: 'inventory_events', rowId: createdEvent.id, action: 'upsert' },
+					],
+				});
+
+				return createdRecord;
 			});
 
 			// Queue dashboard stats refresh in background
@@ -284,16 +335,16 @@ router.post(
 
 			const totalPieces = normalizedQuantityToOpen * piecesPerBox;
 
-			const [updatedBox, pieceRecord] = await prisma.$transaction([
-				prisma.inventoryRecord.update({
+			const { updatedBox, pieceRecord } = await prisma.$transaction(async (tx: any) => {
+				const updated = await tx.inventoryRecord.update({
 					where: { id: inventoryRecordId },
 					data: {
 						quantity: boxRecord.quantity - normalizedQuantityToOpen,
 						version: { increment: 1 },
 						updatedAt: new Date(),
 					},
-				}),
-				prisma.inventoryRecord.create({
+				});
+				const createdPieceRecord = await tx.inventoryRecord.create({
 					data: {
 						skuId: boxRecord.skuId,
 						batchId: boxRecord.batchId,
@@ -303,21 +354,53 @@ router.post(
 						userId: user.id,
 						version: 1,
 					},
-				}),
-			]);
+				});
+				const createdEvent = await tx.inventoryEvent.create({
+					data: {
+						eventType: InventoryEventType.BOX_OPENED,
+						parentEntityId: inventoryRecordId,
+						quantityDelta: -normalizedQuantityToOpen,
+						beforeQuantity: boxRecord.quantity,
+						afterQuantity: boxRecord.quantity - normalizedQuantityToOpen,
+						userId: user.id,
+						overrideFlag: false,
+						metadata: {
+							boxesOpened: normalizedQuantityToOpen,
+							piecesCreated: totalPieces,
+							newRecordId: createdPieceRecord.id,
+						},
+					},
+				});
 
-			await recordEvent({
-				eventType: InventoryEventType.BOX_OPENED,
-				parentEntityId: inventoryRecordId,
-				quantityDelta: -normalizedQuantityToOpen,
-				beforeQuantity: boxRecord.quantity,
-				afterQuantity: boxRecord.quantity - normalizedQuantityToOpen,
-				userId: user.id,
-				metadata: { boxesOpened: normalizedQuantityToOpen, piecesCreated: totalPieces, newRecordId: pieceRecord.id },
+				await enqueueLocalSyncOperation(tx, {
+					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_BOX_OPEN,
+					aggregateId: inventoryRecordId,
+					baseVersion: boxRecord.version,
+					payload: {
+						inventoryRecordId,
+						quantityToOpen: normalizedQuantityToOpen,
+						targetFloorId: targetFloorId ?? null,
+						expectedState: boxRecord.state,
+					},
+				});
+
+				await recordServerSyncChanges(tx, {
+					aggregateId: inventoryRecordId,
+					changes: [
+						{ tableName: 'inventory_records', rowId: updated.id, action: 'upsert' },
+						{ tableName: 'inventory_records', rowId: createdPieceRecord.id, action: 'upsert' },
+						{ tableName: 'inventory_events', rowId: createdEvent.id, action: 'upsert' },
+					],
+				});
+
+				return {
+					updatedBox: updated,
+					pieceRecord: createdPieceRecord,
+				};
 			});
 
 			// Queue dashboard stats refresh in background
-				queueDashboardStatsRefresh();
+			queueDashboardStatsRefresh();
 
 			res.json({ success: true, data: { boxRecord: updatedBox, pieceRecord, piecesCreated: totalPieces } });
 		} catch (error) {
@@ -367,29 +450,66 @@ router.put(
 			}
 			if (batchId !== undefined) updateData.batchId = batchId || null;
 
-			const record = await prisma.inventoryRecord.update({
-				where: { id },
-				data: updateData,
-				include: { sku: true, floor: true, shelf: true, box: true },
-			});
-
 			const normalizedQuantity = quantity !== undefined ? normalizeQuantityInput(quantity) : undefined;
-			if (normalizedQuantity !== undefined && normalizedQuantity !== existing.quantity) {
-				await recordEvent({
-					eventType: InventoryEventType.MANUAL_ADJUSTMENT,
-					parentEntityId: id,
-					quantityDelta: normalizedQuantity - existing.quantity,
-					beforeQuantity: existing.quantity,
-					afterQuantity: normalizedQuantity,
-					userId: user.id,
+			const record = await prisma.$transaction(async (tx: any) => {
+				const updatedRecord = await tx.inventoryRecord.update({
+					where: { id },
+					data: updateData,
+					include: { sku: true, floor: true, shelf: true, box: true },
 				});
-			}
+
+				let adjustmentEventId: string | null = null;
+				if (normalizedQuantity !== undefined && normalizedQuantity !== existing.quantity) {
+					const adjustmentEvent = await tx.inventoryEvent.create({
+						data: {
+							eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+							parentEntityId: id,
+							quantityDelta: normalizedQuantity - existing.quantity,
+							beforeQuantity: existing.quantity,
+							afterQuantity: normalizedQuantity,
+							userId: user.id,
+							overrideFlag: false,
+						},
+					});
+					adjustmentEventId = adjustmentEvent.id;
+				}
+
+				const payload: Record<string, unknown> = { id };
+				if (floorId !== undefined) payload.floorId = floorId || null;
+				if (shelfId !== undefined) payload.shelfId = shelfId || null;
+				if (boxId !== undefined) payload.boxId = boxId || null;
+				if (normalizedQuantity !== undefined) payload.quantity = normalizedQuantity;
+				if (batchId !== undefined) payload.batchId = batchId || null;
+
+				await enqueueLocalSyncOperation(tx, {
+					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE,
+					aggregateId: id,
+					baseVersion: existing.version,
+					payload,
+				});
+
+				const changes: SyncV2ChangeDescriptor[] = [
+					{ tableName: 'inventory_records' as const, rowId: id, action: 'upsert' as const },
+				];
+				if (adjustmentEventId) {
+					changes.push({
+						tableName: 'inventory_events' as const,
+						rowId: adjustmentEventId,
+						action: 'upsert' as const,
+					});
+				}
+				await recordServerSyncChanges(tx, {
+					aggregateId: id,
+					changes,
+				});
+
+				return updatedRecord;
+			});
 
 			// Queue dashboard stats refresh in background
 			queueDashboardStatsRefresh();
 
 			res.json({ success: true, data: record });
-;
 		} catch (error) {
 			logger.error('Update inventory error', error);
 			res.status(500).json({ success: false, error: 'Failed to update inventory record' });

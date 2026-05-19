@@ -1,12 +1,58 @@
 import { Router, Response } from 'express';
-import { REPLICA_TABLES } from '@jingles/shared';
+import {
+  InventoryEventType,
+  InventoryState,
+  REPLICA_TABLES,
+  UserRole,
+} from '@jingles/shared';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
+import { performTransition } from '../modules/inventory/stateMachine';
+import { convert } from '../modules/conversion/unitConverter';
+import { getStatusesByKeys, SpecialStatusKeys } from '../modules/statuses/statusLookup';
+import {
+  SYNC_V2_OPERATION_TYPES,
+  SYNC_V2_STATUSES,
+  type SyncV2ConflictData,
+  type SyncV2ChangeDescriptor,
+  recordServerSyncChanges,
+} from '../sync/syncV2';
 
 interface SyncOperation {
-	operation: string;
-	payload: Record<string, unknown>;
+  operation: string;
+  payload: Record<string, unknown>;
+}
+
+interface SyncV2Operation {
+  id?: string;
+  opType?: string;
+  aggregateId?: string | null;
+  idempotencyKey?: string;
+  baseVersion?: number | null;
+  payload?: Record<string, unknown>;
+}
+
+type SyncV2ProcessedStatus = 'Applied' | 'Conflict' | 'Duplicate' | 'Failed';
+
+type SyncV2ProcessedResult = {
+  clientOperationId: string | null;
+  id: string;
+  idempotencyKey: string;
+  status: SyncV2ProcessedStatus;
+  serverSeq?: number | null;
+  conflict?: SyncV2ConflictData;
+  error?: string;
+};
+
+class SyncConflictError extends Error {
+  public readonly conflict: SyncV2ConflictData;
+
+  constructor(conflict: SyncV2ConflictData) {
+    super(conflict.message);
+    this.name = 'SyncConflictError';
+    this.conflict = conflict;
+  }
 }
 
 const router = Router();
@@ -18,7 +64,9 @@ router.get('/replica/export', async (req: AuthRequest, res: Response): Promise<v
     const snapshot: Record<string, unknown[]> = {};
 
     for (const tableName of REPLICA_TABLES) {
-      const rows = (await prisma.$queryRawUnsafe(`SELECT * FROM "${tableName}"`)) as Array<Record<string, unknown>>;
+      const rows = (await prisma.$queryRawUnsafe(
+        `SELECT * FROM "${tableName}"`
+      )) as Array<Record<string, unknown>>;
       snapshot[tableName] =
         tableName === 'users'
           ? rows.map((row) =>
@@ -46,221 +94,963 @@ router.get('/replica/export', async (req: AuthRequest, res: Response): Promise<v
 });
 
 function normalizeQuantityInput(value: unknown) {
-	if (typeof value === 'number' && Number.isFinite(value)) return value;
-	if (typeof value === 'string') {
-		const trimmed = value.trim();
-		if (!trimmed) return undefined;
-		const parsed = Number(trimmed);
-		return Number.isFinite(parsed) ? parsed : undefined;
-	}
-	return undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
 }
 
-function readStringField(payload: Record<string, unknown>, camelCaseKey: string, snakeCaseKey: string) {
-	const directValue = payload[camelCaseKey];
-	if (typeof directValue === 'string' && directValue.trim()) {
-		return directValue.trim();
-	}
+function readStringField(
+  payload: Record<string, unknown>,
+  camelCaseKey: string,
+  snakeCaseKey: string
+) {
+  const directValue = payload[camelCaseKey];
+  if (typeof directValue === 'string' && directValue.trim()) {
+    return directValue.trim();
+  }
 
-	const snakeValue = payload[snakeCaseKey];
-	if (typeof snakeValue === 'string' && snakeValue.trim()) {
-		return snakeValue.trim();
-	}
+  const snakeValue = payload[snakeCaseKey];
+  if (typeof snakeValue === 'string' && snakeValue.trim()) {
+    return snakeValue.trim();
+  }
 
-	return undefined;
+  return undefined;
+}
+
+function readNullableStringField(
+  payload: Record<string, unknown>,
+  camelCaseKey: string,
+  snakeCaseKey: string
+) {
+  if (payload[camelCaseKey] === null || payload[snakeCaseKey] === null) {
+    return null;
+  }
+
+  return readStringField(payload, camelCaseKey, snakeCaseKey) ?? undefined;
 }
 
 function readDateField(value: unknown) {
-	if (typeof value !== 'string' || !value.trim()) {
-		return undefined;
-	}
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined;
+  }
 
-	const parsed = new Date(value);
-	return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 function readVersionField(value: unknown) {
-	if (typeof value === 'number' && Number.isFinite(value)) {
-		return Math.max(1, Math.trunc(value));
-	}
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(1, Math.trunc(value));
+  }
 
-	if (typeof value === 'string') {
-		const parsed = Number.parseInt(value, 10);
-		return Number.isFinite(parsed) ? Math.max(1, parsed) : undefined;
-	}
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? Math.max(1, parsed) : undefined;
+  }
 
-	return undefined;
+  return undefined;
 }
 
+function buildConflictData(
+  code: string,
+  message: string,
+  operation: Record<string, unknown>,
+  serverRecord?: Record<string, unknown> | null
+): SyncV2ConflictData {
+  return {
+    code,
+    message,
+    operation,
+    serverRecord: serverRecord ?? null,
+  };
+}
+
+async function applyLegacyInventoryUpsert(
+  payload: Record<string, unknown>,
+  userId?: string | null
+) {
+  const recordId = readStringField(payload, 'id', 'id');
+  const existing = recordId
+    ? await prisma.inventoryRecord.findUnique({ where: { id: recordId } })
+    : null;
+  const normalizedQuantity = normalizeQuantityInput(payload.quantity);
+  const normalizedVersion = readVersionField(payload.version);
+  const normalizedSkuId = readStringField(payload, 'skuId', 'sku_id');
+  const normalizedVariantId = readStringField(payload, 'variantId', 'variant_id') ?? null;
+  const normalizedBatchId = readStringField(payload, 'batchId', 'batch_id') ?? null;
+  const normalizedFloorId = readStringField(payload, 'floorId', 'floor_id') ?? null;
+  const normalizedShelfId = readStringField(payload, 'shelfId', 'shelf_id') ?? null;
+  const normalizedBoxId = readStringField(payload, 'boxId', 'box_id') ?? null;
+  const normalizedTerminalId = readStringField(payload, 'terminalId', 'terminal_id') ?? null;
+  const normalizedUserId = readStringField(payload, 'userId', 'user_id') ?? userId ?? null;
+  const normalizedState = readStringField(payload, 'state', 'state');
+  const normalizedCreatedAt = readDateField(payload.createdAt ?? payload.created_at);
+  const normalizedUpdatedAt = readDateField(payload.updatedAt ?? payload.updated_at);
+
+  if (!recordId || !normalizedSkuId || normalizedQuantity === undefined || !normalizedState) {
+    throw new Error('Inventory sync payload requires id, skuId, quantity, and state');
+  }
+
+  if (existing && existing.version > (normalizedVersion ?? 0)) {
+    return {
+      conflictFlag: true,
+      conflictNotes: `Server version ${existing.version} is newer than client version ${normalizedVersion}`,
+    };
+  }
+
+  if (existing) {
+    await prisma.inventoryRecord.update({
+      where: { id: recordId },
+      data: {
+        quantity: normalizedQuantity ?? existing.quantity,
+        state: normalizedState,
+        skuId: normalizedSkuId,
+        variantId: normalizedVariantId,
+        batchId: normalizedBatchId,
+        floorId: normalizedFloorId,
+        shelfId: normalizedShelfId,
+        boxId: normalizedBoxId,
+        terminalId: normalizedTerminalId,
+        userId: normalizedUserId ?? existing.userId,
+        updatedAt: normalizedUpdatedAt ?? new Date(),
+        version: { increment: 1 },
+      },
+    });
+  } else {
+    await prisma.inventoryRecord.create({
+      data: {
+        id: recordId,
+        skuId: normalizedSkuId,
+        variantId: normalizedVariantId,
+        batchId: normalizedBatchId,
+        floorId: normalizedFloorId,
+        shelfId: normalizedShelfId,
+        boxId: normalizedBoxId,
+        quantity: normalizedQuantity,
+        state: normalizedState,
+        terminalId: normalizedTerminalId,
+        userId: normalizedUserId,
+        version: normalizedVersion ?? 1,
+        createdAt: normalizedCreatedAt ?? new Date(),
+        updatedAt: normalizedUpdatedAt ?? new Date(),
+      },
+    });
+  }
+
+  return {
+    conflictFlag: false,
+    conflictNotes: undefined,
+  };
+}
+
+async function applySyncV2Create(
+  operationId: string,
+  payload: Record<string, unknown>,
+  userId: string
+) {
+  const recordId = readStringField(payload, 'id', 'id');
+  const skuId = readStringField(payload, 'skuId', 'sku_id');
+  const state = readStringField(payload, 'state', 'state');
+  const quantity = normalizeQuantityInput(payload.quantity);
+  const variantId = readNullableStringField(payload, 'variantId', 'variant_id');
+  const floorId = readNullableStringField(payload, 'floorId', 'floor_id');
+  const shelfId = readNullableStringField(payload, 'shelfId', 'shelf_id');
+  const boxId = readNullableStringField(payload, 'boxId', 'box_id');
+  const batchId = readNullableStringField(payload, 'batchId', 'batch_id');
+  const terminalId = readNullableStringField(payload, 'terminalId', 'terminal_id');
+
+  if (!recordId || !skuId || !state || quantity === undefined) {
+    throw new Error('inventory.create requires id, skuId, quantity, and state');
+  }
+
+  if (quantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  const existing = await prisma.inventoryRecord.findUnique({ where: { id: recordId } });
+  if (existing) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'record_exists',
+        `Inventory record ${recordId} already exists on the server.`,
+        payload,
+        existing as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  const serverSeq = await prisma.$transaction(async (tx: any) => {
+    const createdRecord = await tx.inventoryRecord.create({
+      data: {
+        id: recordId,
+        skuId,
+        variantId: variantId ?? null,
+        floorId: floorId ?? null,
+        shelfId: shelfId ?? null,
+        boxId: boxId ?? null,
+        quantity,
+        state,
+        batchId: batchId ?? null,
+        terminalId: terminalId ?? null,
+        userId,
+        version: 1,
+      },
+    });
+
+    const createdEvent = await tx.inventoryEvent.create({
+      data: {
+        eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+        parentEntityId: createdRecord.id,
+        quantityDelta: quantity,
+        beforeQuantity: 0,
+        afterQuantity: quantity,
+        userId,
+        terminalId: terminalId ?? null,
+        overrideFlag: false,
+      },
+    });
+
+    return recordServerSyncChanges(tx, {
+      operationId,
+      aggregateId: createdRecord.id,
+      changes: [
+        { tableName: 'inventory_records', rowId: createdRecord.id, action: 'upsert' },
+        { tableName: 'inventory_events', rowId: createdEvent.id, action: 'upsert' },
+      ],
+    });
+  });
+
+  return serverSeq ?? null;
+}
+
+async function applySyncV2Update(
+  operationId: string,
+  payload: Record<string, unknown>,
+  baseVersion: number | null | undefined,
+  userId: string
+) {
+  const recordId = readStringField(payload, 'id', 'id');
+  if (!recordId) {
+    throw new Error('inventory.update requires id');
+  }
+
+  const existing = await prisma.inventoryRecord.findUnique({ where: { id: recordId } });
+  if (!existing) {
+    throw new Error(`Inventory record ${recordId} was not found on the server.`);
+  }
+
+  if (baseVersion !== undefined && baseVersion !== null && existing.version !== baseVersion) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'version_mismatch',
+        `Server version ${existing.version} does not match client version ${baseVersion}.`,
+        payload,
+        existing as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  const normalizedQuantity =
+    payload.quantity !== undefined ? normalizeQuantityInput(payload.quantity) : undefined;
+  if (payload.quantity !== undefined && normalizedQuantity === undefined) {
+    throw new Error('quantity must be a valid number');
+  }
+  if (normalizedQuantity !== undefined && normalizedQuantity <= 0) {
+    throw new Error('quantity must be greater than 0');
+  }
+
+  const updateData: Record<string, unknown> = {
+    version: { increment: 1 },
+    updatedAt: new Date(),
+  };
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'floorId')) {
+    updateData.floorId = readNullableStringField(payload, 'floorId', 'floor_id') ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'shelfId')) {
+    updateData.shelfId = readNullableStringField(payload, 'shelfId', 'shelf_id') ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'boxId')) {
+    updateData.boxId = readNullableStringField(payload, 'boxId', 'box_id') ?? null;
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, 'batchId')) {
+    updateData.batchId = readNullableStringField(payload, 'batchId', 'batch_id') ?? null;
+  }
+  if (normalizedQuantity !== undefined) {
+    updateData.quantity = normalizedQuantity;
+  }
+
+  const serverSeq = await prisma.$transaction(async (tx: any) => {
+    await tx.inventoryRecord.update({
+      where: { id: recordId },
+      data: updateData,
+    });
+
+    let eventId: string | null = null;
+    if (normalizedQuantity !== undefined && normalizedQuantity !== existing.quantity) {
+      const adjustmentEvent = await tx.inventoryEvent.create({
+        data: {
+          eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+          parentEntityId: recordId,
+          quantityDelta: normalizedQuantity - existing.quantity,
+          beforeQuantity: existing.quantity,
+          afterQuantity: normalizedQuantity,
+          userId,
+          overrideFlag: false,
+        },
+      });
+      eventId = adjustmentEvent.id;
+    }
+
+    const changes: SyncV2ChangeDescriptor[] = [
+      { tableName: 'inventory_records' as const, rowId: recordId, action: 'upsert' as const },
+    ];
+    if (eventId) {
+      changes.push({
+        tableName: 'inventory_events' as const,
+        rowId: eventId,
+        action: 'upsert' as const,
+      });
+    }
+
+    return recordServerSyncChanges(tx, {
+      operationId,
+      aggregateId: recordId,
+      changes,
+    });
+  });
+
+  return serverSeq ?? null;
+}
+
+async function applySyncV2BoxOpen(
+  operationId: string,
+  payload: Record<string, unknown>,
+  baseVersion: number | null | undefined,
+  userId: string
+) {
+  const inventoryRecordId = readStringField(payload, 'inventoryRecordId', 'inventory_record_id');
+  const normalizedQuantityToOpen = normalizeQuantityInput(
+    payload.quantityToOpen ?? payload.quantity_to_open
+  );
+  const targetFloorId = readNullableStringField(payload, 'targetFloorId', 'target_floor_id');
+  const expectedState = readStringField(payload, 'expectedState', 'expected_state');
+
+  if (!inventoryRecordId || normalizedQuantityToOpen === undefined) {
+    throw new Error('inventory.box-open requires inventoryRecordId and quantityToOpen');
+  }
+
+  if (normalizedQuantityToOpen <= 0) {
+    throw new Error('quantityToOpen must be greater than 0');
+  }
+
+  const boxRecord = await prisma.inventoryRecord.findUnique({
+    where: { id: inventoryRecordId },
+    include: { sku: true },
+  });
+
+  if (!boxRecord) {
+    throw new Error(`Inventory record ${inventoryRecordId} was not found on the server.`);
+  }
+
+  if (baseVersion !== undefined && baseVersion !== null && boxRecord.version !== baseVersion) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'version_mismatch',
+        `Server version ${boxRecord.version} does not match client version ${baseVersion}.`,
+        payload,
+        boxRecord as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  if (expectedState && boxRecord.state !== expectedState) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'state_mismatch',
+        `Server state ${boxRecord.state} does not match expected state ${expectedState}.`,
+        payload,
+        boxRecord as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  const statusMap = await getStatusesByKeys([
+    SpecialStatusKeys.INVENTORY_UNOPENED_BOX,
+    SpecialStatusKeys.INVENTORY_SHELF_READY,
+    SpecialStatusKeys.INVENTORY_UNINSPECTED,
+  ]);
+  const unopenedBoxState = statusMap.get(SpecialStatusKeys.INVENTORY_UNOPENED_BOX)!;
+  const shelfReadyState = statusMap.get(SpecialStatusKeys.INVENTORY_SHELF_READY)!;
+  const uninspectedState = statusMap.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)!;
+
+  if (boxRecord.state !== unopenedBoxState && boxRecord.state !== shelfReadyState) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'invalid_state',
+        'Record must be in UnopenedBox or ShelfReady state.',
+        payload,
+        boxRecord as unknown as Record<string, unknown>
+      )
+    );
+  }
+  if (boxRecord.quantity < normalizedQuantityToOpen) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'insufficient_quantity',
+        'Server quantity is lower than the requested box-open quantity.',
+        payload,
+        boxRecord as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  const conversionRules = boxRecord.sku.conversionRules as any[];
+  let piecesPerBox = 12;
+  try {
+    piecesPerBox = await convert(1, boxRecord.sku.unitOfMeasure, 'Piece', conversionRules);
+  } catch {
+    // keep default fallback
+  }
+
+  const totalPieces = normalizedQuantityToOpen * piecesPerBox;
+
+  const serverSeq = await prisma.$transaction(async (tx: any) => {
+    const updatedBox = await tx.inventoryRecord.update({
+      where: { id: inventoryRecordId },
+      data: {
+        quantity: boxRecord.quantity - normalizedQuantityToOpen,
+        version: { increment: 1 },
+        updatedAt: new Date(),
+      },
+    });
+
+    const pieceRecord = await tx.inventoryRecord.create({
+      data: {
+        skuId: boxRecord.skuId,
+        batchId: boxRecord.batchId,
+        floorId: targetFloorId ?? boxRecord.floorId,
+        quantity: totalPieces,
+        state: uninspectedState,
+        userId,
+        version: 1,
+      },
+    });
+
+    const boxOpenEvent = await tx.inventoryEvent.create({
+      data: {
+        eventType: InventoryEventType.BOX_OPENED,
+        parentEntityId: inventoryRecordId,
+        quantityDelta: -normalizedQuantityToOpen,
+        beforeQuantity: boxRecord.quantity,
+        afterQuantity: boxRecord.quantity - normalizedQuantityToOpen,
+        userId,
+        overrideFlag: false,
+        metadata: {
+          boxesOpened: normalizedQuantityToOpen,
+          piecesCreated: totalPieces,
+          newRecordId: pieceRecord.id,
+        },
+      },
+    });
+
+    return recordServerSyncChanges(tx, {
+      operationId,
+      aggregateId: inventoryRecordId,
+      changes: [
+        { tableName: 'inventory_records', rowId: updatedBox.id, action: 'upsert' },
+        { tableName: 'inventory_records', rowId: pieceRecord.id, action: 'upsert' },
+        { tableName: 'inventory_events', rowId: boxOpenEvent.id, action: 'upsert' },
+      ],
+    });
+  });
+
+  return serverSeq ?? null;
+}
+
+async function applySyncV2Transition(
+  payload: Record<string, unknown>,
+  baseVersion: number | null | undefined,
+  userId: string,
+  userRole: UserRole
+) {
+  const inventoryRecordId = readStringField(payload, 'inventoryRecordId', 'inventory_record_id');
+  const fromState = readStringField(payload, 'fromState', 'from_state');
+  const toState = readStringField(payload, 'toState', 'to_state');
+  const reason = readNullableStringField(payload, 'reason', 'reason');
+
+  if (!inventoryRecordId || !toState) {
+    throw new Error('inventory.transition requires inventoryRecordId and toState');
+  }
+
+  const existing = await prisma.inventoryRecord.findUnique({ where: { id: inventoryRecordId } });
+  if (!existing) {
+    throw new Error(`Inventory record ${inventoryRecordId} was not found on the server.`);
+  }
+
+  if (baseVersion !== undefined && baseVersion !== null && existing.version !== baseVersion) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'version_mismatch',
+        `Server version ${existing.version} does not match client version ${baseVersion}.`,
+        payload,
+        existing as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  if (fromState && existing.state !== fromState) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'state_mismatch',
+        `Server state ${existing.state} does not match expected state ${fromState}.`,
+        payload,
+        existing as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  const result = await performTransition(
+    inventoryRecordId,
+    toState as InventoryState,
+    userId,
+    userRole,
+    reason ?? undefined
+  );
+
+  if (!result.success) {
+    throw new SyncConflictError(
+      buildConflictData(
+        'invalid_transition',
+        result.error ?? 'Transition is no longer valid on the server.',
+        payload,
+        existing as unknown as Record<string, unknown>
+      )
+    );
+  }
+
+  return result.serverSeq ?? null;
+}
+
+async function processSyncV2Operation(
+  clientId: string,
+  operation: SyncV2Operation,
+  userId: string,
+  userRole: UserRole
+): Promise<SyncV2ProcessedResult> {
+  const clientOperationId =
+    typeof operation.id === 'string' && operation.id.trim() ? operation.id.trim() : null;
+  const opType = typeof operation.opType === 'string' ? operation.opType : '';
+  const idempotencyKey =
+    typeof operation.idempotencyKey === 'string' ? operation.idempotencyKey.trim() : '';
+  const payload =
+    operation.payload && typeof operation.payload === 'object' && !Array.isArray(operation.payload)
+      ? operation.payload
+      : null;
+
+  if (!opType || !idempotencyKey || !payload) {
+    throw new Error('Each sync-v2 operation requires opType, idempotencyKey, and payload.');
+  }
+
+  const existing = await prisma.syncOperationLog.findUnique({
+    where: { idempotencyKey },
+  });
+
+  if (existing) {
+    if (existing.status === SYNC_V2_STATUSES.PROCESSED) {
+      return {
+        clientOperationId,
+        id: existing.id,
+        idempotencyKey,
+        status: 'Duplicate',
+        serverSeq: existing.appliedServerSeq ?? null,
+      };
+    }
+
+    if (existing.status === SYNC_V2_STATUSES.CONFLICT) {
+      return {
+        clientOperationId,
+        id: existing.id,
+        idempotencyKey,
+        status: 'Conflict',
+        conflict: (existing.conflictData ?? undefined) as SyncV2ConflictData | undefined,
+      };
+    }
+
+    if (existing.status === SYNC_V2_STATUSES.FAILED) {
+      return {
+        clientOperationId,
+        id: existing.id,
+        idempotencyKey,
+        status: 'Failed',
+        error: existing.lastError ?? 'Operation previously failed on the server.',
+      };
+    }
+  }
+
+  const logEntry =
+    existing ??
+    (await prisma.syncOperationLog.create({
+      data: {
+        clientId,
+        opType,
+        aggregateType: 'inventory_record',
+        aggregateId:
+          typeof operation.aggregateId === 'string' && operation.aggregateId.trim()
+            ? operation.aggregateId.trim()
+            : null,
+        idempotencyKey,
+        payload: payload as any,
+        baseVersion: operation.baseVersion ?? null,
+        status: SYNC_V2_STATUSES.PENDING,
+      },
+    }));
+
+  try {
+    let serverSeq: number | null = null;
+    switch (opType) {
+      case SYNC_V2_OPERATION_TYPES.INVENTORY_CREATE:
+        serverSeq = await applySyncV2Create(logEntry.id, payload, userId);
+        break;
+      case SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE:
+        serverSeq = await applySyncV2Update(logEntry.id, payload, operation.baseVersion, userId);
+        break;
+      case SYNC_V2_OPERATION_TYPES.INVENTORY_BOX_OPEN:
+        serverSeq = await applySyncV2BoxOpen(logEntry.id, payload, operation.baseVersion, userId);
+        break;
+      case SYNC_V2_OPERATION_TYPES.INVENTORY_TRANSITION:
+        serverSeq = await applySyncV2Transition(
+          payload,
+          operation.baseVersion,
+          userId,
+          userRole
+        );
+        break;
+      default:
+        throw new Error(`Unsupported sync-v2 operation type: ${opType}`);
+    }
+
+    await prisma.syncOperationLog.update({
+      where: { id: logEntry.id },
+      data: {
+        status: SYNC_V2_STATUSES.PROCESSED,
+        processedAt: new Date(),
+        appliedServerSeq: serverSeq,
+        lastError: null,
+        conflictData: null,
+        attemptCount: { increment: 1 },
+      },
+    });
+
+    return {
+      clientOperationId,
+      id: logEntry.id,
+      idempotencyKey,
+      status: 'Applied',
+      serverSeq,
+    };
+  } catch (error) {
+    if (error instanceof SyncConflictError) {
+      await prisma.$transaction(async (tx: any) => {
+        await tx.syncOperationLog.update({
+          where: { id: logEntry.id },
+          data: {
+            status: SYNC_V2_STATUSES.CONFLICT,
+            processedAt: new Date(),
+            conflictData: error.conflict as any,
+            lastError: error.message,
+            attemptCount: { increment: 1 },
+          },
+        });
+
+        await tx.syncConflict.create({
+          data: {
+            operationId: logEntry.id,
+            clientId,
+            aggregateType: 'inventory_record',
+            aggregateId: logEntry.aggregateId,
+            status: SYNC_V2_STATUSES.PENDING,
+            localPayload: payload as any,
+            serverPayload: (error.conflict.serverRecord ?? null) as any,
+          },
+        });
+      });
+
+      return {
+        clientOperationId,
+        id: logEntry.id,
+        idempotencyKey,
+        status: 'Conflict',
+        conflict: error.conflict,
+      };
+    }
+
+    const message = error instanceof Error ? error.message : 'Unknown sync-v2 error';
+    await prisma.syncOperationLog.update({
+      where: { id: logEntry.id },
+      data: {
+        status: SYNC_V2_STATUSES.FAILED,
+        processedAt: new Date(),
+        lastError: message,
+        attemptCount: { increment: 1 },
+      },
+    });
+
+    return {
+      clientOperationId,
+      id: logEntry.id,
+      idempotencyKey,
+      status: 'Failed',
+      error: message,
+    };
+  }
+}
+
+router.post('/push-ops', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { clientId, operations } = req.body as {
+      clientId?: string;
+      operations?: SyncV2Operation[];
+    };
+
+    if (!clientId || !Array.isArray(operations)) {
+      res.status(400).json({ success: false, error: 'clientId and operations array are required' });
+      return;
+    }
+
+    const user = req.user!;
+    const processed: SyncV2ProcessedResult[] = [];
+    let hasConflict = false;
+
+    for (const operation of operations) {
+      const result = await processSyncV2Operation(
+        clientId,
+        operation,
+        user.id,
+        user.role as UserRole
+      );
+      processed.push(result);
+
+      if (result.status === 'Conflict') {
+        hasConflict = true;
+        break;
+      }
+
+      if (result.status === 'Failed') {
+        break;
+      }
+    }
+
+    const appliedServerSeqs = processed
+      .map((item) => item.serverSeq)
+      .filter((value): value is number => typeof value === 'number');
+
+    res.status(hasConflict ? 409 : 200).json({
+      success: !hasConflict,
+      data: {
+        processed,
+        lastServerSeq:
+          appliedServerSeqs.length > 0 ? Math.max(...appliedServerSeqs) : null,
+      },
+    });
+  } catch (error) {
+    logger.error('Sync push-ops error', error);
+    res.status(500).json({ success: false, error: 'Sync push-ops failed' });
+  }
+});
+
+router.get('/log', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const sinceSeqRaw = Array.isArray(req.query.sinceSeq) ? req.query.sinceSeq[0] : req.query.sinceSeq;
+    const limitRaw = Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit;
+    const sinceSeq = Math.max(0, Number.parseInt(String(sinceSeqRaw ?? '0'), 10) || 0);
+    const limit = Math.min(500, Math.max(1, Number.parseInt(String(limitRaw ?? '200'), 10) || 200));
+
+    const changeRows = await prisma.syncServerChange.findMany({
+      where: { seq: { gt: sinceSeq } },
+      orderBy: [{ seq: 'asc' }, { createdAt: 'asc' }],
+      take: limit,
+    });
+
+    const changes = [];
+
+    for (const changeRow of changeRows) {
+      let row: Record<string, unknown> | null = null;
+
+      if (changeRow.tableName === 'inventory_records') {
+        row = (await prisma.inventoryRecord.findUnique({
+          where: { id: changeRow.rowId },
+        })) as unknown as Record<string, unknown> | null;
+      } else if (changeRow.tableName === 'inventory_events') {
+        row = (await prisma.inventoryEvent.findUnique({
+          where: { id: changeRow.rowId },
+        })) as unknown as Record<string, unknown> | null;
+      }
+
+      changes.push({
+        seq: changeRow.seq,
+        table: changeRow.tableName,
+        action: row ? changeRow.action : 'delete',
+        row: row ?? { id: changeRow.rowId },
+        emittedAt: changeRow.createdAt.toISOString(),
+      });
+    }
+
+    const lastServerSeq = changeRows.at(-1)?.seq ?? sinceSeq;
+
+    res.json({
+      success: true,
+      data: {
+        changes,
+        lastServerSeq,
+        hasMore: changeRows.length === limit,
+      },
+    });
+  } catch (error) {
+    logger.error('Sync log error', error);
+    res.status(500).json({ success: false, error: 'Sync log failed' });
+  }
+});
+
+router.get('/conflicts', async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const clientId = Array.isArray(req.query.clientId) ? req.query.clientId[0] : req.query.clientId;
+    const where =
+      typeof clientId === 'string' && clientId.trim()
+        ? { clientId: clientId.trim(), status: SYNC_V2_STATUSES.PENDING }
+        : { status: SYNC_V2_STATUSES.PENDING };
+
+    const conflicts = await prisma.syncConflict.findMany({
+      where,
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ success: true, data: conflicts });
+  } catch (error) {
+    logger.error('Sync conflicts lookup error', error);
+    res.status(500).json({ success: false, error: 'Sync conflict lookup failed' });
+  }
+});
+
 router.post('/push', async (req: AuthRequest, res: Response): Promise<void> => {
-	try {
-		const { clientId, operations } = req.body as { clientId: string; operations: SyncOperation[] };
+  try {
+    const { clientId, operations } = req.body as { clientId: string; operations: SyncOperation[] };
 
-		if (!clientId || !Array.isArray(operations)) {
-			res.status(400).json({ success: false, error: 'clientId and operations array are required' });
-			return;
-		}
+    if (!clientId || !Array.isArray(operations)) {
+      res.status(400).json({ success: false, error: 'clientId and operations array are required' });
+      return;
+    }
 
-		const results = [];
+    const results = [];
 
-		for (const op of operations) {
-			const entry = await prisma.syncQueue.create({
-				data: {
-					clientId,
-					operation: op.operation,
-					payload: op.payload as any,
-					status: 'Pending',
-				},
-			});
-			results.push(entry);
-		}
+    for (const op of operations) {
+      const entry = await prisma.syncQueue.create({
+        data: {
+          clientId,
+          operation: op.operation,
+          payload: op.payload as any,
+          status: 'Pending',
+        },
+      });
+      results.push(entry);
+    }
 
-		const processed = [];
-		for (const entry of results) {
-			try {
-				let conflictFlag = false;
-				let conflictNotes: string | undefined;
+    const processed = [];
+    for (const entry of results) {
+      try {
+        let conflictFlag = false;
+        let conflictNotes: string | undefined;
 
-				if (entry.operation === 'UPSERT_INVENTORY') {
-					const payload = entry.payload as Record<string, unknown>;
-					const recordId = readStringField(payload, 'id', 'id');
-					const existing = recordId
-						? await prisma.inventoryRecord.findUnique({ where: { id: recordId } })
-						: null;
-					const normalizedQuantity = normalizeQuantityInput(payload.quantity);
-					const normalizedVersion = readVersionField(payload.version);
-					const normalizedSkuId = readStringField(payload, 'skuId', 'sku_id');
-					const normalizedVariantId = readStringField(payload, 'variantId', 'variant_id') ?? null;
-					const normalizedBatchId = readStringField(payload, 'batchId', 'batch_id') ?? null;
-					const normalizedFloorId = readStringField(payload, 'floorId', 'floor_id') ?? null;
-					const normalizedShelfId = readStringField(payload, 'shelfId', 'shelf_id') ?? null;
-					const normalizedBoxId = readStringField(payload, 'boxId', 'box_id') ?? null;
-					const normalizedTerminalId = readStringField(payload, 'terminalId', 'terminal_id') ?? null;
-					const normalizedUserId =
-						readStringField(payload, 'userId', 'user_id') ?? req.user?.id ?? null;
-					const normalizedState = readStringField(payload, 'state', 'state');
-					const normalizedCreatedAt = readDateField(payload.createdAt ?? payload.created_at);
-					const normalizedUpdatedAt = readDateField(payload.updatedAt ?? payload.updated_at);
+        if (entry.operation === 'UPSERT_INVENTORY') {
+          const legacyResult = await applyLegacyInventoryUpsert(
+            entry.payload as Record<string, unknown>,
+            req.user?.id ?? null
+          );
+          conflictFlag = legacyResult.conflictFlag;
+          conflictNotes = legacyResult.conflictNotes;
+        }
 
-					if (!recordId || !normalizedSkuId || normalizedQuantity === undefined || !normalizedState) {
-						throw new Error('Inventory sync payload requires id, skuId, quantity, and state');
-					}
+        await prisma.syncQueue.update({
+          where: { id: entry.id },
+          data: {
+            status: conflictFlag ? 'Conflict' : 'Processed',
+            processedAt: new Date(),
+            conflictFlag,
+            conflictNotes,
+          },
+        });
 
-					if (existing && existing.version > (normalizedVersion ?? 0)) {
-						conflictFlag = true;
-						conflictNotes = `Server version ${existing.version} is newer than client version ${normalizedVersion}`;
-					} else if (existing) {
-						await prisma.inventoryRecord.update({
-							where: { id: recordId },
-							data: {
-								quantity: normalizedQuantity ?? existing.quantity,
-								state: normalizedState,
-								skuId: normalizedSkuId,
-								variantId: normalizedVariantId,
-								batchId: normalizedBatchId,
-								floorId: normalizedFloorId,
-								shelfId: normalizedShelfId,
-								boxId: normalizedBoxId,
-								terminalId: normalizedTerminalId,
-								userId: normalizedUserId ?? existing.userId,
-								updatedAt: normalizedUpdatedAt ?? new Date(),
-								version: { increment: 1 },
-							},
-						});
-					} else {
-						await prisma.inventoryRecord.create({
-							data: {
-								id: recordId,
-								skuId: normalizedSkuId,
-								variantId: normalizedVariantId,
-								batchId: normalizedBatchId,
-								floorId: normalizedFloorId,
-								shelfId: normalizedShelfId,
-								boxId: normalizedBoxId,
-								quantity: normalizedQuantity,
-								state: normalizedState,
-								terminalId: normalizedTerminalId,
-								userId: normalizedUserId,
-								version: normalizedVersion ?? 1,
-								createdAt: normalizedCreatedAt ?? new Date(),
-								updatedAt: normalizedUpdatedAt ?? new Date(),
-							},
-						});
-					}
-				}
+        processed.push({
+          id: entry.id,
+          status: conflictFlag ? 'Conflict' : 'Processed',
+          conflictNotes,
+        });
+      } catch (err: any) {
+        await prisma.syncQueue.update({
+          where: { id: entry.id },
+          data: { status: 'Failed' },
+        });
+        processed.push({ id: entry.id, status: 'Failed', error: err.message });
+      }
+    }
 
-				await prisma.syncQueue.update({
-					where: { id: entry.id },
-					data: {
-						status: conflictFlag ? 'Conflict' : 'Processed',
-						processedAt: new Date(),
-						conflictFlag,
-						conflictNotes,
-					},
-				});
-
-				processed.push({ id: entry.id, status: conflictFlag ? 'Conflict' : 'Processed', conflictNotes });
-			} catch (err: any) {
-				await prisma.syncQueue.update({
-					where: { id: entry.id },
-					data: { status: 'Failed' },
-				});
-				processed.push({ id: entry.id, status: 'Failed', error: err.message });
-			}
-		}
-
-		res.json({ success: true, data: { processed } });
-	} catch (error) {
-		logger.error('Sync push error', error);
-		res.status(500).json({ success: false, error: 'Sync push failed' });
-	}
+    res.json({ success: true, data: { processed } });
+  } catch (error) {
+    logger.error('Sync push error', error);
+    res.status(500).json({ success: false, error: 'Sync push failed' });
+  }
 });
 
 router.get('/pull', async (req: AuthRequest, res: Response): Promise<void> => {
-	try {
-		const { clientId, since } = req.query as { clientId?: string; since?: string };
+  try {
+    const { clientId, since } = req.query as { clientId?: string; since?: string };
 
-		if (!clientId) {
-			res.status(400).json({ success: false, error: 'clientId is required' });
-			return;
-		}
+    if (!clientId) {
+      res.status(400).json({ success: false, error: 'clientId is required' });
+      return;
+    }
 
-		const sinceDate = since ? new Date(since) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const sinceDate = since ? new Date(since) : new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-		const [inventoryRecords, inventoryEvents, skus, grns] = await Promise.all([
-			prisma.inventoryRecord.findMany({
-				where: { updatedAt: { gte: sinceDate } },
-				include: { sku: true },
-				take: 500,
-			}),
-			prisma.inventoryEvent.findMany({
-				where: { timestamp: { gte: sinceDate } },
-				take: 500,
-				orderBy: { timestamp: 'asc' },
-			}),
-			prisma.sKU.findMany({
-				where: { updatedAt: { gte: sinceDate } },
-				take: 500,
-			}),
-			prisma.gRN.findMany({
-				where: { updatedAt: { gte: sinceDate } },
-				include: { lines: true },
-				take: 100,
-			}),
-		]);
+    const [inventoryRecords, inventoryEvents, skus, grns] = await Promise.all([
+      prisma.inventoryRecord.findMany({
+        where: { updatedAt: { gte: sinceDate } },
+        include: { sku: true },
+        take: 500,
+      }),
+      prisma.inventoryEvent.findMany({
+        where: { timestamp: { gte: sinceDate } },
+        take: 500,
+        orderBy: { timestamp: 'asc' },
+      }),
+      prisma.sKU.findMany({
+        where: { updatedAt: { gte: sinceDate } },
+        take: 500,
+      }),
+      prisma.gRN.findMany({
+        where: { updatedAt: { gte: sinceDate } },
+        include: { lines: true },
+        take: 100,
+      }),
+    ]);
 
-		const conflicts = await prisma.syncQueue.findMany({
-			where: { clientId, conflictFlag: true, status: 'Conflict' },
-		});
+    const conflicts = await prisma.syncQueue.findMany({
+      where: { clientId, conflictFlag: true, status: 'Conflict' },
+    });
 
-		res.json({
-			success: true,
-			data: { inventoryRecords, inventoryEvents, skus, grns, conflicts, since: sinceDate },
-		});
-	} catch (error) {
-		logger.error('Sync pull error', error);
-		res.status(500).json({ success: false, error: 'Sync pull failed' });
-	}
+    res.json({
+      success: true,
+      data: { inventoryRecords, inventoryEvents, skus, grns, conflicts, since: sinceDate },
+    });
+  } catch (error) {
+    logger.error('Sync pull error', error);
+    res.status(500).json({ success: false, error: 'Sync pull failed' });
+  }
 });
 
 export default router;

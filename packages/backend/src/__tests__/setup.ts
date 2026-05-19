@@ -38,6 +38,10 @@ vi.mock('@prisma/client', () => {
     this.sKUVendor = { upsert: vi.fn(), createMany: vi.fn(), findMany: vi.fn(), deleteMany: vi.fn() };
     this.auditLog = { findMany: vi.fn(), create: vi.fn() };
     this.syncQueue = { findMany: vi.fn(), create: vi.fn(), update: vi.fn() };
+    this.syncOperationLog = { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() };
+    this.syncConflict = { findMany: vi.fn(), create: vi.fn(), update: vi.fn() };
+    this.syncServerSequence = { create: vi.fn() };
+    this.syncServerChange = { findMany: vi.fn(), createMany: vi.fn() };
   }
   return { PrismaClient: MockPrismaClient, Prisma: {} };
 });

@@ -7,6 +7,44 @@ vi.mock('../../prisma/client', () => ({ default: prismaMock }));
 
 const { performTransition } = await import('../../modules/inventory/stateMachine');
 
+function mockTransitionTransaction(
+  record: (typeof INVENTORY_RECORDS)[keyof typeof INVENTORY_RECORDS],
+  toState: InventoryState,
+  options?: {
+    overrideFlag?: boolean;
+    eventId?: string;
+    serverSeq?: number;
+  }
+) {
+  const tx = {
+    inventoryRecord: {
+      update: vi.fn().mockResolvedValue({
+        ...record,
+        state: toState,
+        version: record.version + 1,
+      }),
+    },
+    inventoryEvent: {
+      create: vi.fn().mockResolvedValue({
+        id: options?.eventId ?? 'event-001',
+        overrideFlag: options?.overrideFlag ?? false,
+      }),
+    },
+    syncServerSequence: {
+      create: vi.fn().mockResolvedValue({
+        seq: options?.serverSeq ?? 101,
+      }),
+    },
+    syncServerChange: {
+      createMany: vi.fn().mockResolvedValue({ count: 2 }),
+    },
+  };
+
+  prismaMock.$transaction.mockImplementation((fn: (transaction: typeof tx) => Promise<unknown>) => fn(tx));
+
+  return tx;
+}
+
 describe('performTransition', () => {
   beforeEach(() => {
     resetPrismaMocks();
@@ -30,9 +68,7 @@ describe('performTransition', () => {
   it('performs valid transition and increments version', async () => {
     const record = INVENTORY_RECORDS.uninspected;
     prismaMock.inventoryRecord.findUnique.mockResolvedValue(record);
-
-    const updatedRecord = { ...record, state: InventoryState.Inspected, version: 2 };
-    prismaMock.$transaction.mockResolvedValue([updatedRecord, { id: 'event-001' }]);
+    mockTransitionTransaction(record, InventoryState.Inspected);
 
     const result = await performTransition(
       record.id,
@@ -45,15 +81,16 @@ describe('performTransition', () => {
     expect(result.requiresOverride).toBe(false);
     expect(result.record?.state).toBe(InventoryState.Inspected);
     expect(result.record?.version).toBe(2);
+    expect(result.serverSeq).toBe(101);
   });
 
   it('allows Manager override for invalid transition', async () => {
     const record = INVENTORY_RECORDS.damaged;
     prismaMock.inventoryRecord.findUnique.mockResolvedValue(record);
-    prismaMock.$transaction.mockResolvedValue([
-      { ...record, state: InventoryState.Inspected, version: 2 },
-      { id: 'event-override-001', overrideFlag: true },
-    ]);
+    mockTransitionTransaction(record, InventoryState.Inspected, {
+      overrideFlag: true,
+      eventId: 'event-override-001',
+    });
 
     const result = await performTransition(
       record.id,
@@ -89,10 +126,9 @@ describe('performTransition', () => {
   it('records override event when Manager overrides transition', async () => {
     const record = INVENTORY_RECORDS.damaged;
     prismaMock.inventoryRecord.findUnique.mockResolvedValue(record);
-
-    const mockUpdatedRecord = { ...record, state: InventoryState.ShelfReady };
-    const mockEvent = { id: 'event-001', overrideFlag: true };
-    prismaMock.$transaction.mockResolvedValue([mockUpdatedRecord, mockEvent]);
+    const tx = mockTransitionTransaction(record, InventoryState.ShelfReady, {
+      overrideFlag: true,
+    });
 
     await performTransition(
       record.id,
@@ -104,15 +140,22 @@ describe('performTransition', () => {
 
     // $transaction should have been called at least once in this test (exact count depends on prior test state)
     expect(prismaMock.$transaction).toHaveBeenCalled();
+    expect(tx.inventoryEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          overrideFlag: true,
+        }),
+      })
+    );
   });
 
   it('Admin can also override invalid transitions', async () => {
     const record = INVENTORY_RECORDS.damaged;
     prismaMock.inventoryRecord.findUnique.mockResolvedValue(record);
-    prismaMock.$transaction.mockResolvedValue([
-      { ...record, state: InventoryState.Inspected },
-      { id: 'event-admin-override', overrideFlag: true },
-    ]);
+    mockTransitionTransaction(record, InventoryState.Inspected, {
+      overrideFlag: true,
+      eventId: 'event-admin-override',
+    });
 
     const result = await performTransition(
       record.id,
@@ -128,12 +171,8 @@ describe('performTransition', () => {
   it('valid transition does not set override flag', async () => {
     const record = INVENTORY_RECORDS.inspected;
     prismaMock.inventoryRecord.findUnique.mockResolvedValue(record);
-
-    prismaMock.$transaction.mockImplementation(async (ops: any[]) => {
-      return [
-        { ...record, state: InventoryState.ShelfReady },
-        { id: 'event-state-001', overrideFlag: false },
-      ];
+    const tx = mockTransitionTransaction(record, InventoryState.ShelfReady, {
+      eventId: 'event-state-001',
     });
 
     const result = await performTransition(
@@ -144,5 +183,12 @@ describe('performTransition', () => {
     );
 
     expect(result.requiresOverride).toBe(false);
+    expect(tx.inventoryEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          overrideFlag: false,
+        }),
+      })
+    );
   });
 });

@@ -15,8 +15,12 @@ const SYNC_EXCLUDED_PREFIXES = [
   '/health',
   '/api/auth/login',
   '/api/auth/me',
+  '/api/inventory',
   '/api/sync/push',
+  '/api/sync/push-ops',
   '/api/sync/pull',
+  '/api/sync/log',
+  '/api/sync/conflicts',
   '/api/sync/replica/export',
 ];
 

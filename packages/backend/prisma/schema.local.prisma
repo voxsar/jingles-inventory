@@ -801,6 +801,70 @@ model SyncQueue {
   @@map("sync_queue")
 }
 
+model SyncOperationLog {
+  id               String    @id @default(uuid())
+  clientId         String    @map("client_id")
+  opType           String    @map("op_type")
+  aggregateType    String    @map("aggregate_type")
+  aggregateId      String?   @map("aggregate_id")
+  idempotencyKey   String    @unique @map("idempotency_key")
+  payload          String
+  baseVersion      Int?      @map("base_version")
+  status           String    @default("Pending")
+  conflictData     String?     @map("conflict_data")
+  lastError        String?   @map("last_error")
+  attemptCount     Int       @default(0) @map("attempt_count")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  processedAt      DateTime? @map("processed_at")
+  appliedServerSeq Int?      @map("applied_server_seq")
+
+  @@index([status, createdAt])
+  @@index([clientId, createdAt])
+  @@map("sync_operation_log")
+}
+
+model SyncConflict {
+  id                String    @id @default(uuid())
+  operationId       String    @map("operation_id")
+  clientId          String    @map("client_id")
+  aggregateType     String    @map("aggregate_type")
+  aggregateId       String?   @map("aggregate_id")
+  status            String    @default("Pending")
+  localPayload      String?     @map("local_payload")
+  serverPayload     String?     @map("server_payload")
+  resolutionPayload String?     @map("resolution_payload")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  resolvedAt        DateTime? @map("resolved_at")
+
+  @@index([clientId, status, createdAt])
+  @@index([operationId])
+  @@map("sync_conflicts")
+}
+
+model SyncServerSequence {
+  seq           Int      @id @default(autoincrement())
+  operationId   String?  @map("operation_id")
+  aggregateType String?  @map("aggregate_type")
+  aggregateId   String?  @map("aggregate_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("sync_server_sequence")
+}
+
+model SyncServerChange {
+  id        String   @id @default(uuid())
+  seq       Int
+  tableName String   @map("table_name")
+  rowId     String   @map("row_id")
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([seq, tableName])
+  @@index([tableName, rowId])
+  @@map("sync_server_changes")
+}
+
 model StatusOption {
   id         String   @id @default(uuid())
   entityType String   @map("entity_type")

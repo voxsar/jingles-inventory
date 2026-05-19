@@ -6,10 +6,16 @@ import {
   clearProcessedQueue,
   clearProcessedRequestSyncQueue,
   getConfig,
+  getPendingSyncConflicts,
+  getPendingSyncOperationLogs,
   getPendingRequestSyncQueue,
   getSyncQueue,
+  insertPendingSyncConflict,
   markRequestSyncFailed,
   markRequestSyncProcessed,
+  markSyncOperationLogConflict,
+  markSyncOperationLogFailed,
+  markSyncOperationLogProcessed,
   markSyncProcessed,
   replaceReplicaSnapshot,
   setConfig,
@@ -40,6 +46,34 @@ type QueuedRequestRecord = {
   content_type: string | null;
   body: string | null;
   files: string | null;
+};
+
+type QueuedSyncOperationRecord = {
+  id: string;
+  client_id: string;
+  op_type: string;
+  aggregate_id: string | null;
+  idempotency_key: string;
+  payload: string | null;
+  base_version: number | null;
+  status: string;
+};
+
+type QueuedSyncConflictRecord = {
+  id: string;
+  operation_id: string;
+  client_id: string;
+  aggregate_type: string;
+  aggregate_id: string | null;
+  status: string;
+};
+
+type SyncLogItem = {
+  seq: number;
+  table: string;
+  action: 'upsert' | 'delete';
+  row: Record<string, unknown>;
+  emittedAt: string;
 };
 
 export interface SyncRunResult {
@@ -180,6 +214,33 @@ async function readErrorMessage(response: Response) {
   } catch {
     return body;
   }
+}
+
+async function readJsonBody<T>(response: Response): Promise<T | null> {
+  const body = await response.text();
+  if (!body) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(body) as T;
+  } catch {
+    return null;
+  }
+}
+
+function getSyncV2Cursor() {
+  const rawValue = getConfig('syncV2Cursor');
+  if (!rawValue) {
+    return 0;
+  }
+
+  const parsed = Number.parseInt(rawValue, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function setSyncV2Cursor(seq: number) {
+  setConfig('syncV2Cursor', String(Math.max(0, Math.trunc(seq))));
 }
 
 export function configureSyncEngine(config: SyncConfig) {
@@ -412,6 +473,135 @@ async function pushLegacySyncQueue(serverUrl: string, token: string) {
   return result;
 }
 
+async function pushSyncV2OperationLog(serverUrl: string, token: string) {
+  const result = {
+    pushed: 0,
+    conflicts: 0,
+    errors: [] as string[],
+    blockPull: false,
+  };
+
+  const pendingConflicts = getPendingSyncConflicts() as QueuedSyncConflictRecord[];
+  if (pendingConflicts.length > 0) {
+    result.errors.push('Sync blocked by unresolved local conflicts.');
+    result.blockPull = true;
+    return result;
+  }
+
+  const queuedOps = getPendingSyncOperationLogs() as QueuedSyncOperationRecord[];
+  if (queuedOps.length === 0) {
+    return result;
+  }
+
+  const queuedOpById = new Map(queuedOps.map((operation) => [operation.id, operation]));
+  const queuedOpByIdempotencyKey = new Map(
+    queuedOps.map((operation) => [operation.idempotency_key, operation])
+  );
+
+  try {
+    const response = await fetch(`${serverUrl}/api/sync/push-ops`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clientId: syncConfig?.clientId,
+        operations: queuedOps.map((operation) => ({
+          id: operation.id,
+          opType: operation.op_type,
+          aggregateId: operation.aggregate_id,
+          idempotencyKey: operation.idempotency_key,
+          payload: parseJsonValue(operation.payload, {}),
+          baseVersion: operation.base_version,
+        })),
+      }),
+    });
+
+    const payload = (await readJsonBody<{
+      error?: string;
+      data?: {
+        processed?: Array<{
+          clientOperationId?: string | null;
+          idempotencyKey: string;
+          status: 'Applied' | 'Conflict' | 'Duplicate' | 'Failed';
+          serverSeq?: number | null;
+          conflict?: { message?: string; serverRecord?: Record<string, unknown> | null };
+          error?: string;
+        }>;
+      };
+    }>(response)) ?? { data: { processed: [] } };
+
+    if (!response.ok && response.status !== 409) {
+      const message = payload.error ?? `HTTP ${response.status}`;
+      const keepPending = isNetworkRetriableStatus(response.status);
+
+      for (const operation of queuedOps) {
+        markSyncOperationLogFailed(operation.id, message, keepPending);
+      }
+
+      result.errors.push(`Sync v2 push failed: ${message}`);
+      result.blockPull = true;
+      return result;
+    }
+
+    const processed = payload.data?.processed ?? [];
+    for (const item of processed) {
+      const localOperation =
+        (item.clientOperationId ? queuedOpById.get(item.clientOperationId) : undefined) ??
+        queuedOpByIdempotencyKey.get(item.idempotencyKey);
+
+      if (!localOperation) {
+        continue;
+      }
+
+      if (item.status === 'Applied' || item.status === 'Duplicate') {
+        markSyncOperationLogProcessed(localOperation.id, item.serverSeq ?? null);
+        result.pushed++;
+        continue;
+      }
+
+      if (item.status === 'Conflict') {
+        markSyncOperationLogConflict(localOperation.id, item.conflict ?? null);
+        insertPendingSyncConflict({
+          operation_id: localOperation.id,
+          client_id: localOperation.client_id,
+          aggregate_type: 'inventory_record',
+          aggregate_id: localOperation.aggregate_id ?? null,
+          local_payload: parseJsonValue(localOperation.payload, null),
+          server_payload: item.conflict?.serverRecord ?? null,
+        });
+        result.conflicts++;
+        result.errors.push(
+          `Sync conflict for ${localOperation.op_type}: ${item.conflict?.message ?? 'Conflict detected'}`
+        );
+        continue;
+      }
+
+      markSyncOperationLogFailed(localOperation.id, item.error ?? 'Unknown sync-v2 failure');
+      result.errors.push(
+        `Sync v2 operation ${localOperation.id} failed: ${item.error ?? 'Unknown error'}`
+      );
+    }
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : 'Unknown sync-v2 error';
+    for (const operation of queuedOps) {
+      markSyncOperationLogFailed(operation.id, message, true);
+    }
+    result.errors.push(`Sync v2 push failed: ${message}`);
+    result.blockPull = true;
+  }
+
+  if (
+    (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length > 0 ||
+    (getPendingSyncConflicts() as QueuedSyncConflictRecord[]).length > 0
+  ) {
+    result.blockPull = true;
+  }
+
+  return result;
+}
+
 async function pushChanges(): Promise<{ pushed: number; conflicts: number; errors: string[]; blockPull: boolean }> {
   if (!syncConfig) {
     return { pushed: 0, conflicts: 0, errors: ['Not configured'], blockPull: true };
@@ -428,6 +618,14 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
     errors: [] as string[],
     blockPull: false,
   };
+
+  const syncV2Result = await pushSyncV2OperationLog(syncConfig.serverUrl, token);
+  result.pushed += syncV2Result.pushed;
+  result.conflicts += syncV2Result.conflicts;
+  result.errors.push(...syncV2Result.errors);
+  if (syncV2Result.blockPull) {
+    result.blockPull = true;
+  }
 
   const legacyResult = await pushLegacySyncQueue(syncConfig.serverUrl, token);
   result.pushed += legacyResult.pushed;
@@ -475,6 +673,68 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
   return result;
 }
 
+async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
+  const result = { pulled: 0, errors: [] as string[] };
+
+  let cursor = getSyncV2Cursor();
+
+  while (true) {
+    try {
+      const url = new URL(`${serverUrl}/api/sync/log`);
+      url.searchParams.set('sinceSeq', String(cursor));
+      url.searchParams.set('limit', '200');
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        result.errors.push(await readErrorMessage(response));
+        return result;
+      }
+
+      const payload = await readJsonBody<{
+        data?: {
+          changes?: SyncLogItem[];
+          lastServerSeq?: number;
+          hasMore?: boolean;
+        };
+      }>(response);
+      const changes = payload?.data?.changes ?? [];
+
+      for (const change of changes) {
+        applyReplicaMutation({
+          type: 'replica.mutation',
+          table: change.table as any,
+          action: change.action === 'delete' ? 'delete' : 'upsert',
+          row: change.row,
+          emittedAt: change.emittedAt,
+        });
+        cursor = Math.max(cursor, change.seq);
+        result.pulled++;
+      }
+
+      const lastServerSeq = payload?.data?.lastServerSeq;
+      if (typeof lastServerSeq === 'number') {
+        cursor = Math.max(cursor, lastServerSeq);
+      }
+
+      setSyncV2Cursor(cursor);
+
+      if (!payload?.data?.hasMore) {
+        break;
+      }
+    } catch (error: any) {
+      result.errors.push(`Sync v2 log pull failed: ${error.message}`);
+      return result;
+    }
+  }
+
+  return result;
+}
+
 async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
   if (!syncConfig) {
     return { pulled: 0, errors: ['Not configured'] };
@@ -488,6 +748,10 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
   const result = { pulled: 0, errors: [] as string[] };
 
   try {
+    const syncV2Result = await pullSyncV2ChangeLog(syncConfig.serverUrl, token);
+    result.pulled += syncV2Result.pulled;
+    result.errors.push(...syncV2Result.errors);
+
     const response = await fetch(`${syncConfig.serverUrl}/api/sync/replica/export`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -563,7 +827,12 @@ function closeRealtimeSyncSocket() {
 }
 
 function hasPendingLocalChanges() {
-  return getSyncQueue().length > 0 || getPendingRequestSyncQueue().length > 0;
+  return (
+    getSyncQueue().length > 0 ||
+    getPendingRequestSyncQueue().length > 0 ||
+    (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length > 0 ||
+    (getPendingSyncConflicts() as QueuedSyncConflictRecord[]).length > 0
+  );
 }
 
 function buildRealtimeSyncUrl(serverUrl: string, token: string, clientId: string) {
