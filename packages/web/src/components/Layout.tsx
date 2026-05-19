@@ -1,7 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
-import DesktopStatusBanner from './DesktopStatusBanner';
 import DesktopOutboxControl from './DesktopOutboxControl';
 import { isDesktopRuntime } from '../utils/runtime';
 
@@ -128,8 +127,6 @@ export default function Layout() {
           <h1 className="text-lg font-semibold text-gray-800">{branding.appHeaderTitle}</h1>
           <DesktopOutboxControl />
         </header>
-
-        <DesktopStatusBanner />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">

@@ -14,7 +14,6 @@ const JSON_FIELD_MAP: Record<string, Set<string>> = {
   ImportJob: new Set(['metadata', 'warnings']),
   ImportRecord: new Set(['payload', 'relatedRecords', 'warnings', 'errors']),
   AuditLog: new Set(['changes']),
-  SyncQueue: new Set(['payload']),
   SyncOperationLog: new Set(['payload', 'conflictData']),
   SyncConflict: new Set(['localPayload', 'serverPayload', 'resolutionPayload']),
   DashboardStats: new Set(['inventoryByState']),

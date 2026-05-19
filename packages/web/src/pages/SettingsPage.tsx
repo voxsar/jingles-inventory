@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { settingsApi, attributesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
+import { isDesktopRuntime } from '../utils/runtime';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
 const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
@@ -65,6 +67,7 @@ const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder:
 type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense';
 
 export default function SettingsPage() {
+	const navigate = useNavigate();
 	const [section, setSection] = useState<Section>('home');
 	const [statusEntityType, setStatusEntityType] = useState<string>('inventory');
 
@@ -1133,6 +1136,27 @@ export default function SettingsPage() {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{isDesktopRuntime() && (
+					<button
+						className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"
+						onClick={() => navigate('/desktop-sync')}
+					>
+						<div className="flex items-start gap-4">
+							<div className="text-4xl">🖥️</div>
+							<div>
+								<h2 className="font-semibold text-gray-800 text-lg">Desktop Runtime</h2>
+								<p className="text-sm text-gray-500 mt-1">Open sync controls, application logs, and desktop versus cloud build tracking.</p>
+								<div className="flex flex-wrap gap-1 mt-2">
+									<span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Sync</span>
+									<span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Logs</span>
+									<span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">Versions</span>
+								</div>
+								<span className="inline-block mt-3 text-xs font-medium text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full">Open →</span>
+							</div>
+						</div>
+					</button>
+				)}
+
 				{/* Units of Measure card */}
 				<button
 					className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"

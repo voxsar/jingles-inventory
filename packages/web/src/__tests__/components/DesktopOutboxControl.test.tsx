@@ -5,7 +5,6 @@ import DesktopOutboxControl from '../../components/DesktopOutboxControl';
 
 const conflictSnapshot = {
   summary: {
-    legacyQueueCount: 0,
     syncOperationCount: 1,
     requestQueueCount: 0,
     conflictCount: 1,
@@ -98,7 +97,6 @@ describe('DesktopOutboxControl', () => {
     });
     const emptySnapshot = {
       summary: {
-        legacyQueueCount: 0,
         syncOperationCount: 0,
         requestQueueCount: 0,
         conflictCount: 0,

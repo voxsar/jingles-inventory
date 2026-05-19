@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 import type {
+  BackendRuntimeInfo,
+  ElectronAppLogEntry,
   ElectronDatabaseInfo,
   ElectronDatabaseSwitchMode,
   ElectronSyncHealth,
   ElectronSyncOutboxSnapshot,
   ElectronSyncResult,
   ElectronSyncStatus,
+  RuntimeBuildInfo,
 } from '@jingles/shared';
+import { runtimeApi } from '../api/client';
 import { emitDesktopOutboxChanged } from '../utils/desktopSync';
 import { isDesktopRuntime } from '../utils/runtime';
 
 const REFRESH_INTERVAL_MS = 15000;
+const LOG_LIMIT = 400;
 
 function hasElectronBridge() {
   return typeof window !== 'undefined' && typeof window.electronAPI !== 'undefined';
@@ -54,6 +59,93 @@ function summarizeSyncResult(label: string, result: ElectronSyncResult) {
   return `${label} finished. Pushed ${result.pushed}, pulled ${result.pulled}, conflicts ${result.conflicts}.`;
 }
 
+function buildVersionLabel(buildInfo: RuntimeBuildInfo | null) {
+  if (!buildInfo) {
+    return 'Not available';
+  }
+
+  const parts = [`v${buildInfo.appVersion}`];
+  if (buildInfo.buildNumber) {
+    parts.push(`build ${buildInfo.buildNumber}`);
+  }
+  if (buildInfo.commitShortHash) {
+    parts.push(buildInfo.commitShortHash);
+  }
+
+  return parts.join(' · ');
+}
+
+function getBuildSignature(buildInfo: RuntimeBuildInfo | null) {
+  if (!buildInfo) {
+    return null;
+  }
+
+  if (buildInfo.commitHash) {
+    return buildInfo.commitHash;
+  }
+
+  if (buildInfo.buildNumber) {
+    return `${buildInfo.appVersion}:${buildInfo.buildNumber}`;
+  }
+
+  return buildInfo.appVersion;
+}
+
+function describeBuildParity(
+  desktopBuildInfo: RuntimeBuildInfo | null,
+  hostBuildInfo: RuntimeBuildInfo | null
+) {
+  if (!desktopBuildInfo || !hostBuildInfo) {
+    return {
+      tone: 'border-slate-200 bg-slate-50 text-slate-700',
+      message: 'Build comparison becomes available when both desktop and host metadata can be read.',
+    };
+  }
+
+  const desktopSignature = getBuildSignature(desktopBuildInfo);
+  const hostSignature = getBuildSignature(hostBuildInfo);
+
+  if (desktopSignature && hostSignature && desktopSignature === hostSignature) {
+    return {
+      tone: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      message: `Desktop and host are on the same build (${buildVersionLabel(hostBuildInfo)}).`,
+    };
+  }
+
+  return {
+    tone: 'border-amber-200 bg-amber-50 text-amber-700',
+    message: `Desktop is ${buildVersionLabel(desktopBuildInfo)} while the host is ${buildVersionLabel(hostBuildInfo)}.`,
+  };
+}
+
+function toneForLogLevel(level: ElectronAppLogEntry['level']) {
+  if (level === 'error') {
+    return 'bg-red-100 text-red-700';
+  }
+
+  if (level === 'warn') {
+    return 'bg-amber-100 text-amber-800';
+  }
+
+  if (level === 'debug') {
+    return 'bg-slate-200 text-slate-700';
+  }
+
+  return 'bg-sky-100 text-sky-800';
+}
+
+function toneForLogSource(source: ElectronAppLogEntry['source']) {
+  if (source === 'backend') {
+    return 'bg-emerald-100 text-emerald-800';
+  }
+
+  if (source === 'renderer') {
+    return 'bg-violet-100 text-violet-800';
+  }
+
+  return 'bg-slate-100 text-slate-800';
+}
+
 function DetailRow({
   label,
   value,
@@ -75,11 +167,39 @@ function DetailRow({
   );
 }
 
+function BuildCard({
+  title,
+  description,
+  buildInfo,
+}: {
+  title: string;
+  description: string;
+  buildInfo: RuntimeBuildInfo | null;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {title}
+      </p>
+      <p className="mt-2 text-sm text-slate-600">{description}</p>
+      <div className="mt-4 grid gap-3">
+        <DetailRow label="Version" value={buildVersionLabel(buildInfo)} />
+        <DetailRow label="Package" value={buildInfo?.packageName ?? 'Not available'} mono />
+        <DetailRow label="Commit" value={buildInfo?.commitHash ?? 'Not available'} mono />
+        <DetailRow label="Built At" value={formatTimestamp(buildInfo?.builtAt ?? null)} />
+      </div>
+    </div>
+  );
+}
+
 export default function DesktopSyncPage() {
   const [databaseInfo, setDatabaseInfo] = useState<ElectronDatabaseInfo | null>(null);
   const [syncStatus, setSyncStatus] = useState<ElectronSyncStatus | null>(null);
   const [syncHealth, setSyncHealth] = useState<ElectronSyncHealth | null>(null);
   const [outboxSnapshot, setOutboxSnapshot] = useState<ElectronSyncOutboxSnapshot | null>(null);
+  const [desktopBuildInfo, setDesktopBuildInfo] = useState<RuntimeBuildInfo | null>(null);
+  const [runtimeInfo, setRuntimeInfo] = useState<BackendRuntimeInfo | null>(null);
+  const [appLogs, setAppLogs] = useState<ElectronAppLogEntry[]>([]);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{
     tone: 'success' | 'error' | 'info';
@@ -92,7 +212,12 @@ export default function DesktopSyncPage() {
   const isDesktop = isDesktopShell && hasBridge;
 
   async function refreshState() {
-    if (!window.electronAPI?.db.getInfo || !window.electronAPI?.sync.getStatus) {
+    if (
+      !window.electronAPI?.db.getInfo ||
+      !window.electronAPI?.sync.getStatus ||
+      !window.electronAPI?.app.getBuildInfo ||
+      !window.electronAPI?.logs.list
+    ) {
       return;
     }
 
@@ -104,10 +229,19 @@ export default function DesktopSyncPage() {
         window.electronAPI.sync.getOutbox(),
       ]);
 
+    const [nextDesktopBuildInfo, nextRuntimeInfoResponse, nextLogs] = await Promise.all([
+      window.electronAPI.app.getBuildInfo(),
+      runtimeApi.getInfo(),
+      window.electronAPI.logs.list({ limit: LOG_LIMIT }),
+    ]);
+
     setDatabaseInfo(nextDatabaseInfo);
     setSyncStatus(nextSyncStatus);
     setSyncHealth(nextSyncHealth);
     setOutboxSnapshot(nextOutboxSnapshot);
+    setDesktopBuildInfo(nextDesktopBuildInfo);
+    setRuntimeInfo(nextRuntimeInfoResponse.data.data ?? null);
+    setAppLogs(nextLogs);
   }
 
   useEffect(() => {
@@ -118,10 +252,10 @@ export default function DesktopSyncPage() {
 
     void refreshState()
       .catch((error) => {
-        console.error('[DesktopSyncPage] Failed to load desktop sync state:', error);
+        console.error('[DesktopSyncPage] Failed to load desktop runtime state:', error);
         setFeedback({
           tone: 'error',
-          message: error instanceof Error ? error.message : 'Failed to load desktop sync state.',
+          message: error instanceof Error ? error.message : 'Failed to load desktop runtime state.',
         });
       })
       .finally(() => {
@@ -130,7 +264,7 @@ export default function DesktopSyncPage() {
 
     const intervalId = window.setInterval(() => {
       void refreshState().catch((error) => {
-        console.error('[DesktopSyncPage] Failed to refresh desktop sync state:', error);
+        console.error('[DesktopSyncPage] Failed to refresh desktop runtime state:', error);
       });
     }, REFRESH_INTERVAL_MS);
 
@@ -157,9 +291,23 @@ export default function DesktopSyncPage() {
         });
     });
 
+    const unsubscribeLogs = window.electronAPI?.logs.onEntry?.((entry) => {
+      setAppLogs((currentEntries) => {
+        if (currentEntries.some((currentEntry) => currentEntry.id === entry.id)) {
+          return currentEntries;
+        }
+
+        const nextEntries = [...currentEntries, entry];
+        return nextEntries.length > LOG_LIMIT
+          ? nextEntries.slice(nextEntries.length - LOG_LIMIT)
+          : nextEntries;
+      });
+    });
+
     return () => {
       window.clearInterval(intervalId);
       unsubscribeHealth?.();
+      unsubscribeLogs?.();
     };
   }, [isDesktop]);
 
@@ -286,16 +434,33 @@ export default function DesktopSyncPage() {
     }
   }
 
+  async function handleClearLogs() {
+    if (!window.electronAPI?.logs.clear) {
+      return;
+    }
+
+    try {
+      await window.electronAPI.logs.clear();
+      setAppLogs([]);
+    } catch (error) {
+      console.error('[DesktopSyncPage] Failed to clear application logs:', error);
+      setFeedback({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Failed to clear application logs.',
+      });
+    }
+  }
+
   if (!isDesktopShell) {
     return (
       <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
           Desktop Only
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Sync and database controls</h1>
+        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Sync and local database</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           This page is only available inside the Electron desktop shell because it needs direct access
-          to the local replica database file and desktop sync engine.
+          to the local replica database file, application logs, and desktop sync engine.
         </p>
       </div>
     );
@@ -307,10 +472,10 @@ export default function DesktopSyncPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
           Desktop Bridge Missing
         </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Desktop Sync</h1>
+        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Sync and local database</h1>
         <p className="mt-3 text-sm leading-6 text-slate-700">
           This Electron window is running without the preload bridge, so desktop controls such as
-          Outbox, backup, file switching, and manual sync buttons are unavailable in this renderer.
+          logs, backup, file switching, and manual sync buttons are unavailable in this renderer.
         </p>
         <p className="mt-3 text-sm leading-6 text-slate-700">
           Reload the Electron window first. If the page still shows this message after reload, the
@@ -321,7 +486,6 @@ export default function DesktopSyncPage() {
   }
 
   const outboxSummary = outboxSnapshot?.summary ?? {
-    legacyQueueCount: 0,
     syncOperationCount: 0,
     requestQueueCount: 0,
     conflictCount: 0,
@@ -338,12 +502,15 @@ export default function DesktopSyncPage() {
     'inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60';
   const primaryButtonClass = `${buttonBaseClass} bg-slate-950 text-white hover:bg-slate-800`;
   const secondaryButtonClass = `${buttonBaseClass} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`;
+  const hostBuildInfo = runtimeInfo?.upstream?.build ?? null;
+  const buildParity = describeBuildParity(desktopBuildInfo, hostBuildInfo);
+  const visibleLogs = [...appLogs].reverse();
 
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,116,144,0.18),_transparent_48%),linear-gradient(135deg,_#f8fafc,_#ffffff)] p-8 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
-          Desktop Replica Control
+          Desktop Runtime
         </p>
         <div className="mt-3 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
@@ -351,8 +518,9 @@ export default function DesktopSyncPage() {
               Sync and local database
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              This device reads inventory data from the local replica database file. Use this page to
-              inspect the file, back it up, switch to another file, and run full or one-way syncs.
+              This page is intentionally kept out of the main app chrome. Use it from Settings when
+              you need desktop replica controls, application logs, or a build comparison against the
+              connected host.
             </p>
           </div>
           <div className="inline-flex self-start rounded-full border border-sky-200 bg-white/85 px-4 py-2 text-sm font-semibold text-sky-800 shadow-sm">
@@ -400,9 +568,15 @@ export default function DesktopSyncPage() {
         </div>
       )}
 
+      {runtimeInfo?.upstream?.error && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Host build lookup failed for {runtimeInfo.upstream.url}: {runtimeInfo.upstream.error}
+        </div>
+      )}
+
       {loading ? (
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center text-sm text-slate-500">
-          Loading desktop sync controls...
+          Loading desktop runtime controls...
         </div>
       ) : (
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -564,7 +738,7 @@ export default function DesktopSyncPage() {
         </p>
         <h2 className="mt-2 text-xl font-semibold text-slate-950">Queued desktop work</h2>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Total</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">{outboxSummary.totalCount}</p>
@@ -577,15 +751,117 @@ export default function DesktopSyncPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Requests</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">{outboxSummary.requestQueueCount}</p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Legacy Queue</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{outboxSummary.legacyQueueCount}</p>
-          </div>
           <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Conflicts</p>
             <p className="mt-2 text-2xl font-semibold text-amber-900">{outboxSummary.conflictCount}</p>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Build Tracking
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-slate-950">Desktop versus host versions</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Each build now carries a package version, git-derived build number, and commit hash so you
+              can see whether the desktop and connected cloud host are actually running the same code.
+            </p>
+          </div>
+          <div className={`rounded-2xl border px-4 py-3 text-sm font-medium ${buildParity.tone}`}>
+            {buildParity.message}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 xl:grid-cols-3">
+          <BuildCard
+            title="Desktop Shell"
+            description="The installed Electron application."
+            buildInfo={desktopBuildInfo}
+          />
+          <BuildCard
+            title="Desktop API"
+            description={`The local backend process running in ${runtimeInfo?.mode === 'local_replica' ? 'replica mode' : 'server mode'}.`}
+            buildInfo={runtimeInfo?.build ?? null}
+          />
+          <BuildCard
+            title="Connected Host"
+            description={runtimeInfo?.upstream?.url ?? 'No upstream host is configured.'}
+            buildInfo={hostBuildInfo}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Application Logs
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-slate-950">Desktop log stream</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Recent desktop logs from the Electron main process, renderer console, and bundled backend.
+              Newest entries appear first.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+              {appLogs.length} entries
+            </span>
+            <button
+              type="button"
+              className={secondaryButtonClass}
+              onClick={() => void handleClearLogs()}
+            >
+              Clear Logs
+            </button>
+          </div>
+        </div>
+
+        {visibleLogs.length === 0 ? (
+          <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center text-sm text-slate-500">
+            No application logs captured yet.
+          </div>
+        ) : (
+          <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200">
+            <div className="max-h-[32rem] overflow-auto">
+              <table className="min-w-full border-collapse text-sm">
+                <thead className="sticky top-0 bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Source</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Level</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Message</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleLogs.map((entry) => (
+                    <tr key={entry.id} className="border-t border-slate-200 align-top">
+                      <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                        {formatTimestamp(entry.timestamp)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${toneForLogSource(entry.source)}`}>
+                          {entry.source}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${toneForLogLevel(entry.level)}`}>
+                          {entry.level}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs leading-6 text-slate-700">
+                        {entry.message}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

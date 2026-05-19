@@ -787,20 +787,6 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-model SyncQueue {
-  id            String    @id @default(uuid())
-  clientId      String    @map("client_id")
-  operation     String
-  payload       String
-  status        String    @default("Pending")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  processedAt   DateTime? @map("processed_at")
-  conflictFlag  Boolean   @default(false) @map("conflict_flag")
-  conflictNotes String?   @map("conflict_notes")
-
-  @@map("sync_queue")
-}
-
 model SyncOperationLog {
   id               String    @id @default(uuid())
   clientId         String    @map("client_id")

@@ -4,10 +4,10 @@
   "main": "dist/electron/main.js",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"tsc -w\" \"wait-on dist/electron/main.js http://localhost:5173 && node scripts/launch-electron.cjs .\"",
-    "build": "tsc",
+    "dev": "node ../../scripts/write-build-info.mjs electron && concurrently \"tsc -w\" \"wait-on dist/electron/main.js http://localhost:5173 && node scripts/launch-electron.cjs .\"",
+    "build": "node ../../scripts/write-build-info.mjs electron && tsc",
     "build:electron": "node scripts/verify-package-inputs.cjs && electron-builder",
-    "start": "node scripts/launch-electron.cjs .",
+    "start": "node ../../scripts/write-build-info.mjs electron && node scripts/launch-electron.cjs .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

@@ -2,6 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DesktopSyncPage from '../../pages/DesktopSyncPage';
+import { runtimeApi } from '../../api/client';
+
+vi.mock('../../api/client', async () => {
+  const actual = await vi.importActual<typeof import('../../api/client')>('../../api/client');
+
+  return {
+    ...actual,
+    runtimeApi: {
+      getInfo: vi.fn(),
+    },
+  };
+});
 
 function createDesktopSyncState() {
   return {
@@ -63,7 +75,6 @@ function createDesktopSyncState() {
     },
     outboxSnapshot: {
       summary: {
-        legacyQueueCount: 0,
         syncOperationCount: 1,
         requestQueueCount: 1,
         conflictCount: 1,
@@ -71,6 +82,46 @@ function createDesktopSyncState() {
       },
       conflicts: [],
     },
+    desktopBuildInfo: {
+      packageName: '@jingles/electron',
+      appVersion: '1.0.1',
+      buildNumber: '101',
+      commitHash: 'desktop-commit-hash',
+      commitShortHash: 'desktophash',
+      builtAt: '2026-05-19T09:05:00.000Z',
+    },
+    runtimeInfo: {
+      mode: 'local_replica',
+      build: {
+        packageName: '@jingles/backend',
+        appVersion: '1.0.1',
+        buildNumber: '101',
+        commitHash: 'desktop-commit-hash',
+        commitShortHash: 'desktophash',
+        builtAt: '2026-05-19T09:05:00.000Z',
+      },
+      upstream: {
+        url: 'https://inv.theredsun.org',
+        build: {
+          packageName: '@jingles/backend',
+          appVersion: '1.0.1',
+          buildNumber: '101',
+          commitHash: 'desktop-commit-hash',
+          commitShortHash: 'desktophash',
+          builtAt: '2026-05-19T09:05:00.000Z',
+        },
+        error: null,
+      },
+    },
+    logs: [
+      {
+        id: 1,
+        timestamp: '2026-05-19T09:06:00.000Z',
+        source: 'backend',
+        level: 'info',
+        message: 'Replica realtime listener connected',
+      },
+    ],
   };
 }
 
@@ -101,6 +152,12 @@ function installElectronAPI() {
     relaunching: true,
   });
 
+  (runtimeApi.getInfo as any).mockResolvedValue({
+    data: {
+      data: state.runtimeInfo,
+    },
+  });
+
   window.electronAPI = {
     db: {
       getInfo: vi.fn().mockResolvedValue(state.databaseInfo),
@@ -123,6 +180,19 @@ function installElectronAPI() {
       onHealthChanged: vi.fn(() => vi.fn()),
       getOutbox: vi.fn().mockResolvedValue(state.outboxSnapshot),
       resolveConflict: vi.fn(),
+    },
+    app: {
+      backendUrl: 'http://127.0.0.1:3630',
+      version: vi.fn().mockResolvedValue('1.0.1'),
+      getBuildInfo: vi.fn().mockResolvedValue(state.desktopBuildInfo),
+      openExternal: vi.fn().mockResolvedValue(undefined),
+      setAuthCache: vi.fn().mockResolvedValue(undefined),
+      clearAuthCache: vi.fn().mockResolvedValue(undefined),
+    },
+    logs: {
+      list: vi.fn().mockResolvedValue(state.logs),
+      clear: vi.fn().mockResolvedValue(undefined),
+      onEntry: vi.fn(() => vi.fn()),
     },
     network: {
       isOnline: vi.fn(() => true),
@@ -154,7 +224,7 @@ describe('DesktopSyncPage', () => {
     delete window.electronAPI;
   });
 
-  it('renders database details and desktop sync controls', async () => {
+  it('renders database details, build comparison, and desktop sync controls', async () => {
     installElectronAPI();
 
     render(<DesktopSyncPage />);
@@ -162,6 +232,8 @@ describe('DesktopSyncPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Sync and local database')).toBeInTheDocument();
       expect(screen.getByText('D:/Data/jingles.sqlite')).toBeInTheDocument();
+      expect(screen.getByText('Desktop versus host versions')).toBeInTheDocument();
+      expect(screen.getByText('Replica realtime listener connected')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Sync Now' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Manual Forward Only Sync' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Manual Backward Only Sync' })).toBeInTheDocument();

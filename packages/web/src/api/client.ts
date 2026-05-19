@@ -214,6 +214,10 @@ export const settingsApi = {
   getTypesenseJob: (jobId: string) => api.get(`/settings/typesense/jobs/${jobId}`),
 };
 
+export const runtimeApi = {
+  getInfo: () => api.get('/runtime/info'),
+};
+
 // Attributes (Global Attribute System)
 export const attributesApi = {
   list: () => api.get('/attributes'),

@@ -586,19 +586,6 @@ CREATE TABLE IF NOT EXISTS "audit_logs" (
 );
 
 -- CreateTable
-CREATE TABLE IF NOT EXISTS "sync_queue" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "client_id" TEXT NOT NULL,
-    "operation" TEXT NOT NULL,
-    "payload" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'Pending',
-    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "processed_at" DATETIME,
-    "conflict_flag" BOOLEAN NOT NULL DEFAULT false,
-    "conflict_notes" TEXT
-);
-
--- CreateTable
 CREATE TABLE IF NOT EXISTS "sync_operation_log" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "client_id" TEXT NOT NULL,

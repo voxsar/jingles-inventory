@@ -4,7 +4,6 @@ import {
   getSyncHealth,
   getSyncOutbox,
   processRealtimeSyncEvent,
-  queueOperation,
   resolveSyncConflict,
   stopAutoSync,
   subscribeSyncHealth,
@@ -13,16 +12,13 @@ import {
 
 vi.mock('../offline/localDB', () => ({
   FAILED_PERMANENT_STATUS: 'failed_permanent',
-  addToSyncQueue: vi.fn(),
   applyReplicaMutation: vi.fn(),
-  clearProcessedQueue: vi.fn(),
   clearProcessedRequestSyncQueue: vi.fn(),
   deleteInventoryRecord: vi.fn(),
   getConfig: vi.fn().mockReturnValue(null),
   getPendingSyncConflicts: vi.fn().mockReturnValue([]),
   getPendingSyncConflictDetailById: vi.fn(),
   getPendingSyncConflictDetails: vi.fn().mockReturnValue([]),
-  getPendingSyncQueue: vi.fn().mockReturnValue([]),
   getPendingSyncOperationLogs: vi.fn().mockReturnValue([]),
   getPendingRequestSyncQueue: vi.fn().mockReturnValue([]),
   getSyncOutboxSummary: vi.fn().mockReturnValue({
@@ -37,7 +33,6 @@ vi.mock('../offline/localDB', () => ({
   markSyncOperationLogConflict: vi.fn(),
   markSyncOperationLogFailed: vi.fn(),
   markSyncOperationLogProcessed: vi.fn(),
-  markSyncProcessed: vi.fn(),
   pruneFailedPermanentOutbox: vi.fn().mockReturnValue(0),
   replaceReplicaSnapshot: vi.fn(),
   setConfig: vi.fn(),
@@ -46,14 +41,12 @@ vi.mock('../offline/localDB', () => ({
 
 import {
   FAILED_PERMANENT_STATUS,
-  addToSyncQueue,
   applyReplicaMutation,
   deleteInventoryRecord,
   getConfig,
   getPendingSyncConflicts,
   getPendingSyncConflictDetailById,
   getPendingSyncConflictDetails,
-  getPendingSyncQueue,
   getPendingSyncOperationLogs,
   getPendingRequestSyncQueue,
   getSyncOutboxSummary,
@@ -111,7 +104,6 @@ describe('syncEngine', () => {
     (getPendingSyncConflicts as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncConflictDetailById as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncConflictDetails as ReturnType<typeof vi.fn>).mockReset();
-    (getPendingSyncQueue as ReturnType<typeof vi.fn>).mockReset();
     (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>).mockReset();
     (getSyncOutboxSummary as ReturnType<typeof vi.fn>).mockReset();
     (insertPendingSyncConflict as ReturnType<typeof vi.fn>).mockReset();
@@ -130,7 +122,6 @@ describe('syncEngine', () => {
     (getPendingSyncOperationLogs as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingSyncConflicts as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingSyncConflictDetails as ReturnType<typeof vi.fn>).mockReturnValue([]);
-    (getPendingSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getSyncOutboxSummary as ReturnType<typeof vi.fn>).mockReturnValue({
       pending: 0,
@@ -157,9 +148,6 @@ describe('syncEngine', () => {
   });
 
   it('returns pending sync conflicts in the outbox snapshot', () => {
-    (getPendingSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([
-      { id: 'legacy-001', status: 'Pending' },
-    ]);
     (getPendingSyncOperationLogs as ReturnType<typeof vi.fn>).mockReturnValue([
       { id: 'op-002', status: 'Pending' },
     ]);
@@ -194,11 +182,10 @@ describe('syncEngine', () => {
     const snapshot = getSyncOutbox();
 
     expect(snapshot.summary).toEqual({
-      legacyQueueCount: 1,
       syncOperationCount: 1,
       requestQueueCount: 1,
       conflictCount: 1,
-      totalCount: 4,
+      totalCount: 3,
     });
     expect(snapshot.conflicts[0]).toMatchObject({
       id: 'conflict-001',
@@ -619,46 +606,6 @@ describe('syncEngine', () => {
     expect(replaceReplicaSnapshot).toHaveBeenCalled();
   });
 
-  it('processes legacy sync_queue operations for backwards compatibility', async () => {
-    (getPendingSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([
-      {
-        id: 'legacy-001',
-        client_id: 'client-test-001',
-        operation: 'UPSERT_INVENTORY',
-        payload: JSON.stringify({ id: 'inv-001' }),
-        status: 'Pending',
-      },
-    ]);
-
-    fetchMock
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          data: { processed: [{ id: 'legacy-001', status: 'Processed' }] },
-        })
-      )
-      .mockResolvedValueOnce(
-        createJsonResponse({
-          data: {
-            changes: [],
-            lastServerSeq: 0,
-            hasMore: false,
-          },
-        })
-      )
-      .mockResolvedValueOnce(createJsonResponse({ data: { users: [] } }));
-
-    const result = await syncAll();
-
-    expect(result.pushed).toBe(1);
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      'http://localhost:3001/api/sync/push',
-      expect.objectContaining({
-        method: 'POST',
-      })
-    );
-  });
-
   it('pushes sync-v2 operation log entries and marks them processed', async () => {
     (getPendingSyncOperationLogs as ReturnType<typeof vi.fn>)
       .mockReturnValueOnce([
@@ -924,36 +871,5 @@ describe('syncEngine', () => {
 
     expect(applyReplicaMutation).toHaveBeenCalledWith(realtimeEvent);
     expect(setConfig).toHaveBeenCalledWith('lastSyncTime', '2026-05-18T12:00:00.000Z');
-  });
-});
-
-describe('queueOperation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (getConfig as ReturnType<typeof vi.fn>).mockReturnValue('existing-client-id');
-  });
-
-  it('adds operation to the legacy sync queue', () => {
-    queueOperation('UPSERT_INVENTORY', { id: 'inv-001', quantity: 5 });
-
-    expect(addToSyncQueue).toHaveBeenCalledWith(
-      expect.objectContaining({
-        operation: 'UPSERT_INVENTORY',
-      })
-    );
-  });
-
-  it('generates a UUID for each queued operation', () => {
-    queueOperation('BOX_OPEN', { skuId: 'sku-001' });
-
-    const call = (addToSyncQueue as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(call.id).toMatch(/^[0-9a-f-]{36}$/i);
-  });
-
-  it('uses the existing clientId from config', () => {
-    queueOperation('STATE_CHANGE', { recordId: 'inv-001', newState: 'Inspected' });
-
-    const call = (addToSyncQueue as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(call.client_id).toBe('existing-client-id');
   });
 });

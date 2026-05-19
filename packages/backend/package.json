@@ -3,10 +3,10 @@
 	"version": "1.0.1",
 	"main": "dist/server.js",
 	"scripts": {
-		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-		"build": "node scripts/generate-local-prisma.mjs && prisma generate && tsc",
+		"dev": "node ../../scripts/write-build-info.mjs backend && ts-node-dev --respawn --transpile-only src/server.ts",
+		"build": "node ../../scripts/write-build-info.mjs backend && node scripts/generate-local-prisma.mjs && prisma generate && tsc",
 		"start": "node dist/server.js",
-		"deploy": "prisma migrate deploy && prisma generate && tsc && pm2 restart jingles-backend",
+		"deploy": "node ../../scripts/write-build-info.mjs backend && prisma migrate deploy && prisma generate && tsc && pm2 restart jingles-backend",
 		"prisma:generate": "node scripts/generate-local-prisma.mjs && prisma generate",
 		"prisma:generate:local": "node scripts/generate-local-prisma.mjs",
 		"prisma:migrate": "prisma migrate dev",

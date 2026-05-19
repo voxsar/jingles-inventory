@@ -5,8 +5,37 @@ export interface ElectronSyncResult {
   errors: string[];
 }
 
+export interface RuntimeBuildInfo {
+  packageName: string;
+  appVersion: string;
+  buildNumber: string | null;
+  commitHash: string | null;
+  commitShortHash: string | null;
+  builtAt: string | null;
+}
+
+export interface BackendRuntimeInfo {
+  mode: 'local_replica' | 'server';
+  build: RuntimeBuildInfo;
+  upstream: {
+    url: string;
+    build: RuntimeBuildInfo | null;
+    error: string | null;
+  } | null;
+}
+
+export type ElectronAppLogSource = 'main' | 'renderer' | 'backend';
+export type ElectronAppLogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+export interface ElectronAppLogEntry {
+  id: number;
+  timestamp: string;
+  source: ElectronAppLogSource;
+  level: ElectronAppLogLevel;
+  message: string;
+}
+
 export interface ElectronSyncOutboxSummary {
-  legacyQueueCount: number;
   syncOperationCount: number;
   requestQueueCount: number;
   conflictCount: number;
@@ -152,9 +181,6 @@ export interface ElectronAPI {
     upsertGRN: (grn: any) => Promise<any>;
     getSKUs: () => Promise<any[]>;
     upsertSKU: (sku: any) => Promise<any>;
-    getSyncQueue: () => Promise<any[]>;
-    addToSyncQueue: (operation: any) => Promise<any>;
-    clearProcessed: () => Promise<void>;
     getInfo: () => Promise<ElectronDatabaseInfo>;
     backup: () => Promise<ElectronDatabaseBackupResult>;
     switchFile: (mode: ElectronDatabaseSwitchMode) => Promise<ElectronDatabaseSwitchResult>;
@@ -178,9 +204,15 @@ export interface ElectronAPI {
   app: {
     backendUrl: string;
     version: () => Promise<string>;
+    getBuildInfo: () => Promise<RuntimeBuildInfo>;
     openExternal: (url: string) => Promise<void>;
     setAuthCache: (auth: { token: string; user: unknown }) => Promise<void>;
     clearAuthCache: () => Promise<void>;
+  };
+  logs: {
+    list: (options?: { afterId?: number; limit?: number }) => Promise<ElectronAppLogEntry[]>;
+    clear: () => Promise<void>;
+    onEntry: (callback: (entry: ElectronAppLogEntry) => void) => () => void;
   };
   network: {
     isOnline: () => boolean;

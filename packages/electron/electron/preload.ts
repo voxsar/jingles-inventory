@@ -42,10 +42,6 @@ const electronAPI = {
       ipcRenderer.invoke('db:grns:upsert', grn),
     getSKUs: () => ipcRenderer.invoke('db:skus:get'),
     upsertSKU: (sku: any) => ipcRenderer.invoke('db:skus:upsert', sku),
-    getSyncQueue: () => ipcRenderer.invoke('db:sync:getQueue'),
-    addToSyncQueue: (operation: any) =>
-      ipcRenderer.invoke('db:sync:add', operation),
-    clearProcessed: () => ipcRenderer.invoke('db:sync:clearProcessed'),
     getInfo: () => ipcRenderer.invoke('db:info'),
     backup: () => ipcRenderer.invoke('db:backup'),
     switchFile: (mode: 'new' | 'existing' | 'default') =>
@@ -82,10 +78,25 @@ const electronAPI = {
   app: {
     backendUrl: DESKTOP_LOCAL_API_URL,
     version: () => ipcRenderer.invoke('app:version'),
+    getBuildInfo: () => ipcRenderer.invoke('app:build-info'),
     openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
     setAuthCache: (auth: { token: string; user: unknown }) =>
       ipcRenderer.invoke('app:set-auth-cache', auth),
     clearAuthCache: () => ipcRenderer.invoke('app:clear-auth-cache'),
+  },
+
+  logs: {
+    list: (options?: { afterId?: number; limit?: number }) =>
+      ipcRenderer.invoke('logs:list', options),
+    clear: () => ipcRenderer.invoke('logs:clear'),
+    onEntry: (callback: (entry: unknown) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, entry: unknown) => callback(entry);
+      ipcRenderer.on('logs:entry', listener);
+
+      return () => {
+        ipcRenderer.removeListener('logs:entry', listener);
+      };
+    },
   },
 
   // Online/offline detection

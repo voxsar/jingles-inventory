@@ -922,16 +922,6 @@ async function seedPricingOverlays() {
 }
 
 async function seedAuxiliaryRecords(users: Record<string, string>) {
-	await prisma.syncQueue.create({
-		data: {
-			clientId: 'offline-terminal-01',
-			operation: 'INVENTORY_UPSERT',
-			payload: { skuCode: 'SKU-HUB-100', quantity: 3, state: 'Reserved' },
-			status: 'Pending',
-			conflictFlag: false,
-		},
-	});
-
 	await prisma.auditLog.create({
 		data: {
 			userId: users['admin@theredsun.org'],

@@ -25,6 +25,7 @@ import reportsRoutes from './routes/reports';
 import dashboardRoutes from './routes/dashboard';
 import spaceRoutes from './routes/space';
 import syncRoutes from './routes/sync';
+import runtimeRoutes from './routes/runtime';
 import categoryRoutes from './routes/categories';
 import settingsRoutes from './routes/settings';
 import branchRoutes from './routes/branches';
@@ -102,6 +103,7 @@ export function createApp() {
 	app.use('/api/dashboard', dashboardRoutes);
 	app.use('/api/space', spaceRoutes);
 	app.use('/api/sync', syncRoutes);
+	app.use('/api/runtime', runtimeRoutes);
 	app.use('/api/categories', categoryRoutes);
 	app.use('/api/settings', settingsRoutes);
 	app.use('/api/branches', branchRoutes);

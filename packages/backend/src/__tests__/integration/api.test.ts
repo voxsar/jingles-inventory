@@ -29,6 +29,18 @@ describe('GET /health', () => {
   });
 });
 
+describe('GET /api/runtime/build', () => {
+  it('returns build metadata for this backend', async () => {
+    const res = await request(app).get('/api/runtime/build');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+    expect(res.body.data).toMatchObject({
+      packageName: '@jingles/backend',
+      appVersion: expect.any(String),
+    });
+  });
+});
+
 describe('POST /api/auth/login', () => {
   it('returns 400 for missing email', async () => {
     const res = await request(app)

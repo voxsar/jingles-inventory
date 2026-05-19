@@ -590,18 +590,6 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   timestamp: 'timestamp'
 };
 
-exports.Prisma.SyncQueueScalarFieldEnum = {
-  id: 'id',
-  clientId: 'clientId',
-  operation: 'operation',
-  payload: 'payload',
-  status: 'status',
-  createdAt: 'createdAt',
-  processedAt: 'processedAt',
-  conflictFlag: 'conflictFlag',
-  conflictNotes: 'conflictNotes'
-};
-
 exports.Prisma.SyncOperationLogScalarFieldEnum = {
   id: 'id',
   clientId: 'clientId',
@@ -725,7 +713,6 @@ exports.Prisma.ModelName = {
   ImportJob: 'ImportJob',
   ImportRecord: 'ImportRecord',
   AuditLog: 'AuditLog',
-  SyncQueue: 'SyncQueue',
   SyncOperationLog: 'SyncOperationLog',
   SyncConflict: 'SyncConflict',
   SyncServerSequence: 'SyncServerSequence',

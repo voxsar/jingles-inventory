@@ -1,17 +1,13 @@
 import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 import {
   FAILED_PERMANENT_STATUS,
-  addToSyncQueue,
   applyReplicaMutation,
-  clearProcessedQueue,
   clearProcessedRequestSyncQueue,
   deleteInventoryRecord,
   getConfig,
   getPendingSyncConflicts,
   getPendingSyncConflictDetailById,
   getPendingSyncConflictDetails,
-  getPendingSyncQueue,
   getPendingSyncOperationLogs,
   getPendingRequestSyncQueue,
   getSyncOutboxSummary,
@@ -22,7 +18,6 @@ import {
   markSyncOperationLogConflict,
   markSyncOperationLogFailed,
   markSyncOperationLogProcessed,
-  markSyncProcessed,
   pruneFailedPermanentOutbox,
   replaceReplicaSnapshot,
   setConfig,
@@ -152,7 +147,6 @@ type ElectronSyncConflictEntry = {
 
 type ElectronSyncOutboxSnapshot = {
   summary: {
-    legacyQueueCount: number;
     syncOperationCount: number;
     requestQueueCount: number;
     conflictCount: number;
@@ -1133,21 +1127,15 @@ export function getSyncOutbox(): ElectronSyncOutboxSnapshot {
   const conflicts = (getPendingSyncConflictDetails() as SyncConflictDetailRecord[]).map(
     mapConflictEntry
   );
-  const legacyQueueCount = getPendingSyncQueue().length;
   const syncOperationCount = (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length;
   const requestQueueCount = (getPendingRequestSyncQueue() as QueuedRequestRecord[]).length;
 
   return {
     summary: {
-      legacyQueueCount,
       syncOperationCount,
       requestQueueCount,
       conflictCount: conflicts.length,
-      totalCount:
-        legacyQueueCount +
-        syncOperationCount +
-        requestQueueCount +
-        conflicts.length,
+      totalCount: syncOperationCount + requestQueueCount + conflicts.length,
     },
     conflicts,
   };
@@ -1449,68 +1437,6 @@ export function syncPullOnly() {
   return syncAll({ forcePull: true, mode: 'pull_only' });
 }
 
-async function pushLegacySyncQueue(
-  serverUrl: string,
-  token: string,
-  queuedOps = getPendingSyncQueue()
-) {
-  const result = {
-    pushed: 0,
-    conflicts: 0,
-    errors: [] as string[],
-  };
-
-  if (queuedOps.length === 0) {
-    return result;
-  }
-
-  try {
-    const response = await fetch(`${serverUrl}/api/sync/push`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        clientId: syncConfig?.clientId,
-        operations: queuedOps.map((operation: any) => ({
-          ...operation,
-          payload: parseJsonValue(operation.payload, {}),
-        })),
-      }),
-    });
-
-    if (!response.ok) {
-      result.errors.push(await readErrorMessage(response));
-      return result;
-    }
-
-    const payload = (await response.json()) as {
-      data?: { processed?: Array<{ id: string; status: 'Processed' | 'Conflict' | 'Failed'; conflictNotes?: string; error?: string }> };
-    };
-    const processed = payload.data?.processed ?? [];
-
-    for (const item of processed) {
-      if (item.status === 'Processed') {
-        markSyncProcessed(item.id, 'Processed');
-        result.pushed++;
-      } else if (item.status === 'Conflict') {
-        markSyncProcessed(item.id, 'Conflict', item.conflictNotes);
-        result.conflicts++;
-      } else {
-        markSyncProcessed(item.id, 'failed_permanent', item.error ?? 'Unknown error');
-        result.errors.push(`Legacy sync operation ${item.id} failed: ${item.error ?? 'Unknown error'}`);
-      }
-    }
-
-    clearProcessedQueue();
-  } catch (error: any) {
-    result.errors.push(`Legacy sync push failed: ${error.message}`);
-  }
-
-  return result;
-}
-
 async function pushSyncV2OperationLog(
   serverUrl: string,
   token: string,
@@ -1689,11 +1615,9 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
     blockPull: false,
   };
   const queuedSyncOperations = getPendingSyncOperationLogs() as QueuedSyncOperationRecord[];
-  const queuedLegacyOps = getPendingSyncQueue();
   const queuedRequests = getPendingRequestSyncQueue() as QueuedRequestRecord[];
   const syncOperationWorkUnits = queuedSyncOperations.length;
-  const legacyWorkUnits = queuedLegacyOps.length;
-  const totalWorkUnits = syncOperationWorkUnits + legacyWorkUnits + queuedRequests.length;
+  const totalWorkUnits = syncOperationWorkUnits + queuedRequests.length;
   let processedWorkUnits = 0;
 
   const publishPushProgress = (detail?: string) => {
@@ -1722,16 +1646,6 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
   }
   processedWorkUnits += syncOperationWorkUnits;
   publishPushProgress(syncV2Result.errors[0]);
-
-  const legacyResult = await pushLegacySyncQueue(syncConfig.serverUrl, token, queuedLegacyOps);
-  result.pushed += legacyResult.pushed;
-  result.conflicts += legacyResult.conflicts;
-  result.errors.push(...legacyResult.errors);
-  if (getPendingSyncQueue().length > 0) {
-    result.blockPull = true;
-  }
-  processedWorkUnits += legacyWorkUnits;
-  publishPushProgress(legacyResult.errors[0]);
 
   for (const queuedRequest of queuedRequests) {
     try {
@@ -1951,19 +1865,6 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
   return result;
 }
 
-export function queueOperation(operation: string, payload: any) {
-  const clientId = getConfig('clientId') ?? uuidv4();
-  setConfig('clientId', clientId);
-
-  addToSyncQueue({
-    id: uuidv4(),
-    client_id: clientId,
-    operation,
-    payload,
-  });
-  refreshOutboxState();
-}
-
 function clearRealtimeReconnectTimer() {
   if (!syncWebSocketReconnectTimer) {
     return;
@@ -1997,7 +1898,6 @@ function closeRealtimeSyncSocket() {
 
 function hasPendingLocalChanges() {
   return (
-    getPendingSyncQueue().length > 0 ||
     getPendingRequestSyncQueue().length > 0 ||
     (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length > 0 ||
     (getPendingSyncConflicts() as QueuedSyncConflictRecord[]).length > 0

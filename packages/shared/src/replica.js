@@ -38,7 +38,6 @@ exports.REPLICA_TABLES = [
     'import_jobs',
     'import_records',
     'audit_logs',
-    'sync_queue',
     'status_options',
     'dashboard_stats',
 ];

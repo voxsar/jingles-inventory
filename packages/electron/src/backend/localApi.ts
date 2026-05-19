@@ -18,6 +18,7 @@ import {
   getDesktopLocalApiUrl,
 } from './localApiConfig';
 import { getConfig, setConfig } from '../offline/localDB';
+import { appendDesktopLogLines } from '../runtime/logStore';
 import { configureSyncEngine, startAutoSync, stopAutoSync } from '../sync/syncEngine';
 
 type LocalApiServer = {
@@ -62,11 +63,15 @@ function loadDesktopEnvironment() {
 
 function pipeChildLogs(child: LocalBackendChild) {
   child.stdout?.on('data', (chunk) => {
-    writeToParentStream(process.stdout, `[DesktopBackend] ${chunk}`);
+    const message = String(chunk);
+    appendDesktopLogLines('backend', 'info', message);
+    writeToParentStream(process.stdout, `[DesktopBackend] ${message}`);
   });
 
   child.stderr?.on('data', (chunk) => {
-    writeToParentStream(process.stderr, `[DesktopBackend] ${chunk}`);
+    const message = String(chunk);
+    appendDesktopLogLines('backend', 'error', message);
+    writeToParentStream(process.stderr, `[DesktopBackend] ${message}`);
   });
 }
 

@@ -142,7 +142,6 @@ export default function DesktopOutboxControl() {
   }
 
   const summary = snapshot?.summary ?? {
-    legacyQueueCount: 0,
     syncOperationCount: 0,
     requestQueueCount: 0,
     conflictCount: 0,
@@ -205,15 +204,7 @@ export default function DesktopOutboxControl() {
                 </div>
               )}
 
-              <div className="grid gap-3 sm:grid-cols-4">
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
-                    Legacy Queue
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-gray-900">
-                    {summary.legacyQueueCount}
-                  </p>
-                </div>
+              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
                     Sync Ops

@@ -16,14 +16,11 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import {
   backupLocalDatabase,
-  addToSyncQueue,
-  clearProcessedQueue,
   deleteConfig,
   setConfig,
   getGRNs,
   getInventoryRecords,
   getSKUs,
-  getSyncQueue,
   initLocalDB,
   upsertGRN,
   upsertInventoryRecord,
@@ -51,6 +48,14 @@ import {
   syncPullOnly,
   syncPushOnly,
 } from '../src/sync/syncEngine';
+import { getDesktopBuildInfo } from '../src/runtime/buildInfo';
+import {
+  appendDesktopLog,
+  clearDesktopLogs,
+  installMainProcessConsoleCapture,
+  listDesktopLogs,
+  subscribeDesktopLogs,
+} from '../src/runtime/logStore';
 
 let mainWindow: BrowserWindow | null = null;
 let localApiServer: Awaited<ReturnType<typeof startLocalApiServer>> | null = null;
@@ -58,9 +63,13 @@ let tray: Tray | null = null;
 let isQuitting = false;
 let hasShownBackgroundNotice = false;
 let unsubscribeSyncHealth: (() => void) | null = null;
+let unsubscribeDesktopLogs: (() => void) | null = null;
 
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL ?? 'http://localhost:5173';
 const SYNC_HEALTH_EVENT = 'sync:health-changed';
+const LOG_ENTRY_EVENT = 'logs:entry';
+
+installMainProcessConsoleCapture();
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -466,6 +475,12 @@ async function createWindow() {
       }
     }
   );
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const mappedLevel =
+      level === 2 ? 'error' : level === 1 ? 'warn' : level === 3 ? 'debug' : 'info';
+    const location = sourceId ? ` (${sourceId}:${line})` : '';
+    appendDesktopLog('renderer', mappedLevel, `${message}${location}`);
+  });
 
   const rendererMode = await loadRenderer(mainWindow);
   if (rendererMode === 'dev-server') {
@@ -506,6 +521,15 @@ app.whenReady().then(async () => {
     unsubscribeSyncHealth = subscribeSyncHealth((syncHealth) => {
       broadcastSyncHealth(syncHealth);
     });
+    unsubscribeDesktopLogs = subscribeDesktopLogs((entry) => {
+      for (const window of BrowserWindow.getAllWindows()) {
+        if (window.isDestroyed()) {
+          continue;
+        }
+
+        window.webContents.send(LOG_ENTRY_EVENT, entry);
+      }
+    });
 
     await createWindow();
   } catch (error) {
@@ -532,6 +556,8 @@ app.on('before-quit', () => {
   stopAutoSync();
   unsubscribeSyncHealth?.();
   unsubscribeSyncHealth = null;
+  unsubscribeDesktopLogs?.();
+  unsubscribeDesktopLogs = null;
 
   if (tray) {
     tray.destroy();
@@ -579,21 +605,6 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
     const result = upsertSKU(sku);
     broadcastSyncHealth();
     return result;
-  });
-
-  ipcMain.handle('db:sync:getQueue', () => {
-    return getSyncQueue();
-  });
-
-  ipcMain.handle('db:sync:add', (_event, operation: any) => {
-    const result = addToSyncQueue(operation);
-    broadcastSyncHealth();
-    return result;
-  });
-
-  ipcMain.handle('db:sync:clearProcessed', () => {
-    clearProcessedQueue();
-    broadcastSyncHealth();
   });
 
   ipcMain.handle('db:info', () => {
@@ -708,8 +719,23 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
     return app.getVersion();
   });
 
+  ipcMain.handle('app:build-info', () => {
+    return getDesktopBuildInfo();
+  });
+
   ipcMain.on('app:backend-url-sync', (event) => {
     event.returnValue = localApiServer?.url ?? getDesktopLocalApiUrl();
+  });
+
+  ipcMain.handle(
+    'logs:list',
+    (_event, options?: { afterId?: number; limit?: number }) => {
+      return listDesktopLogs(options);
+    }
+  );
+
+  ipcMain.handle('logs:clear', () => {
+    clearDesktopLogs();
   });
 
   ipcMain.handle('app:open-external', (_event, url: string) => {

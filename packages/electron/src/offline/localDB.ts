@@ -119,22 +119,17 @@ function runMigrations(): void {
   ensureColumnExists(database, 'grns', 'dirty', 'INTEGER DEFAULT 0');
   ensureColumnExists(database, 'status_options', 'server_seq', 'INTEGER');
   ensureColumnExists(database, 'status_options', 'deleted_at', 'TEXT');
-  ensureColumnExists(database, 'sync_queue', 'retry_count', 'INTEGER DEFAULT 0');
+  dropLegacySyncQueueTable(database);
   migrateLegacyFailedStatuses(database);
 }
 
-function migrateLegacyFailedStatuses(database: Database.Database): void {
-  database
-    .prepare(
-      `
-        UPDATE sync_queue
-        SET status = ?,
-            processed_at = COALESCE(processed_at, datetime('now'))
-        WHERE status = 'Failed'
-      `
-    )
-    .run(FAILED_PERMANENT_STATUS);
+function dropLegacySyncQueueTable(database: Database.Database): void {
+  database.exec(`DROP TABLE IF EXISTS sync_queue`);
+  tableColumnCache.delete('sync_queue');
+  tablePrimaryKeyCache.delete('sync_queue');
+}
 
+function migrateLegacyFailedStatuses(database: Database.Database): void {
   database
     .prepare(
       `
@@ -719,57 +714,6 @@ export function upsertGRN(grn: any, options: UpsertOptions = {}) {
   return stmt.run(payload);
 }
 
-// Sync Queue CRUD
-export function getSyncQueue() {
-  return getDB()
-    .prepare(
-      `
-        SELECT *
-        FROM sync_queue
-        WHERE status <> 'Processed'
-        ORDER BY created_at ASC
-      `
-    )
-    .all();
-}
-
-export function getPendingSyncQueue() {
-  return getDB()
-    .prepare(
-      `
-        SELECT *
-        FROM sync_queue
-        WHERE status = 'Pending'
-        ORDER BY created_at ASC
-      `
-    )
-    .all();
-}
-
-export function addToSyncQueue(operation: any) {
-  const database = getDB();
-  const stmt = database.prepare(`
-    INSERT INTO sync_queue (id, client_id, operation, payload, status, created_at)
-    VALUES (@id, @client_id, @operation, @payload, 'Pending', datetime('now'))
-  `);
-  return stmt.run({ ...operation, payload: typeof operation.payload === 'string' ? operation.payload : JSON.stringify(operation.payload) });
-}
-
-export function markSyncProcessed(
-  id: string,
-  status: 'Processed' | 'Conflict' | typeof FAILED_PERMANENT_STATUS,
-  notes?: string
-) {
-  const database = getDB();
-  database.prepare(`
-    UPDATE sync_queue SET status = ?, processed_at = datetime('now'), conflict_notes = ? WHERE id = ?
-  `).run(status, notes ?? null, id);
-}
-
-export function clearProcessedQueue() {
-  getDB().prepare("DELETE FROM sync_queue WHERE status = 'Processed'").run();
-}
-
 export function getPendingSyncOperationLogs() {
   return getDB()
     .prepare(
@@ -1020,9 +964,7 @@ export function pruneFailedPermanentOutbox(retentionDays: number) {
   const database = getDB();
   const normalizedDays = Math.max(0, Math.trunc(retentionDays));
 
-  const deleteFromTable = (
-    tableName: 'sync_queue' | 'request_sync_queue' | 'sync_operation_log'
-  ) => {
+  const deleteFromTable = (tableName: 'request_sync_queue' | 'sync_operation_log') => {
     if (normalizedDays === 0) {
       return database
         .prepare(`DELETE FROM ${tableName} WHERE status = ?`)
@@ -1040,11 +982,7 @@ export function pruneFailedPermanentOutbox(retentionDays: number) {
       .run(FAILED_PERMANENT_STATUS, `-${normalizedDays} days`).changes;
   };
 
-  return (
-    deleteFromTable('sync_queue') +
-    deleteFromTable('request_sync_queue') +
-    deleteFromTable('sync_operation_log')
-  );
+  return deleteFromTable('request_sync_queue') + deleteFromTable('sync_operation_log');
 }
 
 function readCount(query: string, ...params: Array<string | number>) {
@@ -1055,14 +993,11 @@ function readCount(query: string, ...params: Array<string | number>) {
 export function getSyncOutboxSummary(): SyncOutboxSummary {
   return {
     pending:
-      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = 'Pending'`) +
       readCount(`SELECT COUNT(*) AS count FROM request_sync_queue WHERE status = 'Pending'`) +
       readCount(`SELECT COUNT(*) AS count FROM sync_operation_log WHERE status = 'Pending'`),
     conflicts:
-      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = 'Conflict'`) +
       readCount(`SELECT COUNT(*) AS count FROM sync_conflicts WHERE status = 'Pending'`),
     failedPermanent:
-      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = ?`, FAILED_PERMANENT_STATUS) +
       readCount(
         `SELECT COUNT(*) AS count FROM request_sync_queue WHERE status = ?`,
         FAILED_PERMANENT_STATUS

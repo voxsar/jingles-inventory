@@ -328,8 +328,9 @@ GET    /api/space/stacking-suggestions  - Get stacking suggestions
 
 ### Offline Sync
 ```
-POST   /api/sync/push       - Push offline changes to server
-GET    /api/sync/pull       - Pull server changes to client
+POST   /api/sync/push-ops   - Push sync-v2 operations to server
+GET    /api/sync/log        - Pull sync-v2 change log for replica catch-up
+GET    /api/sync/replica/export - Export full replica snapshot for desktop replacement
 ```
 
 ## Role-Based Access Control
