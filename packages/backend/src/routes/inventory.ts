@@ -104,10 +104,10 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			where.floor = { branchId };
 		}
 		if (boxId) where.boxId = boxId;
-		// Location-level text search (batch number, box/shelf/floor codes) always
-		// uses Prisma contains since that data lives in small related tables and
-		// LIKE is fast enough for those fields.
-		if (search && ftsSkuIds === null) {
+		// Location-level text search (batch number, box/shelf/floor codes) uses
+		// Prisma contains; these are small related tables so LIKE is fast.
+		// Applied in both FTS and non-FTS modes for consistent search behaviour.
+		if (search) {
 			where.OR = [
 				{ batch: { batchNumber: { contains: search, mode: 'insensitive' } } },
 				{ box: { code: { contains: search, mode: 'insensitive' } } },
