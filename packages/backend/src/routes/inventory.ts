@@ -15,6 +15,7 @@ import {
 	type SyncV2ChangeDescriptor,
 } from '../sync/syncV2';
 import logger from '../utils/logger';
+import { searchSKUIdsFts } from '../utils/localSearch';
 
 const router = Router();
 
@@ -70,6 +71,9 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		const pageNum = parseInt(page);
 		const pageSizeNum = parseInt(pageSize);
 
+		// In local replica (Electron) mode use FTS5 for fast SKU name/code search.
+		const ftsSkuIds = search ? await searchSKUIdsFts(search) : null;
+
 		const where: Prisma.InventoryRecordWhereInput = {};
 		if (state) where.state = state as InventoryState;
 		if (skuId) where.skuId = skuId;
@@ -78,11 +82,15 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			if (vendorId) skuWhere.vendorId = vendorId;
 			if (categoryId) skuWhere.categoryId = categoryId;
 			if (search) {
-				skuWhere.OR = [
-					{ skuCode: { contains: search, mode: 'insensitive' } },
-					{ name: { contains: search, mode: 'insensitive' } },
-					{ description: { contains: search, mode: 'insensitive' } },
-				];
+				if (ftsSkuIds !== null) {
+					skuWhere.id = { in: ftsSkuIds };
+				} else {
+					skuWhere.OR = [
+						{ skuCode: { contains: search, mode: 'insensitive' } },
+						{ name: { contains: search, mode: 'insensitive' } },
+						{ description: { contains: search, mode: 'insensitive' } },
+					];
+				}
 			}
 			where.sku = skuWhere;
 		}
@@ -96,7 +104,10 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			where.floor = { branchId };
 		}
 		if (boxId) where.boxId = boxId;
-		if (search) {
+		// Location-level text search (batch number, box/shelf/floor codes) always
+		// uses Prisma contains since that data lives in small related tables and
+		// LIKE is fast enough for those fields.
+		if (search && ftsSkuIds === null) {
 			where.OR = [
 				{ batch: { batchNumber: { contains: search, mode: 'insensitive' } } },
 				{ box: { code: { contains: search, mode: 'insensitive' } } },

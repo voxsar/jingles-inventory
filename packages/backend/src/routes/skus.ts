@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import { searchSKUIdsFts } from '../utils/localSearch';
 
 const router = Router();
 
@@ -418,21 +419,28 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 	const skip = (parseInt(page) - 1) * parseInt(pageSize);
 
+	// In local replica (Electron) mode use FTS5 for fast full-text search.
+	// When the FTS table is unavailable the helper returns null and we fall back
+	// to the regular Prisma contains filter.
+	const ftsSkuIds = search ? await searchSKUIdsFts(search) : null;
+
 	const where: Prisma.SKUWhereInput = {
 		...(vendorId ? { skuVendors: { some: { vendorId } } } : {}),
 		...(categoryId ? { categoryId } : {}),
 		...(unitOfMeasureId ? { unitOfMeasureId } : {}),
 		...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
 		...(search
-			? {
-				OR: [
-					{ name: { contains: search, mode: 'insensitive' } },
-					{ skuCode: { contains: search, mode: 'insensitive' } },
-					{ description: { contains: search, mode: 'insensitive' } },
-					{ vendor: { name: { contains: search, mode: 'insensitive' } } },
-					{ category: { name: { contains: search, mode: 'insensitive' } } },
-				],
-			}
+			? ftsSkuIds !== null
+				? { id: { in: ftsSkuIds } }
+				: {
+					OR: [
+						{ name: { contains: search, mode: 'insensitive' } },
+						{ skuCode: { contains: search, mode: 'insensitive' } },
+						{ description: { contains: search, mode: 'insensitive' } },
+						{ vendor: { name: { contains: search, mode: 'insensitive' } } },
+						{ category: { name: { contains: search, mode: 'insensitive' } } },
+					],
+				}
 			: {}),
 	};
 
