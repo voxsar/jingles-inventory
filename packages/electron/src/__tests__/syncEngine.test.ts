@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   configureSyncEngine,
+  getSyncHealth,
   getSyncOutbox,
   processRealtimeSyncEvent,
   queueOperation,
   resolveSyncConflict,
   stopAutoSync,
+  subscribeSyncHealth,
   syncAll,
 } from '../sync/syncEngine';
 
@@ -197,6 +199,86 @@ describe('syncEngine', () => {
       localPayload: { id: 'inv-001', quantity: 8 },
       serverPayload: { id: 'inv-001', quantity: 12, version: 5 },
     });
+  });
+
+  it('returns a sync health snapshot with outbox counts and cursor lag', () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'syncV2Cursor') {
+        return '4';
+      }
+
+      if (key === 'syncV2LastServerSeq') {
+        return '9';
+      }
+
+      return null;
+    });
+    (getSyncOutboxSummary as ReturnType<typeof vi.fn>).mockReturnValue({
+      pending: 3,
+      conflicts: 2,
+      failedPermanent: 1,
+    });
+    configureSyncEngine({
+      serverUrl: 'http://localhost:3001',
+      clientId: 'client-test-001',
+      getToken: () => 'test-token',
+    });
+
+    const health = getSyncHealth();
+
+    expect(health).toMatchObject({
+      pendingCount: 3,
+      conflictCount: 2,
+      failedPermanentCount: 1,
+      cursorLag: 5,
+      localCursor: 4,
+      latestServerSeq: 9,
+      running: false,
+    });
+  });
+
+  it('publishes sync health updates while a sync run is active', async () => {
+    let resolveLogFetch: ((value: unknown) => void) | undefined;
+    fetchMock
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveLogFetch = resolve;
+        })
+      )
+      .mockResolvedValueOnce(createJsonResponse({ data: { users: [] } }));
+
+    const listener = vi.fn();
+    const unsubscribe = subscribeSyncHealth(listener);
+
+    const syncPromise = syncAll({ forcePull: true });
+    await Promise.resolve();
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        running: true,
+      })
+    );
+
+    resolveLogFetch?.(
+      createJsonResponse({
+        data: {
+          changes: [],
+          lastServerSeq: 0,
+          hasMore: false,
+        },
+      })
+    );
+
+    await syncPromise;
+
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({
+        running: false,
+        lastSuccessfulSyncAt: expect.any(String),
+      })
+    );
+
+    unsubscribe();
   });
 
   it('keeps the local version by replaying the change and marking the conflict processed', async () => {

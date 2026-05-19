@@ -150,10 +150,11 @@ export async function getStatusesByKeys(specialKeys: string[]): Promise<Map<stri
 	if (uncachedKeys.length > 0) {
 		const statusModel = (prisma as any).statusOption;
 		if (statusModel?.findMany) {
-			const statuses = await statusModel.findMany({
+			const statusesResult = await statusModel.findMany({
 				where: { specialKey: { in: uncachedKeys }, isActive: true, deletedAt: null },
 				select: { specialKey: true, value: true },
 			});
+			const statuses = Array.isArray(statusesResult) ? statusesResult : [];
 
 			for (const status of statuses) {
 				if (status.specialKey) {
@@ -192,10 +193,11 @@ export async function preloadStatusCache(): Promise<void> {
 		return;
 	}
 
-	const statuses = await statusModel.findMany({
+	const statusesResult = await statusModel.findMany({
 		where: { specialKey: { not: null }, isActive: true, deletedAt: null },
 		select: { specialKey: true, value: true },
 	});
+	const statuses = Array.isArray(statusesResult) ? statusesResult : [];
 
 	for (const status of statuses) {
 		if (status.specialKey) {

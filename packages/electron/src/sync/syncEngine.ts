@@ -177,6 +177,21 @@ export interface SyncStatus {
   lastResult: SyncRunResult | null;
 }
 
+export interface SyncHealth {
+  pendingCount: number;
+  conflictCount: number;
+  failedPermanentCount: number;
+  lastSuccessfulSyncAt: string | null;
+  lastSyncError: string | null;
+  lastRealtimeError: string | null;
+  running: boolean;
+  websocketConnected: boolean;
+  cursorLag: number;
+  localCursor: number;
+  latestServerSeq: number;
+  failedPermanentPolicy: FailedPermanentPolicyDescriptor;
+}
+
 const EMPTY_OUTBOX_SUMMARY: SyncOutboxSummary = {
   pending: 0,
   conflicts: 0,
@@ -184,6 +199,7 @@ const EMPTY_OUTBOX_SUMMARY: SyncOutboxSummary = {
 };
 
 const DEFAULT_FAILED_PERMANENT_RETENTION_DAYS = 7;
+const SYNC_V2_SERVER_SEQ_CONFIG_KEY = 'syncV2LastServerSeq';
 
 function resolveFailedPermanentPolicy(): FailedPermanentPolicy {
   const normalizedMode = process.env.ELECTRON_SYNC_FAILED_PERMANENT_POLICY?.trim()
@@ -228,6 +244,10 @@ let syncWebSocketReconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let realtimeReconnectDelayMs = 1000;
 let needsFullReplicaPull = true;
 let autoSyncEnabled = false;
+let syncHealthInitialized = false;
+let latestObservedServerSeq: number | null = null;
+let lastPublishedSyncHealth: SyncHealth | null = null;
+const syncHealthListeners = new Set<(health: SyncHealth) => void>();
 let syncStatus: SyncStatus = {
   configured: false,
   running: false,
@@ -254,16 +274,143 @@ function cloneResult(result: SyncRunResult): SyncRunResult {
   };
 }
 
-function refreshOutboxState() {
+function cloneFailedPermanentPolicy(
+  descriptor: FailedPermanentPolicyDescriptor
+): FailedPermanentPolicyDescriptor {
+  return {
+    mode: descriptor.mode,
+    retainDays: descriptor.retainDays,
+  };
+}
+
+function cloneSyncHealth(health: SyncHealth): SyncHealth {
+  return {
+    ...health,
+    failedPermanentPolicy: cloneFailedPermanentPolicy(health.failedPermanentPolicy),
+  };
+}
+
+function readConfigNumber(key: string): number | null {
+  const rawValue = getConfig(key);
+  if (!rawValue) {
+    return null;
+  }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : null;
+}
+
+function ensureSyncHealthInitialized() {
+  if (syncHealthInitialized) {
+    return;
+  }
+
+  latestObservedServerSeq = readConfigNumber(SYNC_V2_SERVER_SEQ_CONFIG_KEY);
+  syncHealthInitialized = true;
+}
+
+function buildSyncHealthSnapshot(): SyncHealth {
+  ensureSyncHealthInitialized();
+
+  const localCursor = getSyncV2Cursor();
+  const latestServerSeq = Math.max(localCursor, latestObservedServerSeq ?? 0);
+
+  return {
+    pendingCount: syncStatus.outbox.pending,
+    conflictCount: syncStatus.outbox.conflicts,
+    failedPermanentCount: syncStatus.outbox.failedPermanent,
+    lastSuccessfulSyncAt: syncStatus.lastSuccessfulSyncAt,
+    lastSyncError: syncStatus.lastResult?.errors[0] ?? null,
+    lastRealtimeError: syncStatus.lastRealtimeError,
+    running: syncStatus.running,
+    websocketConnected: syncStatus.websocketConnected,
+    cursorLag: Math.max(0, latestServerSeq - localCursor),
+    localCursor,
+    latestServerSeq,
+    failedPermanentPolicy: cloneFailedPermanentPolicy(syncStatus.failedPermanentPolicy),
+  };
+}
+
+function syncHealthEquals(left: SyncHealth | null, right: SyncHealth) {
+  return (
+    left !== null &&
+    left.pendingCount === right.pendingCount &&
+    left.conflictCount === right.conflictCount &&
+    left.failedPermanentCount === right.failedPermanentCount &&
+    left.lastSuccessfulSyncAt === right.lastSuccessfulSyncAt &&
+    left.lastSyncError === right.lastSyncError &&
+    left.lastRealtimeError === right.lastRealtimeError &&
+    left.running === right.running &&
+    left.websocketConnected === right.websocketConnected &&
+    left.cursorLag === right.cursorLag &&
+    left.localCursor === right.localCursor &&
+    left.latestServerSeq === right.latestServerSeq &&
+    left.failedPermanentPolicy.mode === right.failedPermanentPolicy.mode &&
+    left.failedPermanentPolicy.retainDays === right.failedPermanentPolicy.retainDays
+  );
+}
+
+function publishSyncHealthIfChanged() {
+  const nextHealth = buildSyncHealthSnapshot();
+  if (syncHealthEquals(lastPublishedSyncHealth, nextHealth)) {
+    return;
+  }
+
+  lastPublishedSyncHealth = cloneSyncHealth(nextHealth);
+  for (const listener of syncHealthListeners) {
+    listener(cloneSyncHealth(nextHealth));
+  }
+}
+
+function updateObservedServerSeq(
+  seq: number | null | undefined,
+  options: { publish?: boolean } = {}
+) {
+  if (typeof seq !== 'number' || !Number.isFinite(seq) || seq < 0) {
+    return;
+  }
+
+  ensureSyncHealthInitialized();
+
+  const normalizedSeq = Math.max(0, Math.trunc(seq));
+  if (latestObservedServerSeq !== null && normalizedSeq <= latestObservedServerSeq) {
+    return;
+  }
+
+  latestObservedServerSeq = normalizedSeq;
+  setConfig(SYNC_V2_SERVER_SEQ_CONFIG_KEY, String(normalizedSeq));
+
+  if (options.publish !== false) {
+    publishSyncHealthIfChanged();
+  }
+}
+
+function applySyncStatusPatch(
+  patch: Partial<SyncStatus>,
+  options: { publish?: boolean } = {}
+) {
+  syncStatus = {
+    ...syncStatus,
+    ...patch,
+  };
+
+  if (options.publish !== false) {
+    publishSyncHealthIfChanged();
+  }
+}
+
+function refreshOutboxState(options: { publish?: boolean } = {}) {
   if (FAILED_PERMANENT_POLICY.mode !== 'hold') {
     pruneFailedPermanentOutbox(FAILED_PERMANENT_POLICY.retainDays ?? 0);
   }
 
-  syncStatus = {
-    ...syncStatus,
-    outbox: getSyncOutboxSummary(),
-    failedPermanentPolicy: getFailedPermanentPolicyDescriptor(),
-  };
+  applySyncStatusPatch(
+    {
+      outbox: getSyncOutboxSummary(),
+      failedPermanentPolicy: getFailedPermanentPolicyDescriptor(),
+    },
+    options
+  );
 }
 
 function parseJsonValue<T>(value: string | null | undefined, fallback: T): T {
@@ -712,18 +859,25 @@ function getSyncV2Cursor() {
 }
 
 function setSyncV2Cursor(seq: number) {
-  setConfig('syncV2Cursor', String(Math.max(0, Math.trunc(seq))));
+  const normalizedSeq = Math.max(0, Math.trunc(seq));
+  setConfig('syncV2Cursor', String(normalizedSeq));
+  updateObservedServerSeq(normalizedSeq, { publish: false });
+  publishSyncHealthIfChanged();
 }
 
 export function configureSyncEngine(config: SyncConfig) {
   syncConfig = config;
   needsFullReplicaPull = true;
-  syncStatus = {
-    ...syncStatus,
-    configured: true,
-    serverUrl: config.serverUrl,
-    clientId: config.clientId,
-  };
+  syncHealthInitialized = false;
+  lastPublishedSyncHealth = null;
+  applySyncStatusPatch(
+    {
+      configured: true,
+      serverUrl: config.serverUrl,
+      clientId: config.clientId,
+    },
+    { publish: false }
+  );
   refreshOutboxState();
 
   if (autoSyncEnabled) {
@@ -732,15 +886,31 @@ export function configureSyncEngine(config: SyncConfig) {
 }
 
 export function getSyncStatus(): SyncStatus {
-  refreshOutboxState();
+  refreshOutboxState({ publish: false });
   return {
     ...syncStatus,
     lastResult: syncStatus.lastResult ? cloneResult(syncStatus.lastResult) : null,
+    outbox: { ...syncStatus.outbox },
+    failedPermanentPolicy: cloneFailedPermanentPolicy(syncStatus.failedPermanentPolicy),
+  };
+}
+
+export function getSyncHealth(): SyncHealth {
+  refreshOutboxState({ publish: false });
+  return cloneSyncHealth(buildSyncHealthSnapshot());
+}
+
+export function subscribeSyncHealth(listener: (health: SyncHealth) => void) {
+  syncHealthListeners.add(listener);
+  listener(getSyncHealth());
+
+  return () => {
+    syncHealthListeners.delete(listener);
   };
 }
 
 export function getSyncOutbox(): ElectronSyncOutboxSnapshot {
-  refreshOutboxState();
+  refreshOutboxState({ publish: false });
 
   const conflicts = (getPendingSyncConflictDetails() as SyncConflictDetailRecord[]).map(
     mapConflictEntry
@@ -838,10 +1008,12 @@ export function startAutoSync(intervalMs = 30000) {
 
   autoSyncEnabled = true;
   needsFullReplicaPull = true;
-  syncStatus = {
-    ...syncStatus,
-    autoSyncIntervalMs: intervalMs,
-  };
+  applySyncStatusPatch(
+    {
+      autoSyncIntervalMs: intervalMs,
+    },
+    { publish: false }
+  );
   refreshOutboxState();
 
   syncInterval = setInterval(() => {
@@ -862,11 +1034,13 @@ export function stopAutoSync() {
 
   clearRealtimeReconnectTimer();
   closeRealtimeSyncSocket();
-  syncStatus = {
-    ...syncStatus,
-    autoSyncIntervalMs: null,
-    websocketConnected: false,
-  };
+  applySyncStatusPatch(
+    {
+      autoSyncIntervalMs: null,
+      websocketConnected: false,
+    },
+    { publish: false }
+  );
   refreshOutboxState();
 }
 
@@ -878,11 +1052,10 @@ export function refreshRealtimeSyncConnection() {
   }
 
   if (typeof WebSocket === 'undefined') {
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       websocketConnected: false,
       lastRealtimeError: 'WebSocket is not available in this runtime.',
-    };
+    });
     return;
   }
 
@@ -924,22 +1097,20 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
 
     if (!syncConfig) {
       result.errors.push('Sync not configured');
-      syncStatus = {
-        ...syncStatus,
+      applySyncStatusPatch({
         configured: false,
         lastResult: cloneResult(result),
-      };
+      });
       return result;
     }
 
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       configured: true,
       running: true,
       serverUrl: syncConfig.serverUrl,
       clientId: syncConfig.clientId,
       lastStartedAt: new Date().toISOString(),
-    };
+    });
 
     try {
       const pushResult = await pushChanges();
@@ -965,13 +1136,16 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
     }
 
     const completedAt = new Date().toISOString();
-    syncStatus = {
-      ...syncStatus,
-      running: false,
-      lastCompletedAt: completedAt,
-      lastSuccessfulSyncAt: result.errors.length === 0 ? completedAt : syncStatus.lastSuccessfulSyncAt,
-      lastResult: cloneResult(result),
-    };
+    applySyncStatusPatch(
+      {
+        running: false,
+        lastCompletedAt: completedAt,
+        lastSuccessfulSyncAt:
+          result.errors.length === 0 ? completedAt : syncStatus.lastSuccessfulSyncAt,
+        lastResult: cloneResult(result),
+      },
+      { publish: false }
+    );
     refreshOutboxState();
 
     return result;
@@ -1099,8 +1273,11 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
           conflict?: { message?: string; serverRecord?: Record<string, unknown> | null };
           error?: string;
         }>;
+        lastServerSeq?: number | null;
       };
     }>(response)) ?? { data: { processed: [] } };
+
+    updateObservedServerSeq(payload.data?.lastServerSeq, { publish: false });
 
     if (!response.ok && response.status !== 409) {
       const message = payload.error ?? `HTTP ${response.status}`;
@@ -1369,6 +1546,7 @@ export function queueOperation(operation: string, payload: any) {
     operation,
     payload,
   });
+  refreshOutboxState();
 }
 
 function clearRealtimeReconnectTimer() {
@@ -1460,11 +1638,10 @@ function connectRealtimeSync(target: string) {
   try {
     socket = new WebSocket(target);
   } catch (error: any) {
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       websocketConnected: false,
       lastRealtimeError: `Realtime sync failed to start: ${error.message}`,
-    };
+    });
     needsFullReplicaPull = true;
     scheduleRealtimeSyncReconnect();
     return;
@@ -1479,11 +1656,10 @@ function connectRealtimeSync(target: string) {
     }
 
     realtimeReconnectDelayMs = 1000;
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       websocketConnected: true,
       lastRealtimeError: null,
-    };
+    });
 
     if (needsFullReplicaPull && !activeSyncPromise && !hasPendingLocalChanges()) {
       void syncAll({ forcePull: true });
@@ -1495,10 +1671,9 @@ function connectRealtimeSync(target: string) {
       return;
     }
 
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       lastRealtimeError: 'Realtime sync connection error.',
-    };
+    });
   };
 
   socket.onclose = () => {
@@ -1509,10 +1684,9 @@ function connectRealtimeSync(target: string) {
     syncWebSocket = null;
     syncWebSocketTarget = null;
     needsFullReplicaPull = true;
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       websocketConnected: false,
-    };
+    });
     scheduleRealtimeSyncReconnect();
   };
 
@@ -1531,10 +1705,9 @@ function connectRealtimeSync(target: string) {
       handleRealtimeSyncEvent(payload);
     } catch (error: any) {
       needsFullReplicaPull = true;
-      syncStatus = {
-        ...syncStatus,
+      applySyncStatusPatch({
         lastRealtimeError: `Realtime sync payload parse failed: ${error.message}`,
-      };
+      });
       if (!activeSyncPromise && !hasPendingLocalChanges()) {
         void syncAll({ forcePull: true });
       }
@@ -1543,12 +1716,11 @@ function connectRealtimeSync(target: string) {
 }
 
 function handleRealtimeSyncEvent(event: ReplicaSyncEvent) {
-  syncStatus = {
-    ...syncStatus,
+  applySyncStatusPatch({
     lastRealtimeEventAt: event.emittedAt,
     lastRealtimeError:
       event.type === 'replica.snapshot-required' ? event.reason : syncStatus.lastRealtimeError,
-  };
+  });
 
   if (event.type === 'replica.ready') {
     return;
@@ -1574,10 +1746,9 @@ function handleRealtimeSyncEvent(event: ReplicaSyncEvent) {
     setConfig('lastSyncTime', event.emittedAt);
   } catch (error: any) {
     needsFullReplicaPull = true;
-    syncStatus = {
-      ...syncStatus,
+    applySyncStatusPatch({
       lastRealtimeError: `Realtime sync apply failed: ${error.message}`,
-    };
+    });
     if (!activeSyncPromise && !hasPendingLocalChanges()) {
       void syncAll({ forcePull: true });
     }

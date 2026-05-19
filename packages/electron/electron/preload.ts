@@ -42,6 +42,15 @@ const electronAPI = {
     push: () => ipcRenderer.invoke('sync:push'),
     pull: () => ipcRenderer.invoke('sync:pull'),
     getStatus: () => ipcRenderer.invoke('sync:status'),
+    getHealth: () => ipcRenderer.invoke('sync:health'),
+    onHealthChanged: (callback: (health: unknown) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, health: unknown) => callback(health);
+      ipcRenderer.on('sync:health-changed', listener);
+
+      return () => {
+        ipcRenderer.removeListener('sync:health-changed', listener);
+      };
+    },
     getOutbox: () => ipcRenderer.invoke('sync:outbox'),
     resolveConflict: (
       conflictId: string,

@@ -30,11 +30,13 @@ import {
 import { setupBarcodeIPC } from '../src/barcode/scanner';
 import { getDesktopLocalApiUrl, startLocalApiServer } from '../src/backend/localApi';
 import {
+  getSyncHealth,
   getSyncOutbox,
   getSyncStatus,
   refreshRealtimeSyncConnection,
   resolveSyncConflict,
   stopAutoSync,
+  subscribeSyncHealth,
   syncAll,
 } from '../src/sync/syncEngine';
 
@@ -43,8 +45,10 @@ let localApiServer: Awaited<ReturnType<typeof startLocalApiServer>> | null = nul
 let tray: Tray | null = null;
 let isQuitting = false;
 let hasShownBackgroundNotice = false;
+let unsubscribeSyncHealth: (() => void) | null = null;
 
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL ?? 'http://localhost:5173';
+const SYNC_HEALTH_EVENT = 'sync:health-changed';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -202,6 +206,18 @@ function refreshTrayMenu() {
   );
 }
 
+function broadcastSyncHealth(syncHealth = getSyncHealth()) {
+  refreshTrayMenu();
+
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed()) {
+      continue;
+    }
+
+    window.webContents.send(SYNC_HEALTH_EVENT, syncHealth);
+  }
+}
+
 function ensureTray() {
   if (tray && !tray.isDestroyed()) {
     return tray;
@@ -349,6 +365,9 @@ app.whenReady().then(async () => {
     setupOfflineIPC(ipcMain);
     setupLocalAssetProtocol();
     ensureTray();
+    unsubscribeSyncHealth = subscribeSyncHealth((syncHealth) => {
+      broadcastSyncHealth(syncHealth);
+    });
 
     await createWindow();
   } catch (error) {
@@ -373,6 +392,8 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   isQuitting = true;
   stopAutoSync();
+  unsubscribeSyncHealth?.();
+  unsubscribeSyncHealth = null;
 
   if (tray) {
     tray.destroy();
@@ -397,7 +418,9 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   });
 
   ipcMain.handle('db:inventory:upsert', (_event, record: any) => {
-    return upsertInventoryRecord(record, { markDirty: true });
+    const result = upsertInventoryRecord(record, { markDirty: true });
+    broadcastSyncHealth();
+    return result;
   });
 
   ipcMain.handle('db:grns:get', (_event, filters?: Record<string, any>) => {
@@ -405,7 +428,9 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   });
 
   ipcMain.handle('db:grns:upsert', (_event, grn: any) => {
-    return upsertGRN(grn, { markDirty: true });
+    const result = upsertGRN(grn, { markDirty: true });
+    broadcastSyncHealth();
+    return result;
   });
 
   ipcMain.handle('db:skus:get', () => {
@@ -413,7 +438,9 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   });
 
   ipcMain.handle('db:skus:upsert', (_event, sku: any) => {
-    return upsertSKU(sku);
+    const result = upsertSKU(sku);
+    broadcastSyncHealth();
+    return result;
   });
 
   ipcMain.handle('db:sync:getQueue', () => {
@@ -421,11 +448,14 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   });
 
   ipcMain.handle('db:sync:add', (_event, operation: any) => {
-    return addToSyncQueue(operation);
+    const result = addToSyncQueue(operation);
+    broadcastSyncHealth();
+    return result;
   });
 
   ipcMain.handle('db:sync:clearProcessed', () => {
     clearProcessedQueue();
+    broadcastSyncHealth();
   });
 
   ipcMain.handle('sync:push', async () => {
@@ -440,6 +470,10 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
     return getSyncStatus();
   });
 
+  ipcMain.handle('sync:health', () => {
+    return getSyncHealth();
+  });
+
   ipcMain.handle('sync:outbox', () => {
     return getSyncOutbox();
   });
@@ -447,7 +481,9 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   ipcMain.handle(
     'sync:resolve-conflict',
     async (_event, conflictId: string, resolution: 'keep_local' | 'keep_server') => {
-      return resolveSyncConflict(conflictId, resolution);
+      const result = await resolveSyncConflict(conflictId, resolution);
+      broadcastSyncHealth();
+      return result;
     }
   );
 

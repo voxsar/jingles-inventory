@@ -1,29 +1,12 @@
 import { useEffect, useState } from 'react';
-import {
-  emitDesktopOutboxChanged,
-  subscribeDesktopOutboxChanged,
-} from '../utils/desktopSync';
+import type {
+  ElectronFailedPermanentPolicy,
+  ElectronSyncHealth,
+  ElectronSyncResult,
+} from '@jingles/shared';
 
-type DesktopSyncState = 'idle' | 'syncing';
-
-type DesktopSyncResult = {
-  errors?: string[];
-};
-
-type FailedPermanentPolicy = {
-  mode?: 'auto_discard' | 'hold' | 'auto_keep_server';
-  retainDays?: number | null;
-};
-
-type DesktopSyncStatusPayload = {
-  lastResult?: DesktopSyncResult | null;
-  outbox?: {
-    failedPermanent?: number;
-  } | null;
-  failedPermanentPolicy?: FailedPermanentPolicy | null;
-};
-
-const STATUS_POLL_INTERVAL_MS = 15000;
+const STALE_SYNC_WARNING_MS = 3 * 24 * 60 * 60 * 1000;
+const STALE_SYNC_CLOCK_INTERVAL_MS = 60 * 1000;
 
 function hasElectronBridge() {
   return typeof window !== 'undefined' && typeof window.electronAPI !== 'undefined';
@@ -39,7 +22,7 @@ function getInitialOnlineStatus() {
 
 function buildPermanentFailureMessage(
   failedPermanentCount: number,
-  policy: FailedPermanentPolicy | null | undefined
+  policy: ElectronFailedPermanentPolicy | null | undefined
 ) {
   if (failedPermanentCount <= 0) {
     return null;
@@ -64,82 +47,92 @@ function buildPermanentFailureMessage(
   return `${changeLabel} could not be synced and ${verb} being held for review. Server state will be kept automatically after ${retainDays} ${dayLabel}.`;
 }
 
+function buildPendingMessage(pendingCount: number, running: boolean) {
+  if (running || pendingCount <= 0) {
+    return null;
+  }
+
+  return pendingCount === 1
+    ? '1 desktop change is waiting to sync.'
+    : `${pendingCount} desktop changes are waiting to sync.`;
+}
+
+function buildCursorLagMessage(cursorLag: number, running: boolean) {
+  if (running || cursorLag <= 0) {
+    return null;
+  }
+
+  return cursorLag === 1
+    ? 'Desktop replica is 1 server change behind the host.'
+    : `Desktop replica is ${cursorLag} server changes behind the host.`;
+}
+
+function buildStaleSyncMessage(
+  lastSuccessfulSyncAt: string | null,
+  nowMs: number,
+  running: boolean
+) {
+  if (running || !lastSuccessfulSyncAt) {
+    return null;
+  }
+
+  const parsed = new Date(lastSuccessfulSyncAt);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  if (nowMs - parsed.getTime() < STALE_SYNC_WARNING_MS) {
+    return null;
+  }
+
+  return `Desktop sync has not completed successfully since ${parsed.toLocaleString()}.`;
+}
+
 export default function DesktopStatusBanner() {
   const [isElectron] = useState(hasElectronBridge);
   const [isOnline, setIsOnline] = useState(getInitialOnlineStatus);
-  const [syncState, setSyncState] = useState<DesktopSyncState>('idle');
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [conflictCount, setConflictCount] = useState(0);
-  const [permanentFailureNotice, setPermanentFailureNotice] = useState<string | null>(null);
+  const [syncHealth, setSyncHealth] = useState<ElectronSyncHealth | null>(null);
+  const [fallbackSyncError, setFallbackSyncError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
-  const refreshSyncStatus = async () => {
-    if (!window.electronAPI) {
-      return;
-    }
-
-    try {
-      const status = (await window.electronAPI.sync.getStatus()) as DesktopSyncStatusPayload;
-      const latestError = status.lastResult?.errors?.[0] ?? null;
-      setSyncError(latestError);
-      setPermanentFailureNotice(
-        buildPermanentFailureMessage(
-          status.outbox?.failedPermanent ?? 0,
-          status.failedPermanentPolicy
-        )
-      );
-    } catch (error) {
-      console.error('[DesktopSync] Failed to read desktop sync status:', error);
-    }
-  };
-
-  const refreshOutbox = async () => {
-    if (!window.electronAPI?.sync.getOutbox) {
-      return;
-    }
-
-    try {
-      const outbox = await window.electronAPI.sync.getOutbox();
-      setConflictCount(outbox.summary.conflictCount);
-    } catch (error) {
-      console.error('[DesktopSync] Failed to read desktop outbox:', error);
-    }
+  const applySyncHealth = (health: ElectronSyncHealth) => {
+    setSyncHealth(health);
+    setFallbackSyncError(null);
   };
 
   const triggerSync = async () => {
-    if (!window.electronAPI) {
+    if (!window.electronAPI?.sync.push) {
       return;
     }
 
-    setSyncState('syncing');
-
     try {
-      const result = (await window.electronAPI.sync.push()) as DesktopSyncResult;
-      setSyncError(result.errors?.[0] ?? null);
+      const result = (await window.electronAPI.sync.push()) as ElectronSyncResult;
+      setFallbackSyncError(result.errors[0] ?? null);
     } catch (error) {
       console.error('[DesktopSync] Failed to push local changes:', error);
-      setSyncError('Desktop sync failed. The next reconnect will retry automatically.');
-    } finally {
-      setSyncState('idle');
-      emitDesktopOutboxChanged();
-      await refreshOutbox();
-      await refreshSyncStatus();
+      setFallbackSyncError('Desktop sync failed. The next reconnect will retry automatically.');
     }
   };
 
   useEffect(() => {
-    if (!window.electronAPI) {
+    if (!window.electronAPI?.sync.getHealth || !window.electronAPI.sync.onHealthChanged) {
       return;
     }
 
-    void refreshOutbox();
-    void refreshSyncStatus();
+    void window.electronAPI.sync
+      .getHealth()
+      .then((health) => {
+        applySyncHealth(health);
+      })
+      .catch((error) => {
+        console.error('[DesktopSync] Failed to read desktop sync health:', error);
+      });
 
     const intervalId = window.setInterval(() => {
-      void refreshOutbox();
-      void refreshSyncStatus();
-    }, STATUS_POLL_INTERVAL_MS);
-    const unsubscribeOutbox = subscribeDesktopOutboxChanged(() => {
-      void refreshOutbox();
+      setNowMs(Date.now());
+    }, STALE_SYNC_CLOCK_INTERVAL_MS);
+    const unsubscribeHealth = window.electronAPI.sync.onHealthChanged((health) => {
+      applySyncHealth(health);
     });
 
     const unsubscribe = window.electronAPI.network.onStatusChange((online: boolean) => {
@@ -152,17 +145,35 @@ export default function DesktopStatusBanner() {
 
     return () => {
       window.clearInterval(intervalId);
-      unsubscribeOutbox();
+      unsubscribeHealth?.();
       unsubscribe?.();
     };
   }, []);
 
+  const running = syncHealth?.running ?? false;
+  const conflictCount = syncHealth?.conflictCount ?? 0;
+  const syncError = syncHealth?.lastSyncError ?? fallbackSyncError;
+  const pendingNotice = buildPendingMessage(syncHealth?.pendingCount ?? 0, running);
+  const cursorLagNotice = buildCursorLagMessage(syncHealth?.cursorLag ?? 0, running);
+  const staleSyncNotice = buildStaleSyncMessage(
+    syncHealth?.lastSuccessfulSyncAt ?? null,
+    nowMs,
+    running
+  );
+  const permanentFailureNotice = buildPermanentFailureMessage(
+    syncHealth?.failedPermanentCount ?? 0,
+    syncHealth?.failedPermanentPolicy
+  );
+
   const shouldRender =
     isElectron &&
     (!isOnline ||
-      syncState === 'syncing' ||
+      running ||
       conflictCount > 0 ||
       Boolean(syncError) ||
+      Boolean(pendingNotice) ||
+      Boolean(cursorLagNotice) ||
+      Boolean(staleSyncNotice) ||
       Boolean(permanentFailureNotice));
 
   if (!shouldRender) {
@@ -176,7 +187,7 @@ export default function DesktopStatusBanner() {
           Offline mode. Changes will sync when the connection returns.
         </s-banner>
       )}
-      {syncState === 'syncing' && (
+      {running && (
         <s-banner tone="info">Syncing desktop changes...</s-banner>
       )}
       {syncError && (
@@ -191,6 +202,9 @@ export default function DesktopStatusBanner() {
             : `${conflictCount} sync conflicts need review in the desktop outbox.`}
         </s-banner>
       )}
+      {pendingNotice && <s-banner tone="info">{pendingNotice}</s-banner>}
+      {cursorLagNotice && <s-banner tone="warning">{cursorLagNotice}</s-banner>}
+      {staleSyncNotice && <s-banner tone="warning">{staleSyncNotice}</s-banner>}
       {permanentFailureNotice && (
         <s-banner tone="warning">{permanentFailureNotice}</s-banner>
       )}

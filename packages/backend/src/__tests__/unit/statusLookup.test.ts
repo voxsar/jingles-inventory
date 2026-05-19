@@ -210,6 +210,21 @@ describe('getStatusesByKeys', () => {
 		await expect(getStatusesByKeys(['TOTALLY_UNKNOWN_KEY'])).rejects.toThrow('not found in database');
 	});
 
+	it('falls back when the status model returns a non-array result', async () => {
+		(prismaMock as any).statusOption = {
+			findFirst: vi.fn(),
+			findMany: vi.fn().mockResolvedValue(undefined),
+		};
+
+		const result = await getStatusesByKeys([
+			SpecialStatusKeys.GRN_DRAFT,
+			SpecialStatusKeys.INVENTORY_UNINSPECTED,
+		]);
+
+		expect(result.get(SpecialStatusKeys.GRN_DRAFT)).toBe('Draft');
+		expect(result.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)).toBe('Uninspected');
+	});
+
 	it('mixes cached and uncached keys in a single call', async () => {
 		// Pre-cache one key
 		await getStatusByKey(SpecialStatusKeys.GRN_DRAFT);

@@ -49,6 +49,17 @@ export interface ElectronSyncConflictResolutionResult {
   aggregateId: string | null;
 }
 
+export interface ElectronFailedPermanentPolicy {
+  mode: 'auto_discard' | 'hold' | 'auto_keep_server';
+  retainDays: number | null;
+}
+
+export interface ElectronSyncStatusOutbox {
+  pending: number;
+  conflicts: number;
+  failedPermanent: number;
+}
+
 export interface ElectronSyncStatus {
   configured: boolean;
   running: boolean;
@@ -61,7 +72,24 @@ export interface ElectronSyncStatus {
   lastSuccessfulSyncAt: string | null;
   lastRealtimeEventAt: string | null;
   lastRealtimeError: string | null;
+  outbox: ElectronSyncStatusOutbox;
+  failedPermanentPolicy: ElectronFailedPermanentPolicy;
   lastResult: ElectronSyncResult | null;
+}
+
+export interface ElectronSyncHealth {
+  pendingCount: number;
+  conflictCount: number;
+  failedPermanentCount: number;
+  lastSuccessfulSyncAt: string | null;
+  lastSyncError: string | null;
+  lastRealtimeError: string | null;
+  running: boolean;
+  websocketConnected: boolean;
+  cursorLag: number;
+  localCursor: number;
+  latestServerSeq: number;
+  failedPermanentPolicy: ElectronFailedPermanentPolicy;
 }
 
 export interface ElectronAPI {
@@ -86,6 +114,8 @@ export interface ElectronAPI {
     push: () => Promise<ElectronSyncResult>;
     pull: () => Promise<ElectronSyncResult>;
     getStatus: () => Promise<ElectronSyncStatus>;
+    getHealth: () => Promise<ElectronSyncHealth>;
+    onHealthChanged: (callback: (health: ElectronSyncHealth) => void) => () => void;
     getOutbox: () => Promise<ElectronSyncOutboxSnapshot>;
     resolveConflict: (
       conflictId: string,

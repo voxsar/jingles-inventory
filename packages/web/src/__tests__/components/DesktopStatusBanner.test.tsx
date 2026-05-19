@@ -1,15 +1,84 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import DesktopStatusBanner from '../../components/DesktopStatusBanner';
+
+function createHealth(overrides: Record<string, unknown> = {}) {
+  return {
+    pendingCount: 0,
+    conflictCount: 0,
+    failedPermanentCount: 0,
+    lastSuccessfulSyncAt: '2026-05-19T09:00:00.000Z',
+    lastSyncError: null,
+    lastRealtimeError: null,
+    running: false,
+    websocketConnected: true,
+    cursorLag: 0,
+    localCursor: 12,
+    latestServerSeq: 12,
+    failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+    ...overrides,
+  };
+}
+
+function installElectronAPI(options: {
+  health?: Record<string, unknown>;
+  isOnline?: boolean;
+  pushResult?: Record<string, unknown>;
+} = {}) {
+  let networkCallback: ((online: boolean) => void) | undefined;
+  let healthCallback: ((health: any) => void) | undefined;
+  const push = vi.fn().mockResolvedValue({
+    pushed: 0,
+    pulled: 0,
+    conflicts: 0,
+    errors: [],
+    ...options.pushResult,
+  });
+
+  window.electronAPI = {
+    sync: {
+      push,
+      pull: vi.fn(),
+      getStatus: vi.fn(),
+      getHealth: vi.fn().mockResolvedValue(createHealth(options.health)),
+      onHealthChanged: vi.fn((callback: (health: any) => void) => {
+        healthCallback = callback;
+        return vi.fn();
+      }),
+      getOutbox: vi.fn(),
+      resolveConflict: vi.fn(),
+    },
+    network: {
+      isOnline: vi.fn(() => options.isOnline ?? true),
+      onStatusChange: vi.fn((callback: (online: boolean) => void) => {
+        networkCallback = callback;
+        return vi.fn();
+      }),
+    },
+  } as any;
+
+  return {
+    push,
+    emitHealth: (health: Record<string, unknown>) => {
+      healthCallback?.(createHealth(health));
+    },
+    setOnline: (online: boolean) => {
+      networkCallback?.(online);
+    },
+  };
+}
 
 describe('DesktopStatusBanner', () => {
   const originalElectronAPI = window.electronAPI;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
+
     if (originalElectronAPI) {
       window.electronAPI = originalElectronAPI;
       return;
@@ -27,104 +96,32 @@ describe('DesktopStatusBanner', () => {
   });
 
   it('shows the offline banner for the desktop shell', () => {
-    window.electronAPI = {
-      sync: {
-        push: vi.fn(),
-        pull: vi.fn(),
-        getStatus: vi.fn().mockResolvedValue({
-          lastResult: { errors: [] },
-          outbox: { failedPermanent: 0 },
-          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
-        }),
-        getOutbox: vi.fn().mockResolvedValue({
-          summary: {
-            legacyQueueCount: 0,
-            syncOperationCount: 0,
-            requestQueueCount: 0,
-            conflictCount: 0,
-            totalCount: 0,
-          },
-          conflicts: [],
-        }),
-      },
-      network: {
-        isOnline: vi.fn(() => false),
-        onStatusChange: vi.fn(() => vi.fn()),
-      },
-    } as any;
+    installElectronAPI({ isOnline: false });
 
     render(<DesktopStatusBanner />);
 
-    expect(screen.getByText('Offline mode. Changes will sync when the connection returns.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Offline mode. Changes will sync when the connection returns.')
+    ).toBeInTheDocument();
   });
 
   it('triggers a desktop sync when the connection comes back', async () => {
-    const push = vi.fn().mockResolvedValue({});
-    let statusCallback: ((online: boolean) => void) | undefined;
-
-    window.electronAPI = {
-      sync: {
-        push,
-        pull: vi.fn(),
-        getStatus: vi.fn().mockResolvedValue({
-          lastResult: { errors: [] },
-          outbox: { failedPermanent: 0 },
-          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
-        }),
-        getOutbox: vi.fn().mockResolvedValue({
-          summary: {
-            legacyQueueCount: 0,
-            syncOperationCount: 0,
-            requestQueueCount: 0,
-            conflictCount: 0,
-            totalCount: 0,
-          },
-          conflicts: [],
-        }),
-      },
-      network: {
-        isOnline: vi.fn(() => false),
-        onStatusChange: vi.fn((callback: (online: boolean) => void) => {
-          statusCallback = callback;
-          return vi.fn();
-        }),
-      },
-    } as any;
+    const { push, setOnline } = installElectronAPI({ isOnline: false });
 
     render(<DesktopStatusBanner />);
-    statusCallback?.(true);
+    setOnline(true);
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('shows the permanent failure retention banner when the outbox has held failures', async () => {
-    window.electronAPI = {
-      sync: {
-        push: vi.fn(),
-        pull: vi.fn(),
-        getStatus: vi.fn().mockResolvedValue({
-          lastResult: { errors: [] },
-          outbox: { failedPermanent: 2 },
-          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
-        }),
-        getOutbox: vi.fn().mockResolvedValue({
-          summary: {
-            legacyQueueCount: 0,
-            syncOperationCount: 0,
-            requestQueueCount: 0,
-            conflictCount: 0,
-            totalCount: 0,
-          },
-          conflicts: [],
-        }),
+  it('shows the permanent failure retention banner from sync health', async () => {
+    installElectronAPI({
+      health: {
+        failedPermanentCount: 2,
       },
-      network: {
-        isOnline: vi.fn(() => true),
-        onStatusChange: vi.fn(() => vi.fn()),
-      },
-    } as any;
+    });
 
     render(<DesktopStatusBanner />);
 
@@ -137,38 +134,54 @@ describe('DesktopStatusBanner', () => {
     });
   });
 
-  it('shows a conflict banner when the outbox contains unresolved sync conflicts', async () => {
-    window.electronAPI = {
-      sync: {
-        push: vi.fn(),
-        pull: vi.fn(),
-        getStatus: vi.fn().mockResolvedValue({
-          lastResult: { errors: [] },
-          outbox: { failedPermanent: 0 },
-          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
-        }),
-        getOutbox: vi.fn().mockResolvedValue({
-          summary: {
-            legacyQueueCount: 0,
-            syncOperationCount: 0,
-            requestQueueCount: 0,
-            conflictCount: 2,
-            totalCount: 2,
-          },
-          conflicts: [],
-        }),
+  it('shows a conflict banner from sync health', async () => {
+    installElectronAPI({
+      health: {
+        conflictCount: 2,
       },
-      network: {
-        isOnline: vi.fn(() => true),
-        onStatusChange: vi.fn(() => vi.fn()),
-      },
-    } as any;
+    });
 
     render(<DesktopStatusBanner />);
 
     await waitFor(() => {
       expect(
         screen.getByText('2 sync conflicts need review in the desktop outbox.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('updates the indicator from sync health change events', async () => {
+    const { emitHealth } = installElectronAPI();
+
+    render(<DesktopStatusBanner />);
+
+    await waitFor(() => {
+      expect(window.electronAPI?.sync.onHealthChanged).toHaveBeenCalledTimes(1);
+    });
+
+    await act(async () => {
+      emitHealth({ cursorLag: 2 });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Desktop replica is 2 server changes behind the host.')
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('shows a stale sync warning when the last successful sync is older than three days', async () => {
+    installElectronAPI({
+      health: {
+        lastSuccessfulSyncAt: '2000-01-01T00:00:00.000Z',
+      },
+    });
+
+    render(<DesktopStatusBanner />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Desktop sync has not completed successfully since/)
       ).toBeInTheDocument();
     });
   });
