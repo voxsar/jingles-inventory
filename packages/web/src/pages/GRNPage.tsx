@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
-import { GRNStatus } from '@jingles/shared';
+import { GRNStatus } from '@jingles/shared/enums';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import SearchableSelect from '../components/SearchableSelect';

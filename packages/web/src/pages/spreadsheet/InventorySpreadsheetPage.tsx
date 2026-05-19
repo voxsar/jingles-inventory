@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { inventoryApi, floorsApi, skusApi, racksApi, shelvesApi, boxesApi, branchesApi } from '../../api/client';
-import { InventoryState } from '@jingles/shared';
+import { InventoryState } from '@jingles/shared/enums';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
 import { fetchAllSpreadsheetRows, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
 

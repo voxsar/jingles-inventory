@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { InventoryState } from '@jingles/shared';
+import { InventoryState } from '@jingles/shared/enums';
 
 const STATE_CLASSES: Record<string, string> = {
   [InventoryState.UnopenedBox]: 'bg-purple-100 text-purple-800',

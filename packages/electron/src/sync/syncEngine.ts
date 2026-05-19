@@ -37,8 +37,11 @@ interface SyncConfig {
   getToken: () => string | null;
 }
 
+type SyncRunMode = 'full' | 'push_only' | 'pull_only';
+
 interface SyncRunOptions {
   forcePull?: boolean;
+  mode?: SyncRunMode;
 }
 
 type QueuedRequestFile = {
@@ -111,6 +114,21 @@ type FailedPermanentPolicyDescriptor = {
   retainDays: number | null;
 };
 
+type SyncProgressPhase = 'preparing' | 'pushing' | 'pulling' | 'finalizing';
+
+type SyncProgress = {
+  phase: SyncProgressPhase;
+  label: string;
+  detail: string | null;
+  percent: number;
+  pending: number;
+  pushed: number;
+  pulled: number;
+  conflicts: number;
+  startedAt: string | null;
+  updatedAt: string | null;
+};
+
 type ElectronSyncConflictEntry = {
   id: string;
   operationId: string;
@@ -175,6 +193,7 @@ export interface SyncStatus {
   outbox: SyncOutboxSummary;
   failedPermanentPolicy: FailedPermanentPolicyDescriptor;
   lastResult: SyncRunResult | null;
+  progress: SyncProgress | null;
 }
 
 export interface SyncHealth {
@@ -190,6 +209,7 @@ export interface SyncHealth {
   localCursor: number;
   latestServerSeq: number;
   failedPermanentPolicy: FailedPermanentPolicyDescriptor;
+  progress: SyncProgress | null;
 }
 
 const EMPTY_OUTBOX_SUMMARY: SyncOutboxSummary = {
@@ -200,6 +220,12 @@ const EMPTY_OUTBOX_SUMMARY: SyncOutboxSummary = {
 
 const DEFAULT_FAILED_PERMANENT_RETENTION_DAYS = 7;
 const SYNC_V2_SERVER_SEQ_CONFIG_KEY = 'syncV2LastServerSeq';
+const SYNC_PROGRESS_PREPARING_PERCENT = 8;
+const SYNC_PROGRESS_PUSH_START_PERCENT = 18;
+const SYNC_PROGRESS_PUSH_END_PERCENT = 62;
+const SYNC_PROGRESS_PULL_LOG_PERCENT = 76;
+const SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT = 90;
+const SYNC_PROGRESS_FINALIZING_PERCENT = 97;
 
 function resolveFailedPermanentPolicy(): FailedPermanentPolicy {
   const normalizedMode = process.env.ELECTRON_SYNC_FAILED_PERMANENT_POLICY?.trim()
@@ -263,6 +289,7 @@ let syncStatus: SyncStatus = {
   outbox: EMPTY_OUTBOX_SUMMARY,
   failedPermanentPolicy: getFailedPermanentPolicyDescriptor(),
   lastResult: null,
+  progress: null,
 };
 
 function cloneResult(result: SyncRunResult): SyncRunResult {
@@ -283,11 +310,162 @@ function cloneFailedPermanentPolicy(
   };
 }
 
+function clampSyncProgressPercent(percent: number) {
+  if (!Number.isFinite(percent)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(percent)));
+}
+
+function cloneSyncProgress(progress: SyncProgress | null): SyncProgress | null {
+  if (!progress) {
+    return null;
+  }
+
+  return {
+    phase: progress.phase,
+    label: progress.label,
+    detail: progress.detail,
+    percent: progress.percent,
+    pending: progress.pending,
+    pushed: progress.pushed,
+    pulled: progress.pulled,
+    conflicts: progress.conflicts,
+    startedAt: progress.startedAt,
+    updatedAt: progress.updatedAt,
+  };
+}
+
+function syncProgressEquals(left: SyncProgress | null, right: SyncProgress | null) {
+  return (
+    left === right ||
+    (left !== null &&
+      right !== null &&
+      left.phase === right.phase &&
+      left.label === right.label &&
+      left.detail === right.detail &&
+      left.percent === right.percent &&
+      left.pending === right.pending &&
+      left.pushed === right.pushed &&
+      left.pulled === right.pulled &&
+      left.conflicts === right.conflicts &&
+      left.startedAt === right.startedAt &&
+      left.updatedAt === right.updatedAt)
+  );
+}
+
 function cloneSyncHealth(health: SyncHealth): SyncHealth {
   return {
     ...health,
     failedPermanentPolicy: cloneFailedPermanentPolicy(health.failedPermanentPolicy),
+    progress: cloneSyncProgress(health.progress),
   };
+}
+
+function describeCount(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function buildPreparationDetail(pendingCount: number, options: SyncRunOptions) {
+  const queuedLabel =
+    pendingCount > 0
+      ? `${describeCount(pendingCount, 'queued local change')} ready to sync.`
+      : 'No queued local changes found.';
+
+  if (options.mode === 'push_only') {
+    return `${queuedLabel} Only local changes will be pushed to the host.`;
+  }
+
+  if (options.mode === 'pull_only') {
+    return 'Skipping local push. A manual replica refresh will run against the host.';
+  }
+
+  return options.forcePull
+    ? `${queuedLabel} A full replica refresh will run after the push.`
+    : `${queuedLabel} Checking whether the desktop replica needs a refresh.`;
+}
+
+function buildPushProgressDetail(processed: number, total: number, pendingCount: number) {
+  if (total <= 0) {
+    return 'No queued local changes found. Moving on to replica checks.';
+  }
+
+  const pendingLabel =
+    pendingCount > 0
+      ? `${describeCount(pendingCount, 'local change')} still waiting to sync.`
+      : 'Outbox is clear.';
+
+  return `${processed} of ${total} queued local changes processed. ${pendingLabel}`;
+}
+
+function buildPushProgressPercent(processed: number, total: number) {
+  if (total <= 0) {
+    return SYNC_PROGRESS_PUSH_END_PERCENT;
+  }
+
+  const ratio = Math.max(0, Math.min(1, processed / total));
+  return clampSyncProgressPercent(
+    SYNC_PROGRESS_PUSH_START_PERCENT +
+      (SYNC_PROGRESS_PUSH_END_PERCENT - SYNC_PROGRESS_PUSH_START_PERCENT) * ratio
+  );
+}
+
+function buildPullLogDetail(pulledCount: number) {
+  if (pulledCount <= 0) {
+    return 'Checking the server change log for replica updates.';
+  }
+
+  return `Applied ${describeCount(pulledCount, 'server change')} from the realtime log.`;
+}
+
+function buildFinalizingDetail(
+  result: SyncRunResult,
+  skippedPull: boolean,
+  mode: SyncRunMode
+) {
+  if (result.errors.length > 0) {
+    return result.errors[0];
+  }
+
+  if (mode === 'push_only') {
+    return `Pushed ${describeCount(result.pushed, 'local change')} without refreshing the replica snapshot.`;
+  }
+
+  if (mode === 'pull_only') {
+    return `Refreshed ${describeCount(result.pulled, 'replica row')} without sending queued local changes.`;
+  }
+
+  if (skippedPull) {
+    return `Synced ${describeCount(result.pushed, 'local change')} and kept the current replica snapshot.`;
+  }
+
+  return `Synced ${describeCount(result.pushed, 'local change')} and refreshed ${describeCount(result.pulled, 'replica row')}.`;
+}
+
+function updateSyncProgress(
+  patch: Pick<SyncProgress, 'phase' | 'label' | 'percent'> &
+    Partial<Omit<SyncProgress, 'phase' | 'label' | 'percent'>>,
+  options: { publish?: boolean } = {}
+) {
+  const previous = syncStatus.progress;
+  applySyncStatusPatch(
+    {
+      progress: {
+        phase: patch.phase,
+        label: patch.label,
+        detail: patch.detail ?? previous?.detail ?? null,
+        percent: clampSyncProgressPercent(patch.percent),
+        pending: patch.pending ?? syncStatus.outbox.pending,
+        pushed: patch.pushed ?? previous?.pushed ?? 0,
+        pulled: patch.pulled ?? previous?.pulled ?? 0,
+        conflicts: patch.conflicts ?? previous?.conflicts ?? 0,
+        startedAt: patch.startedAt ?? previous?.startedAt ?? syncStatus.lastStartedAt,
+        updatedAt: patch.updatedAt ?? new Date().toISOString(),
+      },
+    },
+    options
+  );
 }
 
 function readConfigNumber(key: string): number | null {
@@ -328,6 +506,7 @@ function buildSyncHealthSnapshot(): SyncHealth {
     localCursor,
     latestServerSeq,
     failedPermanentPolicy: cloneFailedPermanentPolicy(syncStatus.failedPermanentPolicy),
+    progress: cloneSyncProgress(syncStatus.progress),
   };
 }
 
@@ -346,7 +525,8 @@ function syncHealthEquals(left: SyncHealth | null, right: SyncHealth) {
     left.localCursor === right.localCursor &&
     left.latestServerSeq === right.latestServerSeq &&
     left.failedPermanentPolicy.mode === right.failedPermanentPolicy.mode &&
-    left.failedPermanentPolicy.retainDays === right.failedPermanentPolicy.retainDays
+    left.failedPermanentPolicy.retainDays === right.failedPermanentPolicy.retainDays &&
+    syncProgressEquals(left.progress, right.progress)
   );
 }
 
@@ -559,8 +739,45 @@ async function readErrorMessage(response: Response) {
     const payload = JSON.parse(body) as { error?: string; message?: string };
     return payload.error ?? payload.message ?? `HTTP ${response.status}`;
   } catch {
-    return body;
+    const preformattedMatch = body.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+    if (preformattedMatch?.[1]) {
+      return preformattedMatch[1]
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    if (/<\/?[a-z][\s\S]*>/i.test(body)) {
+      const collapsed = body
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (collapsed) {
+        return collapsed;
+      }
+    }
+
+    return body.trim();
   }
+}
+
+function isMissingSyncLogEndpoint(status: number, message: string) {
+  if (status === 404) {
+    return true;
+  }
+
+  return /cannot get\s+\/api\/sync\/log|not found/i.test(message);
 }
 
 async function readJsonBody<T>(response: Response): Promise<T | null> {
@@ -892,6 +1109,7 @@ export function getSyncStatus(): SyncStatus {
     lastResult: syncStatus.lastResult ? cloneResult(syncStatus.lastResult) : null,
     outbox: { ...syncStatus.outbox },
     failedPermanentPolicy: cloneFailedPermanentPolicy(syncStatus.failedPermanentPolicy),
+    progress: cloneSyncProgress(syncStatus.progress),
   };
 }
 
@@ -1088,47 +1306,98 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
 
   refreshOutboxState();
   activeSyncPromise = (async () => {
+    const mode = options.mode ?? 'full';
     const result: SyncRunResult = {
       pushed: 0,
       pulled: 0,
       conflicts: 0,
       errors: [],
     };
+    let skippedPull = false;
 
     if (!syncConfig) {
       result.errors.push('Sync not configured');
       applySyncStatusPatch({
         configured: false,
         lastResult: cloneResult(result),
+        progress: null,
       });
       return result;
     }
 
+    const startedAt = new Date().toISOString();
     applySyncStatusPatch({
       configured: true,
       running: true,
       serverUrl: syncConfig.serverUrl,
       clientId: syncConfig.clientId,
-      lastStartedAt: new Date().toISOString(),
+      lastStartedAt: startedAt,
+    }, { publish: false });
+    updateSyncProgress({
+      phase: 'preparing',
+      label: 'Preparing desktop sync',
+      detail: buildPreparationDetail(syncStatus.outbox.pending, options),
+      percent: SYNC_PROGRESS_PREPARING_PERCENT,
+      pending: syncStatus.outbox.pending,
+      pushed: 0,
+      pulled: 0,
+      conflicts: 0,
+      startedAt,
     });
 
     try {
-      const pushResult = await pushChanges();
-      result.pushed = pushResult.pushed;
-      result.conflicts = pushResult.conflicts;
-      result.errors.push(...pushResult.errors);
-
-      const shouldPull =
-        options.forcePull || needsFullReplicaPull || !syncStatus.websocketConnected;
-
-      if (pushResult.blockPull) {
-        result.errors.push('Replica pull skipped because some local changes are still pending sync.');
-      } else if (shouldPull) {
+      if (mode === 'pull_only') {
         const pullResult = await pullChanges();
         result.pulled = pullResult.pulled;
         result.errors.push(...pullResult.errors);
         if (pullResult.errors.length === 0) {
           needsFullReplicaPull = false;
+        }
+      } else {
+        const pushResult = await pushChanges();
+        result.pushed = pushResult.pushed;
+        result.conflicts = pushResult.conflicts;
+        result.errors.push(...pushResult.errors);
+
+        if (mode === 'push_only') {
+          skippedPull = true;
+          updateSyncProgress({
+            phase: 'finalizing',
+            label: 'Finalizing desktop sync',
+            detail: 'Local changes were pushed. Manual replica refresh was skipped.',
+            percent: SYNC_PROGRESS_FINALIZING_PERCENT,
+            pending: syncStatus.outbox.pending,
+            pushed: result.pushed,
+            pulled: result.pulled,
+            conflicts: result.conflicts,
+          });
+        } else {
+          const shouldPull =
+            options.forcePull || needsFullReplicaPull || !syncStatus.websocketConnected;
+
+          if (pushResult.blockPull) {
+            skippedPull = true;
+            result.errors.push('Replica pull skipped because some local changes are still pending sync.');
+          } else if (shouldPull) {
+            const pullResult = await pullChanges();
+            result.pulled = pullResult.pulled;
+            result.errors.push(...pullResult.errors);
+            if (pullResult.errors.length === 0) {
+              needsFullReplicaPull = false;
+            }
+          } else {
+            skippedPull = true;
+            updateSyncProgress({
+              phase: 'finalizing',
+              label: 'Finalizing desktop sync',
+              detail: 'Local changes are synced. Realtime replica is already current.',
+              percent: SYNC_PROGRESS_FINALIZING_PERCENT,
+              pending: syncStatus.outbox.pending,
+              pushed: result.pushed,
+              pulled: result.pulled,
+              conflicts: result.conflicts,
+            });
+          }
         }
       }
     } catch (err: any) {
@@ -1136,6 +1405,19 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
     }
 
     const completedAt = new Date().toISOString();
+    updateSyncProgress(
+      {
+        phase: 'finalizing',
+        label: result.errors.length > 0 ? 'Finalizing with sync issues' : 'Finalizing desktop sync',
+        detail: buildFinalizingDetail(result, skippedPull, mode),
+        percent: SYNC_PROGRESS_FINALIZING_PERCENT,
+        pending: syncStatus.outbox.pending,
+        pushed: result.pushed,
+        pulled: result.pulled,
+        conflicts: result.conflicts,
+      },
+      { publish: false }
+    );
     applySyncStatusPatch(
       {
         running: false,
@@ -1143,6 +1425,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
         lastSuccessfulSyncAt:
           result.errors.length === 0 ? completedAt : syncStatus.lastSuccessfulSyncAt,
         lastResult: cloneResult(result),
+        progress: null,
       },
       { publish: false }
     );
@@ -1158,8 +1441,19 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
   }
 }
 
-async function pushLegacySyncQueue(serverUrl: string, token: string) {
-  const queuedOps = getPendingSyncQueue();
+export function syncPushOnly() {
+  return syncAll({ mode: 'push_only' });
+}
+
+export function syncPullOnly() {
+  return syncAll({ forcePull: true, mode: 'pull_only' });
+}
+
+async function pushLegacySyncQueue(
+  serverUrl: string,
+  token: string,
+  queuedOps = getPendingSyncQueue()
+) {
   const result = {
     pushed: 0,
     conflicts: 0,
@@ -1217,7 +1511,14 @@ async function pushLegacySyncQueue(serverUrl: string, token: string) {
   return result;
 }
 
-async function pushSyncV2OperationLog(serverUrl: string, token: string) {
+async function pushSyncV2OperationLog(
+  serverUrl: string,
+  token: string,
+  options: {
+    pendingConflicts?: QueuedSyncConflictRecord[];
+    queuedOps?: QueuedSyncOperationRecord[];
+  } = {}
+) {
   const result = {
     pushed: 0,
     conflicts: 0,
@@ -1225,14 +1526,16 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
     blockPull: false,
   };
 
-  const pendingConflicts = getPendingSyncConflicts() as QueuedSyncConflictRecord[];
+  const pendingConflicts =
+    options.pendingConflicts ?? (getPendingSyncConflicts() as QueuedSyncConflictRecord[]);
   if (pendingConflicts.length > 0) {
     result.errors.push('Sync blocked by unresolved local conflicts.');
     result.blockPull = true;
     return result;
   }
 
-  const queuedOps = getPendingSyncOperationLogs() as QueuedSyncOperationRecord[];
+  const queuedOps =
+    options.queuedOps ?? (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]);
   if (queuedOps.length === 0) {
     return result;
   }
@@ -1357,11 +1660,25 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
 
 async function pushChanges(): Promise<{ pushed: number; conflicts: number; errors: string[]; blockPull: boolean }> {
   if (!syncConfig) {
+    updateSyncProgress({
+      phase: 'pushing',
+      label: 'Pushing desktop changes',
+      detail: 'Sync is not configured for this desktop.',
+      percent: SYNC_PROGRESS_PUSH_START_PERCENT,
+      pending: syncStatus.outbox.pending,
+    });
     return { pushed: 0, conflicts: 0, errors: ['Not configured'], blockPull: true };
   }
 
   const token = syncConfig.getToken();
   if (!token) {
+    updateSyncProgress({
+      phase: 'pushing',
+      label: 'Pushing desktop changes',
+      detail: 'Sign in again to sync local changes.',
+      percent: SYNC_PROGRESS_PUSH_START_PERCENT,
+      pending: syncStatus.outbox.pending,
+    });
     return { pushed: 0, conflicts: 0, errors: ['Not authenticated'], blockPull: true };
   }
 
@@ -1371,24 +1688,51 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
     errors: [] as string[],
     blockPull: false,
   };
+  const queuedSyncOperations = getPendingSyncOperationLogs() as QueuedSyncOperationRecord[];
+  const queuedLegacyOps = getPendingSyncQueue();
+  const queuedRequests = getPendingRequestSyncQueue() as QueuedRequestRecord[];
+  const syncOperationWorkUnits = queuedSyncOperations.length;
+  const legacyWorkUnits = queuedLegacyOps.length;
+  const totalWorkUnits = syncOperationWorkUnits + legacyWorkUnits + queuedRequests.length;
+  let processedWorkUnits = 0;
 
-  const syncV2Result = await pushSyncV2OperationLog(syncConfig.serverUrl, token);
+  const publishPushProgress = (detail?: string) => {
+    refreshOutboxState({ publish: false });
+    updateSyncProgress({
+      phase: 'pushing',
+      label: totalWorkUnits > 0 ? 'Pushing desktop changes' : 'Checking local outbox',
+      detail: detail ?? buildPushProgressDetail(processedWorkUnits, totalWorkUnits, syncStatus.outbox.pending),
+      percent: buildPushProgressPercent(processedWorkUnits, totalWorkUnits),
+      pending: syncStatus.outbox.pending,
+      pushed: result.pushed,
+      conflicts: result.conflicts,
+    });
+  };
+
+  publishPushProgress();
+
+  const syncV2Result = await pushSyncV2OperationLog(syncConfig.serverUrl, token, {
+    queuedOps: queuedSyncOperations,
+  });
   result.pushed += syncV2Result.pushed;
   result.conflicts += syncV2Result.conflicts;
   result.errors.push(...syncV2Result.errors);
   if (syncV2Result.blockPull) {
     result.blockPull = true;
   }
+  processedWorkUnits += syncOperationWorkUnits;
+  publishPushProgress(syncV2Result.errors[0]);
 
-  const legacyResult = await pushLegacySyncQueue(syncConfig.serverUrl, token);
+  const legacyResult = await pushLegacySyncQueue(syncConfig.serverUrl, token, queuedLegacyOps);
   result.pushed += legacyResult.pushed;
   result.conflicts += legacyResult.conflicts;
   result.errors.push(...legacyResult.errors);
   if (getPendingSyncQueue().length > 0) {
     result.blockPull = true;
   }
+  processedWorkUnits += legacyWorkUnits;
+  publishPushProgress(legacyResult.errors[0]);
 
-  const queuedRequests = getPendingRequestSyncQueue() as QueuedRequestRecord[];
   for (const queuedRequest of queuedRequests) {
     try {
       const response = await replayQueuedRequest(queuedRequest, syncConfig.serverUrl, token);
@@ -1396,6 +1740,8 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
       if (response.ok) {
         markRequestSyncProcessed(queuedRequest.id);
         result.pushed++;
+        processedWorkUnits += 1;
+        publishPushProgress();
         continue;
       }
 
@@ -1410,12 +1756,18 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
       if (disposition === 'retry') {
         result.blockPull = true;
       }
+      processedWorkUnits += 1;
+      publishPushProgress(`Request sync failed for ${queuedRequest.method} ${queuedRequest.path}: ${message}`);
     } catch (error: any) {
       markRequestSyncFailed(queuedRequest.id, error.message, 'retry');
       result.errors.push(
         `Request sync failed for ${queuedRequest.method} ${queuedRequest.path}: ${error.message}`
       );
       result.blockPull = true;
+      processedWorkUnits += 1;
+      publishPushProgress(
+        `Request sync failed for ${queuedRequest.method} ${queuedRequest.path}: ${error.message}`
+      );
     }
   }
 
@@ -1423,11 +1775,18 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
     result.blockPull = true;
   }
 
+  publishPushProgress(result.errors[0]);
+
   return result;
 }
 
 async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
-  const result = { pulled: 0, errors: [] as string[] };
+  const result = {
+    pulled: 0,
+    errors: [] as string[],
+    skipped: false,
+    skipReason: null as string | null,
+  };
 
   let cursor = getSyncV2Cursor();
 
@@ -1444,7 +1803,14 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
       });
 
       if (!response.ok) {
-        result.errors.push(await readErrorMessage(response));
+        const message = await readErrorMessage(response);
+        if (isMissingSyncLogEndpoint(response.status, message)) {
+          result.skipped = true;
+          result.skipReason = 'The host does not expose /api/sync/log, so desktop sync is using snapshot-only compatibility mode.';
+          return result;
+        }
+
+        result.errors.push(message);
         return result;
       }
 
@@ -1475,6 +1841,14 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
       }
 
       setSyncV2Cursor(cursor);
+      updateSyncProgress({
+        phase: 'pulling',
+        label: 'Refreshing desktop replica',
+        detail: buildPullLogDetail(result.pulled),
+        percent: SYNC_PROGRESS_PULL_LOG_PERCENT,
+        pending: syncStatus.outbox.pending,
+        pulled: result.pulled,
+      });
 
       if (!payload?.data?.hasMore) {
         break;
@@ -1490,20 +1864,52 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
 
 async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
   if (!syncConfig) {
+    updateSyncProgress({
+      phase: 'pulling',
+      label: 'Refreshing desktop replica',
+      detail: 'Sync is not configured for this desktop.',
+      percent: SYNC_PROGRESS_PULL_LOG_PERCENT,
+      pending: syncStatus.outbox.pending,
+    });
     return { pulled: 0, errors: ['Not configured'] };
   }
 
   const token = syncConfig.getToken();
   if (!token) {
+    updateSyncProgress({
+      phase: 'pulling',
+      label: 'Refreshing desktop replica',
+      detail: 'Sign in again to refresh the desktop replica.',
+      percent: SYNC_PROGRESS_PULL_LOG_PERCENT,
+      pending: syncStatus.outbox.pending,
+    });
     return { pulled: 0, errors: ['Not authenticated'] };
   }
 
   const result = { pulled: 0, errors: [] as string[] };
+  updateSyncProgress({
+    phase: 'pulling',
+    label: 'Refreshing desktop replica',
+    detail: buildPullLogDetail(0),
+    percent: SYNC_PROGRESS_PULL_LOG_PERCENT,
+    pending: syncStatus.outbox.pending,
+  });
 
   try {
     const syncV2Result = await pullSyncV2ChangeLog(syncConfig.serverUrl, token);
     result.pulled += syncV2Result.pulled;
     result.errors.push(...syncV2Result.errors);
+    updateSyncProgress({
+      phase: 'pulling',
+      label: 'Refreshing desktop replica',
+      detail:
+        syncV2Result.skipped && syncV2Result.skipReason
+          ? syncV2Result.skipReason
+          : 'Downloading the latest replica snapshot from the host.',
+      percent: SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT,
+      pending: syncStatus.outbox.pending,
+      pulled: result.pulled,
+    });
 
     const response = await fetch(`${syncConfig.serverUrl}/api/sync/replica/export`, {
       headers: {
@@ -1527,6 +1933,15 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
     result.pulled = Object.values(snapshot).reduce((total, rows) => {
       return total + (Array.isArray(rows) ? rows.length : 0);
     }, 0);
+    refreshOutboxState({ publish: false });
+    updateSyncProgress({
+      phase: 'pulling',
+      label: 'Refreshing desktop replica',
+      detail: `Loaded ${describeCount(result.pulled, 'replica row')} into the desktop cache.`,
+      percent: SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT,
+      pending: syncStatus.outbox.pending,
+      pulled: result.pulled,
+    });
 
     setConfig('lastSyncTime', new Date().toISOString());
   } catch (error: any) {

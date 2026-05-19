@@ -21,7 +21,11 @@ type AuthPayload = {
 };
 
 function buildJwtForUser(user: { id: string; email: string; role: string }) {
-  const secret = process.env.JWT_SECRET!;
+  const secret = process.env.JWT_SECRET?.trim();
+  if (!secret) {
+    return null;
+  }
+
   const expiresIn = (process.env.JWT_EXPIRES_IN ?? '7d') as jwt.SignOptions['expiresIn'];
 
   return jwt.sign({ id: user.id, email: user.email, role: user.role }, secret, {
@@ -49,6 +53,35 @@ async function upsertReplicaUser(user: AuthPayload['user'], passwordHash = '') {
       createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
     },
   });
+}
+
+async function cacheReplicaUser(user: AuthPayload['user'], passwordHash = '') {
+  try {
+    await upsertReplicaUser(user, passwordHash);
+  } catch (error) {
+    logger.warn('Failed to cache the authenticated user in the local replica', error);
+  }
+}
+
+async function findLocalUserByEmail(email: string) {
+  try {
+    return await prisma.user.findUnique({ where: { email } });
+  } catch (error) {
+    logger.warn('Failed to read the user from the local replica during login', error);
+    return null;
+  }
+}
+
+async function findLocalUserById(id: string) {
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, role: true, vendorId: true, createdAt: true },
+    });
+  } catch (error) {
+    logger.warn('Failed to read the current user from the local replica', error);
+    return null;
+  }
 }
 
 async function loginAgainstUpstream(email: string, password: string) {
@@ -82,7 +115,7 @@ async function loginAgainstUpstream(email: string, password: string) {
       };
     }
 
-    await upsertReplicaUser(authPayload.user);
+    await cacheReplicaUser(authPayload.user);
 
     return {
       ok: true as const,
@@ -126,7 +159,7 @@ async function fetchUpstreamCurrentUser(authorizationHeader: string) {
       };
     }
 
-    await upsertReplicaUser(user);
+    await cacheReplicaUser(user);
 
     return {
       ok: true as const,
@@ -154,7 +187,7 @@ router.post(
 
     const { email, password } = req.body as { email: string; password: string };
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await findLocalUserByEmail(email);
     const canAuthenticateLocally =
       Boolean(user?.isActive) && typeof user?.passwordHash === 'string' && user.passwordHash.length > 0;
 
@@ -162,8 +195,14 @@ router.post(
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (valid) {
         const token = buildJwtForUser(user);
-        res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
-        return;
+        if (token) {
+          res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+          return;
+        }
+
+        logger.warn(
+          'Skipping local token issuance during login because JWT_SECRET is not configured.'
+        );
       }
     }
 
@@ -192,10 +231,7 @@ router.post(
 );
 
 router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
-  const user = await prisma.user.findUnique({
-    where: { id: req.user!.id },
-    select: { id: true, email: true, role: true, vendorId: true, createdAt: true },
-  });
+  const user = await findLocalUserById(req.user!.id);
   if (!user) {
     const authorization = req.headers.authorization;
     if (authorization) {

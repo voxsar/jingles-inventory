@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { inventoryApi, floorsApi, branchesApi, skusApi, variantsApi, shelvesApi, boxesApi, racksApi, batchesApi } from '../api/client';
-import { InventoryState, ALLOWED_TRANSITIONS } from '@jingles/shared';
+import { InventoryState } from '@jingles/shared/enums';
+import { ALLOWED_TRANSITIONS } from '@jingles/shared/transitions';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';

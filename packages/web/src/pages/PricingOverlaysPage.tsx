@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { pricingOverlaysApi, skusApi, variantsApi, batchesApi, categoriesApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
-import { PricingOverlayType, PricingOverlayStatus } from '@jingles/shared';
+import { PricingOverlayStatus, PricingOverlayType } from '@jingles/shared/enums';
 import SearchableSelect from '../components/SearchableSelect';
 import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
 

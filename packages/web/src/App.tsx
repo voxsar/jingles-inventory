@@ -34,6 +34,7 @@ import TagSpreadsheetPage from './pages/spreadsheet/TagSpreadsheetPage';
 import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
 import TagsPage from './pages/TagsPage';
 import UsersPage from './pages/UsersPage';
+import DesktopSyncPage from './pages/DesktopSyncPage';
 import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
@@ -97,6 +98,7 @@ function AppRoutes() {
         <Route path="spreadsheet/units" element={<UnitSpreadsheetPage />} />
         <Route path="spreadsheet/tags" element={<TagSpreadsheetPage />} />
         <Route path="spreadsheet/grns" element={<GRNSpreadsheetPage />} />
+        <Route path="desktop-sync" element={<DesktopSyncPage />} />
         <Route
           path="vendor-portal"
           element={

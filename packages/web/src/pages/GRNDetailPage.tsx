@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { grnsApi, settingsApi } from '../api/client';
-import { GRNStatus } from '@jingles/shared';
+import { GRNStatus } from '@jingles/shared/enums';
 import SearchableSelect from '../components/SearchableSelect';
 
 const STATUS_TONES: Record<string, string> = {

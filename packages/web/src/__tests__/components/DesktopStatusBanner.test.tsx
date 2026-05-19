@@ -16,6 +16,7 @@ function createHealth(overrides: Record<string, unknown> = {}) {
     localCursor: 12,
     latestServerSeq: 12,
     failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+    progress: null,
     ...overrides,
   };
 }
@@ -103,6 +104,36 @@ describe('DesktopStatusBanner', () => {
     expect(
       screen.getByText('Offline mode. Changes will sync when the connection returns.')
     ).toBeInTheDocument();
+  });
+
+  it('renders a visual sync progress card while desktop sync is running', async () => {
+    installElectronAPI({
+      health: {
+        running: true,
+        progress: {
+          phase: 'pulling',
+          label: 'Refreshing desktop replica',
+          detail: 'Loaded 42 replica rows into the desktop cache.',
+          percent: 90,
+          pending: 1,
+          pushed: 4,
+          pulled: 42,
+          conflicts: 1,
+          startedAt: '2026-05-19T09:00:00.000Z',
+          updatedAt: '2026-05-19T09:00:05.000Z',
+        },
+      },
+    });
+
+    render(<DesktopStatusBanner />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Desktop Sync')).toBeInTheDocument();
+      expect(screen.getByText('Refreshing desktop replica')).toBeInTheDocument();
+      expect(screen.getByText('90%')).toBeInTheDocument();
+      expect(screen.getByText('42 rows')).toBeInTheDocument();
+      expect(screen.getByText('1 issue')).toBeInTheDocument();
+    });
   });
 
   it('triggers a desktop sync when the connection comes back', async () => {

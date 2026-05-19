@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { IUser } from '@jingles/shared';
+import type { IUser } from '@jingles/shared';
 import { authApi } from '../api/client';
 import { branding } from '../config/branding';
 import { clearDesktopAuthCache, persistDesktopAuthCache } from '../utils/runtime';

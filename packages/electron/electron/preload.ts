@@ -1,9 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-const DESKTOP_LOCAL_API_HOST = process.env.ELECTRON_LOCAL_API_HOST ?? '127.0.0.1';
-const DESKTOP_LOCAL_API_PORT = process.env.ELECTRON_LOCAL_API_PORT ?? '3630';
-const DESKTOP_LOCAL_API_URL =
-  process.env.ELECTRON_LOCAL_API_URL ?? `http://${DESKTOP_LOCAL_API_HOST}:${DESKTOP_LOCAL_API_PORT}`;
+const FALLBACK_DESKTOP_LOCAL_API_URL = 'http://127.0.0.1:3630';
+
+function readDesktopLocalApiUrl() {
+  try {
+    const resolvedUrl = ipcRenderer.sendSync('app:backend-url-sync');
+    return typeof resolvedUrl === 'string' && resolvedUrl.trim()
+      ? resolvedUrl.trim()
+      : FALLBACK_DESKTOP_LOCAL_API_URL;
+  } catch (error) {
+    console.error('[Electron preload] Failed to resolve the desktop backend URL.', error);
+    return FALLBACK_DESKTOP_LOCAL_API_URL;
+  }
+}
+
+const DESKTOP_LOCAL_API_URL = readDesktopLocalApiUrl();
 
 // Expose safe IPC API to renderer process
 const electronAPI = {
@@ -35,10 +46,18 @@ const electronAPI = {
     addToSyncQueue: (operation: any) =>
       ipcRenderer.invoke('db:sync:add', operation),
     clearProcessed: () => ipcRenderer.invoke('db:sync:clearProcessed'),
+    getInfo: () => ipcRenderer.invoke('db:info'),
+    backup: () => ipcRenderer.invoke('db:backup'),
+    switchFile: (mode: 'new' | 'existing' | 'default') =>
+      ipcRenderer.invoke('db:switch-file', mode),
+    revealFile: () => ipcRenderer.invoke('db:reveal-file'),
   },
 
   // Sync engine
   sync: {
+    runNow: () => ipcRenderer.invoke('sync:run'),
+    pushOnly: () => ipcRenderer.invoke('sync:push-only'),
+    pullOnly: () => ipcRenderer.invoke('sync:pull-only'),
     push: () => ipcRenderer.invoke('sync:push'),
     pull: () => ipcRenderer.invoke('sync:pull'),
     getStatus: () => ipcRenderer.invoke('sync:status'),

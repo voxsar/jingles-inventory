@@ -2,6 +2,14 @@ function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, '');
 }
 
+function isElectronUserAgent() {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return /\bElectron\/\d+/i.test(navigator.userAgent);
+}
+
 function getDesktopApiBaseUrl() {
   if (!isDesktopRuntime()) {
     return null;
@@ -18,7 +26,11 @@ function getDesktopApiBaseUrl() {
 export function isDesktopRuntime() {
   return (
     typeof window !== 'undefined' &&
-    (window.location.protocol === 'file:' || typeof window.electronAPI !== 'undefined')
+    (
+      window.location.protocol === 'file:' ||
+      typeof window.electronAPI !== 'undefined' ||
+      isElectronUserAgent()
+    )
   );
 }
 

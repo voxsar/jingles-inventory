@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
-import { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
+import type { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 import SearchableSelect from '../components/SearchableSelect';
 
 // ── Grid helper ─────────────────────────────────────────────────────────────

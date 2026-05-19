@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { dashboardApi } from '../api/client';
-import { InventoryState, GRNStatus } from '@jingles/shared';
 import { formatQuantity } from '../utils/quantity';
 
 interface StatCard {

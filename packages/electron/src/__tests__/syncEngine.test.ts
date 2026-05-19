@@ -91,6 +91,15 @@ function createEmptyResponse(status = 200) {
   };
 }
 
+function createHtmlResponse(html: string, status = 500) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: vi.fn().mockResolvedValue(html),
+    json: vi.fn().mockRejectedValue(new Error('Response body is not JSON')),
+  };
+}
+
 describe('syncEngine', () => {
   beforeEach(() => {
     stopAutoSync();
@@ -256,6 +265,10 @@ describe('syncEngine', () => {
     expect(listener).toHaveBeenCalledWith(
       expect.objectContaining({
         running: true,
+        progress: expect.objectContaining({
+          label: expect.any(String),
+          percent: expect.any(Number),
+        }),
       })
     );
 
@@ -275,6 +288,7 @@ describe('syncEngine', () => {
       expect.objectContaining({
         running: false,
         lastSuccessfulSyncAt: expect.any(String),
+        progress: null,
       })
     );
 
@@ -452,6 +466,35 @@ describe('syncEngine', () => {
       })
     );
     expect(setConfig).toHaveBeenCalledWith('lastSyncTime', expect.any(String));
+  });
+
+  it('falls back to snapshot-only sync when the host does not expose /api/sync/log', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        createHtmlResponse(
+          '<!DOCTYPE html><html><body><pre>Cannot GET /api/sync/log</pre></body></html>',
+          404
+        )
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          data: {
+            users: [{ id: 'user-001', email: 'admin@test.com', role: 'Admin', password_hash: '' }],
+            skus: [{ id: 'sku-001', sku_code: 'SKU-001' }],
+          },
+        })
+      );
+
+    const result = await syncAll({ forcePull: true });
+
+    expect(result.errors).toEqual([]);
+    expect(result.pulled).toBe(2);
+    expect(replaceReplicaSnapshot).toHaveBeenCalledWith(
+      expect.objectContaining({
+        users: expect.any(Array),
+        skus: expect.any(Array),
+      })
+    );
   });
 
   it('replays pending request sync entries before pulling the replica snapshot', async () => {

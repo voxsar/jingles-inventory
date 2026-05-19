@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuthStore } from '../../store/authStore';
-import { UserRole } from '@jingles/shared';
+import { UserRole } from '@jingles/shared/enums';
 
 vi.mock('../../store/authStore');
 

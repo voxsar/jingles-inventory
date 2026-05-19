@@ -1,5 +1,20 @@
 export * from './electron';
-export * from './enums';
+export {
+  InventoryState,
+  InventoryEventType,
+  GRNStatus,
+  PRNStatus,
+  UserRole,
+  SyncStatus,
+  DamageClassification,
+  UnitOfMeasure,
+  StockTransferStatus,
+  VendorType,
+  BarcodeType,
+  UnitType,
+  PricingOverlayType,
+  PricingOverlayStatus,
+} from './enums';
 export * from './interfaces';
 export * from './replica';
 export * from './transitions';

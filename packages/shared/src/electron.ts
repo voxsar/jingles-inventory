@@ -54,6 +54,25 @@ export interface ElectronFailedPermanentPolicy {
   retainDays: number | null;
 }
 
+export type ElectronSyncProgressPhase =
+  | 'preparing'
+  | 'pushing'
+  | 'pulling'
+  | 'finalizing';
+
+export interface ElectronSyncProgress {
+  phase: ElectronSyncProgressPhase;
+  label: string;
+  detail: string | null;
+  percent: number;
+  pending: number;
+  pushed: number;
+  pulled: number;
+  conflicts: number;
+  startedAt: string | null;
+  updatedAt: string | null;
+}
+
 export interface ElectronSyncStatusOutbox {
   pending: number;
   conflicts: number;
@@ -75,6 +94,7 @@ export interface ElectronSyncStatus {
   outbox: ElectronSyncStatusOutbox;
   failedPermanentPolicy: ElectronFailedPermanentPolicy;
   lastResult: ElectronSyncResult | null;
+  progress: ElectronSyncProgress | null;
 }
 
 export interface ElectronSyncHealth {
@@ -90,6 +110,32 @@ export interface ElectronSyncHealth {
   localCursor: number;
   latestServerSeq: number;
   failedPermanentPolicy: ElectronFailedPermanentPolicy;
+  progress: ElectronSyncProgress | null;
+}
+
+export interface ElectronDatabaseInfo {
+  currentPath: string;
+  defaultPath: string;
+  directory: string;
+  exists: boolean;
+  sizeBytes: number;
+  lastModifiedAt: string | null;
+  usesCustomPath: boolean;
+}
+
+export interface ElectronDatabaseBackupResult {
+  canceled: boolean;
+  backupPath: string | null;
+  sizeBytes: number | null;
+}
+
+export type ElectronDatabaseSwitchMode = 'new' | 'existing' | 'default';
+
+export interface ElectronDatabaseSwitchResult {
+  canceled: boolean;
+  mode: ElectronDatabaseSwitchMode;
+  selectedPath: string | null;
+  relaunching: boolean;
 }
 
 export interface ElectronAPI {
@@ -109,8 +155,15 @@ export interface ElectronAPI {
     getSyncQueue: () => Promise<any[]>;
     addToSyncQueue: (operation: any) => Promise<any>;
     clearProcessed: () => Promise<void>;
+    getInfo: () => Promise<ElectronDatabaseInfo>;
+    backup: () => Promise<ElectronDatabaseBackupResult>;
+    switchFile: (mode: ElectronDatabaseSwitchMode) => Promise<ElectronDatabaseSwitchResult>;
+    revealFile: () => Promise<void>;
   };
   sync: {
+    runNow: () => Promise<ElectronSyncResult>;
+    pushOnly: () => Promise<ElectronSyncResult>;
+    pullOnly: () => Promise<ElectronSyncResult>;
     push: () => Promise<ElectronSyncResult>;
     pull: () => Promise<ElectronSyncResult>;
     getStatus: () => Promise<ElectronSyncStatus>;

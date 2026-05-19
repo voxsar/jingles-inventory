@@ -3,8 +3,9 @@ import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
 import DesktopStatusBanner from './DesktopStatusBanner';
 import DesktopOutboxControl from './DesktopOutboxControl';
+import { isDesktopRuntime } from '../utils/runtime';
 
-const navItems = [
+const baseNavItems = [
   { to: '/dashboard', label: '📊 Dashboard' },
   { to: '/inventory', label: '📦 Inventory' },
   { to: '/grns', label: '📋 GRNs' },
@@ -28,6 +29,7 @@ const navItems = [
 export default function Layout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const isDesktop = isDesktopRuntime();
 
   const handleLogout = () => {
     logout();
@@ -36,7 +38,7 @@ export default function Layout() {
 
   const allNavItems = user?.role === 'Vendor'
     ? [{ to: '/vendor-portal', label: '🛒 Vendor Portal' }]
-    : navItems.filter((item: any) => {
+    : baseNavItems.filter((item: any) => {
         // Filter items based on user role if roles array is defined
         if (item.roles && !item.roles.includes(user?.role || '')) {
           return false;
@@ -75,6 +77,28 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {isDesktop && (
+          <div className="px-3 pb-3">
+            <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-2">
+              <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700">
+                Desktop
+              </p>
+              <NavLink
+                to="/desktop-sync"
+                className={({ isActive }) =>
+                  `flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-sky-600 text-white shadow-sm'
+                      : 'text-sky-900 hover:bg-sky-100'
+                  }`
+                }
+              >
+                Desktop Sync
+              </NavLink>
+            </div>
+          </div>
+        )}
 
         {/* User profile & logout */}
         <div className="border-t border-gray-200 p-4">

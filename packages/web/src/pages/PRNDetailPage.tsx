@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { prnsApi } from '../api/client';
-import { PRNStatus } from '@jingles/shared';
+import { PRNStatus } from '@jingles/shared/enums';
 
 const STATUS_TONES: Record<string, string> = {
   [PRNStatus.Draft]: '',

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildHierarchicalCategoryOptions, buildHierarchicalCategoryOptionsFromFlat } from '../../utils/categoryHelpers';
-import { ICategory } from '@jingles/shared';
+import type { ICategory } from '@jingles/shared';
 
 describe('categoryHelpers', () => {
   describe('buildHierarchicalCategoryOptions', () => {

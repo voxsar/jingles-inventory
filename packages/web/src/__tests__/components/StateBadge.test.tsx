@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import StateBadge from '../../components/StateBadge';
-import { InventoryState } from '@jingles/shared';
+import { InventoryState } from '@jingles/shared/enums';
 
 describe('StateBadge', () => {
   it('renders the state text', () => {

@@ -2,6 +2,7 @@ import fs from 'fs';
 import {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   Menu,
   nativeImage,
@@ -14,6 +15,7 @@ import {
 import path from 'path';
 import { pathToFileURL } from 'url';
 import {
+  backupLocalDatabase,
   addToSyncQueue,
   clearProcessedQueue,
   deleteConfig,
@@ -30,6 +32,14 @@ import {
 import { setupBarcodeIPC } from '../src/barcode/scanner';
 import { getDesktopLocalApiUrl, startLocalApiServer } from '../src/backend/localApi';
 import {
+  clearConfiguredDesktopDatabasePath,
+  setConfiguredDesktopDatabasePath,
+} from '../src/backend/desktopDbConfig';
+import {
+  getDesktopDatabasePath,
+  getDesktopDefaultDatabasePath,
+} from '../src/backend/runtimePaths';
+import {
   getSyncHealth,
   getSyncOutbox,
   getSyncStatus,
@@ -38,6 +48,8 @@ import {
   stopAutoSync,
   subscribeSyncHealth,
   syncAll,
+  syncPullOnly,
+  syncPushOnly,
 } from '../src/sync/syncEngine';
 
 let mainWindow: BrowserWindow | null = null;
@@ -204,6 +216,132 @@ function refreshTrayMenu() {
       },
     ])
   );
+}
+
+function buildTimestampForFilename(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+    '-',
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0'),
+    String(date.getSeconds()).padStart(2, '0'),
+  ].join('');
+}
+
+function getDesktopDatabaseInfo() {
+  const currentPath = path.resolve(getDesktopDatabasePath());
+  const defaultPath = path.resolve(getDesktopDefaultDatabasePath());
+  const exists = fs.existsSync(currentPath);
+  const stats = exists ? fs.statSync(currentPath) : null;
+
+  return {
+    currentPath,
+    defaultPath,
+    directory: path.dirname(currentPath),
+    exists,
+    sizeBytes: stats?.size ?? 0,
+    lastModifiedAt: stats?.mtime.toISOString() ?? null,
+    usesCustomPath: currentPath !== defaultPath,
+  };
+}
+
+function getDialogOwner() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return undefined;
+  }
+
+  return mainWindow;
+}
+
+async function pickBackupDestinationPath() {
+  const databaseInfo = getDesktopDatabaseInfo();
+  const options: Electron.SaveDialogOptions = {
+    title: 'Backup Desktop Database',
+    defaultPath: path.join(
+      databaseInfo.directory,
+      `jingles-inventory-backup-${buildTimestampForFilename()}.sqlite`
+    ),
+    filters: [
+      { name: 'SQLite Database', extensions: ['sqlite', 'db'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+    properties: ['createDirectory', 'showOverwriteConfirmation'],
+  };
+  const dialogOwner = getDialogOwner();
+  const result = dialogOwner
+    ? await dialog.showSaveDialog(dialogOwner, options)
+    : await dialog.showSaveDialog(options);
+
+  if (result.canceled || !result.filePath) {
+    return null;
+  }
+
+  return path.resolve(result.filePath);
+}
+
+async function pickDatabasePathForSwitch(mode: 'new' | 'existing') {
+  const databaseInfo = getDesktopDatabaseInfo();
+
+  if (mode === 'existing') {
+    const options: Electron.OpenDialogOptions = {
+      title: 'Select Desktop Database',
+      defaultPath: databaseInfo.directory,
+      filters: [
+        { name: 'SQLite Database', extensions: ['sqlite', 'db'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    };
+    const dialogOwner = getDialogOwner();
+    const result = dialogOwner
+      ? await dialog.showOpenDialog(dialogOwner, options)
+      : await dialog.showOpenDialog(options);
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return path.resolve(result.filePaths[0]);
+  }
+
+  const options: Electron.SaveDialogOptions = {
+    title: 'Create Desktop Database',
+    defaultPath: path.join(
+      databaseInfo.directory,
+      `jingles-inventory-${buildTimestampForFilename()}.sqlite`
+    ),
+    filters: [
+      { name: 'SQLite Database', extensions: ['sqlite', 'db'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+    properties: ['createDirectory', 'showOverwriteConfirmation'],
+  };
+  const dialogOwner = getDialogOwner();
+  const result = dialogOwner
+    ? await dialog.showSaveDialog(dialogOwner, options)
+    : await dialog.showSaveDialog(options);
+
+  if (result.canceled || !result.filePath) {
+    return null;
+  }
+
+  return path.resolve(result.filePath);
+}
+
+function scheduleDatabaseSwitch(nextPath: string | null) {
+  if (nextPath) {
+    setConfiguredDesktopDatabasePath(nextPath);
+  } else {
+    clearConfiguredDesktopDatabasePath();
+  }
+
+  setTimeout(() => {
+    isQuitting = true;
+    app.relaunch();
+    app.quit();
+  }, 100);
 }
 
 function broadcastSyncHealth(syncHealth = getSyncHealth()) {
@@ -458,6 +596,85 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
     broadcastSyncHealth();
   });
 
+  ipcMain.handle('db:info', () => {
+    return getDesktopDatabaseInfo();
+  });
+
+  ipcMain.handle('db:backup', async () => {
+    const backupPath = await pickBackupDestinationPath();
+    if (!backupPath) {
+      return {
+        canceled: true,
+        backupPath: null,
+        sizeBytes: null,
+      };
+    }
+
+    const result = await backupLocalDatabase(backupPath);
+    return {
+      canceled: false,
+      backupPath: result.path,
+      sizeBytes: result.sizeBytes,
+    };
+  });
+
+  ipcMain.handle('db:switch-file', async (_event, mode: 'new' | 'existing' | 'default') => {
+    if (mode === 'default') {
+      const selectedPath = getDesktopDefaultDatabasePath();
+      scheduleDatabaseSwitch(null);
+      return {
+        canceled: false,
+        mode,
+        selectedPath,
+        relaunching: true,
+      };
+    }
+
+    const selectedPath = await pickDatabasePathForSwitch(mode);
+    if (!selectedPath) {
+      return {
+        canceled: true,
+        mode,
+        selectedPath: null,
+        relaunching: false,
+      };
+    }
+
+    scheduleDatabaseSwitch(selectedPath);
+    return {
+      canceled: false,
+      mode,
+      selectedPath,
+      relaunching: true,
+    };
+  });
+
+  ipcMain.handle('db:reveal-file', async () => {
+    const databaseInfo = getDesktopDatabaseInfo();
+
+    if (databaseInfo.exists) {
+      shell.showItemInFolder(databaseInfo.currentPath);
+      return;
+    }
+
+    const openError = await shell.openPath(databaseInfo.directory);
+    if (openError) {
+      throw new Error(openError);
+    }
+  });
+
+  ipcMain.handle('sync:run', async () => {
+    return syncAll({ forcePull: true });
+  });
+
+  ipcMain.handle('sync:push-only', async () => {
+    return syncPushOnly();
+  });
+
+  ipcMain.handle('sync:pull-only', async () => {
+    return syncPullOnly();
+  });
+
   ipcMain.handle('sync:push', async () => {
     return syncAll();
   });
@@ -489,6 +706,10 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
 
   ipcMain.handle('app:version', () => {
     return app.getVersion();
+  });
+
+  ipcMain.on('app:backend-url-sync', (event) => {
+    event.returnValue = localApiServer?.url ?? getDesktopLocalApiUrl();
   });
 
   ipcMain.handle('app:open-external', (_event, url: string) => {

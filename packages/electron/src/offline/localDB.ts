@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import Database from 'better-sqlite3';
+import path from 'path';
 import type { ReplicaMutationEvent, ReplicaTable } from '../sync/replicaEvents';
 import { REPLICA_TABLES } from '../backend/replicaTables';
 import {
@@ -1088,6 +1089,23 @@ export function setConfig(key: string, value: string): void {
 
 export function deleteConfig(key: string): void {
   getDB().prepare('DELETE FROM config WHERE key = ?').run(key);
+}
+
+export async function backupLocalDatabase(destinationPath: string) {
+  const resolvedDestinationPath = path.resolve(destinationPath);
+  const destinationDirectory = path.dirname(resolvedDestinationPath);
+
+  if (!fs.existsSync(destinationDirectory)) {
+    fs.mkdirSync(destinationDirectory, { recursive: true });
+  }
+
+  await getDB().backup(resolvedDestinationPath);
+  const stats = fs.statSync(resolvedDestinationPath);
+
+  return {
+    path: resolvedDestinationPath,
+    sizeBytes: stats.size,
+  };
 }
 
 export function getCachedResponse<T = unknown>(key: string): T | null {

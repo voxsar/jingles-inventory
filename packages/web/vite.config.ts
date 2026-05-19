@@ -17,14 +17,15 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     base: './',
     resolve: {
+      extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
       alias: [
         {
-          find: '@jingles/shared',
-          replacement: path.resolve(__dirname, '../shared/src/index.ts'),
+          find: /^@jingles\/shared\/(.*)$/,
+          replacement: `${path.resolve(__dirname, '../shared/src')}/$1.ts`,
         },
         {
-          find: /^@jingles\/shared\/(.*)$/,
-          replacement: `${path.resolve(__dirname, '../shared/src')}/$1`,
+          find: /^@jingles\/shared$/,
+          replacement: path.resolve(__dirname, '../shared/src/index.ts'),
         },
       ],
     },

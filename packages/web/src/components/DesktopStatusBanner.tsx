@@ -2,11 +2,31 @@ import { useEffect, useState } from 'react';
 import type {
   ElectronFailedPermanentPolicy,
   ElectronSyncHealth,
+  ElectronSyncProgress,
+  ElectronSyncProgressPhase,
   ElectronSyncResult,
 } from '@jingles/shared';
 
 const STALE_SYNC_WARNING_MS = 3 * 24 * 60 * 60 * 1000;
 const STALE_SYNC_CLOCK_INTERVAL_MS = 60 * 1000;
+const PROGRESS_STEPS: Array<{ phase: ElectronSyncProgressPhase; label: string }> = [
+  { phase: 'preparing', label: 'Prepare' },
+  { phase: 'pushing', label: 'Push' },
+  { phase: 'pulling', label: 'Pull' },
+  { phase: 'finalizing', label: 'Finish' },
+];
+const PROGRESS_STEP_ORDER = PROGRESS_STEPS.reduce<Record<ElectronSyncProgressPhase, number>>(
+  (accumulator, step, index) => {
+    accumulator[step.phase] = index;
+    return accumulator;
+  },
+  {
+    preparing: 0,
+    pushing: 1,
+    pulling: 2,
+    finalizing: 3,
+  }
+);
 
 function hasElectronBridge() {
   return typeof window !== 'undefined' && typeof window.electronAPI !== 'undefined';
@@ -88,6 +108,112 @@ function buildStaleSyncMessage(
   return `Desktop sync has not completed successfully since ${parsed.toLocaleString()}.`;
 }
 
+function formatMetricCount(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function getProgressStepState(
+  currentPhase: ElectronSyncProgressPhase,
+  targetPhase: ElectronSyncProgressPhase
+) {
+  const currentIndex = PROGRESS_STEP_ORDER[currentPhase];
+  const targetIndex = PROGRESS_STEP_ORDER[targetPhase];
+
+  if (targetIndex < currentIndex) {
+    return 'complete';
+  }
+
+  if (targetIndex === currentIndex) {
+    return 'active';
+  }
+
+  return 'upcoming';
+}
+
+function renderSyncProgress(progress: ElectronSyncProgress) {
+  return (
+    <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-cyan-50 px-5 py-4 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+            Desktop Sync
+          </p>
+          <h2 className="mt-1 text-base font-semibold text-gray-900">{progress.label}</h2>
+          {progress.detail && (
+            <p className="mt-1 text-sm text-gray-600">{progress.detail}</p>
+          )}
+        </div>
+        <div className="inline-flex self-start rounded-full border border-sky-200 bg-white/85 px-3 py-1 text-sm font-semibold text-sky-800 shadow-sm">
+          {progress.percent}%
+        </div>
+      </div>
+
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-sky-100">
+        <div
+          className="h-full rounded-full bg-sky-600 transition-all duration-300"
+          style={{ width: `${progress.percent}%` }}
+        />
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-white/70 bg-white/85 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
+            Pending
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {formatMetricCount(progress.pending, 'change')}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/70 bg-white/85 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
+            Pushed
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {formatMetricCount(progress.pushed, 'change')}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/70 bg-white/85 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
+            Pulled
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {formatMetricCount(progress.pulled, 'row')}
+          </p>
+        </div>
+        <div className="rounded-xl border border-white/70 bg-white/85 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
+            Conflicts
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {formatMetricCount(progress.conflicts, 'issue', 'issues')}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {PROGRESS_STEPS.map((step) => {
+          const state = getProgressStepState(progress.phase, step.phase);
+          const toneClasses =
+            state === 'complete'
+              ? 'border-sky-600 bg-sky-600 text-white'
+              : state === 'active'
+                ? 'border-sky-300 bg-sky-100 text-sky-900'
+                : 'border-gray-200 bg-white text-gray-500';
+
+          return (
+            <span
+              key={step.phase}
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] ${toneClasses}`}
+            >
+              {step.label}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DesktopStatusBanner() {
   const [isElectron] = useState(hasElectronBridge);
   const [isOnline, setIsOnline] = useState(getInitialOnlineStatus);
@@ -151,6 +277,7 @@ export default function DesktopStatusBanner() {
   }, []);
 
   const running = syncHealth?.running ?? false;
+  const progress = syncHealth?.progress ?? null;
   const conflictCount = syncHealth?.conflictCount ?? 0;
   const syncError = syncHealth?.lastSyncError ?? fallbackSyncError;
   const pendingNotice = buildPendingMessage(syncHealth?.pendingCount ?? 0, running);
@@ -182,12 +309,13 @@ export default function DesktopStatusBanner() {
 
   return (
     <div className="border-b border-gray-200 bg-white px-6 py-3 space-y-2">
+      {progress && renderSyncProgress(progress)}
       {!isOnline && (
         <s-banner tone="warning">
           Offline mode. Changes will sync when the connection returns.
         </s-banner>
       )}
-      {running && (
+      {running && !progress && (
         <s-banner tone="info">Syncing desktop changes...</s-banner>
       )}
       {syncError && (
