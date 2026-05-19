@@ -17,14 +17,20 @@ describe('getStatusByKey', () => {
 
 	it('returns value from database when statusOption model is available', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn().mockResolvedValue({ value: 'UnopenedBox' }),
+			findFirst: vi.fn().mockResolvedValue({ value: 'UnopenedBox' }),
 			findMany: vi.fn(),
 		};
 
 		const result = await getStatusByKey(SpecialStatusKeys.INVENTORY_UNOPENED_BOX);
 		expect(result).toBe('UnopenedBox');
-		expect((prismaMock as any).statusOption.findUnique).toHaveBeenCalledWith(
-			expect.objectContaining({ where: { specialKey: SpecialStatusKeys.INVENTORY_UNOPENED_BOX } })
+		expect((prismaMock as any).statusOption.findFirst).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: {
+					specialKey: SpecialStatusKeys.INVENTORY_UNOPENED_BOX,
+					isActive: true,
+					deletedAt: null,
+				},
+			})
 		);
 	});
 
@@ -36,7 +42,7 @@ describe('getStatusByKey', () => {
 
 	it('falls back when database returns null', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn().mockResolvedValue(null),
+			findFirst: vi.fn().mockResolvedValue(null),
 			findMany: vi.fn(),
 		};
 
@@ -46,7 +52,7 @@ describe('getStatusByKey', () => {
 
 	it('throws when key is unknown and database returns null', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn().mockResolvedValue(null),
+			findFirst: vi.fn().mockResolvedValue(null),
 			findMany: vi.fn(),
 		};
 
@@ -55,7 +61,7 @@ describe('getStatusByKey', () => {
 
 	it('caches value after first lookup', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn().mockResolvedValue({ value: 'Inspected' }),
+			findFirst: vi.fn().mockResolvedValue({ value: 'Inspected' }),
 			findMany: vi.fn(),
 		};
 
@@ -63,7 +69,7 @@ describe('getStatusByKey', () => {
 		await getStatusByKey(SpecialStatusKeys.INVENTORY_INSPECTED);
 
 		// Should only call DB once due to caching
-		expect((prismaMock as any).statusOption.findUnique).toHaveBeenCalledTimes(1);
+		expect((prismaMock as any).statusOption.findFirst).toHaveBeenCalledTimes(1);
 	});
 
 	it('caches fallback value to avoid repeated DB calls', async () => {
@@ -150,7 +156,7 @@ describe('getStatusesByKeys', () => {
 
 	it('uses database values when statusOption model is available', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn(),
+			findFirst: vi.fn(),
 			findMany: vi.fn().mockResolvedValue([
 				{ specialKey: SpecialStatusKeys.GRN_DRAFT, value: 'Draft' },
 				{ specialKey: SpecialStatusKeys.INVENTORY_UNINSPECTED, value: 'Uninspected' },
@@ -164,6 +170,20 @@ describe('getStatusesByKeys', () => {
 
 		expect(result.get(SpecialStatusKeys.GRN_DRAFT)).toBe('Draft');
 		expect(result.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)).toBe('Uninspected');
+		expect((prismaMock as any).statusOption.findMany).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: {
+					specialKey: {
+						in: [
+							SpecialStatusKeys.GRN_DRAFT,
+							SpecialStatusKeys.INVENTORY_UNINSPECTED,
+						],
+					},
+					isActive: true,
+					deletedAt: null,
+				},
+			})
+		);
 	});
 
 	it('uses cache for previously fetched keys', async () => {
@@ -171,7 +191,7 @@ describe('getStatusesByKeys', () => {
 		await getStatusesByKeys([SpecialStatusKeys.INVENTORY_DAMAGED]);
 
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn(),
+			findFirst: vi.fn(),
 			findMany: vi.fn(),
 		};
 
@@ -183,7 +203,7 @@ describe('getStatusesByKeys', () => {
 
 	it('throws when a requested key has no fallback and is missing from DB', async () => {
 		(prismaMock as any).statusOption = {
-			findUnique: vi.fn(),
+			findFirst: vi.fn(),
 			findMany: vi.fn().mockResolvedValue([]),
 		};
 

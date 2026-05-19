@@ -12,6 +12,15 @@ import {
 let db: Database.Database;
 const tableColumnCache = new Map<string, string[]>();
 const tablePrimaryKeyCache = new Map<string, string[]>();
+export const FAILED_PERMANENT_STATUS = 'failed_permanent' as const;
+
+type SyncFailureDisposition = 'retry' | 'permanent';
+
+export interface SyncOutboxSummary {
+  pending: number;
+  conflicts: number;
+  failedPermanent: number;
+}
 
 type InventoryFilters = {
   state?: string;
@@ -107,7 +116,47 @@ function runMigrations(): void {
 
   ensureColumnExists(database, 'grns', 'synced_at', 'TEXT');
   ensureColumnExists(database, 'grns', 'dirty', 'INTEGER DEFAULT 0');
+  ensureColumnExists(database, 'status_options', 'server_seq', 'INTEGER');
+  ensureColumnExists(database, 'status_options', 'deleted_at', 'TEXT');
   ensureColumnExists(database, 'sync_queue', 'retry_count', 'INTEGER DEFAULT 0');
+  migrateLegacyFailedStatuses(database);
+}
+
+function migrateLegacyFailedStatuses(database: Database.Database): void {
+  database
+    .prepare(
+      `
+        UPDATE sync_queue
+        SET status = ?,
+            processed_at = COALESCE(processed_at, datetime('now'))
+        WHERE status = 'Failed'
+      `
+    )
+    .run(FAILED_PERMANENT_STATUS);
+
+  database
+    .prepare(
+      `
+        UPDATE request_sync_queue
+        SET status = ?,
+            processed_at = COALESCE(processed_at, datetime('now')),
+            last_error = COALESCE(last_error, 'Marked as permanently failed by sync policy upgrade.')
+        WHERE status = 'Failed'
+      `
+    )
+    .run(FAILED_PERMANENT_STATUS);
+
+  database
+    .prepare(
+      `
+        UPDATE sync_operation_log
+        SET status = ?,
+            processed_at = COALESCE(processed_at, datetime('now')),
+            last_error = COALESCE(last_error, 'Marked as permanently failed by sync policy upgrade.')
+        WHERE status = 'Failed'
+      `
+    )
+    .run(FAILED_PERMANENT_STATUS);
 }
 
 function ensureColumnExists(
@@ -182,6 +231,11 @@ function normalizeReplicaValue(value: unknown): unknown {
   }
 
   return value;
+}
+
+function isReplicaTombstone(row: Record<string, unknown>) {
+  const deletedAt = row.deleted_at ?? row.deletedAt;
+  return deletedAt !== undefined && deletedAt !== null && deletedAt !== '';
 }
 
 function buildInsertStatement(tableName: string, columns: string[]) {
@@ -280,6 +334,10 @@ export function replaceReplicaSnapshot(snapshot: Partial<Record<string, unknown[
             continue;
           }
 
+          if (isReplicaTombstone(row)) {
+            continue;
+          }
+
           const payload = Object.fromEntries(
             Object.entries(row)
               .filter(([columnName]) => tableColumns.has(columnName))
@@ -324,9 +382,10 @@ export function applyReplicaMutation(change: ReplicaMutationEvent) {
   }
 
   const keyPayload = getReplicaKeyPayload(change.table, change.row);
+  const shouldDelete = change.action === 'delete' || isReplicaTombstone(change.row);
 
   const transaction = database.transaction(() => {
-    if (change.action === 'delete') {
+    if (shouldDelete) {
       const whereClause = Object.keys(keyPayload)
         .map((columnName) => `"${columnName}" = @${columnName}`)
         .join(' AND ');
@@ -661,7 +720,29 @@ export function upsertGRN(grn: any, options: UpsertOptions = {}) {
 
 // Sync Queue CRUD
 export function getSyncQueue() {
-  return getDB().prepare("SELECT * FROM sync_queue WHERE status IN ('Pending', 'Failed') ORDER BY created_at ASC").all();
+  return getDB()
+    .prepare(
+      `
+        SELECT *
+        FROM sync_queue
+        WHERE status <> 'Processed'
+        ORDER BY created_at ASC
+      `
+    )
+    .all();
+}
+
+export function getPendingSyncQueue() {
+  return getDB()
+    .prepare(
+      `
+        SELECT *
+        FROM sync_queue
+        WHERE status = 'Pending'
+        ORDER BY created_at ASC
+      `
+    )
+    .all();
 }
 
 export function addToSyncQueue(operation: any) {
@@ -673,11 +754,15 @@ export function addToSyncQueue(operation: any) {
   return stmt.run({ ...operation, payload: typeof operation.payload === 'string' ? operation.payload : JSON.stringify(operation.payload) });
 }
 
-export function markSyncProcessed(id: string, status: 'Processed' | 'Failed' | 'Conflict', conflictNotes?: string) {
+export function markSyncProcessed(
+  id: string,
+  status: 'Processed' | 'Conflict' | typeof FAILED_PERMANENT_STATUS,
+  notes?: string
+) {
   const database = getDB();
   database.prepare(`
     UPDATE sync_queue SET status = ?, processed_at = datetime('now'), conflict_notes = ? WHERE id = ?
-  `).run(status, conflictNotes ?? null, id);
+  `).run(status, notes ?? null, id);
 }
 
 export function clearProcessedQueue() {
@@ -710,6 +795,49 @@ export function getPendingSyncConflicts() {
     .all();
 }
 
+export function getPendingSyncConflictDetails() {
+  return getDB()
+    .prepare(
+      `
+        SELECT
+          c.*,
+          o.op_type AS operation_type,
+          o.status AS operation_status,
+          o.base_version AS operation_base_version,
+          o.payload AS operation_payload,
+          o.last_error AS operation_last_error,
+          o.conflict_data AS operation_conflict_data
+        FROM sync_conflicts c
+        LEFT JOIN sync_operation_log o ON o.id = c.operation_id
+        WHERE c.status = 'Pending'
+        ORDER BY c.created_at ASC
+      `
+    )
+    .all();
+}
+
+export function getPendingSyncConflictDetailById(id: string) {
+  return getDB()
+    .prepare(
+      `
+        SELECT
+          c.*,
+          o.op_type AS operation_type,
+          o.status AS operation_status,
+          o.base_version AS operation_base_version,
+          o.payload AS operation_payload,
+          o.last_error AS operation_last_error,
+          o.conflict_data AS operation_conflict_data
+        FROM sync_conflicts c
+        LEFT JOIN sync_operation_log o ON o.id = c.operation_id
+        WHERE c.id = ?
+          AND c.status = 'Pending'
+        LIMIT 1
+      `
+    )
+    .get(id);
+}
+
 export function markSyncOperationLogProcessed(id: string, serverSeq?: number | null) {
   getDB()
     .prepare(
@@ -718,7 +846,9 @@ export function markSyncOperationLogProcessed(id: string, serverSeq?: number | n
         SET status = 'Processed',
             processed_at = datetime('now'),
             applied_server_seq = ?,
-            last_error = NULL
+            last_error = NULL,
+            conflict_data = NULL,
+            attempt_count = attempt_count + 1
         WHERE id = ?
       `
     )
@@ -744,7 +874,12 @@ export function markSyncOperationLogConflict(id: string, conflictData: unknown) 
     .run(serializedConflict, id);
 }
 
-export function markSyncOperationLogFailed(id: string, error: string, keepPending = false) {
+export function markSyncOperationLogFailed(
+  id: string,
+  error: string,
+  disposition: SyncFailureDisposition = 'retry'
+) {
+  const keepPending = disposition === 'retry';
   getDB()
     .prepare(
       `
@@ -756,7 +891,7 @@ export function markSyncOperationLogFailed(id: string, error: string, keepPendin
         WHERE id = ?
       `
     )
-    .run(keepPending ? 'Pending' : 'Failed', keepPending ? 1 : 0, error, id);
+    .run(keepPending ? 'Pending' : FAILED_PERMANENT_STATUS, keepPending ? 1 : 0, error, id);
 }
 
 export function insertPendingSyncConflict(conflict: {
@@ -804,12 +939,35 @@ export function insertPendingSyncConflict(conflict: {
     );
 }
 
+export function markSyncConflictResolved(id: string, resolutionPayload: unknown) {
+  const serializedResolution =
+    typeof resolutionPayload === 'string'
+      ? resolutionPayload
+      : JSON.stringify(resolutionPayload ?? null);
+
+  getDB()
+    .prepare(
+      `
+        UPDATE sync_conflicts
+        SET status = 'Resolved',
+            resolution_payload = ?,
+            resolved_at = datetime('now')
+        WHERE id = ?
+      `
+    )
+    .run(serializedResolution, id);
+}
+
 export function getDirtyRecords() {
   return getDB().prepare('SELECT * FROM inventory_records WHERE dirty = 1').all();
 }
 
 export function markRecordSynced(id: string) {
   getDB().prepare("UPDATE inventory_records SET dirty = 0, synced_at = datetime('now') WHERE id = ?").run(id);
+}
+
+export function deleteInventoryRecord(id: string) {
+  getDB().prepare('DELETE FROM inventory_records WHERE id = ?').run(id);
 }
 
 export function getPendingRequestSyncQueue() {
@@ -835,7 +993,12 @@ export function markRequestSyncProcessed(id: string) {
     .run(id);
 }
 
-export function markRequestSyncFailed(id: string, error: string, keepPending = false) {
+export function markRequestSyncFailed(
+  id: string,
+  error: string,
+  disposition: SyncFailureDisposition = 'retry'
+) {
+  const keepPending = disposition === 'retry';
   getDB()
     .prepare(`
       UPDATE request_sync_queue
@@ -845,11 +1008,69 @@ export function markRequestSyncFailed(id: string, error: string, keepPending = f
           attempt_count = attempt_count + 1
       WHERE id = ?
     `)
-    .run(keepPending ? 'Pending' : 'Failed', keepPending ? 1 : 0, error, id);
+    .run(keepPending ? 'Pending' : FAILED_PERMANENT_STATUS, keepPending ? 1 : 0, error, id);
 }
 
 export function clearProcessedRequestSyncQueue() {
   getDB().prepare(`DELETE FROM request_sync_queue WHERE status = 'Processed'`).run();
+}
+
+export function pruneFailedPermanentOutbox(retentionDays: number) {
+  const database = getDB();
+  const normalizedDays = Math.max(0, Math.trunc(retentionDays));
+
+  const deleteFromTable = (
+    tableName: 'sync_queue' | 'request_sync_queue' | 'sync_operation_log'
+  ) => {
+    if (normalizedDays === 0) {
+      return database
+        .prepare(`DELETE FROM ${tableName} WHERE status = ?`)
+        .run(FAILED_PERMANENT_STATUS).changes;
+    }
+
+    return database
+      .prepare(
+        `
+          DELETE FROM ${tableName}
+          WHERE status = ?
+            AND datetime(COALESCE(processed_at, created_at)) <= datetime('now', ?)
+        `
+      )
+      .run(FAILED_PERMANENT_STATUS, `-${normalizedDays} days`).changes;
+  };
+
+  return (
+    deleteFromTable('sync_queue') +
+    deleteFromTable('request_sync_queue') +
+    deleteFromTable('sync_operation_log')
+  );
+}
+
+function readCount(query: string, ...params: Array<string | number>) {
+  const row = getDB().prepare(query).get(...params) as { count?: number } | undefined;
+  return row?.count ?? 0;
+}
+
+export function getSyncOutboxSummary(): SyncOutboxSummary {
+  return {
+    pending:
+      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = 'Pending'`) +
+      readCount(`SELECT COUNT(*) AS count FROM request_sync_queue WHERE status = 'Pending'`) +
+      readCount(`SELECT COUNT(*) AS count FROM sync_operation_log WHERE status = 'Pending'`),
+    conflicts:
+      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = 'Conflict'`) +
+      readCount(`SELECT COUNT(*) AS count FROM sync_conflicts WHERE status = 'Pending'`),
+    failedPermanent:
+      readCount(`SELECT COUNT(*) AS count FROM sync_queue WHERE status = ?`, FAILED_PERMANENT_STATUS) +
+      readCount(
+        `SELECT COUNT(*) AS count FROM request_sync_queue WHERE status = ?`,
+        FAILED_PERMANENT_STATUS
+      ) +
+      readCount(
+        `SELECT COUNT(*) AS count FROM sync_operation_log WHERE status = ?`,
+        FAILED_PERMANENT_STATUS
+      ),
+  };
 }
 
 // Config key-value store (replaces localStorage for main-process persistence)

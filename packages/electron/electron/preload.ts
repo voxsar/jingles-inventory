@@ -42,6 +42,12 @@ const electronAPI = {
     push: () => ipcRenderer.invoke('sync:push'),
     pull: () => ipcRenderer.invoke('sync:pull'),
     getStatus: () => ipcRenderer.invoke('sync:status'),
+    getOutbox: () => ipcRenderer.invoke('sync:outbox'),
+    resolveConflict: (
+      conflictId: string,
+      resolution: 'keep_local' | 'keep_server'
+    ) =>
+      ipcRenderer.invoke('sync:resolve-conflict', conflictId, resolution),
   },
 
   // App info

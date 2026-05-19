@@ -33,6 +33,22 @@ function normalizeQuantityInput(value: unknown) {
 	return undefined;
 }
 
+const inventoryRecordDetailInclude = {
+	sku: { include: { vendor: { select: { id: true, name: true } } } },
+	variant: {
+		include: {
+			attributeValues: {
+				include: { attribute: true, attributeValue: true },
+			},
+		},
+	},
+	floor: { include: { branch: { select: { id: true, name: true } } } },
+	shelf: true,
+	box: true,
+	batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true, expiryDate: true } },
+	user: { select: { email: true } },
+} satisfies Prisma.InventoryRecordInclude;
+
 // GET /api/inventory
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
@@ -104,21 +120,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				where,
 				skip: (pageNum - 1) * pageSizeNum,
 				take: pageSizeNum,
-				include: {
-					sku: { include: { vendor: { select: { id: true, name: true } } } },
-					variant: {
-						include: {
-							attributeValues: {
-								include: { attribute: true, attributeValue: true },
-							},
-						},
-					},
-					floor: { include: { branch: { select: { id: true, name: true } } } },
-					shelf: true,
-					box: true,
-					batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true, expiryDate: true } },
-					user: { select: { email: true } },
-				},
+				include: inventoryRecordDetailInclude,
 				orderBy: { updatedAt: 'desc' },
 			}),
 			prisma.inventoryRecord.count({ where }),
@@ -156,6 +158,28 @@ router.get('/events', async (req: AuthRequest, res: Response): Promise<void> => 
 	} catch (error) {
 		logger.error('Get events error', error);
 		res.status(500).json({ success: false, error: 'Failed to fetch events' });
+	}
+});
+
+// GET /api/inventory/:id
+router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const { id } = req.params as { id: string };
+
+		const record = await prisma.inventoryRecord.findUnique({
+			where: { id },
+			include: inventoryRecordDetailInclude,
+		});
+
+		if (!record) {
+			res.status(404).json({ success: false, error: 'Inventory record not found' });
+			return;
+		}
+
+		res.json({ success: true, data: record });
+	} catch (error) {
+		logger.error('Get inventory record error', error);
+		res.status(500).json({ success: false, error: 'Failed to fetch inventory record' });
 	}
 });
 

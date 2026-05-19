@@ -55,6 +55,14 @@ describe('sync v2 routes', () => {
         action: 'upsert',
         createdAt: new Date('2026-05-18T12:12:00.000Z'),
       },
+      {
+        id: 'chg-004',
+        seq: 13,
+        tableName: 'status_options',
+        rowId: 'status-001',
+        action: 'upsert',
+        createdAt: new Date('2026-05-18T12:13:00.000Z'),
+      },
     ]);
     prismaMock.inventoryRecord.findUnique
       .mockResolvedValueOnce({ id: 'inv-001', quantity: 8, version: 4 } as any)
@@ -64,6 +72,15 @@ describe('sync v2 routes', () => {
       eventType: 'STATE_CHANGE',
       parentEntityId: 'inv-001',
     } as any);
+    prismaMock.statusOption.findUnique.mockResolvedValueOnce({
+      id: 'status-001',
+      entityType: 'inventory',
+      value: 'ShelfReady',
+      label: 'Shelf Ready',
+      specialKey: 'INVENTORY_SHELF_READY',
+      serverSeq: 13,
+      deletedAt: null,
+    } as any);
 
     const app = createTestApp();
     const res = await request(app)
@@ -71,7 +88,7 @@ describe('sync v2 routes', () => {
       .query({ sinceSeq: 9, limit: 10 });
 
     expect(res.status).toBe(200);
-    expect(res.body.data.lastServerSeq).toBe(12);
+    expect(res.body.data.lastServerSeq).toBe(13);
     expect(res.body.data.hasMore).toBe(false);
     expect(res.body.data.changes).toEqual([
       {
@@ -98,6 +115,54 @@ describe('sync v2 routes', () => {
         action: 'delete',
         row: { id: 'inv-deleted' },
         emittedAt: '2026-05-18T12:12:00.000Z',
+      },
+      {
+        seq: 13,
+        table: 'status_options',
+        action: 'upsert',
+        row: {
+          id: 'status-001',
+          entityType: 'inventory',
+          value: 'ShelfReady',
+          label: 'Shelf Ready',
+          specialKey: 'INVENTORY_SHELF_READY',
+          serverSeq: 13,
+          deletedAt: null,
+        },
+        emittedAt: '2026-05-18T12:13:00.000Z',
+      },
+    ]);
+  });
+
+  it('emits delete actions for tombstoned status options', async () => {
+    prismaMock.syncServerChange.findMany.mockResolvedValue([
+      {
+        id: 'chg-005',
+        seq: 14,
+        tableName: 'status_options',
+        rowId: 'status-deleted',
+        action: 'delete',
+        createdAt: new Date('2026-05-18T12:14:00.000Z'),
+      },
+    ]);
+    prismaMock.statusOption.findUnique.mockResolvedValueOnce({
+      id: 'status-deleted',
+      deletedAt: new Date('2026-05-18T12:14:00.000Z'),
+    } as any);
+
+    const app = createTestApp();
+    const res = await request(app)
+      .get('/api/sync/log')
+      .query({ sinceSeq: 13, limit: 10 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.changes).toEqual([
+      {
+        seq: 14,
+        table: 'status_options',
+        action: 'delete',
+        row: { id: 'status-deleted' },
+        emittedAt: '2026-05-18T12:14:00.000Z',
       },
     ]);
   });

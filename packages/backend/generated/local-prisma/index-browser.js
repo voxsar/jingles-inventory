@@ -662,6 +662,8 @@ exports.Prisma.StatusOptionScalarFieldEnum = {
   isSystem: 'isSystem',
   isActive: 'isActive',
   specialKey: 'specialKey',
+  serverSeq: 'serverSeq',
+  deletedAt: 'deletedAt',
   createdAt: 'createdAt'
 };
 

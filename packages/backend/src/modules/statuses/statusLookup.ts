@@ -99,7 +99,7 @@ export async function getStatusByKey(specialKey: string): Promise<string> {
 	}
 
 	const statusModel = (prisma as any).statusOption;
-	if (!statusModel?.findUnique) {
+	if (!statusModel?.findFirst) {
 		const fallback = FALLBACK_STATUS_BY_KEY[specialKey];
 		if (!fallback) {
 			throw new Error(`Status with special key '${specialKey}' not found in database`);
@@ -108,8 +108,8 @@ export async function getStatusByKey(specialKey: string): Promise<string> {
 		return fallback;
 	}
 
-	const status = await statusModel.findUnique({
-		where: { specialKey },
+	const status = await statusModel.findFirst({
+		where: { specialKey, isActive: true, deletedAt: null },
 		select: { value: true },
 	});
 
@@ -151,7 +151,7 @@ export async function getStatusesByKeys(specialKeys: string[]): Promise<Map<stri
 		const statusModel = (prisma as any).statusOption;
 		if (statusModel?.findMany) {
 			const statuses = await statusModel.findMany({
-				where: { specialKey: { in: uncachedKeys } },
+				where: { specialKey: { in: uncachedKeys }, isActive: true, deletedAt: null },
 				select: { specialKey: true, value: true },
 			});
 
@@ -193,7 +193,7 @@ export async function preloadStatusCache(): Promise<void> {
 	}
 
 	const statuses = await statusModel.findMany({
-		where: { specialKey: { not: null } },
+		where: { specialKey: { not: null }, isActive: true, deletedAt: null },
 		select: { specialKey: true, value: true },
 	});
 

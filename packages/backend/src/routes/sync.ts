@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { Router, Response } from 'express';
 import {
   InventoryEventType,
@@ -59,14 +60,35 @@ const router = Router();
 
 router.use(authenticate);
 
+const REPLICA_EXPORT_FILTERS: Partial<Record<string, string>> = {
+  status_options: `"deleted_at" IS NULL`,
+};
+
+function buildReplicaExportQuery(tableName: string) {
+  const filter = REPLICA_EXPORT_FILTERS[tableName];
+  return filter ? `SELECT * FROM "${tableName}" WHERE ${filter}` : `SELECT * FROM "${tableName}"`;
+}
+
+function isReplicaRowDeleted(row: Record<string, unknown> | null) {
+  if (!row) {
+    return true;
+  }
+
+  return row.deletedAt !== undefined
+    ? row.deletedAt !== null
+    : row.deleted_at !== undefined
+      ? row.deleted_at !== null
+      : false;
+}
+
 router.get('/replica/export', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const snapshot: Record<string, unknown[]> = {};
 
     for (const tableName of REPLICA_TABLES) {
-      const rows = (await prisma.$queryRawUnsafe(
-        `SELECT * FROM "${tableName}"`
-      )) as Array<Record<string, unknown>>;
+      const rows = (await prisma.$queryRawUnsafe(buildReplicaExportQuery(tableName))) as Array<
+        Record<string, unknown>
+      >;
       snapshot[tableName] =
         tableName === 'users'
           ? rows.map((row) =>
@@ -742,7 +764,7 @@ async function processSyncV2Operation(
         processedAt: new Date(),
         appliedServerSeq: serverSeq,
         lastError: null,
-        conflictData: null,
+        conflictData: Prisma.DbNull,
         attemptCount: { increment: 1 },
       },
     });
@@ -890,13 +912,19 @@ router.get('/log', async (req: AuthRequest, res: Response): Promise<void> => {
         row = (await prisma.inventoryEvent.findUnique({
           where: { id: changeRow.rowId },
         })) as unknown as Record<string, unknown> | null;
+      } else if (changeRow.tableName === 'status_options') {
+        row = (await prisma.statusOption.findUnique({
+          where: { id: changeRow.rowId },
+        })) as unknown as Record<string, unknown> | null;
       }
+
+      const shouldDelete = changeRow.action === 'delete' || isReplicaRowDeleted(row);
 
       changes.push({
         seq: changeRow.seq,
         table: changeRow.tableName,
-        action: row ? changeRow.action : 'delete',
-        row: row ?? { id: changeRow.rowId },
+        action: shouldDelete ? 'delete' : 'upsert',
+        row: shouldDelete ? { id: changeRow.rowId } : (row as Record<string, unknown>),
         emittedAt: changeRow.createdAt.toISOString(),
       });
     }

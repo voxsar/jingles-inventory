@@ -6,12 +6,35 @@ import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { testTypesenseConnection } from '../modules/typesense/client';
 import { startSyncJob } from '../modules/typesense/syncService';
 import { getJob, getAllJobs } from '../modules/typesense/jobTracker';
+import { persistSyncMetadata, recordServerSyncChanges } from '../sync/syncV2';
 import logger from '../utils/logger';
 import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
 router.use(authenticate);
+
+async function syncStatusOptionChange(
+	tx: any,
+	statusOptionId: string,
+	action: 'upsert' | 'delete',
+	deletedAt?: Date | null,
+) {
+	const serverSeq = await recordServerSyncChanges(tx, {
+		aggregateType: 'status_option',
+		aggregateId: statusOptionId,
+		changes: [{ tableName: 'status_options', rowId: statusOptionId, action }],
+	});
+
+	await persistSyncMetadata(tx, {
+		tableName: 'status_options',
+		rowId: statusOptionId,
+		serverSeq,
+		deletedAt: deletedAt ?? null,
+	});
+
+	return serverSeq;
+}
 
 router.get('/units', async (req: AuthRequest, res: Response): Promise<void> => {
 	const { search } = req.query as { search?: string };
@@ -138,7 +161,7 @@ const VALID_ENTITY_TYPES = ['inventory', 'product', 'location', 'branch', 'suppl
 router.get('/statuses', async (req: AuthRequest, res: Response): Promise<void> => {
 	const { entityType } = req.query as { entityType?: string };
 	const pagination = getPagination(req.query);
-	const where: Prisma.StatusOptionWhereInput = { isActive: true };
+	const where: Prisma.StatusOptionWhereInput = { isActive: true, deletedAt: null };
 	if (entityType) where.entityType = entityType;
 	if (pagination.isPaginated) {
 		const [items, total] = await Promise.all([
@@ -200,8 +223,14 @@ router.post(
 				return;
 			}
 		}
-		const status = await prisma.statusOption.create({
-			data: { entityType, value, label, color, sortOrder: sortOrder ?? 0, isDefault: isDefault ?? false, specialKey: specialKey || null },
+		const status = await prisma.$transaction(async (tx: any) => {
+			const createdStatus = await tx.statusOption.create({
+				data: { entityType, value, label, color, sortOrder: sortOrder ?? 0, isDefault: isDefault ?? false, specialKey: specialKey || null },
+			});
+
+			await syncStatusOptionChange(tx, createdStatus.id, 'upsert');
+
+			return tx.statusOption.findUnique({ where: { id: createdStatus.id } });
 		});
 		res.status(201).json({ success: true, data: status });
 	}
@@ -238,9 +267,15 @@ router.put(
 				return;
 			}
 		}
-		const status = await prisma.statusOption.update({
-			where: { id: req.params!.id },
-			data: { label, color, sortOrder, isDefault, isActive, specialKey: specialKey === undefined ? undefined : specialKey },
+		const status = await prisma.$transaction(async (tx: any) => {
+			const updatedStatus = await tx.statusOption.update({
+				where: { id: req.params!.id },
+				data: { label, color, sortOrder, isDefault, isActive, specialKey: specialKey === undefined ? undefined : specialKey },
+			});
+
+			await syncStatusOptionChange(tx, updatedStatus.id, 'upsert');
+
+			return tx.statusOption.findUnique({ where: { id: updatedStatus.id } });
 		});
 		res.json({ success: true, data: status });
 	}
@@ -261,7 +296,18 @@ router.delete(
 			res.status(404).json({ error: 'Status option not found' });
 			return;
 		}
-		await prisma.statusOption.delete({ where: { id: req.params!.id } });
+		const deletedAt = new Date();
+		await prisma.$transaction(async (tx: any) => {
+			await tx.statusOption.update({
+				where: { id: req.params!.id },
+				data: {
+					isActive: false,
+					deletedAt,
+				},
+			});
+
+			await syncStatusOptionChange(tx, req.params!.id, 'delete', deletedAt);
+		});
 		res.json({ success: true, message: 'Status option deleted' });
 	}
 );

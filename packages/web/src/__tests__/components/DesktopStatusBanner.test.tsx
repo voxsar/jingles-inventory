@@ -31,7 +31,21 @@ describe('DesktopStatusBanner', () => {
       sync: {
         push: vi.fn(),
         pull: vi.fn(),
-        getStatus: vi.fn(),
+        getStatus: vi.fn().mockResolvedValue({
+          lastResult: { errors: [] },
+          outbox: { failedPermanent: 0 },
+          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+        }),
+        getOutbox: vi.fn().mockResolvedValue({
+          summary: {
+            legacyQueueCount: 0,
+            syncOperationCount: 0,
+            requestQueueCount: 0,
+            conflictCount: 0,
+            totalCount: 0,
+          },
+          conflicts: [],
+        }),
       },
       network: {
         isOnline: vi.fn(() => false),
@@ -52,7 +66,21 @@ describe('DesktopStatusBanner', () => {
       sync: {
         push,
         pull: vi.fn(),
-        getStatus: vi.fn(),
+        getStatus: vi.fn().mockResolvedValue({
+          lastResult: { errors: [] },
+          outbox: { failedPermanent: 0 },
+          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+        }),
+        getOutbox: vi.fn().mockResolvedValue({
+          summary: {
+            legacyQueueCount: 0,
+            syncOperationCount: 0,
+            requestQueueCount: 0,
+            conflictCount: 0,
+            totalCount: 0,
+          },
+          conflicts: [],
+        }),
       },
       network: {
         isOnline: vi.fn(() => false),
@@ -68,6 +96,80 @@ describe('DesktopStatusBanner', () => {
 
     await waitFor(() => {
       expect(push).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('shows the permanent failure retention banner when the outbox has held failures', async () => {
+    window.electronAPI = {
+      sync: {
+        push: vi.fn(),
+        pull: vi.fn(),
+        getStatus: vi.fn().mockResolvedValue({
+          lastResult: { errors: [] },
+          outbox: { failedPermanent: 2 },
+          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+        }),
+        getOutbox: vi.fn().mockResolvedValue({
+          summary: {
+            legacyQueueCount: 0,
+            syncOperationCount: 0,
+            requestQueueCount: 0,
+            conflictCount: 0,
+            totalCount: 0,
+          },
+          conflicts: [],
+        }),
+      },
+      network: {
+        isOnline: vi.fn(() => true),
+        onStatusChange: vi.fn(() => vi.fn()),
+      },
+    } as any;
+
+    render(<DesktopStatusBanner />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          '2 desktop changes could not be synced and are being held for review. Server state will be kept automatically after 7 days.'
+        )
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('shows a conflict banner when the outbox contains unresolved sync conflicts', async () => {
+    window.electronAPI = {
+      sync: {
+        push: vi.fn(),
+        pull: vi.fn(),
+        getStatus: vi.fn().mockResolvedValue({
+          lastResult: { errors: [] },
+          outbox: { failedPermanent: 0 },
+          failedPermanentPolicy: { mode: 'auto_keep_server', retainDays: 7 },
+        }),
+        getOutbox: vi.fn().mockResolvedValue({
+          summary: {
+            legacyQueueCount: 0,
+            syncOperationCount: 0,
+            requestQueueCount: 0,
+            conflictCount: 2,
+            totalCount: 2,
+          },
+          conflicts: [],
+        }),
+      },
+      network: {
+        isOnline: vi.fn(() => true),
+        onStatusChange: vi.fn(() => vi.fn()),
+      },
+    } as any;
+
+    render(<DesktopStatusBanner />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('2 sync conflicts need review in the desktop outbox.')
+      ).toBeInTheDocument();
     });
   });
 });

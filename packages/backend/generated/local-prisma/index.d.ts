@@ -49349,10 +49349,12 @@ export namespace Prisma {
 
   export type StatusOptionAvgAggregateOutputType = {
     sortOrder: number | null
+    serverSeq: number | null
   }
 
   export type StatusOptionSumAggregateOutputType = {
     sortOrder: number | null
+    serverSeq: number | null
   }
 
   export type StatusOptionMinAggregateOutputType = {
@@ -49366,6 +49368,8 @@ export namespace Prisma {
     isSystem: boolean | null
     isActive: boolean | null
     specialKey: string | null
+    serverSeq: number | null
+    deletedAt: Date | null
     createdAt: Date | null
   }
 
@@ -49380,6 +49384,8 @@ export namespace Prisma {
     isSystem: boolean | null
     isActive: boolean | null
     specialKey: string | null
+    serverSeq: number | null
+    deletedAt: Date | null
     createdAt: Date | null
   }
 
@@ -49394,6 +49400,8 @@ export namespace Prisma {
     isSystem: number
     isActive: number
     specialKey: number
+    serverSeq: number
+    deletedAt: number
     createdAt: number
     _all: number
   }
@@ -49401,10 +49409,12 @@ export namespace Prisma {
 
   export type StatusOptionAvgAggregateInputType = {
     sortOrder?: true
+    serverSeq?: true
   }
 
   export type StatusOptionSumAggregateInputType = {
     sortOrder?: true
+    serverSeq?: true
   }
 
   export type StatusOptionMinAggregateInputType = {
@@ -49418,6 +49428,8 @@ export namespace Prisma {
     isSystem?: true
     isActive?: true
     specialKey?: true
+    serverSeq?: true
+    deletedAt?: true
     createdAt?: true
   }
 
@@ -49432,6 +49444,8 @@ export namespace Prisma {
     isSystem?: true
     isActive?: true
     specialKey?: true
+    serverSeq?: true
+    deletedAt?: true
     createdAt?: true
   }
 
@@ -49446,6 +49460,8 @@ export namespace Prisma {
     isSystem?: true
     isActive?: true
     specialKey?: true
+    serverSeq?: true
+    deletedAt?: true
     createdAt?: true
     _all?: true
   }
@@ -49547,6 +49563,8 @@ export namespace Prisma {
     isSystem: boolean
     isActive: boolean
     specialKey: string | null
+    serverSeq: number | null
+    deletedAt: Date | null
     createdAt: Date
     _count: StatusOptionCountAggregateOutputType | null
     _avg: StatusOptionAvgAggregateOutputType | null
@@ -49580,6 +49598,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: boolean
+    serverSeq?: boolean
+    deletedAt?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["statusOption"]>
 
@@ -49594,6 +49614,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: boolean
+    serverSeq?: boolean
+    deletedAt?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["statusOption"]>
 
@@ -49608,6 +49630,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: boolean
+    serverSeq?: boolean
+    deletedAt?: boolean
     createdAt?: boolean
   }
 
@@ -49626,6 +49650,8 @@ export namespace Prisma {
       isSystem: boolean
       isActive: boolean
       specialKey: string | null
+      serverSeq: number | null
+      deletedAt: Date | null
       createdAt: Date
     }, ExtArgs["result"]["statusOption"]>
     composites: {}
@@ -50030,6 +50056,8 @@ export namespace Prisma {
     readonly isSystem: FieldRef<"StatusOption", 'Boolean'>
     readonly isActive: FieldRef<"StatusOption", 'Boolean'>
     readonly specialKey: FieldRef<"StatusOption", 'String'>
+    readonly serverSeq: FieldRef<"StatusOption", 'Int'>
+    readonly deletedAt: FieldRef<"StatusOption", 'DateTime'>
     readonly createdAt: FieldRef<"StatusOption", 'DateTime'>
   }
     
@@ -51940,6 +51968,8 @@ export namespace Prisma {
     isSystem: 'isSystem',
     isActive: 'isActive',
     specialKey: 'specialKey',
+    serverSeq: 'serverSeq',
+    deletedAt: 'deletedAt',
     createdAt: 'createdAt'
   };
 
@@ -55674,6 +55704,8 @@ export namespace Prisma {
     isSystem?: BoolFilter<"StatusOption"> | boolean
     isActive?: BoolFilter<"StatusOption"> | boolean
     specialKey?: StringNullableFilter<"StatusOption"> | string | null
+    serverSeq?: IntNullableFilter<"StatusOption"> | number | null
+    deletedAt?: DateTimeNullableFilter<"StatusOption"> | Date | string | null
     createdAt?: DateTimeFilter<"StatusOption"> | Date | string
   }
 
@@ -55688,6 +55720,8 @@ export namespace Prisma {
     isSystem?: SortOrder
     isActive?: SortOrder
     specialKey?: SortOrderInput | SortOrder
+    serverSeq?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
   }
 
@@ -55706,6 +55740,8 @@ export namespace Prisma {
     isDefault?: BoolFilter<"StatusOption"> | boolean
     isSystem?: BoolFilter<"StatusOption"> | boolean
     isActive?: BoolFilter<"StatusOption"> | boolean
+    serverSeq?: IntNullableFilter<"StatusOption"> | number | null
+    deletedAt?: DateTimeNullableFilter<"StatusOption"> | Date | string | null
     createdAt?: DateTimeFilter<"StatusOption"> | Date | string
   }, "id" | "specialKey" | "entityType_value">
 
@@ -55720,6 +55756,8 @@ export namespace Prisma {
     isSystem?: SortOrder
     isActive?: SortOrder
     specialKey?: SortOrderInput | SortOrder
+    serverSeq?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: StatusOptionCountOrderByAggregateInput
     _avg?: StatusOptionAvgOrderByAggregateInput
@@ -55742,6 +55780,8 @@ export namespace Prisma {
     isSystem?: BoolWithAggregatesFilter<"StatusOption"> | boolean
     isActive?: BoolWithAggregatesFilter<"StatusOption"> | boolean
     specialKey?: StringNullableWithAggregatesFilter<"StatusOption"> | string | null
+    serverSeq?: IntNullableWithAggregatesFilter<"StatusOption"> | number | null
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"StatusOption"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"StatusOption"> | Date | string
   }
 
@@ -59761,6 +59801,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: string | null
+    serverSeq?: number | null
+    deletedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -59775,6 +59817,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: string | null
+    serverSeq?: number | null
+    deletedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -59789,6 +59833,8 @@ export namespace Prisma {
     isSystem?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     specialKey?: NullableStringFieldUpdateOperationsInput | string | null
+    serverSeq?: NullableIntFieldUpdateOperationsInput | number | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -59803,6 +59849,8 @@ export namespace Prisma {
     isSystem?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     specialKey?: NullableStringFieldUpdateOperationsInput | string | null
+    serverSeq?: NullableIntFieldUpdateOperationsInput | number | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -59817,6 +59865,8 @@ export namespace Prisma {
     isSystem?: boolean
     isActive?: boolean
     specialKey?: string | null
+    serverSeq?: number | null
+    deletedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -59831,6 +59881,8 @@ export namespace Prisma {
     isSystem?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     specialKey?: NullableStringFieldUpdateOperationsInput | string | null
+    serverSeq?: NullableIntFieldUpdateOperationsInput | number | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -59845,6 +59897,8 @@ export namespace Prisma {
     isSystem?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     specialKey?: NullableStringFieldUpdateOperationsInput | string | null
+    serverSeq?: NullableIntFieldUpdateOperationsInput | number | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -62547,11 +62601,14 @@ export namespace Prisma {
     isSystem?: SortOrder
     isActive?: SortOrder
     specialKey?: SortOrder
+    serverSeq?: SortOrder
+    deletedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type StatusOptionAvgOrderByAggregateInput = {
     sortOrder?: SortOrder
+    serverSeq?: SortOrder
   }
 
   export type StatusOptionMaxOrderByAggregateInput = {
@@ -62565,6 +62622,8 @@ export namespace Prisma {
     isSystem?: SortOrder
     isActive?: SortOrder
     specialKey?: SortOrder
+    serverSeq?: SortOrder
+    deletedAt?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -62579,11 +62638,14 @@ export namespace Prisma {
     isSystem?: SortOrder
     isActive?: SortOrder
     specialKey?: SortOrder
+    serverSeq?: SortOrder
+    deletedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type StatusOptionSumOrderByAggregateInput = {
     sortOrder?: SortOrder
+    serverSeq?: SortOrder
   }
 
   export type DashboardStatsCountOrderByAggregateInput = {

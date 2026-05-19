@@ -29,7 +29,14 @@ import {
 } from '../src/offline/localDB';
 import { setupBarcodeIPC } from '../src/barcode/scanner';
 import { getDesktopLocalApiUrl, startLocalApiServer } from '../src/backend/localApi';
-import { getSyncStatus, refreshRealtimeSyncConnection, stopAutoSync, syncAll } from '../src/sync/syncEngine';
+import {
+  getSyncOutbox,
+  getSyncStatus,
+  refreshRealtimeSyncConnection,
+  resolveSyncConflict,
+  stopAutoSync,
+  syncAll,
+} from '../src/sync/syncEngine';
 
 let mainWindow: BrowserWindow | null = null;
 let localApiServer: Awaited<ReturnType<typeof startLocalApiServer>> | null = null;
@@ -432,6 +439,17 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
   ipcMain.handle('sync:status', () => {
     return getSyncStatus();
   });
+
+  ipcMain.handle('sync:outbox', () => {
+    return getSyncOutbox();
+  });
+
+  ipcMain.handle(
+    'sync:resolve-conflict',
+    async (_event, conflictId: string, resolution: 'keep_local' | 'keep_server') => {
+      return resolveSyncConflict(conflictId, resolution);
+    }
+  );
 
   ipcMain.handle('app:version', () => {
     return app.getVersion();

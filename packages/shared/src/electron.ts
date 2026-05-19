@@ -5,6 +5,50 @@ export interface ElectronSyncResult {
   errors: string[];
 }
 
+export interface ElectronSyncOutboxSummary {
+  legacyQueueCount: number;
+  syncOperationCount: number;
+  requestQueueCount: number;
+  conflictCount: number;
+  totalCount: number;
+}
+
+export interface ElectronSyncConflictEntry {
+  id: string;
+  operationId: string;
+  clientId: string;
+  aggregateType: string;
+  aggregateId: string | null;
+  status: string;
+  localPayload: Record<string, unknown> | null;
+  serverPayload: Record<string, unknown> | null;
+  resolutionPayload: Record<string, unknown> | null;
+  createdAt: string | null;
+  resolvedAt: string | null;
+  operationType: string | null;
+  operationStatus: string | null;
+  operationBaseVersion: number | null;
+  operationPayload: Record<string, unknown> | null;
+  operationLastError: string | null;
+  conflictCode: string | null;
+  conflictMessage: string | null;
+}
+
+export interface ElectronSyncOutboxSnapshot {
+  summary: ElectronSyncOutboxSummary;
+  conflicts: ElectronSyncConflictEntry[];
+}
+
+export type ElectronSyncConflictResolutionChoice = 'keep_local' | 'keep_server';
+
+export interface ElectronSyncConflictResolutionResult {
+  conflictId: string;
+  operationId: string;
+  resolution: ElectronSyncConflictResolutionChoice;
+  operationStatus: string;
+  aggregateId: string | null;
+}
+
 export interface ElectronSyncStatus {
   configured: boolean;
   running: boolean;
@@ -42,6 +86,11 @@ export interface ElectronAPI {
     push: () => Promise<ElectronSyncResult>;
     pull: () => Promise<ElectronSyncResult>;
     getStatus: () => Promise<ElectronSyncStatus>;
+    getOutbox: () => Promise<ElectronSyncOutboxSnapshot>;
+    resolveConflict: (
+      conflictId: string,
+      resolution: ElectronSyncConflictResolutionChoice
+    ) => Promise<ElectronSyncConflictResolutionResult>;
   };
   app: {
     backendUrl: string;

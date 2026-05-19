@@ -663,6 +663,8 @@ CREATE TABLE IF NOT EXISTS "status_options" (
     "is_system" BOOLEAN NOT NULL DEFAULT false,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "special_key" TEXT,
+    "server_seq" INTEGER,
+    "deleted_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -787,6 +789,12 @@ CREATE INDEX IF NOT EXISTS "sync_server_changes_table_name_row_id_idx" ON "sync_
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "status_options_special_key_key" ON "status_options"("special_key");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "status_options_server_seq_idx" ON "status_options"("server_seq");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "status_options_deleted_at_idx" ON "status_options"("deleted_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "status_options_entity_type_value_key" ON "status_options"("entity_type", "value");

@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
 import DesktopStatusBanner from './DesktopStatusBanner';
+import DesktopOutboxControl from './DesktopOutboxControl';
 
 const navItems = [
   { to: '/dashboard', label: '📊 Dashboard' },
@@ -99,8 +100,9 @@ export default function Layout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between gap-4 px-6 flex-shrink-0">
           <h1 className="text-lg font-semibold text-gray-800">{branding.appHeaderTitle}</h1>
+          <DesktopOutboxControl />
         </header>
 
         <DesktopStatusBanner />

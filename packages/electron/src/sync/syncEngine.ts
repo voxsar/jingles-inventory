@@ -1,25 +1,34 @@
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  FAILED_PERMANENT_STATUS,
   addToSyncQueue,
   applyReplicaMutation,
   clearProcessedQueue,
   clearProcessedRequestSyncQueue,
+  deleteInventoryRecord,
   getConfig,
   getPendingSyncConflicts,
+  getPendingSyncConflictDetailById,
+  getPendingSyncConflictDetails,
+  getPendingSyncQueue,
   getPendingSyncOperationLogs,
   getPendingRequestSyncQueue,
-  getSyncQueue,
+  getSyncOutboxSummary,
   insertPendingSyncConflict,
   markRequestSyncFailed,
   markRequestSyncProcessed,
+  markSyncConflictResolved,
   markSyncOperationLogConflict,
   markSyncOperationLogFailed,
   markSyncOperationLogProcessed,
   markSyncProcessed,
+  pruneFailedPermanentOutbox,
   replaceReplicaSnapshot,
   setConfig,
+  upsertInventoryRecord,
 } from '../offline/localDB';
+import type { SyncOutboxSummary } from '../offline/localDB';
 import type { ReplicaSyncEvent } from './replicaEvents';
 
 interface SyncConfig {
@@ -68,12 +77,80 @@ type QueuedSyncConflictRecord = {
   status: string;
 };
 
+type SyncConflictDetailRecord = QueuedSyncConflictRecord & {
+  local_payload: string | null;
+  server_payload: string | null;
+  resolution_payload: string | null;
+  created_at: string | null;
+  resolved_at: string | null;
+  operation_type: string | null;
+  operation_status: string | null;
+  operation_base_version: number | null;
+  operation_payload: string | null;
+  operation_last_error: string | null;
+  operation_conflict_data: string | null;
+};
+
 type SyncLogItem = {
   seq: number;
   table: string;
   action: 'upsert' | 'delete';
   row: Record<string, unknown>;
   emittedAt: string;
+};
+
+type FailedPermanentPolicyMode = 'auto_discard' | 'hold' | 'auto_keep_server';
+
+type FailedPermanentPolicy =
+  | { mode: 'auto_discard'; retainDays: 0 }
+  | { mode: 'hold'; retainDays: null }
+  | { mode: 'auto_keep_server'; retainDays: number };
+
+type FailedPermanentPolicyDescriptor = {
+  mode: FailedPermanentPolicyMode;
+  retainDays: number | null;
+};
+
+type ElectronSyncConflictEntry = {
+  id: string;
+  operationId: string;
+  clientId: string;
+  aggregateType: string;
+  aggregateId: string | null;
+  status: string;
+  localPayload: Record<string, unknown> | null;
+  serverPayload: Record<string, unknown> | null;
+  resolutionPayload: Record<string, unknown> | null;
+  createdAt: string | null;
+  resolvedAt: string | null;
+  operationType: string | null;
+  operationStatus: string | null;
+  operationBaseVersion: number | null;
+  operationPayload: Record<string, unknown> | null;
+  operationLastError: string | null;
+  conflictCode: string | null;
+  conflictMessage: string | null;
+};
+
+type ElectronSyncOutboxSnapshot = {
+  summary: {
+    legacyQueueCount: number;
+    syncOperationCount: number;
+    requestQueueCount: number;
+    conflictCount: number;
+    totalCount: number;
+  };
+  conflicts: ElectronSyncConflictEntry[];
+};
+
+type ElectronSyncConflictResolutionChoice = 'keep_local' | 'keep_server';
+
+type ElectronSyncConflictResolutionResult = {
+  conflictId: string;
+  operationId: string;
+  resolution: ElectronSyncConflictResolutionChoice;
+  operationStatus: string;
+  aggregateId: string | null;
 };
 
 export interface SyncRunResult {
@@ -95,7 +172,51 @@ export interface SyncStatus {
   lastSuccessfulSyncAt: string | null;
   lastRealtimeEventAt: string | null;
   lastRealtimeError: string | null;
+  outbox: SyncOutboxSummary;
+  failedPermanentPolicy: FailedPermanentPolicyDescriptor;
   lastResult: SyncRunResult | null;
+}
+
+const EMPTY_OUTBOX_SUMMARY: SyncOutboxSummary = {
+  pending: 0,
+  conflicts: 0,
+  failedPermanent: 0,
+};
+
+const DEFAULT_FAILED_PERMANENT_RETENTION_DAYS = 7;
+
+function resolveFailedPermanentPolicy(): FailedPermanentPolicy {
+  const normalizedMode = process.env.ELECTRON_SYNC_FAILED_PERMANENT_POLICY?.trim()
+    .toLowerCase()
+    .replace(/-/g, '_');
+
+  if (normalizedMode === 'auto_discard') {
+    return { mode: 'auto_discard', retainDays: 0 };
+  }
+
+  if (normalizedMode === 'hold') {
+    return { mode: 'hold', retainDays: null };
+  }
+
+  const parsedDays = Number.parseInt(
+    process.env.ELECTRON_SYNC_FAILED_PERMANENT_RETENTION_DAYS ?? '',
+    10
+  );
+  const retainDays =
+    Number.isFinite(parsedDays) && parsedDays >= 0
+      ? parsedDays
+      : DEFAULT_FAILED_PERMANENT_RETENTION_DAYS;
+
+  return { mode: 'auto_keep_server', retainDays };
+}
+
+const FAILED_PERMANENT_POLICY = resolveFailedPermanentPolicy();
+
+function getFailedPermanentPolicyDescriptor(): FailedPermanentPolicyDescriptor {
+  return {
+    mode: FAILED_PERMANENT_POLICY.mode,
+    retainDays: FAILED_PERMANENT_POLICY.retainDays,
+  };
 }
 
 let syncConfig: SyncConfig | null = null;
@@ -119,6 +240,8 @@ let syncStatus: SyncStatus = {
   lastSuccessfulSyncAt: null,
   lastRealtimeEventAt: null,
   lastRealtimeError: null,
+  outbox: EMPTY_OUTBOX_SUMMARY,
+  failedPermanentPolicy: getFailedPermanentPolicyDescriptor(),
   lastResult: null,
 };
 
@@ -128,6 +251,18 @@ function cloneResult(result: SyncRunResult): SyncRunResult {
     pulled: result.pulled,
     conflicts: result.conflicts,
     errors: [...result.errors],
+  };
+}
+
+function refreshOutboxState() {
+  if (FAILED_PERMANENT_POLICY.mode !== 'hold') {
+    pruneFailedPermanentOutbox(FAILED_PERMANENT_POLICY.retainDays ?? 0);
+  }
+
+  syncStatus = {
+    ...syncStatus,
+    outbox: getSyncOutboxSummary(),
+    failedPermanentPolicy: getFailedPermanentPolicyDescriptor(),
   };
 }
 
@@ -141,6 +276,71 @@ function parseJsonValue<T>(value: string | null | undefined, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readStringProperty(
+  payload: Record<string, unknown> | null,
+  ...keys: string[]
+): string | null {
+  for (const key of keys) {
+    const value = payload?.[key];
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function mapConflictEntry(conflict: SyncConflictDetailRecord): ElectronSyncConflictEntry {
+  const localPayload = parseJsonValue<Record<string, unknown> | null>(
+    conflict.local_payload,
+    null
+  );
+  const serverPayload = parseJsonValue<Record<string, unknown> | null>(
+    conflict.server_payload,
+    null
+  );
+  const resolutionPayload = parseJsonValue<Record<string, unknown> | null>(
+    conflict.resolution_payload,
+    null
+  );
+  const operationPayload = parseJsonValue<Record<string, unknown> | null>(
+    conflict.operation_payload,
+    null
+  );
+  const conflictData = parseJsonValue<Record<string, unknown> | null>(
+    conflict.operation_conflict_data,
+    null
+  );
+
+  return {
+    id: conflict.id,
+    operationId: conflict.operation_id,
+    clientId: conflict.client_id,
+    aggregateType: conflict.aggregate_type,
+    aggregateId: conflict.aggregate_id,
+    status: conflict.status,
+    localPayload,
+    serverPayload,
+    resolutionPayload,
+    createdAt: conflict.created_at,
+    resolvedAt: conflict.resolved_at,
+    operationType: conflict.operation_type,
+    operationStatus: conflict.operation_status,
+    operationBaseVersion: conflict.operation_base_version,
+    operationPayload,
+    operationLastError: conflict.operation_last_error,
+    conflictCode: readStringProperty(conflictData, 'code'),
+    conflictMessage: readStringProperty(conflictData, 'message'),
+  };
 }
 
 function isNetworkRetriableStatus(status: number) {
@@ -229,6 +429,278 @@ async function readJsonBody<T>(response: Response): Promise<T | null> {
   }
 }
 
+function copyFirstPresentKey(
+  source: Record<string, unknown> | null,
+  keys: string[],
+  target: Record<string, unknown>,
+  targetKey = keys[0]
+) {
+  if (!source) {
+    return;
+  }
+
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      target[targetKey] = source[key];
+      return;
+    }
+  }
+}
+
+async function sendAuthorizedJsonRequest<T>(
+  serverUrl: string,
+  token: string,
+  path: string,
+  init: {
+    method?: 'GET' | 'POST' | 'PUT';
+    body?: Record<string, unknown>;
+  } = {}
+) {
+  const headers = new Headers({
+    Authorization: `Bearer ${token}`,
+  });
+
+  if (init.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${serverUrl}${path}`, {
+    method: init.method ?? 'GET',
+    headers,
+    body: init.body ? JSON.stringify(init.body) : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response));
+  }
+
+  return readJsonBody<T>(response);
+}
+
+async function refreshInventoryRecordFromServer(
+  serverUrl: string,
+  token: string,
+  inventoryRecordId: string,
+  options: { deleteWhenMissing?: boolean } = {}
+) {
+  const response = await fetch(`${serverUrl}/api/inventory/${inventoryRecordId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (response.status === 404) {
+    if (options.deleteWhenMissing) {
+      deleteInventoryRecord(inventoryRecordId);
+      return null;
+    }
+
+    throw new Error(`Inventory record ${inventoryRecordId} was not found on the server.`);
+  }
+
+  if (!response.ok) {
+    throw new Error(await readErrorMessage(response));
+  }
+
+  const payload = await readJsonBody<{ data?: Record<string, unknown> }>(response);
+  if (!isRecord(payload?.data)) {
+    throw new Error(`Inventory refresh for ${inventoryRecordId} returned an invalid payload.`);
+  }
+
+  upsertInventoryRecord(payload.data, { markDirty: false });
+  return payload.data;
+}
+
+async function applyKeepLocalInventoryCreate(
+  serverUrl: string,
+  token: string,
+  localPayload: Record<string, unknown>,
+  serverPayload: Record<string, unknown> | null
+) {
+  const recordId = readStringProperty(localPayload, 'id');
+  if (!recordId) {
+    throw new Error('inventory.create resolution requires an id.');
+  }
+
+  if (!serverPayload) {
+    await sendAuthorizedJsonRequest(serverUrl, token, '/api/inventory', {
+      method: 'POST',
+      body: localPayload,
+    });
+    return recordId;
+  }
+
+  const localSkuId = readStringProperty(localPayload, 'skuId', 'sku_id');
+  const serverSkuId = readStringProperty(serverPayload, 'skuId', 'sku_id');
+  const localVariantId = readStringProperty(localPayload, 'variantId', 'variant_id');
+  const serverVariantId = readStringProperty(serverPayload, 'variantId', 'variant_id');
+
+  if (localSkuId && serverSkuId && localSkuId !== serverSkuId) {
+    throw new Error(
+      'This inventory.create conflict cannot be auto-resolved because the server record belongs to a different SKU.'
+    );
+  }
+
+  if ((localVariantId ?? null) !== (serverVariantId ?? null)) {
+    throw new Error(
+      'This inventory.create conflict cannot be auto-resolved because the server record belongs to a different variant.'
+    );
+  }
+
+  const updateBody: Record<string, unknown> = {};
+  copyFirstPresentKey(localPayload, ['floorId', 'floor_id'], updateBody, 'floorId');
+  copyFirstPresentKey(localPayload, ['shelfId', 'shelf_id'], updateBody, 'shelfId');
+  copyFirstPresentKey(localPayload, ['boxId', 'box_id'], updateBody, 'boxId');
+  copyFirstPresentKey(localPayload, ['batchId', 'batch_id'], updateBody, 'batchId');
+  copyFirstPresentKey(localPayload, ['quantity'], updateBody, 'quantity');
+
+  if (Object.keys(updateBody).length > 0) {
+    await sendAuthorizedJsonRequest(serverUrl, token, `/api/inventory/${recordId}`, {
+      method: 'PUT',
+      body: updateBody,
+    });
+  }
+
+  const localState = readStringProperty(localPayload, 'state');
+  const serverState = readStringProperty(serverPayload, 'state');
+  if (localState && serverState && localState !== serverState) {
+    await sendAuthorizedJsonRequest(serverUrl, token, `/api/inventory/${recordId}/transition`, {
+      method: 'POST',
+      body: {
+        toState: localState,
+        reason: 'Resolved from desktop sync conflict',
+      },
+    });
+  }
+
+  return recordId;
+}
+
+async function applyKeepLocalInventoryUpdate(
+  serverUrl: string,
+  token: string,
+  localPayload: Record<string, unknown>
+) {
+  const recordId = readStringProperty(localPayload, 'id');
+  if (!recordId) {
+    throw new Error('inventory.update resolution requires an id.');
+  }
+
+  const updateBody: Record<string, unknown> = {};
+  copyFirstPresentKey(localPayload, ['floorId', 'floor_id'], updateBody, 'floorId');
+  copyFirstPresentKey(localPayload, ['shelfId', 'shelf_id'], updateBody, 'shelfId');
+  copyFirstPresentKey(localPayload, ['boxId', 'box_id'], updateBody, 'boxId');
+  copyFirstPresentKey(localPayload, ['batchId', 'batch_id'], updateBody, 'batchId');
+  copyFirstPresentKey(localPayload, ['quantity'], updateBody, 'quantity');
+
+  if (Object.keys(updateBody).length > 0) {
+    await sendAuthorizedJsonRequest(serverUrl, token, `/api/inventory/${recordId}`, {
+      method: 'PUT',
+      body: updateBody,
+    });
+  }
+
+  return recordId;
+}
+
+async function applyKeepLocalInventoryBoxOpen(
+  serverUrl: string,
+  token: string,
+  localPayload: Record<string, unknown>
+) {
+  const inventoryRecordId = readStringProperty(
+    localPayload,
+    'inventoryRecordId',
+    'inventory_record_id'
+  );
+  if (!inventoryRecordId) {
+    throw new Error('inventory.box-open resolution requires inventoryRecordId.');
+  }
+
+  const requestBody: Record<string, unknown> = {
+    inventoryRecordId,
+  };
+  copyFirstPresentKey(localPayload, ['quantityToOpen', 'quantity_to_open'], requestBody, 'quantityToOpen');
+  copyFirstPresentKey(localPayload, ['targetFloorId', 'target_floor_id'], requestBody, 'targetFloorId');
+
+  const payload = await sendAuthorizedJsonRequest<{
+    data?: {
+      boxRecord?: Record<string, unknown>;
+      pieceRecord?: Record<string, unknown>;
+    };
+  }>(serverUrl, token, '/api/inventory/box-open', {
+    method: 'POST',
+    body: requestBody,
+  });
+
+  if (isRecord(payload?.data?.boxRecord)) {
+    upsertInventoryRecord(payload.data.boxRecord, { markDirty: false });
+  }
+
+  if (isRecord(payload?.data?.pieceRecord)) {
+    upsertInventoryRecord(payload.data.pieceRecord, { markDirty: false });
+  }
+
+  return inventoryRecordId;
+}
+
+async function applyKeepLocalInventoryTransition(
+  serverUrl: string,
+  token: string,
+  localPayload: Record<string, unknown>
+) {
+  const inventoryRecordId = readStringProperty(
+    localPayload,
+    'inventoryRecordId',
+    'inventory_record_id'
+  );
+  const toState = readStringProperty(localPayload, 'toState', 'to_state');
+
+  if (!inventoryRecordId || !toState) {
+    throw new Error('inventory.transition resolution requires inventoryRecordId and toState.');
+  }
+
+  const requestBody: Record<string, unknown> = {
+    toState,
+  };
+  copyFirstPresentKey(localPayload, ['reason'], requestBody, 'reason');
+
+  await sendAuthorizedJsonRequest(serverUrl, token, `/api/inventory/${inventoryRecordId}/transition`, {
+    method: 'POST',
+    body: requestBody,
+  });
+
+  return inventoryRecordId;
+}
+
+async function applyKeepLocalResolution(
+  serverUrl: string,
+  token: string,
+  conflict: SyncConflictDetailRecord
+) {
+  const localPayload = parseJsonValue<Record<string, unknown> | null>(conflict.local_payload, null);
+  const serverPayload = parseJsonValue<Record<string, unknown> | null>(conflict.server_payload, null);
+
+  if (!localPayload) {
+    throw new Error('Sync conflict does not include a local payload to apply.');
+  }
+
+  switch (conflict.operation_type) {
+    case 'inventory.create':
+      return applyKeepLocalInventoryCreate(serverUrl, token, localPayload, serverPayload);
+    case 'inventory.update':
+      return applyKeepLocalInventoryUpdate(serverUrl, token, localPayload);
+    case 'inventory.box-open':
+      return applyKeepLocalInventoryBoxOpen(serverUrl, token, localPayload);
+    case 'inventory.transition':
+      return applyKeepLocalInventoryTransition(serverUrl, token, localPayload);
+    default:
+      throw new Error(
+        `Sync conflict resolution is not implemented for operation type ${conflict.operation_type ?? 'unknown'}.`
+      );
+  }
+}
+
 function getSyncV2Cursor() {
   const rawValue = getConfig('syncV2Cursor');
   if (!rawValue) {
@@ -252,6 +724,7 @@ export function configureSyncEngine(config: SyncConfig) {
     serverUrl: config.serverUrl,
     clientId: config.clientId,
   };
+  refreshOutboxState();
 
   if (autoSyncEnabled) {
     refreshRealtimeSyncConnection();
@@ -259,9 +732,102 @@ export function configureSyncEngine(config: SyncConfig) {
 }
 
 export function getSyncStatus(): SyncStatus {
+  refreshOutboxState();
   return {
     ...syncStatus,
     lastResult: syncStatus.lastResult ? cloneResult(syncStatus.lastResult) : null,
+  };
+}
+
+export function getSyncOutbox(): ElectronSyncOutboxSnapshot {
+  refreshOutboxState();
+
+  const conflicts = (getPendingSyncConflictDetails() as SyncConflictDetailRecord[]).map(
+    mapConflictEntry
+  );
+  const legacyQueueCount = getPendingSyncQueue().length;
+  const syncOperationCount = (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length;
+  const requestQueueCount = (getPendingRequestSyncQueue() as QueuedRequestRecord[]).length;
+
+  return {
+    summary: {
+      legacyQueueCount,
+      syncOperationCount,
+      requestQueueCount,
+      conflictCount: conflicts.length,
+      totalCount:
+        legacyQueueCount +
+        syncOperationCount +
+        requestQueueCount +
+        conflicts.length,
+    },
+    conflicts,
+  };
+}
+
+export async function resolveSyncConflict(
+  conflictId: string,
+  resolution: ElectronSyncConflictResolutionChoice
+): Promise<ElectronSyncConflictResolutionResult> {
+  if (!syncConfig) {
+    throw new Error('Sync not configured');
+  }
+
+  const token = syncConfig.getToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const conflict = getPendingSyncConflictDetailById(conflictId) as
+    | SyncConflictDetailRecord
+    | undefined;
+  if (!conflict) {
+    throw new Error(`Pending sync conflict ${conflictId} was not found.`);
+  }
+
+  let aggregateId = conflict.aggregate_id;
+
+  if (resolution === 'keep_local') {
+    aggregateId =
+      (await applyKeepLocalResolution(syncConfig.serverUrl, token, conflict)) ?? aggregateId;
+
+    if (aggregateId && conflict.aggregate_type === 'inventory_record') {
+      await refreshInventoryRecordFromServer(syncConfig.serverUrl, token, aggregateId);
+    }
+
+    markSyncOperationLogProcessed(conflict.operation_id, null);
+  } else {
+    if (aggregateId && conflict.aggregate_type === 'inventory_record') {
+      await refreshInventoryRecordFromServer(syncConfig.serverUrl, token, aggregateId, {
+        deleteWhenMissing: true,
+      });
+    }
+
+    markSyncOperationLogFailed(
+      conflict.operation_id,
+      'Resolved by keeping the server version.',
+      'permanent'
+    );
+  }
+
+  markSyncConflictResolved(conflict.id, {
+    resolution,
+    resolvedAt: new Date().toISOString(),
+    operationStatus:
+      resolution === 'keep_local' ? 'Processed' : FAILED_PERMANENT_STATUS,
+    aggregateId,
+  });
+
+  needsFullReplicaPull = true;
+  refreshOutboxState();
+
+  return {
+    conflictId: conflict.id,
+    operationId: conflict.operation_id,
+    resolution,
+    operationStatus:
+      resolution === 'keep_local' ? 'Processed' : FAILED_PERMANENT_STATUS,
+    aggregateId,
   };
 }
 
@@ -276,6 +842,7 @@ export function startAutoSync(intervalMs = 30000) {
     ...syncStatus,
     autoSyncIntervalMs: intervalMs,
   };
+  refreshOutboxState();
 
   syncInterval = setInterval(() => {
     void syncAll();
@@ -300,6 +867,7 @@ export function stopAutoSync() {
     autoSyncIntervalMs: null,
     websocketConnected: false,
   };
+  refreshOutboxState();
 }
 
 export function refreshRealtimeSyncConnection() {
@@ -345,6 +913,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
     return activeSyncPromise;
   }
 
+  refreshOutboxState();
   activeSyncPromise = (async () => {
     const result: SyncRunResult = {
       pushed: 0,
@@ -403,6 +972,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
       lastSuccessfulSyncAt: result.errors.length === 0 ? completedAt : syncStatus.lastSuccessfulSyncAt,
       lastResult: cloneResult(result),
     };
+    refreshOutboxState();
 
     return result;
   })();
@@ -415,7 +985,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
 }
 
 async function pushLegacySyncQueue(serverUrl: string, token: string) {
-  const queuedOps = getSyncQueue();
+  const queuedOps = getPendingSyncQueue();
   const result = {
     pushed: 0,
     conflicts: 0,
@@ -460,7 +1030,7 @@ async function pushLegacySyncQueue(serverUrl: string, token: string) {
         markSyncProcessed(item.id, 'Conflict', item.conflictNotes);
         result.conflicts++;
       } else {
-        markSyncProcessed(item.id, 'Failed');
+        markSyncProcessed(item.id, 'failed_permanent', item.error ?? 'Unknown error');
         result.errors.push(`Legacy sync operation ${item.id} failed: ${item.error ?? 'Unknown error'}`);
       }
     }
@@ -534,14 +1104,16 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
 
     if (!response.ok && response.status !== 409) {
       const message = payload.error ?? `HTTP ${response.status}`;
-      const keepPending = isNetworkRetriableStatus(response.status);
+      const disposition = isNetworkRetriableStatus(response.status) ? 'retry' : 'permanent';
 
       for (const operation of queuedOps) {
-        markSyncOperationLogFailed(operation.id, message, keepPending);
+        markSyncOperationLogFailed(operation.id, message, disposition);
       }
 
       result.errors.push(`Sync v2 push failed: ${message}`);
-      result.blockPull = true;
+      if (disposition === 'retry') {
+        result.blockPull = true;
+      }
       return result;
     }
 
@@ -578,7 +1150,11 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
         continue;
       }
 
-      markSyncOperationLogFailed(localOperation.id, item.error ?? 'Unknown sync-v2 failure');
+      markSyncOperationLogFailed(
+        localOperation.id,
+        item.error ?? 'Unknown sync-v2 failure',
+        'permanent'
+      );
       result.errors.push(
         `Sync v2 operation ${localOperation.id} failed: ${item.error ?? 'Unknown error'}`
       );
@@ -586,7 +1162,7 @@ async function pushSyncV2OperationLog(serverUrl: string, token: string) {
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'Unknown sync-v2 error';
     for (const operation of queuedOps) {
-      markSyncOperationLogFailed(operation.id, message, true);
+      markSyncOperationLogFailed(operation.id, message, 'retry');
     }
     result.errors.push(`Sync v2 push failed: ${message}`);
     result.blockPull = true;
@@ -631,7 +1207,7 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
   result.pushed += legacyResult.pushed;
   result.conflicts += legacyResult.conflicts;
   result.errors.push(...legacyResult.errors);
-  if (getSyncQueue().length > 0) {
+  if (getPendingSyncQueue().length > 0) {
     result.blockPull = true;
   }
 
@@ -647,18 +1223,18 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
       }
 
       const message = await readErrorMessage(response);
-      const keepPending = isNetworkRetriableStatus(response.status);
+      const disposition = isNetworkRetriableStatus(response.status) ? 'retry' : 'permanent';
       markRequestSyncFailed(
         queuedRequest.id,
         `HTTP ${response.status}: ${message}`,
-        keepPending
+        disposition
       );
       result.errors.push(`Request sync failed for ${queuedRequest.method} ${queuedRequest.path}: ${message}`);
-      if (keepPending) {
+      if (disposition === 'retry') {
         result.blockPull = true;
       }
     } catch (error: any) {
-      markRequestSyncFailed(queuedRequest.id, error.message, true);
+      markRequestSyncFailed(queuedRequest.id, error.message, 'retry');
       result.errors.push(
         `Request sync failed for ${queuedRequest.method} ${queuedRequest.path}: ${error.message}`
       );
@@ -828,7 +1404,7 @@ function closeRealtimeSyncSocket() {
 
 function hasPendingLocalChanges() {
   return (
-    getSyncQueue().length > 0 ||
+    getPendingSyncQueue().length > 0 ||
     getPendingRequestSyncQueue().length > 0 ||
     (getPendingSyncOperationLogs() as QueuedSyncOperationRecord[]).length > 0 ||
     (getPendingSyncConflicts() as QueuedSyncConflictRecord[]).length > 0

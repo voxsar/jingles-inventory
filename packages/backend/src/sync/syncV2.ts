@@ -19,7 +19,7 @@ export const SYNC_V2_STATUSES = {
 } as const;
 
 export type SyncV2ChangeAction = 'upsert' | 'delete';
-export type SyncV2ChangeTable = 'inventory_records' | 'inventory_events';
+export type SyncV2ChangeTable = 'inventory_records' | 'inventory_events' | 'status_options';
 
 export interface SyncV2ChangeDescriptor {
   tableName: SyncV2ChangeTable;
@@ -54,6 +54,8 @@ type PrismaTransactionLike = {
     createMany: (args: { data: Array<Record<string, unknown>> }) => Promise<unknown>;
   };
 };
+
+const TABLES_WITH_SYNC_METADATA = new Set<SyncV2ChangeTable>(['status_options']);
 
 async function ensureLocalClientId(tx: PrismaTransactionLike): Promise<string> {
   const rows = (await tx.$queryRawUnsafe(
@@ -108,6 +110,7 @@ export async function recordServerSyncChanges(
   tx: PrismaTransactionLike,
   input: {
     operationId?: string | null;
+    aggregateType?: string | null;
     aggregateId?: string | null;
     changes: SyncV2ChangeDescriptor[];
   }
@@ -119,7 +122,7 @@ export async function recordServerSyncChanges(
   const sequence = await tx.syncServerSequence.create({
     data: {
       operationId: input.operationId ?? null,
-      aggregateType: 'inventory_record',
+      aggregateType: input.aggregateType ?? 'inventory_record',
       aggregateId: input.aggregateId ?? null,
     },
   });
@@ -134,4 +137,29 @@ export async function recordServerSyncChanges(
   });
 
   return sequence.seq;
+}
+
+export async function persistSyncMetadata(
+  tx: PrismaTransactionLike,
+  input: {
+    tableName: SyncV2ChangeTable;
+    rowId: string;
+    serverSeq: number | null;
+    deletedAt?: Date | null;
+  }
+) {
+  if (
+    isLocalReplicaMode() ||
+    typeof input.serverSeq !== 'number' ||
+    !TABLES_WITH_SYNC_METADATA.has(input.tableName)
+  ) {
+    return;
+  }
+
+  await tx.$executeRawUnsafe(
+    `UPDATE "${input.tableName}" SET "server_seq" = ?, "deleted_at" = ? WHERE "id" = ?`,
+    input.serverSeq,
+    input.deletedAt ?? null,
+    input.rowId
+  );
 }
