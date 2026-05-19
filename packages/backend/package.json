@@ -1,6 +1,6 @@
 {
 	"name": "@jingles/backend",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"main": "dist/server.js",
 	"scripts": {
 		"dev": "node ../../scripts/write-build-info.mjs backend && ts-node-dev --respawn --transpile-only src/server.ts",
