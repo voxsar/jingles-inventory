@@ -1,8 +1,8 @@
 export const GENERATED_BUILD_INFO = {
   "packageName": "@jingles/electron",
   "appVersion": "1.0.1",
-  "buildNumber": "291",
-  "commitHash": "9b9cc1c15e412b3c989c0faa57aadd042dfd47ad",
-  "commitShortHash": "9b9cc1c15e41",
-  "builtAt": "2026-05-19T18:29:32.377Z"
+  "buildNumber": "292",
+  "commitHash": "23934dcb63a6d52ed73eb2928aba0132bb6e685e",
+  "commitShortHash": "23934dcb63a6",
+  "builtAt": "2026-05-19T18:41:14.196Z"
 } as const;
