@@ -1,8 +1,8 @@
 export const GENERATED_BUILD_INFO = {
   "packageName": "@jingles/backend",
   "appVersion": "1.0.1",
-  "buildNumber": "288",
-  "commitHash": "888cda95a3aad4a2b45556ef441412be993dc464",
-  "commitShortHash": "888cda95a3aa",
-  "builtAt": "2026-05-19T17:11:30.811Z"
+  "buildNumber": "289",
+  "commitHash": "178b0d3748b669379f2750f957bcc5ef3fdfd642",
+  "commitShortHash": "178b0d3748b6",
+  "builtAt": "2026-05-19T17:52:37.178Z"
 } as const;
