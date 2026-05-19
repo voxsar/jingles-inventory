@@ -2,18 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DesktopSyncPage from '../../pages/DesktopSyncPage';
-import { runtimeApi } from '../../api/client';
-
-vi.mock('../../api/client', async () => {
-  const actual = await vi.importActual<typeof import('../../api/client')>('../../api/client');
-
-  return {
-    ...actual,
-    runtimeApi: {
-      getInfo: vi.fn(),
-    },
-  };
-});
 
 function createDesktopSyncState() {
   return {
@@ -152,12 +140,6 @@ function installElectronAPI() {
     relaunching: true,
   });
 
-  (runtimeApi.getInfo as any).mockResolvedValue({
-    data: {
-      data: state.runtimeInfo,
-    },
-  });
-
   window.electronAPI = {
     db: {
       getInfo: vi.fn().mockResolvedValue(state.databaseInfo),
@@ -185,6 +167,7 @@ function installElectronAPI() {
       backendUrl: 'http://127.0.0.1:3630',
       version: vi.fn().mockResolvedValue('1.0.1'),
       getBuildInfo: vi.fn().mockResolvedValue(state.desktopBuildInfo),
+      getRuntimeInfo: vi.fn().mockResolvedValue(state.runtimeInfo),
       openExternal: vi.fn().mockResolvedValue(undefined),
       setAuthCache: vi.fn().mockResolvedValue(undefined),
       clearAuthCache: vi.fn().mockResolvedValue(undefined),

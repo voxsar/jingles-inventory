@@ -205,6 +205,7 @@ export interface ElectronAPI {
     backendUrl: string;
     version: () => Promise<string>;
     getBuildInfo: () => Promise<RuntimeBuildInfo>;
+    getRuntimeInfo: () => Promise<BackendRuntimeInfo>;
     openExternal: (url: string) => Promise<void>;
     setAuthCache: (auth: { token: string; user: unknown }) => Promise<void>;
     clearAuthCache: () => Promise<void>;

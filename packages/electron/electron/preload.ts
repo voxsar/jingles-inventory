@@ -79,6 +79,7 @@ const electronAPI = {
     backendUrl: DESKTOP_LOCAL_API_URL,
     version: () => ipcRenderer.invoke('app:version'),
     getBuildInfo: () => ipcRenderer.invoke('app:build-info'),
+    getRuntimeInfo: () => ipcRenderer.invoke('app:runtime-info'),
     openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
     setAuthCache: (auth: { token: string; user: unknown }) =>
       ipcRenderer.invoke('app:set-auth-cache', auth),

@@ -361,6 +361,35 @@ function describeCount(count: number, singular: string, plural = `${singular}s`)
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+function formatByteCount(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return '0 B';
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${value >= 10 || unitIndex === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unitIndex]}`;
+}
+
+function formatElapsedMs(elapsedMs: number) {
+  const totalSeconds = Math.max(0, Math.round(elapsedMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes <= 0) {
+    return `${seconds}s`;
+  }
+
+  return `${minutes}m ${seconds}s`;
+}
+
 function buildPreparationDetail(pendingCount: number, options: SyncRunOptions) {
   const queuedLabel =
     pendingCount > 0
@@ -411,6 +440,83 @@ function buildPullLogDetail(pulledCount: number) {
   }
 
   return `Applied ${describeCount(pulledCount, 'server change')} from the realtime log.`;
+}
+
+function buildSnapshotDownloadDetail(receivedBytes: number, totalBytes: number | null, elapsedMs: number) {
+  const downloadedLabel = formatByteCount(receivedBytes);
+  const elapsedLabel = formatElapsedMs(elapsedMs);
+
+  if (totalBytes && totalBytes > 0) {
+    const percent = Math.max(0, Math.min(100, Math.round((receivedBytes / totalBytes) * 100)));
+    return `Downloading the latest replica snapshot from the host. ${downloadedLabel} of ${formatByteCount(totalBytes)} received (${percent}%) after ${elapsedLabel}.`;
+  }
+
+  return `Downloading the latest replica snapshot from the host. ${downloadedLabel} received after ${elapsedLabel}.`;
+}
+
+function buildSnapshotApplyDetail(tableCount: number, rowCount: number) {
+  return `Applying snapshot locally across ${describeCount(tableCount, 'table')} and ${describeCount(rowCount, 'row')}.`;
+}
+
+function buildSnapshotDownloadPercent(receivedBytes: number, totalBytes: number | null) {
+  if (!totalBytes || totalBytes <= 0) {
+    return SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT;
+  }
+
+  const ratio = Math.max(0, Math.min(1, receivedBytes / totalBytes));
+  return clampSyncProgressPercent(SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT + ratio * 4);
+}
+
+async function readResponseTextWithProgress(
+  response: Response,
+  onProgress: (receivedBytes: number, totalBytes: number | null, elapsedMs: number) => void
+) {
+  const totalBytesHeader = response.headers.get('content-length');
+  const parsedTotalBytes = totalBytesHeader ? Number.parseInt(totalBytesHeader, 10) : Number.NaN;
+  const totalBytes = Number.isFinite(parsedTotalBytes) && parsedTotalBytes > 0 ? parsedTotalBytes : null;
+  const startedAt = Date.now();
+  const reader = response.body?.getReader();
+
+  if (!reader) {
+    const text = await response.text();
+    onProgress(text.length, totalBytes, Date.now() - startedAt);
+    return text;
+  }
+
+  const chunks: Uint8Array[] = [];
+  let receivedBytes = 0;
+  let lastPublishedAt = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+
+    if (!value) {
+      continue;
+    }
+
+    chunks.push(value);
+    receivedBytes += value.byteLength;
+
+    const now = Date.now();
+    if (now - lastPublishedAt >= 500) {
+      onProgress(receivedBytes, totalBytes, now - startedAt);
+      lastPublishedAt = now;
+    }
+  }
+
+  onProgress(receivedBytes, totalBytes, Date.now() - startedAt);
+
+  const payload = new Uint8Array(receivedBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    payload.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return new TextDecoder().decode(payload);
 }
 
 function buildFinalizingDetail(
@@ -1825,6 +1931,7 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
       pulled: result.pulled,
     });
 
+    const snapshotDownloadStartedAt = Date.now();
     const response = await fetch(`${syncConfig.serverUrl}/api/sync/replica/export`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1836,23 +1943,47 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
       return result;
     }
 
-    const payload = (await response.json()) as {
+    const responseText = await readResponseTextWithProgress(
+      response,
+      (receivedBytes, totalBytes, elapsedMs) => {
+        updateSyncProgress({
+          phase: 'pulling',
+          label: 'Refreshing desktop replica',
+          detail: buildSnapshotDownloadDetail(receivedBytes, totalBytes, elapsedMs),
+          percent: buildSnapshotDownloadPercent(receivedBytes, totalBytes),
+          pending: syncStatus.outbox.pending,
+          pulled: result.pulled,
+        });
+      }
+    );
+
+    const payload = JSON.parse(responseText) as {
       data?: Partial<Record<string, unknown[]>>;
     };
 
     const snapshot = payload.data ?? {};
+    const snapshotTableCount = Object.keys(snapshot).length;
+    const snapshotRowCount = Object.values(snapshot).reduce((total, rows) => {
+      return total + (Array.isArray(rows) ? rows.length : 0);
+    }, 0);
+    updateSyncProgress({
+      phase: 'pulling',
+      label: 'Refreshing desktop replica',
+      detail: `${buildSnapshotApplyDetail(snapshotTableCount, snapshotRowCount)} Snapshot download finished after ${formatElapsedMs(Date.now() - snapshotDownloadStartedAt)}.`,
+      percent: SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT + 5,
+      pending: syncStatus.outbox.pending,
+      pulled: result.pulled,
+    });
     replaceReplicaSnapshot(snapshot);
     clearProcessedRequestSyncQueue();
 
-    result.pulled = Object.values(snapshot).reduce((total, rows) => {
-      return total + (Array.isArray(rows) ? rows.length : 0);
-    }, 0);
+    result.pulled = snapshotRowCount;
     refreshOutboxState({ publish: false });
     updateSyncProgress({
       phase: 'pulling',
       label: 'Refreshing desktop replica',
-      detail: `Loaded ${describeCount(result.pulled, 'replica row')} into the desktop cache.`,
-      percent: SYNC_PROGRESS_PULL_SNAPSHOT_PERCENT,
+      detail: `Loaded ${describeCount(result.pulled, 'replica row')} into the desktop cache and cleared processed queue entries.`,
+      percent: SYNC_PROGRESS_FINALIZING_PERCENT - 1,
       pending: syncStatus.outbox.pending,
       pulled: result.pulled,
     });

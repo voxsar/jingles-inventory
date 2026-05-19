@@ -13,6 +13,19 @@ const targets = {
   electron: {
     packageJsonPath: path.join(repoRoot, 'packages', 'electron', 'package.json'),
     outputPath: path.join(repoRoot, 'packages', 'electron', 'src', 'generated', 'buildInfo.ts'),
+    additionalOutputs: [
+      {
+        packageJsonPath: path.join(repoRoot, 'packages', 'backend', 'package.json'),
+        outputPath: path.join(
+          repoRoot,
+          'packages',
+          'electron',
+          'src',
+          'generated',
+          'backendBuildInfo.ts'
+        ),
+      },
+    ],
   },
 };
 
@@ -36,7 +49,7 @@ function getPackageVersion(packageJsonPath) {
   };
 }
 
-function buildInfoSource(targetName) {
+function buildInfoSource(targetName, packageJsonPathOverride) {
   const envCommit = process.env.JINGLES_BUILD_COMMIT?.trim() || null;
   const envBuildNumber = process.env.JINGLES_BUILD_NUMBER?.trim() || null;
   const envBuiltAt = process.env.JINGLES_BUILD_TIME?.trim() || null;
@@ -45,7 +58,8 @@ function buildInfoSource(targetName) {
   const commitShortHash = commitHash ? commitHash.slice(0, 12) : null;
   const buildNumber = envBuildNumber ?? runGit(['rev-list', '--count', 'HEAD']);
   const builtAt = envBuiltAt ?? new Date().toISOString();
-  const { packageName, appVersion } = getPackageVersion(targets[targetName].packageJsonPath);
+  const packageJsonPath = packageJsonPathOverride ?? targets[targetName].packageJsonPath;
+  const { packageName, appVersion } = getPackageVersion(packageJsonPath);
 
   return {
     packageName,
@@ -57,6 +71,12 @@ function buildInfoSource(targetName) {
   };
 }
 
+function writeBuildInfo(outputPath, buildInfo) {
+  const contents = `export const GENERATED_BUILD_INFO = ${JSON.stringify(buildInfo, null, 2)} as const;\n`;
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, contents, 'utf8');
+}
+
 function writeTarget(targetName) {
   const target = targets[targetName];
   if (!target) {
@@ -64,9 +84,14 @@ function writeTarget(targetName) {
   }
 
   const buildInfo = buildInfoSource(targetName);
-  const contents = `export const GENERATED_BUILD_INFO = ${JSON.stringify(buildInfo, null, 2)} as const;\n`;
-  fs.mkdirSync(path.dirname(target.outputPath), { recursive: true });
-  fs.writeFileSync(target.outputPath, contents, 'utf8');
+  writeBuildInfo(target.outputPath, buildInfo);
+
+  for (const additionalOutput of target.additionalOutputs ?? []) {
+    writeBuildInfo(
+      additionalOutput.outputPath,
+      buildInfoSource(targetName, additionalOutput.packageJsonPath)
+    );
+  }
 }
 
 const requestedTargets = process.argv.slice(2);

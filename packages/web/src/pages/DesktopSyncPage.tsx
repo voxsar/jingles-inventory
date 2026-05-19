@@ -10,12 +10,29 @@ import type {
   ElectronSyncStatus,
   RuntimeBuildInfo,
 } from '@jingles/shared';
-import { runtimeApi } from '../api/client';
 import { emitDesktopOutboxChanged } from '../utils/desktopSync';
 import { isDesktopRuntime } from '../utils/runtime';
 
 const REFRESH_INTERVAL_MS = 15000;
 const LOG_LIMIT = 400;
+
+function createFallbackBuildInfo(
+  packageName: string,
+  appVersion: string | null | undefined
+): RuntimeBuildInfo | null {
+  if (!appVersion) {
+    return null;
+  }
+
+  return {
+    packageName,
+    appVersion,
+    buildNumber: null,
+    commitHash: null,
+    commitShortHash: null,
+    builtAt: null,
+  };
+}
 
 function hasElectronBridge() {
   return typeof window !== 'undefined' && typeof window.electronAPI !== 'undefined';
@@ -215,8 +232,8 @@ export default function DesktopSyncPage() {
     if (
       !window.electronAPI?.db.getInfo ||
       !window.electronAPI?.sync.getStatus ||
-      !window.electronAPI?.app.getBuildInfo ||
-      !window.electronAPI?.logs.list
+      !window.electronAPI?.sync.getHealth ||
+      !window.electronAPI?.sync.getOutbox
     ) {
       return;
     }
@@ -229,18 +246,42 @@ export default function DesktopSyncPage() {
         window.electronAPI.sync.getOutbox(),
       ]);
 
-    const [nextDesktopBuildInfo, nextRuntimeInfoResponse, nextLogs] = await Promise.all([
-      window.electronAPI.app.getBuildInfo(),
-      runtimeApi.getInfo(),
-      window.electronAPI.logs.list({ limit: LOG_LIMIT }),
+    const [nextDesktopVersion, nextDesktopBuildInfo, nextRuntimeInfoResponse, nextLogs] =
+      await Promise.all([
+        window.electronAPI.app.version?.().catch(() => null) ?? Promise.resolve(null),
+        window.electronAPI.app.getBuildInfo?.().catch(() => null) ?? Promise.resolve(null),
+        window.electronAPI.app.getRuntimeInfo?.().catch(() => null) ?? Promise.resolve(null),
+        window.electronAPI.logs?.list?.({ limit: LOG_LIMIT }).catch(() => []) ??
+          Promise.resolve([]),
     ]);
+
+    const fallbackDesktopBuildInfo =
+      createFallbackBuildInfo('@jingles/electron', nextDesktopVersion) ?? null;
+    const resolvedDesktopBuildInfo = nextDesktopBuildInfo ?? fallbackDesktopBuildInfo;
+    const fallbackRuntimeInfo: BackendRuntimeInfo | null =
+      nextRuntimeInfoResponse ??
+      (resolvedDesktopBuildInfo
+        ? {
+            mode: 'local_replica',
+            build:
+              createFallbackBuildInfo('@jingles/backend', resolvedDesktopBuildInfo.appVersion) ??
+              resolvedDesktopBuildInfo,
+            upstream: nextSyncStatus.serverUrl
+              ? {
+                  url: nextSyncStatus.serverUrl,
+                  build: null,
+                  error: 'Host build info is unavailable in the current desktop shell.',
+                }
+              : null,
+          }
+        : null);
 
     setDatabaseInfo(nextDatabaseInfo);
     setSyncStatus(nextSyncStatus);
     setSyncHealth(nextSyncHealth);
     setOutboxSnapshot(nextOutboxSnapshot);
-    setDesktopBuildInfo(nextDesktopBuildInfo);
-    setRuntimeInfo(nextRuntimeInfoResponse.data.data ?? null);
+    setDesktopBuildInfo(resolvedDesktopBuildInfo);
+    setRuntimeInfo(fallbackRuntimeInfo);
     setAppLogs(nextLogs);
   }
 

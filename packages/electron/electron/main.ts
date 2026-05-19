@@ -49,6 +49,7 @@ import {
   syncPushOnly,
 } from '../src/sync/syncEngine';
 import { getDesktopBuildInfo } from '../src/runtime/buildInfo';
+import { getDesktopRuntimeInfo } from '../src/runtime/runtimeInfo';
 import {
   appendDesktopLog,
   clearDesktopLogs,
@@ -721,6 +722,10 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
 
   ipcMain.handle('app:build-info', () => {
     return getDesktopBuildInfo();
+  });
+
+  ipcMain.handle('app:runtime-info', async () => {
+    return getDesktopRuntimeInfo();
   });
 
   ipcMain.on('app:backend-url-sync', (event) => {
