@@ -28,6 +28,11 @@ type LocalApiServer = {
 
 type LocalBackendChild = ReturnType<typeof spawn>;
 
+type LocalBackendRuntime = {
+  child: LocalBackendChild;
+  readyUrl: string;
+};
+
 function isBrokenPipeError(error: unknown): error is NodeJS.ErrnoException {
   return (
     typeof error === 'object' &&
@@ -73,6 +78,55 @@ function pipeChildLogs(child: LocalBackendChild) {
     appendDesktopLogLines('backend', 'error', message);
     writeToParentStream(process.stderr, `[DesktopBackend] ${message}`);
   });
+}
+
+function buildChildEnv(
+  runtimeRoot: string,
+  config: ReturnType<typeof getDesktopLocalApiConfig>
+) {
+  return {
+    ...process.env,
+    NODE_PATH: [path.join(app.getAppPath(), 'node_modules'), process.env.NODE_PATH ?? '']
+      .filter(Boolean)
+      .join(path.delimiter),
+    ELECTRON_RUN_AS_NODE: '1',
+    PORT: String(config.port),
+    JINGLES_LOCAL_SQLITE: '1',
+    JINGLES_STORAGE_ROOT: runtimeRoot,
+    JINGLES_SERVER_AUTOSTART: 'true',
+    JINGLES_UPSTREAM_SERVER_URL: config.upstreamUrl,
+    LOCAL_SQLITE_DATABASE_URL: getDesktopSqliteDatabaseUrl(),
+  };
+}
+
+async function startBackendChild(
+  localBackendEntryPath: string,
+  runtimeRoot: string,
+  config: ReturnType<typeof getDesktopLocalApiConfig>
+): Promise<LocalBackendRuntime> {
+  const child = spawn(process.execPath, [localBackendEntryPath], {
+    cwd: runtimeRoot,
+    env: buildChildEnv(runtimeRoot, config),
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
+
+  pipeChildLogs(child);
+
+  const preferredUrl = getDesktopLocalApiUrl(config);
+  const readyUrl = await waitForBackendReady(getDesktopLocalApiProbeUrls(config), child);
+  process.env.ELECTRON_LOCAL_API_URL = readyUrl;
+
+  if (readyUrl !== preferredUrl) {
+    const message = `[Electron] Desktop backend became ready via ${readyUrl}; using it instead of ${preferredUrl}.\n`;
+    appendDesktopLogLines('main', 'warn', message);
+    writeToParentStream(process.stderr, message);
+  }
+
+  return {
+    child,
+    readyUrl,
+  };
 }
 
 function getHttpClient(protocol: string) {
@@ -171,60 +225,89 @@ async function startLocalApiServer(): Promise<LocalApiServer> {
     clientId,
     getToken: () => getConfig('authToken'),
   });
+  let currentRuntime = await startBackendChild(localBackendEntryPath, runtimeRoot, config);
+  let isClosing = false;
+  let restartTimer: NodeJS.Timeout | null = null;
+  let restartAttempt = 0;
 
-  const child = spawn(process.execPath, [localBackendEntryPath], {
-    cwd: runtimeRoot,
-    env: {
-      ...process.env,
-      NODE_PATH: [
-        path.join(app.getAppPath(), 'node_modules'),
-        process.env.NODE_PATH ?? '',
-      ]
-        .filter(Boolean)
-        .join(path.delimiter),
-      ELECTRON_RUN_AS_NODE: '1',
-      PORT: String(config.port),
-      JINGLES_LOCAL_SQLITE: '1',
-      JINGLES_STORAGE_ROOT: runtimeRoot,
-      JINGLES_SERVER_AUTOSTART: 'true',
-      JINGLES_UPSTREAM_SERVER_URL: config.upstreamUrl,
-      LOCAL_SQLITE_DATABASE_URL: getDesktopSqliteDatabaseUrl(),
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-    windowsHide: true,
-  });
-
-  pipeChildLogs(child);
-
-  child.on('exit', (code, signal) => {
-    if (code === 0 || signal === 'SIGTERM') {
+  const clearRestartTimer = () => {
+    if (!restartTimer) {
       return;
     }
 
-    writeToParentStream(
-      process.stderr,
-      `[DesktopBackend] Child process exited unexpectedly (code=${code ?? 'null'}, signal=${signal ?? 'null'}).\n`
-    );
-  });
+    clearTimeout(restartTimer);
+    restartTimer = null;
+  };
 
-  const preferredUrl = getDesktopLocalApiUrl(config);
-  const readyUrl = await waitForBackendReady(getDesktopLocalApiProbeUrls(config), child);
-  process.env.ELECTRON_LOCAL_API_URL = readyUrl;
+  const scheduleRestart = () => {
+    if (isClosing || restartTimer) {
+      return;
+    }
 
-  if (readyUrl !== preferredUrl) {
-    writeToParentStream(
-      process.stderr,
-      `[Electron] Desktop backend became ready via ${readyUrl}; using it instead of ${preferredUrl}.\n`
-    );
-  }
+    restartAttempt += 1;
+    const delayMs = Math.min(15000, 1000 * restartAttempt);
+    const message = `[DesktopBackend] Restart attempt ${restartAttempt} scheduled in ${delayMs}ms.\n`;
+    appendDesktopLogLines('main', 'warn', message);
+    writeToParentStream(process.stderr, message);
+
+    restartTimer = setTimeout(() => {
+      restartTimer = null;
+      void restartBackend();
+    }, delayMs);
+  };
+
+  const restartBackend = async () => {
+    if (isClosing) {
+      return;
+    }
+
+    try {
+      const message = '[DesktopBackend] Restarting local desktop backend.\n';
+      appendDesktopLogLines('main', 'warn', message);
+      writeToParentStream(process.stderr, message);
+
+      currentRuntime = await startBackendChild(localBackendEntryPath, runtimeRoot, config);
+      restartAttempt = 0;
+
+      attachExitHandler(currentRuntime.child);
+
+      const readyMessage = `[DesktopBackend] Local desktop backend is listening again at ${currentRuntime.readyUrl}.\n`;
+      appendDesktopLogLines('main', 'info', readyMessage);
+      writeToParentStream(process.stdout, readyMessage);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown desktop backend restart failure.';
+      const message = `[DesktopBackend] Restart failed: ${errorMessage}\n`;
+      appendDesktopLogLines('main', 'error', message);
+      writeToParentStream(process.stderr, message);
+      scheduleRestart();
+    }
+  };
+
+  const attachExitHandler = (child: LocalBackendChild) => {
+    child.on('exit', (code, signal) => {
+      if (isClosing || code === 0 || signal === 'SIGTERM') {
+        return;
+      }
+
+      const message = `[DesktopBackend] Child process exited unexpectedly (code=${code ?? 'null'}, signal=${signal ?? 'null'}).\n`;
+      appendDesktopLogLines('main', 'error', message);
+      writeToParentStream(process.stderr, message);
+      scheduleRestart();
+    });
+  };
+
+  attachExitHandler(currentRuntime.child);
 
   startAutoSync(config.autoSyncIntervalMs);
 
   return {
-    url: readyUrl,
+    url: currentRuntime.readyUrl,
     close: async () => {
+      isClosing = true;
+      clearRestartTimer();
       stopAutoSync();
-      await stopChildProcess(child);
+      await stopChildProcess(currentRuntime.child);
     },
   };
 }
