@@ -712,7 +712,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\Projects\\jingles-inventory\\packages\\backend\\generated\\local-prisma",
+      "value": "/var/www/jingles-inventory/packages/backend/generated/local-prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -721,16 +721,17 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "debian-openssl-3.0.x",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\Projects\\jingles-inventory\\packages\\backend\\prisma\\schema.local.prisma",
+    "sourceFilePath": "/var/www/jingles-inventory/packages/backend/prisma/schema.local.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../.env"
   },
   "relativePath": "../../prisma",
   "clientVersion": "5.22.0",
