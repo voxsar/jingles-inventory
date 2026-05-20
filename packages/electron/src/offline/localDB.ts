@@ -52,6 +52,9 @@ export function initLocalDB(): void {
   bootstrapReplicaSchema();
   createAppTables();
   runMigrations();
+  createFtsTables();
+  rebuildSkusFts();
+  rebuildVendorsFts();
 }
 
 function bootstrapReplicaSchema(): void {
@@ -104,6 +107,114 @@ function createAppTables(): void {
     CREATE INDEX IF NOT EXISTS idx_cached_responses_updated_at ON cached_responses(updated_at);
     CREATE INDEX IF NOT EXISTS idx_request_sync_queue_status ON request_sync_queue(status, created_at);
   `);
+}
+
+function createFtsTables(): void {
+  const database = getDB();
+
+  database.exec(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS skus_fts USING fts5(
+      id UNINDEXED,
+      name,
+      sku_code,
+      description,
+      category,
+      tokenize = 'porter unicode61'
+    );
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS vendors_fts USING fts5(
+      id UNINDEXED,
+      name,
+      contact_email,
+      contact_phone,
+      tokenize = 'porter unicode61'
+    );
+  `);
+}
+
+function rebuildSkusFts(): void {
+  const database = getDB();
+  database.exec(`DELETE FROM skus_fts`);
+  database.prepare(`
+    INSERT INTO skus_fts(id, name, sku_code, description, category)
+    SELECT id,
+           COALESCE(name, ''),
+           COALESCE(sku_code, ''),
+           COALESCE(description, ''),
+           COALESCE(category, '')
+    FROM skus
+  `).run();
+}
+
+function rebuildVendorsFts(): void {
+  const database = getDB();
+  database.exec(`DELETE FROM vendors_fts`);
+  database.prepare(`
+    INSERT INTO vendors_fts(id, name, contact_email, contact_phone)
+    SELECT id,
+           COALESCE(name, ''),
+           COALESCE(contact_email, ''),
+           COALESCE(contact_phone, '')
+    FROM vendors
+  `).run();
+}
+
+function updateFtsOnMutation(
+  database: Database.Database,
+  table: string,
+  id: string | null,
+  payload: Record<string, unknown> | null
+): void {
+  if (!id) {
+    return;
+  }
+
+  if (table === 'skus') {
+    database.prepare('DELETE FROM skus_fts WHERE id = ?').run(id);
+    if (payload) {
+      database
+        .prepare(
+          'INSERT INTO skus_fts(id, name, sku_code, description, category) VALUES (?, ?, ?, ?, ?)'
+        )
+        .run(
+          id,
+          String(payload.name ?? ''),
+          String(payload.sku_code ?? ''),
+          String(payload.description ?? ''),
+          String(payload.category ?? '')
+        );
+    }
+  } else if (table === 'vendors') {
+    database.prepare('DELETE FROM vendors_fts WHERE id = ?').run(id);
+    if (payload) {
+      database
+        .prepare(
+          'INSERT INTO vendors_fts(id, name, contact_email, contact_phone) VALUES (?, ?, ?, ?)'
+        )
+        .run(
+          id,
+          String(payload.name ?? ''),
+          String(payload.contact_email ?? ''),
+          String(payload.contact_phone ?? '')
+        );
+    }
+  }
+}
+
+function buildFtsQuery(query: string): string {
+  const tokens = query
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((token) => token.replace(/["*()\[\]{}^~?:\\]/g, '').trim())
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return '';
+  }
+
+  const last = tokens.pop()!;
+  return [...tokens, `${last}*`].join(' ');
 }
 
 function runMigrations(): void {
@@ -368,6 +479,9 @@ export function replaceReplicaSnapshot(snapshot: Partial<Record<string, unknown[
   } finally {
     database.exec('PRAGMA foreign_keys = ON');
   }
+
+  rebuildSkusFts();
+  rebuildVendorsFts();
 }
 
 export function applyReplicaMutation(change: ReplicaMutationEvent) {
@@ -381,11 +495,14 @@ export function applyReplicaMutation(change: ReplicaMutationEvent) {
   const shouldDelete = change.action === 'delete' || isReplicaTombstone(change.row);
 
   const transaction = database.transaction(() => {
+    const id = typeof keyPayload.id === 'string' ? keyPayload.id : null;
+
     if (shouldDelete) {
       const whereClause = Object.keys(keyPayload)
         .map((columnName) => `"${columnName}" = @${columnName}`)
         .join(' AND ');
       database.prepare(`DELETE FROM "${change.table}" WHERE ${whereClause}`).run(keyPayload);
+      updateFtsOnMutation(database, change.table, id, null);
       return;
     }
 
@@ -401,6 +518,7 @@ export function applyReplicaMutation(change: ReplicaMutationEvent) {
       getTablePrimaryKeys(change.table)
     );
     statement.run(payload);
+    updateFtsOnMutation(database, change.table, id, payload);
   });
 
   transaction();
@@ -1071,5 +1189,45 @@ export function clearCachedResponse(key: string): void {
 
 export function clearCachedResponsesByPrefix(prefix: string): void {
   getDB().prepare('DELETE FROM cached_responses WHERE key LIKE ?').run(`${prefix}%`);
+}
+
+export function searchSKUIds(query: string, limit = 100): string[] {
+  if (!query.trim()) {
+    return [];
+  }
+
+  const ftsQuery = buildFtsQuery(query);
+  if (!ftsQuery) {
+    return [];
+  }
+
+  try {
+    const rows = getDB()
+      .prepare(`SELECT id FROM skus_fts WHERE skus_fts MATCH ? ORDER BY rank LIMIT ?`)
+      .all(ftsQuery, limit) as Array<{ id: string }>;
+    return rows.map((row) => row.id);
+  } catch {
+    return [];
+  }
+}
+
+export function searchVendorIds(query: string, limit = 100): string[] {
+  if (!query.trim()) {
+    return [];
+  }
+
+  const ftsQuery = buildFtsQuery(query);
+  if (!ftsQuery) {
+    return [];
+  }
+
+  try {
+    const rows = getDB()
+      .prepare(`SELECT id FROM vendors_fts WHERE vendors_fts MATCH ? ORDER BY rank LIMIT ?`)
+      .all(ftsQuery, limit) as Array<{ id: string }>;
+    return rows.map((row) => row.id);
+  } catch {
+    return [];
+  }
 }
 

@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { getPagination, paginatedPayload } from '../utils/pagination';
+import { searchVendorIdsFts } from '../utils/localSearch';
 
 const router = Router();
 
@@ -12,6 +13,9 @@ router.use(authenticate);
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const { type, isActive, search, hasWebsite } = req.query as { type?: string; isActive?: string; search?: string; hasWebsite?: string };
   const pagination = getPagination(req.query);
+
+  // In local replica (Electron) mode use FTS5 for fast vendor name/contact search.
+  const ftsVendorIds = search ? await searchVendorIdsFts(search) : null;
 
   const where: Prisma.VendorWhereInput = {
     ...(type ? { type } : {}),
@@ -22,18 +26,20 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         ? { website: null }
         : {}),
     ...(search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { contactEmail: { contains: search, mode: 'insensitive' } },
-            { contactPhone: { contains: search, mode: 'insensitive' } },
-            { address: { contains: search, mode: 'insensitive' } },
-            { website: { contains: search, mode: 'insensitive' } },
-            { taxId: { contains: search, mode: 'insensitive' } },
-            { paymentTerms: { contains: search, mode: 'insensitive' } },
-            { notes: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+      ? ftsVendorIds !== null
+        ? { id: { in: ftsVendorIds } }
+        : {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { contactEmail: { contains: search, mode: 'insensitive' } },
+              { contactPhone: { contains: search, mode: 'insensitive' } },
+              { address: { contains: search, mode: 'insensitive' } },
+              { website: { contains: search, mode: 'insensitive' } },
+              { taxId: { contains: search, mode: 'insensitive' } },
+              { paymentTerms: { contains: search, mode: 'insensitive' } },
+              { notes: { contains: search, mode: 'insensitive' } },
+            ],
+          }
       : {}),
   };
 
