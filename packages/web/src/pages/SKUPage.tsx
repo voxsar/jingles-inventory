@@ -1109,11 +1109,11 @@ export default function SKUPage() {
 					)}
 				</div>
 				<div style={{ overflowX: 'auto' }}>
-					<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+					<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: 'var(--ink)' }}>
 						<thead>
-							<tr style={{ background: '#f6f6f7' }}>
+							<tr style={{ background: 'var(--glass-pop)' }}>
 								{skuTableHeaders.map((h, i) => (
-									<th key={i} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '12px', color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5', whiteSpace: 'nowrap' }}>{h}</th>
+									<th key={i} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '12px', color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{h}</th>
 								))}
 							</tr>
 						</thead>
@@ -1122,15 +1122,15 @@ export default function SKUPage() {
 								Array.from({ length: 5 }).map((_, i) => (
 									<tr key={i}>
 										{skuTableHeaders.map((_, j) => (
-											<td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid #e1e3e5' }}>
-												<div style={{ height: '16px', background: '#e1e3e5', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
+											<td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+												<div style={{ height: '16px', background: 'var(--chip)', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
 											</td>
 										))}
 									</tr>
 								))
 							) : skus.length === 0 ? (
 								<tr>
-									<td colSpan={skuTableHeaders.length} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
+									<td colSpan={skuTableHeaders.length} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--ink-3)' }}>
 										<div style={{ fontSize: '2rem', marginBottom: '8px' }}>🏷️</div>
 										<span>No products found.</span>
 									</td>
@@ -1145,13 +1145,13 @@ export default function SKUPage() {
 										<Fragment key={sku.id}>
 											<tr
 												onClick={() => openEdit(sku)}
-												style={{ cursor: 'pointer', background: idx % 2 === 1 ? '#fafbfb' : 'white', borderBottom: isExpanded ? 'none' : '1px solid #e1e3e5' }}
+												style={{ cursor: 'pointer', background: idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)', borderBottom: isExpanded ? 'none' : '1px solid var(--line)', color: 'var(--ink)' }}
 											>
 												<td style={{ padding: '12px 8px 12px 16px', width: '32px' }}>
 													{variantCount > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); toggleSkuExpand(sku.id, variantCount); }}
-															style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: '#374151', padding: 0 }}
+															style={{ background: 'transparent', border: '1px solid var(--line-strong)', borderRadius: '4px', cursor: 'pointer', width: '22px', height: '22px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', color: 'var(--ink-2)', padding: 0 }}
 															title={isExpanded ? 'Collapse variants' : `Expand ${variantCount} variant${variantCount !== 1 ? 's' : ''}`}
 														>
 															{isExpanded ? '−' : '+'}
@@ -1161,7 +1161,7 @@ export default function SKUPage() {
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{sku.skuCode}</span></td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
 													<span>{sku.name}</span>
-													{variantCount > 0 && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#6d7175', background: '#f3f4f6', borderRadius: '10px', padding: '1px 6px' }}>{variantCount} variant{variantCount !== 1 ? 's' : ''}</span>}
+													{variantCount > 0 && <span className="legacy-inline-pill" style={{ marginLeft: '8px' }}>{variantCount} variant{variantCount !== 1 ? 's' : ''}</span>}
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.category?.name ?? '—'}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.skuVendors?.length > 0 ? sku.skuVendors.map((sv: any) => sv.vendor?.name).join(', ') : sku.vendor?.name}</td>
@@ -1172,7 +1172,7 @@ export default function SKUPage() {
 														{sku.tags?.length > 3 && <UiBadge>+{sku.tags.length - 3}</UiBadge>}
 													</div>
 												</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#f59e0b', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <UiBadge tone="warning">⚠️ Fragile</UiBadge> : <UiText>No</UiText>}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <UiBadge tone="success">● Active</UiBadge> : <UiBadge>○ Inactive</UiBadge>}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
@@ -1185,21 +1185,21 @@ export default function SKUPage() {
 											</tr>
 											{isExpanded && (
 												isLoadingVariants ? (
-													<tr key={`${sku.id}-loading`} style={{ background: idx % 2 === 1 ? '#fafbfb' : 'white', borderBottom: '1px solid #e1e3e5' }}>
-														<td colSpan={skuTableHeaders.length} style={{ padding: '8px 16px 8px 48px', color: '#6d7175', fontSize: '13px' }}>Loading variants…</td>
+													<tr key={`${sku.id}-loading`} style={{ background: idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)', borderBottom: '1px solid var(--line)', color: 'var(--ink)' }}>
+														<td colSpan={skuTableHeaders.length} style={{ padding: '8px 16px 8px 48px', color: 'var(--ink-3)', fontSize: '13px' }}>Loading variants…</td>
 													</tr>
 												) : variants.map((variant: any, vi: number) => (
-													<tr key={variant.id} style={{ background: idx % 2 === 1 ? '#f3f4f6' : '#f9fafb', borderBottom: vi === variants.length - 1 ? '1px solid #e1e3e5' : '1px solid #f3f4f6' }}>
+													<tr key={variant.id} style={{ background: idx % 2 === 1 ? 'rgba(var(--accent-glow), 0.08)' : 'var(--glass-pop)', borderBottom: vi === variants.length - 1 ? '1px solid var(--line)' : '1px solid rgba(var(--accent-glow), 0.08)', color: 'var(--ink)' }}>
 														<td style={{ padding: '8px 8px 8px 16px' }} />
 														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>
-															<span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', color: '#6d7175', borderLeft: '2px solid #d1d5db' }}>
+															<span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', color: 'var(--ink-3)', borderLeft: '2px solid var(--line-strong)' }}>
 																<span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{variant.variantCode}</span>
 															</span>
 														</td>
-														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap', color: '#374151' }}>
+														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap', color: 'var(--ink-2)' }}>
 															<span style={{ paddingLeft: '4px' }}>{variant.name || variant.attributeValues?.map((av: any) => av.attributeValue?.value).join(' / ')}</span>
 														</td>
-														<td colSpan={6} style={{ padding: '8px 16px', color: '#6d7175', fontSize: '12px' }}>
+														<td colSpan={6} style={{ padding: '8px 16px', color: 'var(--ink-3)', fontSize: '12px' }}>
 															{variant.attributeValues?.map((av: any) => (
 																<span key={av.attributeId} style={{ marginRight: '8px' }}>
 																	<span style={{ fontWeight: 500 }}>{av.attribute?.name}:</span> {av.attributeValue?.value}

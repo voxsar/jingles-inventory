@@ -197,7 +197,9 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
       width: '100%',
       padding: '6px 8px',
       fontSize: '13px',
-      border: `1px solid ${error ? '#ef4444' : '#d1d5db'}`,
+      color: 'var(--ink)',
+      background: 'var(--bg-2)',
+      border: error ? '1px solid rgba(239, 68, 68, 0.45)' : '1px solid var(--line-strong)',
       borderRadius: '4px',
       outline: 'none',
     };
@@ -212,7 +214,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             placeholder={`Select ${col.header}`}
             isClearable={!col.required}
           />
-          {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
+          {error && <div style={{ color: '#f87171', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
         </div>
       );
     }
@@ -227,7 +229,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             placeholder={`Select ${col.header}`}
             isMulti
           />
-          {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
+          {error && <div style={{ color: '#f87171', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
         </div>
       );
     }
@@ -252,7 +254,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             onChange={(e) => setForm({ ...form, [col.key]: e.target.value })}
             style={commonStyle}
           />
-          {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
+          {error && <div style={{ color: '#f87171', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
         </div>
       );
     }
@@ -266,7 +268,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             onChange={(e) => setForm({ ...form, [col.key]: e.target.value ? parseFloat(e.target.value) : '' })}
             style={commonStyle}
           />
-          {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
+          {error && <div style={{ color: '#f87171', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
         </div>
       );
     }
@@ -280,16 +282,16 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
           onChange={(e) => setForm({ ...form, [col.key]: e.target.value })}
           style={commonStyle}
         />
-        {error && <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
+        {error && <div style={{ color: '#f87171', fontSize: '11px', marginTop: '2px' }}>{error}</div>}
       </div>
     );
   };
 
   return (
     <div ref={tableRef} style={{ overflowX: 'auto', position: 'relative' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--ink)' }}>
         <thead>
-          <tr style={{ background: '#f6f6f7' }}>
+          <tr style={{ background: 'var(--glass-pop)' }}>
             {columns.map((col) => (
               <th
                 key={String(col.key)}
@@ -298,10 +300,10 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                   textAlign: 'left',
                   fontWeight: 600,
                   fontSize: '11px',
-                  color: '#6d7175',
+                  color: 'var(--ink-3)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  borderBottom: '2px solid #e1e3e5',
+                  borderBottom: '2px solid var(--line)',
                   whiteSpace: 'nowrap',
                   width: col.width,
                 }}
@@ -317,10 +319,10 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                   textAlign: 'center',
                   fontWeight: 600,
                   fontSize: '11px',
-                  color: '#6d7175',
+                  color: 'var(--ink-3)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  borderBottom: '2px solid #e1e3e5',
+                  borderBottom: '2px solid var(--line)',
                   width: '120px',
                 }}
               >
@@ -334,8 +336,8 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
                 {Array.from({ length: columns.length + 1 }).map((_, j) => (
-                  <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid #e1e3e5' }}>
-                    <div style={{ height: '16px', background: '#e1e3e5', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
+                  <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                    <div style={{ height: '16px', background: 'var(--chip)', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
                   </td>
                 ))}
               </tr>
@@ -344,7 +346,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
             <>
               {/* Add new row form */}
               {addingNew && (
-                <tr style={{ background: '#fef3c7', borderBottom: '2px solid #fbbf24' }}>
+                <tr style={{ background: 'rgba(245, 158, 11, 0.12)', borderBottom: '2px solid rgba(245, 158, 11, 0.24)' }}>
                   {columns.map((col) => (
                     <td key={String(col.key)} style={{ padding: '8px 12px', verticalAlign: 'top' }}>
                       {renderCell(col, {} as T, true, newRowForm, setNewRowForm)}
@@ -376,7 +378,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
               {/* Data rows */}
               {data.length === 0 && !addingNew ? (
                 <tr>
-                  <td colSpan={columns.length + 1} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
+                  <td colSpan={columns.length + 1} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--ink-3)' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{emptyIcon}</div>
                     <div>{emptyMessage}</div>
                   </td>
@@ -390,8 +392,9 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                     <tr
                       key={rowKey}
                       style={{
-                        background: isEditing ? '#dbeafe' : idx % 2 === 1 ? '#fafbfb' : 'white',
-                        borderBottom: '1px solid #e1e3e5',
+                        background: isEditing ? 'rgba(59, 130, 246, 0.14)' : idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)',
+                        borderBottom: '1px solid var(--line)',
+                        color: 'var(--ink)',
                       }}
                     >
                       {columns.map((col) => (
@@ -460,7 +463,7 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
 
       {/* Add row button */}
       {canAdd && !addingNew && !isLoading && (
-        <div style={{ padding: '16px', textAlign: 'center', borderTop: '1px solid #e1e3e5' }}>
+        <div style={{ padding: '16px', textAlign: 'center', borderTop: '1px solid var(--line)' }}>
           <button
             onClick={() => setAddingNew(true)}
             className="btn-secondary"

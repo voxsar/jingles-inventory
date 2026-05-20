@@ -14,9 +14,9 @@
 		"prisma:seed-stress": "ts-node src/prisma/seed-stress.ts",
 		"import:recovered-catalog": "ts-node src/scripts/importRecoveredCatalog.ts",
 		"restore:catalog-defaults": "ts-node src/scripts/restoreCatalogDefaults.ts",
-		"test": "vitest run",
-		"test:watch": "vitest",
-		"test:coverage": "vitest run --coverage"
+		"test": "node ../../scripts/write-build-info.mjs backend && vitest run",
+		"test:watch": "node ../../scripts/write-build-info.mjs backend && vitest",
+		"test:coverage": "node ../../scripts/write-build-info.mjs backend && vitest run --coverage"
 	},
 	"dependencies": {
 		"@jingles/shared": "*",

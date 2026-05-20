@@ -109,10 +109,10 @@ export default function SpreadsheetPage() {
             gridColumn: '1 / -1',
             padding: '64px 24px',
             textAlign: 'center',
-            color: '#6d7175',
-            background: 'white',
+            color: 'var(--ink-3)',
+            background: 'var(--bg-2)',
             borderRadius: '8px',
-            border: '1px solid #e1e3e5'
+            border: '1px solid var(--line)'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
             <div style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px' }}>No entities found</div>
@@ -124,8 +124,8 @@ export default function SpreadsheetPage() {
               key={entity.id}
               onClick={() => navigate(entity.path)}
               style={{
-                background: 'white',
-                border: '1px solid #e1e3e5',
+                background: 'var(--bg-2)',
+                border: '1px solid var(--line)',
                 borderRadius: '8px',
                 padding: '20px',
                 cursor: 'pointer',
@@ -140,7 +140,7 @@ export default function SpreadsheetPage() {
                 e.currentTarget.style.transform = 'translateY(-2px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#e1e3e5';
+                e.currentTarget.style.borderColor = 'var(--line)';
                 e.currentTarget.style.boxShadow = 'none';
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
@@ -148,15 +148,15 @@ export default function SpreadsheetPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ fontSize: '2rem', lineHeight: 1 }}>{entity.icon}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827', marginBottom: '4px' }}>
+                  <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--ink)', marginBottom: '4px' }}>
                     {entity.name}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {categories.find(c => c.id === entity.category)?.name}
                   </div>
                 </div>
               </div>
-              <p style={{ fontSize: '13px', color: '#6d7175', lineHeight: '1.5', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: 'var(--ink-3)', lineHeight: '1.5', margin: 0 }}>
                 {entity.description}
               </p>
               <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
@@ -182,7 +182,7 @@ export default function SpreadsheetPage() {
           <div style={{
             fontSize: '14px',
             fontWeight: 600,
-            color: '#6d7175',
+            color: 'var(--ink-3)',
             marginBottom: '16px',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
@@ -195,7 +195,7 @@ export default function SpreadsheetPage() {
                 <h3 style={{
                   fontSize: '16px',
                   fontWeight: 600,
-                  color: '#111827',
+                  color: 'var(--ink)',
                   marginBottom: '12px',
                   display: 'flex',
                   alignItems: 'center',
@@ -206,7 +206,7 @@ export default function SpreadsheetPage() {
                   <span style={{
                     fontSize: '12px',
                     fontWeight: 400,
-                    color: '#6d7175',
+                    color: 'var(--ink-3)',
                     marginLeft: '8px'
                   }}>
                     ({group.entities.length})
@@ -219,11 +219,11 @@ export default function SpreadsheetPage() {
                       onClick={() => navigate(entity.path)}
                       style={{
                         padding: '8px 16px',
-                        background: 'white',
-                        border: '1px solid #e1e3e5',
+                        background: 'var(--bg-2)',
+                        border: '1px solid var(--line)',
                         borderRadius: '6px',
                         fontSize: '13px',
-                        color: '#111827',
+                        color: 'var(--ink)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                         display: 'inline-flex',
@@ -232,11 +232,11 @@ export default function SpreadsheetPage() {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = '#6366f1';
-                        e.currentTarget.style.background = '#f0f1ff';
+                        e.currentTarget.style.background = 'rgba(var(--accent-glow), 0.08)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#e1e3e5';
-                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.borderColor = 'var(--line)';
+                        e.currentTarget.style.background = 'var(--bg-2)';
                       }}
                     >
                       <span>{entity.icon}</span>

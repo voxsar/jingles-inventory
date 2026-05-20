@@ -48,15 +48,15 @@ function CategoryRow({
 }) {
   return (
     <>
-      <tr style={{ borderBottom: '1px solid #e1e3e5' }}>
+      <tr style={{ borderBottom: '1px solid var(--line)' }}>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
           <div style={{ paddingLeft: `${depth * 20}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {depth > 0 && <span style={{ color: '#c9cccf' }}>└</span>}
+            {depth > 0 && <span style={{ color: 'var(--ink-4)' }}>└</span>}
             <span style={{ fontWeight: 500 }}>{category.name}</span>
           </div>
         </td>
-        <td style={{ padding: '8px 16px', fontSize: '14px', fontFamily: 'monospace', color: '#6d7175' }}>{category.slug}</td>
-        <td style={{ padding: '8px 16px', fontSize: '14px', color: '#6d7175' }}>{category.description ?? '—'}</td>
+        <td style={{ padding: '8px 16px', fontSize: '14px', fontFamily: 'monospace', color: 'var(--ink-3)' }}>{category.slug}</td>
+        <td style={{ padding: '8px 16px', fontSize: '14px', color: 'var(--ink-3)' }}>{category.description ?? '—'}</td>
         <td style={{ padding: '8px 16px', fontSize: '14px', textAlign: 'center' }}>{category.sortOrder}</td>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
           {category.isActive
@@ -266,21 +266,21 @@ export default function CategoriesPage() {
           <div className="px-6 py-8 text-gray-500 text-sm">Loading…</div>
         ) : (
           <div className="overflow-x-auto">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: 'var(--ink)' }}>
               <thead>
-                <tr style={{ background: '#f6f6f7' }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Name</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Slug</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Description</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Order</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#6d7175', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e1e3e5' }}>Actions</th>
+                <tr style={{ background: 'var(--glass-pop)' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Name</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Slug</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Description</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Order</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCategories.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
+                    <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--ink-3)' }}>
                       No categories match the current filters.
                     </td>
                   </tr>

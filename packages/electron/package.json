@@ -8,9 +8,9 @@
     "build": "node ../../scripts/write-build-info.mjs electron && tsc",
     "build:electron": "node scripts/verify-package-inputs.cjs && electron-builder",
     "start": "node ../../scripts/write-build-info.mjs electron && node scripts/launch-electron.cjs .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "node ../../scripts/write-build-info.mjs electron && vitest run",
+    "test:watch": "node ../../scripts/write-build-info.mjs electron && vitest",
+    "test:coverage": "node ../../scripts/write-build-info.mjs electron && vitest run --coverage"
   },
   "dependencies": {
     "axios": "^1.6.2",

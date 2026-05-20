@@ -792,6 +792,18 @@
     color: var(--accent-1);
   }
 
+  .legacy-inline-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--chip);
+    color: var(--ink-3);
+    border: 1px solid var(--line);
+    font-size: 11px;
+  }
+
   .ui-banner {
     display: flex;
     align-items: flex-start;

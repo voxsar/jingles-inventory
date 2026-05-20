@@ -20,6 +20,11 @@ coverage/
 out/
 release/
 
+# Generated local build identity files
+packages/backend/src/generated/buildInfo.ts
+packages/electron/src/generated/buildInfo.ts
+packages/electron/src/generated/backendBuildInfo.ts
+
 # Large data files
 *.dump
 /Dump*.sql
