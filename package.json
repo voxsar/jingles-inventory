@@ -9,7 +9,6 @@
 		"dev:backend": "npm run dev --workspace=packages/backend",
 		"dev:web": "npm run dev --workspace=packages/web",
 		"dev:electron": "concurrently \"npm run dev --workspace=packages/web\" \"npm run dev --workspace=packages/electron\"",
-		"vendor:polaris": "node scripts/vendor-polaris.mjs",
 		"build:shared": "npm run build --workspace=packages/shared",
 		"build:backend": "npm run build --workspace=packages/backend",
 		"build:web": "npm run build --workspace=packages/web",

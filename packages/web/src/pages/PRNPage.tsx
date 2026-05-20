@@ -5,6 +5,7 @@ import { PRNStatus } from '@jingles/shared/enums';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import SearchableSelect from '../components/SearchableSelect';
+import { UiBadge, UiText } from '../components/UiPrimitives';
 
 const STATUS_TONES: Record<string, string> = {
   [PRNStatus.Draft]: '',
@@ -284,9 +285,9 @@ export default function PRNPage() {
   const columns = [
     { key: 'id', header: 'PRN ID', render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.id.slice(0, 8)}…</span> },
     { key: 'supplier', header: 'Supplier', sortable: true, render: (r: any) => r.supplier?.name },
-    { key: 'returnReason', header: 'Return Reason', render: (r: any) => r.returnReason ?? <s-text>—</s-text> },
+    { key: 'returnReason', header: 'Return Reason', render: (r: any) => r.returnReason ?? <UiText>—</UiText> },
     { key: 'floor', header: 'Location', render: (r: any) => {
-      if (!r.floor) return <s-text>—</s-text>;
+      if (!r.floor) return <UiText>—</UiText>;
       const floorLabel = r.floor.branch?.name ? `🏢 ${r.floor.branch.name} › ${r.floor.name}` : r.floor.name;
       return (
         <span className="text-xs">
@@ -298,11 +299,11 @@ export default function PRNPage() {
     {
       key: 'status', header: 'Status', render: (r: any) => {
         const tone = STATUS_TONES[r.status] ?? '';
-        return tone ? <s-badge tone={tone as any}>{r.status}</s-badge> : <s-badge>{r.status}</s-badge>;
+        return tone ? <UiBadge tone={tone}>{r.status}</UiBadge> : <UiBadge>{r.status}</UiBadge>;
       }
     },
     { key: 'linesCount', header: 'Lines', align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{r.lines?.length ?? 0}</span> },
-    { key: 'createdAt', header: 'Created', sortable: true, render: (r: any) => <s-text>{new Date(r.createdAt).toLocaleDateString()}</s-text> },
+    { key: 'createdAt', header: 'Created', sortable: true, render: (r: any) => <UiText>{new Date(r.createdAt).toLocaleDateString()}</UiText> },
     {
       key: 'actions', header: '',
       render: (r: any) => (

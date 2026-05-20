@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { grnsApi, settingsApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared/enums';
 import SearchableSelect from '../components/SearchableSelect';
+import { UiBadge } from '../components/UiPrimitives';
 
 const STATUS_TONES: Record<string, string> = {
   [GRNStatus.Draft]: '',
@@ -145,7 +146,7 @@ export default function GRNDetailPage() {
           <div className="page-header-left">
             <div className="flex items-center gap-3">
               <h1 className="page-title">📋 GRN Detail</h1>
-              {statusTone ? <s-badge tone={statusTone as any}>{grn.status}</s-badge> : <s-badge>{grn.status}</s-badge>}
+              {statusTone ? <UiBadge tone={statusTone}>{grn.status}</UiBadge> : <UiBadge>{grn.status}</UiBadge>}
             </div>
             <p className="page-subtitle font-mono text-xs">{grn.id?.slice(0, 8)}…</p>
           </div>
@@ -260,7 +261,7 @@ export default function GRNDetailPage() {
                 </button>
               )}
               {line.inspectionRecords?.length > 0 && (
-                <s-badge tone="success">✓ Inspected</s-badge>
+                <UiBadge tone="success">✓ Inspected</UiBadge>
               )}
             </div>
 

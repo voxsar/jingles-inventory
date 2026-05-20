@@ -37,27 +37,16 @@ export default function Pagination({
   }
 
   return (
-    <div
-      className="pagination-bar"
-      style={{
-        display: 'flex',
-        gap: '12px',
-        padding: '12px 16px',
-        borderTop: '1px solid #e1e3e5',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span style={{ color: '#4b5563', fontSize: '14px' }}>
+    <div className="pagination-bar">
+      <div className="pagination-summary">
+        <span>
           {total === 0 ? 'No results' : `Showing ${start}-${end} of ${total}`}
         </span>
         {onPageSizeChange && (
           <select
+            className="pagination-size"
             value={pageSize}
             onChange={e => onPageSizeChange(Number(e.target.value))}
-            style={{ fontSize: '14px', border: '1px solid #c9cccf', borderRadius: '6px', padding: '4px 8px' }}
           >
             {pageSizeOptions.map(s => (
               <option key={s} value={s}>{s} per page</option>
@@ -66,7 +55,7 @@ export default function Pagination({
         )}
       </div>
       {safeTotalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="pagination-actions">
           <button
             type="button"
             className="btn-secondary text-xs"
@@ -77,7 +66,7 @@ export default function Pagination({
           </button>
           {pages.map((p, i) =>
             p === '...' ? (
-              <span key={`ellipsis-${i}`} style={{ padding: '6px 8px', color: '#6d7175' }}>…</span>
+              <span key={`ellipsis-${i}`} className="pagination-ellipsis">…</span>
             ) : (
               <button
                 type="button"

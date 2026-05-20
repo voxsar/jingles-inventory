@@ -10,6 +10,7 @@ import ImageGalleryManager from '../components/ImageGalleryManager';
 import { branding } from '../config/branding';
 import SearchableSelect from '../components/SearchableSelect';
 import MultiSearchableSelect from '../components/MultiSearchableSelect';
+import { UiBadge, UiText } from '../components/UiPrimitives';
 import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
 import { formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
 
@@ -1167,13 +1168,13 @@ export default function SKUPage() {
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.unitOfMeasure}</td>
 												<td style={{ padding: '12px 16px' }}>
 													<div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-														{sku.tags?.slice(0, 3).map((t: any) => <s-badge key={t.id} tone="info">{t.tag?.name ?? t.name}</s-badge>)}
-														{sku.tags?.length > 3 && <s-badge>+{sku.tags.length - 3}</s-badge>}
+														{sku.tags?.slice(0, 3).map((t: any) => <UiBadge key={t.id} tone="info">{t.tag?.name ?? t.name}</UiBadge>)}
+														{sku.tags?.length > 3 && <UiBadge>+{sku.tags.length - 3}</UiBadge>}
 													</div>
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#d97706', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <s-badge tone="warning">⚠️ Fragile</s-badge> : <s-text>No</s-text>}</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge>}</td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <UiBadge tone="warning">⚠️ Fragile</UiBadge> : <UiText>No</UiText>}</td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <UiBadge tone="success">● Active</UiBadge> : <UiBadge>○ Inactive</UiBadge>}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
 													<div className="flex gap-1">
 														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
@@ -1205,7 +1206,7 @@ export default function SKUPage() {
 																</span>
 															))}
 														</td>
-														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>{variant.isActive ? <s-badge tone="success">● Active</s-badge> : <s-badge>○ Inactive</s-badge>}</td>
+														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>{variant.isActive ? <UiBadge tone="success">● Active</UiBadge> : <UiBadge>○ Inactive</UiBadge>}</td>
 														<td />
 													</tr>
 												))
@@ -1723,7 +1724,7 @@ export default function SKUPage() {
 									<div className="flex flex-wrap gap-2 mb-2">
 										{formTags.map((id) => (
 											<span key={id} className="inline-flex items-center gap-1">
-												<s-badge tone="info">{getTagName(id)}</s-badge>
+												<UiBadge tone="info">{getTagName(id)}</UiBadge>
 												<button type="button" onClick={() => setFormTags((p) => p.filter((t) => t !== id))} className="modal-close text-sm">✕</button>
 											</span>
 										))}
@@ -2051,7 +2052,7 @@ export default function SKUPage() {
 										{editTags.length === 0 ? <span className="text-sm text-gray-400">No tags assigned</span>
 											: editTags.map((id) => (
 												<span key={id} className="inline-flex items-center gap-1">
-													<s-badge tone="info">{getTagName(id)}</s-badge>
+													<UiBadge tone="info">{getTagName(id)}</UiBadge>
 													<button onClick={() => removeEditTag(id)} className="modal-close text-sm">✕</button>
 												</span>
 											))}
@@ -2082,8 +2083,8 @@ export default function SKUPage() {
 											<div key={bc.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
 												<div className="flex items-center gap-3">
 													<span className="font-mono text-sm">{bc.barcode}</span>
-													<s-badge>{bc.barcodeType}</s-badge>
-													{bc.isDefault && <s-badge tone="info">Default</s-badge>}
+													<UiBadge>{bc.barcodeType}</UiBadge>
+													{bc.isDefault && <UiBadge tone="info">Default</UiBadge>}
 													{bc.label && <span className="text-xs text-gray-500">({bc.label})</span>}
 												</div>
 												<button type="button" className="btn-sm text-red-600" onClick={() => handleDeleteBarcode(bc.id)}>Remove</button>
@@ -2278,14 +2279,14 @@ export default function SKUPage() {
 															<div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
 																<span className="font-medium text-sm">📍 {val.locationName}</span>
 																<div className="flex items-center gap-2">
-																	{isLowStock && <s-badge tone="warning">⚠️ Low Stock</s-badge>}
-																	<s-badge tone="info">{formatQuantity(totalQty)} units</s-badge>
+																	{isLowStock && <UiBadge tone="warning">⚠️ Low Stock</UiBadge>}
+																	<UiBadge tone="info">{formatQuantity(totalQty)} units</UiBadge>
 																</div>
 															</div>
 															{val.records.map((record: any) => (
 																<div key={record.id} className="flex items-center justify-between px-4 py-2 text-sm border-b border-gray-100 last:border-0">
 																	<div className="flex items-center gap-3">
-																		<s-badge>{record.state}</s-badge>
+																		<UiBadge>{record.state}</UiBadge>
 																		{record.variant && <span className="text-xs text-indigo-600">Variant: {record.variant.name ?? record.variant.variantCode}</span>}
 																		{record.batch && <span className="text-xs text-gray-500">Batch: {record.batch.batchNumber}</span>}
 																	</div>

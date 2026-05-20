@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { vendorsApi, reportsApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
+import { UiText } from '../components/UiPrimitives';
 import { formatQuantity } from '../utils/quantity';
 
 export default function VendorPortalPage() {
@@ -40,21 +41,34 @@ export default function VendorPortalPage() {
 
 	if (!user?.vendorId) {
 		return (
-			<><s-section><s-text>No vendor profile associated with your account. Contact an administrator.</s-text></s-section></>
+			<section className="card">
+				<UiText>No vendor profile associated with your account. Contact an administrator.</UiText>
+			</section>
 		);
 	}
 
 	return (
-		<>
-			<s-heading>Vendor Portal</s-heading>
+		<div className="flex flex-col gap-4">
+			<div className="page-header">
+				<div className="page-header-left">
+					<h1 className="page-title">Vendor Portal</h1>
+					<p className="page-subtitle">Monitor assigned products and current inventory status.</p>
+				</div>
+			</div>
 
-			<s-section heading="My Products">
+			<section className="content-section">
+				<div className="content-section-header">
+					<h2 className="section-title">My Products</h2>
+				</div>
 				<PaginatedDataTable columns={productColumns} data={products} isLoading={isLoading} emptyMessage="No products found" />
-			</s-section>
+			</section>
 
-			<s-section heading="Inventory Status">
+			<section className="content-section">
+				<div className="content-section-header">
+					<h2 className="section-title">Inventory Status</h2>
+				</div>
 				<PaginatedDataTable columns={valuationColumns} data={valuation} isLoading={isLoading} emptyMessage="No inventory data" />
-			</s-section>
-		</>
+			</section>
+		</div>
 	);
 }

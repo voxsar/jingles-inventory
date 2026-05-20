@@ -30,7 +30,7 @@ export default function DataTable<T extends Record<string, any>>({
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+      setSortDir((direction) => direction === 'asc' ? 'desc' : 'asc');
     } else {
       setSortKey(key);
       setSortDir('asc');
@@ -48,25 +48,17 @@ export default function DataTable<T extends Record<string, any>>({
     : data;
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+    <div className="table-container">
+      <table className="data-table">
         <thead>
-          <tr style={{ background: '#f6f6f7' }}>
+          <tr>
             {columns.map((col) => (
               <th
                 key={String(col.key)}
                 onClick={() => col.sortable && handleSort(String(col.key))}
+                className={`data-table__header${col.sortable ? ' is-sortable' : ''}`}
                 style={{
-                  padding: '12px 16px',
                   textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
-                  fontWeight: 600,
-                  fontSize: '12px',
-                  color: '#6d7175',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  cursor: col.sortable ? 'pointer' : 'default',
-                  borderBottom: '1px solid #e1e3e5',
-                  userSelect: 'none',
                 }}
               >
                 {col.header}
@@ -78,19 +70,19 @@ export default function DataTable<T extends Record<string, any>>({
         <tbody>
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i}>
+              <tr key={i} className="data-table__row">
                 {Array.from({ length: columns.length }).map((_, j) => (
-                  <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid #e1e3e5' }}>
-                    <div style={{ height: '16px', background: '#e1e3e5', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
+                  <td key={j} className="data-table__cell">
+                    <div className="data-table__skeleton" style={{ width: `${60 + (j * 13) % 40}%` }} />
                   </td>
                 ))}
               </tr>
             ))
           ) : sortedData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ padding: '48px 16px', textAlign: 'center', color: '#6d7175' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{emptyIcon}</div>
-                <s-text>{emptyMessage}</s-text>
+              <td colSpan={columns.length} className="data-table__empty">
+                <div className="data-table__empty-icon">{emptyIcon}</div>
+                <span>{emptyMessage}</span>
               </td>
             </tr>
           ) : (
@@ -98,20 +90,14 @@ export default function DataTable<T extends Record<string, any>>({
               <tr
                 key={idx}
                 onClick={() => onRowClick?.(row)}
-                style={{
-                  cursor: onRowClick ? 'pointer' : 'default',
-                  background: idx % 2 === 1 ? '#fafbfb' : 'white',
-                  borderBottom: '1px solid #e1e3e5',
-                }}
+                className={`data-table__row${onRowClick ? ' is-clickable' : ''}`}
               >
                 {columns.map((col) => (
                   <td
                     key={String(col.key)}
+                    className="data-table__cell"
                     style={{
-                      padding: '12px 16px',
-                      fontSize: '14px',
                       textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
-                      whiteSpace: 'nowrap',
                     }}
                   >
                     {col.render ? col.render(row) : String(row[String(col.key)] ?? '')}
@@ -125,4 +111,3 @@ export default function DataTable<T extends Record<string, any>>({
     </div>
   );
 }
-

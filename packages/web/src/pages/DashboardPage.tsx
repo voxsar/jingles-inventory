@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardApi } from '../api/client';
 import { formatQuantity } from '../utils/quantity';
+import {
+  BoxIcon,
+  CheckCircleIcon,
+  ReceiptIcon,
+  RefreshIcon,
+  SparklesIcon,
+  WarningIcon,
+} from '../components/AppIcons';
 
-interface StatCard {
-  label: string;
-  value: string | number;
-  color: string;
-  icon: string;
-}
+type StatTone = 'accent' | 'success' | 'warning' | 'danger';
 
 interface DashboardStats {
   totalItems: number;
@@ -26,6 +30,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     dashboardApi.getStats()
@@ -39,81 +44,201 @@ export default function DashboardPage() {
       .catch(() => setIsLoading(false));
   }, []);
 
-  const cards: StatCard[] = stats ? [
-    { label: 'Total Items', value: formatQuantity(stats.totalItems), color: 'bg-blue-500', icon: '📦' },
-    { label: 'Shelf Ready', value: formatQuantity(stats.shelfReadyItems), color: 'bg-green-500', icon: '✅' },
-    { label: 'Open GRNs', value: stats.openGRNs, color: 'bg-yellow-500', icon: '📋' },
-    { label: 'Damaged Items', value: formatQuantity(stats.damagedItems), color: 'bg-red-500', icon: '⚠️' },
-  ] : [];
+  const cards = useMemo(
+    () =>
+      stats
+        ? [
+            {
+              label: 'Total Items',
+              value: formatQuantity(stats.totalItems),
+              delta: `${Object.keys(stats.inventoryByState).length} tracked states`,
+              icon: BoxIcon,
+              tone: 'accent' as StatTone,
+            },
+            {
+              label: 'Shelf Ready',
+              value: formatQuantity(stats.shelfReadyItems),
+              delta: `${stats.totalItems > 0 ? Math.round((stats.shelfReadyItems / stats.totalItems) * 100) : 0}% of stock`,
+              icon: CheckCircleIcon,
+              tone: 'success' as StatTone,
+            },
+            {
+              label: 'Open GRNs',
+              value: stats.openGRNs,
+              delta: stats.openGRNs > 0 ? 'Needs review' : 'All clear',
+              icon: ReceiptIcon,
+              tone: 'warning' as StatTone,
+            },
+            {
+              label: 'Damaged',
+              value: formatQuantity(stats.damagedItems),
+              delta: stats.totalItems > 0 ? `${Math.round((stats.damagedItems / stats.totalItems) * 100)}% of stock` : 'No loss reported',
+              icon: WarningIcon,
+              tone: 'danger' as StatTone,
+            },
+          ]
+        : [],
+    [stats]
+  );
 
-  // Build inventory by state array from stats
-  const statsByState = stats ? 
-    Object.entries(stats.inventoryByState)
-      .map(([state, data]) => ({
-        state,
-        count: data.count,
-        quantity: data.quantity,
-      }))
-      .filter(({ quantity }) => quantity > 0)
-    : [];
+  const statsByState = useMemo(
+    () =>
+      stats
+        ? Object.entries(stats.inventoryByState)
+            .map(([state, data]) => ({
+              state,
+              count: data.count,
+              quantity: data.quantity,
+            }))
+            .filter(({ quantity }) => quantity > 0)
+            .sort((left, right) => right.quantity - left.quantity)
+        : [],
+    [stats]
+  );
 
   const totalItems = stats?.totalItems ?? 0;
+  const shelfReadyRate =
+    totalItems > 0 && stats ? Math.round((stats.shelfReadyItems / totalItems) * 100) : 0;
+  const lastUpdatedLabel = stats?.lastUpdated
+    ? new Date(stats.lastUpdated).toLocaleString()
+    : 'Unavailable';
+  const insightMessage = stats
+    ? stats.openGRNs > 0
+      ? `${stats.openGRNs} open GRNs are still blocking stock from fully landing. Clearing them will improve availability across the warehouse.`
+      : shelfReadyRate >= 90
+        ? `Most stock is already shelf ready. The main watch area now is preserving sync quality and reducing damaged inventory drift.`
+        : `Shelf-ready stock is at ${shelfReadyRate}%. A quick review of uninspected items would improve fulfillment readiness.`
+    : '';
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4">
+      <div className="dashboard-shell">
         <div className="page-header">
-          <h1 className="page-title">📊 Dashboard</h1>
+          <div className="page-header-left">
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-subtitle">Warehouse health, activity, and stock readiness.</p>
+          </div>
         </div>
-        <div className="content-section px-6 py-8 text-gray-500 text-sm">Loading…</div>
+        <div className="content-section px-6 py-8 text-sm text-gray-500">Loading dashboard metrics...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Page header */}
+    <div className="dashboard-shell">
       <div className="page-header">
-        <h1 className="page-title">📊 Dashboard</h1>
+        <div className="page-header-left">
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Live inventory posture across warehouse operations.</p>
+        </div>
+        <div className="dashboard-header-actions">
+          <button type="button" className="btn-secondary">
+            <RefreshIcon size={14} />
+            Refresh
+          </button>
+          <button type="button" className="btn-primary" onClick={() => navigate('/inventory')}>
+            Open Inventory
+          </button>
+        </div>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section className="dashboard-insight-card">
+        <div className="dashboard-insight-icon">
+          <SparklesIcon size={18} />
+        </div>
+        <div className="dashboard-insight-content">
+          <div className="dashboard-insight-meta">
+            <span className="chip chip-accent">AI Insight</span>
+            <span className="dashboard-insight-updated">Updated from live dashboard stats</span>
+          </div>
+          <p className="dashboard-insight-copy">{insightMessage}</p>
+          <div className="dashboard-insight-actions">
+            <button type="button" className="btn-primary btn-sm" onClick={() => navigate('/grns')}>
+              Review GRNs
+            </button>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => navigate('/inventory')}>
+              Open inventory
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="dashboard-stat-grid">
         {cards.map(card => (
-          <div key={card.label} className="content-section p-5 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl ${card.color} bg-opacity-15 flex items-center justify-center text-2xl flex-shrink-0`}>
-              {card.icon}
+          <div
+            key={card.label}
+            className={`dashboard-stat-card dashboard-stat-card--${card.tone}`}
+          >
+            <div className="dashboard-stat-icon">
+              <card.icon size={18} />
             </div>
-            <div>
-              <p className="text-sm text-gray-500">{card.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-            </div>
+            <div className="dashboard-stat-label">{card.label}</div>
+            <div className="dashboard-stat-value">{card.value}</div>
+            <div className="dashboard-stat-delta">{card.delta}</div>
           </div>
         ))}
       </div>
 
-      {/* Inventory by state */}
-      <div className="content-section">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Inventory by State</h2>
-        </div>
-        <div className="px-6 py-4 flex flex-col gap-3">
-          {statsByState.map(({ state, quantity }) => (
-            <div key={state} className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 w-36 flex-shrink-0">{state}</span>
-              <div className="flex-1 bg-gray-100 rounded-full h-2">
-                <div
-                  className="bg-primary-500 h-2 rounded-full transition-all"
-                  style={{ width: `${totalItems > 0 ? (quantity / totalItems) * 100 : 0}%` }}
-                />
-              </div>
-              <span className="text-sm font-medium text-gray-700 w-16 text-right">{formatQuantity(quantity)}</span>
+      <div className="dashboard-grid">
+        <section className="content-section dashboard-panel dashboard-panel--wide">
+          <div className="content-section-header">
+            <div>
+              <h2 className="section-title mb-0">Inventory by State</h2>
+              <p className="dashboard-panel-subtitle">Current distribution across tracked stock states.</p>
             </div>
-          ))}
-          {statsByState.length === 0 && (
-            <p className="text-sm text-gray-500">No inventory data yet.</p>
-          )}
-        </div>
+          </div>
+          <div className="dashboard-state-list">
+            {statsByState.map(({ state, quantity }) => (
+              <div key={state} className="dashboard-state-row">
+                <div className="dashboard-state-head">
+                  <span>{state}</span>
+                  <span>{formatQuantity(quantity)}</span>
+                </div>
+                <div className="dashboard-state-bar">
+                  <span style={{ width: `${totalItems > 0 ? (quantity / totalItems) * 100 : 0}%` }} />
+                </div>
+              </div>
+            ))}
+            {statsByState.length === 0 && (
+              <p className="text-sm text-gray-500">No inventory data yet.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="content-section dashboard-panel">
+          <div className="content-section-header">
+            <div>
+              <h2 className="section-title mb-0">System Snapshot</h2>
+              <p className="dashboard-panel-subtitle">Operational summary from the current dashboard payload.</p>
+            </div>
+          </div>
+          <div className="dashboard-summary-list">
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">Last updated</span>
+              <strong>{lastUpdatedLabel}</strong>
+            </div>
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">Shelf-ready rate</span>
+              <strong>{shelfReadyRate}%</strong>
+            </div>
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">States with stock</span>
+              <strong>{statsByState.length}</strong>
+            </div>
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">Damaged units</span>
+              <strong>{formatQuantity(stats?.damagedItems ?? 0)}</strong>
+            </div>
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">Open GRNs</span>
+              <strong>{stats?.openGRNs ?? 0}</strong>
+            </div>
+            <div className="dashboard-summary-item">
+              <span className="dashboard-summary-label">Tracked inventory count</span>
+              <strong>{formatQuantity(totalItems)}</strong>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

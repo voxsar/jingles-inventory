@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { categoriesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
 import Pagination from '../components/Pagination';
+import { UiBadge } from '../components/UiPrimitives';
 import { buildHierarchicalCategoryOptions } from '../utils/categoryHelpers';
 
 interface Category {
@@ -59,8 +60,8 @@ function CategoryRow({
         <td style={{ padding: '8px 16px', fontSize: '14px', textAlign: 'center' }}>{category.sortOrder}</td>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
           {category.isActive
-            ? <s-badge tone="success">Active</s-badge>
-            : <s-badge tone="critical">Inactive</s-badge>}
+            ? <UiBadge tone="success">Active</UiBadge>
+            : <UiBadge tone="critical">Inactive</UiBadge>}
         </td>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
           <div className="flex gap-2">

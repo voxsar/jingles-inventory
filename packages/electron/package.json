@@ -20,7 +20,6 @@
     "vite": "8.0.13"
   },
   "devDependencies": {
-    "@shopify/polaris-types": "^1.0.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.10.6",
     "@types/uuid": "^9.0.7",

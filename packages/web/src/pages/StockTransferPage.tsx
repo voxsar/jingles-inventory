@@ -3,6 +3,7 @@ import { branchesApi, floorsApi, skusApi, stockTransfersApi, variantsApi, batche
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
 import SearchableSelect from '../components/SearchableSelect';
+import { UiBadge } from '../components/UiPrimitives';
 
 const STATUS_TONES: Record<string, string> = {
   Draft: '',
@@ -15,7 +16,7 @@ const STATUS_TONES: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const tone = STATUS_TONES[status] ?? '';
-  return tone ? <s-badge tone={tone as any}>{status}</s-badge> : <s-badge>{status}</s-badge>;
+  return tone ? <UiBadge tone={tone}>{status}</UiBadge> : <UiBadge>{status}</UiBadge>;
 }
 
 export default function StockTransferPage() {

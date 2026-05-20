@@ -48,82 +48,85 @@ export default function SearchableSelect(props: SearchableSelectProps) {
   const customStyles: StylesConfig<SelectOption, boolean> = {
     control: (base, state) => ({
       ...base,
-      minHeight: '38px',
-      borderColor: state.isFocused ? '#6366f1' : '#d1d5db',
-      boxShadow: state.isFocused ? '0 0 0 2px rgba(99, 102, 241, 0.5)' : 'none',
+      minHeight: '42px',
+      borderColor: state.isFocused ? 'rgba(var(--accent-glow), 0.5)' : 'var(--line-2)',
+      boxShadow: state.isFocused ? '0 0 0 4px rgba(var(--accent-glow), 0.12)' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#6366f1' : '#9ca3af',
+        borderColor: state.isFocused ? 'rgba(var(--accent-glow), 0.5)' : 'var(--line-strong)',
       },
-      borderRadius: '0.5rem',
+      borderRadius: '12px',
       fontSize: '0.875rem',
       cursor: 'pointer',
-      backgroundColor: 'white',
+      backgroundColor: 'var(--bg-2)',
     }),
     menu: (base) => ({
       ...base,
-      borderRadius: '0.5rem',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      border: '1px solid #e5e7eb',
+      borderRadius: '16px',
+      boxShadow: 'var(--shadow-lg)',
+      border: '1px solid var(--line)',
       fontSize: '0.875rem',
       zIndex: 100,
+      overflow: 'hidden',
+      backgroundColor: 'var(--glass-strong)',
+      backdropFilter: 'blur(calc(var(--glass-blur) * 1.2)) saturate(var(--glass-saturate))',
     }),
     menuList: (base) => ({
       ...base,
-      padding: '4px',
+      padding: '8px',
       maxHeight: '300px',
     }),
     option: (base, state) => ({
       ...base,
       backgroundColor: state.isSelected
-        ? '#6366f1'
+        ? 'rgba(var(--accent-glow), 0.22)'
         : state.isFocused
-        ? '#f3f4f6'
-        : 'white',
-      color: state.isSelected ? 'white' : '#111827',
+        ? 'var(--row-hover)'
+        : 'transparent',
+      color: 'var(--ink)',
       cursor: 'pointer',
       padding: '8px 12px',
-      borderRadius: '0.375rem',
+      borderRadius: '10px',
       fontSize: '0.875rem',
       whiteSpace: 'pre',
       '&:active': {
-        backgroundColor: state.isSelected ? '#6366f1' : '#e5e7eb',
+        backgroundColor: state.isSelected ? 'rgba(var(--accent-glow), 0.3)' : 'var(--row-hover)',
       },
     }),
     placeholder: (base) => ({
       ...base,
-      color: '#9ca3af',
+      color: 'var(--ink-4)',
       fontSize: '0.875rem',
     }),
     singleValue: (base) => ({
       ...base,
-      color: '#111827',
+      color: 'var(--ink)',
       fontSize: '0.875rem',
       whiteSpace: 'pre',
     }),
     input: (base) => ({
       ...base,
-      color: '#111827',
+      color: 'var(--ink)',
       fontSize: '0.875rem',
     }),
     dropdownIndicator: (base) => ({
       ...base,
-      color: '#6b7280',
+      color: 'var(--ink-3)',
       padding: '6px',
       '&:hover': {
-        color: '#374151',
+        color: 'var(--ink)',
       },
     }),
     clearIndicator: (base) => ({
       ...base,
-      color: '#6b7280',
+      color: 'var(--ink-3)',
       padding: '6px',
       '&:hover': {
-        color: '#374151',
+        color: 'var(--ink)',
       },
     }),
     indicatorSeparator: (base) => ({
       ...base,
-      backgroundColor: '#d1d5db',
+      backgroundColor: 'var(--line)',
     }),
   };
 

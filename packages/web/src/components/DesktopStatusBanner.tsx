@@ -6,6 +6,7 @@ import type {
   ElectronSyncProgressPhase,
   ElectronSyncResult,
 } from '@jingles/shared';
+import { UiBanner } from './UiPrimitives';
 
 const STALE_SYNC_WARNING_MS = 3 * 24 * 60 * 60 * 1000;
 const STALE_SYNC_CLOCK_INTERVAL_MS = 60 * 1000;
@@ -311,30 +312,30 @@ export default function DesktopStatusBanner() {
     <div className="border-b border-gray-200 bg-white px-6 py-3 space-y-2">
       {progress && renderSyncProgress(progress)}
       {!isOnline && (
-        <s-banner tone="warning">
+        <UiBanner tone="warning">
           Offline mode. Changes will sync when the connection returns.
-        </s-banner>
+        </UiBanner>
       )}
       {running && !progress && (
-        <s-banner tone="info">Syncing desktop changes...</s-banner>
+        <UiBanner tone="info">Syncing desktop changes...</UiBanner>
       )}
       {syncError && (
-        <s-banner tone="critical">
+        <UiBanner tone="critical">
           Desktop sync failed: {syncError}
-        </s-banner>
+        </UiBanner>
       )}
       {conflictCount > 0 && (
-        <s-banner tone="warning">
+        <UiBanner tone="warning">
           {conflictCount === 1
             ? '1 sync conflict needs review in the desktop outbox.'
             : `${conflictCount} sync conflicts need review in the desktop outbox.`}
-        </s-banner>
+        </UiBanner>
       )}
-      {pendingNotice && <s-banner tone="info">{pendingNotice}</s-banner>}
-      {cursorLagNotice && <s-banner tone="warning">{cursorLagNotice}</s-banner>}
-      {staleSyncNotice && <s-banner tone="warning">{staleSyncNotice}</s-banner>}
+      {pendingNotice && <UiBanner tone="info">{pendingNotice}</UiBanner>}
+      {cursorLagNotice && <UiBanner tone="warning">{cursorLagNotice}</UiBanner>}
+      {staleSyncNotice && <UiBanner tone="warning">{staleSyncNotice}</UiBanner>}
       {permanentFailureNotice && (
-        <s-banner tone="warning">{permanentFailureNotice}</s-banner>
+        <UiBanner tone="warning">{permanentFailureNotice}</UiBanner>
       )}
     </div>
   );

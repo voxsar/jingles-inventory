@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { vendorsApi, settingsApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
 import SearchableSelect from '../components/SearchableSelect';
+import { UiBadge } from '../components/UiPrimitives';
 
 const defaultForm = {
   name: '',
@@ -124,7 +125,7 @@ export default function SuppliersPage() {
       key: 'type', header: 'Type',
       render: (r: any) => {
         const tone = r.type === 'Supplier' ? 'info' : r.type === 'Both' ? 'warning' : '';
-        return tone ? <s-badge tone={tone as any}>{r.type}</s-badge> : <s-badge>{r.type}</s-badge>;
+        return tone ? <UiBadge tone={tone}>{r.type}</UiBadge> : <UiBadge>{r.type}</UiBadge>;
       },
     },
     { key: 'contactEmail', header: 'Email', sortable: true },
@@ -133,8 +134,8 @@ export default function SuppliersPage() {
     {
       key: 'isActive', header: 'Status',
       render: (r: any) => r.isActive
-        ? <s-badge tone="success">Active</s-badge>
-        : <s-badge tone="critical">Inactive</s-badge>,
+        ? <UiBadge tone="success">Active</UiBadge>
+        : <UiBadge tone="critical">Inactive</UiBadge>,
     },
     {
       key: 'actions', header: 'Actions',

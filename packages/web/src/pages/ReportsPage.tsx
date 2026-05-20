@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { branchesApi, floorsApi, reportsApi, skusApi, vendorsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import { UiBadge } from '../components/UiPrimitives';
 import { formatQuantity } from '../utils/quantity';
 
 type ReportId =
@@ -157,7 +158,7 @@ const lineCost = (row: any, quantityField: string) => (row.lines ?? []).reduce((
 	return sum + unitCost * Number(line[quantityField] ?? 0);
 }, 0);
 
-const badge = (value: any) => value ? <s-badge>{String(value)}</s-badge> : '';
+const badge = (value: any) => value ? <UiBadge>{String(value)}</UiBadge> : '';
 
 const textColumn = (key: string, header: string, paths: string[]): ExportColumn => ({
 	key,

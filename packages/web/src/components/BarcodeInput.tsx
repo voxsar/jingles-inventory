@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { barcodeApi } from '../api/client';
+import { UiBanner } from './UiPrimitives';
 
 interface BarcodeInputProps {
   onResult?: (result: any) => void;
@@ -32,7 +33,7 @@ export default function BarcodeInput({ onResult, placeholder = 'Scan or type bar
   };
 
   return (
-    <s-stack direction="inline" gap="base">
+    <div className="flex flex-wrap items-start gap-3">
       <input
         ref={inputRef}
         type="text"
@@ -41,17 +42,21 @@ export default function BarcodeInput({ onResult, placeholder = 'Scan or type bar
         disabled={isLoading}
         onChange={(e) => setBarcode(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleScan(barcode)}
-        style={{ flex: 1, padding: '8px 12px', border: '1px solid #c9cccf', borderRadius: '6px', fontSize: '14px' }}
+        className="input-field min-w-[240px] flex-1"
       />
       <button
         type="button"
         onClick={() => handleScan(barcode)}
         disabled={isLoading || !barcode}
-        style={{ padding: '8px 16px', background: '#008060', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}
+        className="btn-primary whitespace-nowrap"
       >
         {isLoading ? 'Scanning...' : 'Scan'}
       </button>
-      {error && <s-banner tone="critical">{error}</s-banner>}
-    </s-stack>
+      {error && (
+        <div className="w-full">
+          <UiBanner tone="critical">{error}</UiBanner>
+        </div>
+      )}
+    </div>
   );
 }

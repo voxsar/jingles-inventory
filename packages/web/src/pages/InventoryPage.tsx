@@ -7,6 +7,7 @@ import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
 import BarcodeInput from '../components/BarcodeInput';
 import SearchableSelect from '../components/SearchableSelect';
+import { UiText } from '../components/UiPrimitives';
 import { applyQuantityDelta, formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
 
 const PAGE_SIZE = 20;
@@ -297,9 +298,9 @@ export default function InventoryPage() {
     )},
     { key: 'quantity', header: 'Qty', sortable: true, align: 'right' as const, render: (r: any) => <span style={{ fontWeight: 600 }}>{formatQuantity(r.quantity)}</span> },
     { key: 'state', header: 'State', render: (r: any) => <StateBadge state={r.state} /> },
-    { key: 'floor', header: 'Location', render: (r: any) => <s-text>{formatLocation(r)}</s-text> },
-    { key: 'batchId', header: 'Batch', render: (r: any) => r.batch ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batch.batchNumber}</span> : <s-text>—</s-text> },
-    { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <s-text>{new Date(r.updatedAt).toLocaleDateString()}</s-text> },
+    { key: 'floor', header: 'Location', render: (r: any) => <UiText>{formatLocation(r)}</UiText> },
+    { key: 'batchId', header: 'Batch', render: (r: any) => r.batch ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.batch.batchNumber}</span> : <UiText>—</UiText> },
+    { key: 'updatedAt', header: 'Updated', sortable: true, render: (r: any) => <UiText>{new Date(r.updatedAt).toLocaleDateString()}</UiText> },
     {
       key: 'actions', header: '',
       render: (r: any) => (

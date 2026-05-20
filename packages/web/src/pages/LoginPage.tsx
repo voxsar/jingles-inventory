@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { branding } from '../config/branding';
+import { BrandMark } from '../components/Layout';
+import { MoonIcon, SparklesIcon, SunIcon } from '../components/AppIcons';
+import { getStoredUITheme, persistUITheme, toggleUITheme, type UITheme } from '../utils/uiTheme';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@theredsun.org');
   const [password, setPassword] = useState('');
+  const [theme, setTheme] = useState<UITheme>(() => getStoredUITheme());
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
 
@@ -19,43 +23,86 @@ export default function LoginPage() {
     }
   };
 
+  const handleThemeToggle = () => {
+    setTheme((currentTheme) => {
+      const nextTheme = toggleUITheme(currentTheme);
+      persistUITheme(nextTheme);
+      return nextTheme;
+    });
+  };
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f2f4' }}>
-      <div style={{ width: '100%', maxWidth: '400px', padding: '16px' }}>
-        <s-section>
-          <s-stack gap="base">
-            <div style={{ textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '8px' }}>{branding.appLogoEmoji}</div>
-              <s-heading>{branding.appName}</s-heading>
-              <s-text>Sign in to your account</s-text>
+    <div className="inventory-app-theme auth-screen" data-theme={theme}>
+      <div className="app-backdrop" aria-hidden="true">
+        <div className="app-backdrop-spot" />
+        <div className="app-backdrop-grain" />
+      </div>
+
+      <button type="button" className="auth-theme-toggle shell-icon-button" onClick={handleThemeToggle}>
+        {theme === 'dark' ? <SunIcon size={17} /> : <MoonIcon size={17} />}
+      </button>
+
+      <div className="auth-card">
+        <div className="auth-card-side">
+          <div className="auth-brand">
+            <BrandMark />
+            <div>
+              <p className="auth-brand-name">{branding.appShortName || branding.appName}</p>
+              <p className="auth-brand-subtitle">{branding.appHeaderTitle}</p>
             </div>
-            <form onSubmit={handleSubmit}>
-              <s-stack gap="base">
-                <s-text-field
-                  label="Email"
-                  type="email"
-                  name="email"
-                  value={email}
-                  required
-                  placeholder="admin@theredsun.org"
-                  onChange={(e: any) => setEmail(e.currentTarget.value)}
-                />
-                <s-password-field
-                  label="Password"
-                  name="password"
-                  value={password}
-                  required
-                  placeholder="Enter your password"
-                  onChange={(e: any) => setPassword(e.currentTarget.value)}
-                />
-                {error && <s-banner tone="critical">{error}</s-banner>}
-                <s-button variant="primary" type="submit" disabled={isLoading}>
-                  {isLoading ? 'Signing in...' : 'Sign In'}
-                </s-button>
-              </s-stack>
-            </form>
-          </s-stack>
-        </s-section>
+          </div>
+          <div className="auth-hero">
+            <span className="chip chip-accent">
+              <SparklesIcon size={12} />
+              Unified web + desktop UI
+            </span>
+            <h1>Modern inventory control, one shared interface.</h1>
+            <p>
+              Sign in to access the same updated workspace across the browser app and the Electron desktop shell.
+            </p>
+          </div>
+        </div>
+
+        <div className="auth-card-main">
+          <div className="auth-form-header">
+            <h2>Sign in</h2>
+            <p>Use your existing account to continue.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <label className="field">
+              <span className="label">Email</span>
+              <input
+                className="input-field auth-input"
+                type="email"
+                name="email"
+                value={email}
+                required
+                placeholder="admin@theredsun.org"
+                onChange={(event) => setEmail(event.currentTarget.value)}
+              />
+            </label>
+
+            <label className="field">
+              <span className="label">Password</span>
+              <input
+                className="input-field auth-input"
+                type="password"
+                name="password"
+                value={password}
+                required
+                placeholder="Enter your password"
+                onChange={(event) => setPassword(event.currentTarget.value)}
+              />
+            </label>
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button className="btn-primary auth-submit" type="submit" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

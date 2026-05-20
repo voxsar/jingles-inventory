@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { prnsApi } from '../api/client';
 import { PRNStatus } from '@jingles/shared/enums';
+import { UiBadge } from '../components/UiPrimitives';
 
 const STATUS_TONES: Record<string, string> = {
   [PRNStatus.Draft]: '',
@@ -82,7 +83,7 @@ export default function PRNDetailPage() {
           <div className="page-header-left">
             <div className="flex items-center gap-3">
               <h1 className="page-title">↩️ PRN Detail</h1>
-              {statusTone ? <s-badge tone={statusTone as any}>{prn.status}</s-badge> : <s-badge>{prn.status}</s-badge>}
+              {statusTone ? <UiBadge tone={statusTone}>{prn.status}</UiBadge> : <UiBadge>{prn.status}</UiBadge>}
             </div>
             <p className="page-subtitle font-mono text-xs">{prn.id?.slice(0, 8)}…</p>
           </div>
@@ -219,7 +220,7 @@ export default function PRNDetailPage() {
                 )}
               </div>
               {line.pickedUpQuantity >= line.returnQuantity && line.returnQuantity > 0 && (
-                <s-badge tone="success">✓ Picked Up</s-badge>
+                <UiBadge tone="success">✓ Picked Up</UiBadge>
               )}
             </div>
           </div>
