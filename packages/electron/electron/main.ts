@@ -16,6 +16,7 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import {
   backupLocalDatabase,
+  getConfig,
   deleteConfig,
   setConfig,
   getGRNs,
@@ -71,6 +72,15 @@ const SYNC_HEALTH_EVENT = 'sync:health-changed';
 const LOG_ENTRY_EVENT = 'logs:entry';
 
 installMainProcessConsoleCapture();
+
+function getAuthCacheUserId(user: unknown) {
+  if (!user || typeof user !== 'object') {
+    return null;
+  }
+
+  const id = 'id' in user ? user.id : null;
+  return typeof id === 'string' && id.trim() ? id.trim() : null;
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -747,16 +757,50 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
     shell.openExternal(url);
   });
 
-  ipcMain.handle('app:set-auth-cache', async (_event, auth: { token: string; user: unknown }) => {
-    setConfig('authToken', auth.token);
-    setConfig('authUser', JSON.stringify(auth.user));
+  ipcMain.handle(
+    'app:set-auth-cache',
+    async (_event, auth: { token: string; user: unknown; syncToken?: string | null }) => {
+      const userId = getAuthCacheUserId(auth.user);
+      const cachedUpstreamUserId = getConfig('upstreamAuthUserId')?.trim() || null;
 
-    refreshRealtimeSyncConnection();
-    void syncAll();
-    refreshTrayMenu();
-  });
+      setConfig('localSessionToken', auth.token);
+      setConfig('authUser', JSON.stringify(auth.user));
+      if (typeof auth.syncToken === 'string' && auth.syncToken.trim()) {
+        setConfig('upstreamAuthToken', auth.syncToken.trim());
+        if (userId) {
+          setConfig('upstreamAuthUserId', userId);
+        }
+      } else if (userId && cachedUpstreamUserId && cachedUpstreamUserId !== userId) {
+        deleteConfig('upstreamAuthToken');
+        deleteConfig('upstreamAuthUserId');
+      }
+
+      refreshRealtimeSyncConnection();
+      void syncAll();
+      refreshTrayMenu();
+    }
+  );
+
+  ipcMain.handle(
+    'app:set-sync-token',
+    async (_event, sync: { token: string; userId?: string | null }) => {
+      const syncToken = sync.token.trim();
+      if (!syncToken) {
+        return;
+      }
+
+      setConfig('upstreamAuthToken', syncToken);
+      if (typeof sync.userId === 'string' && sync.userId.trim()) {
+        setConfig('upstreamAuthUserId', sync.userId.trim());
+      }
+
+      refreshRealtimeSyncConnection();
+      refreshTrayMenu();
+    }
+  );
 
   ipcMain.handle('app:clear-auth-cache', () => {
+    deleteConfig('localSessionToken');
     deleteConfig('authToken');
     deleteConfig('authUser');
     refreshRealtimeSyncConnection();

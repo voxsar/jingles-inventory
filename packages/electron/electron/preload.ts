@@ -81,8 +81,10 @@ const electronAPI = {
     getBuildInfo: () => ipcRenderer.invoke('app:build-info'),
     getRuntimeInfo: () => ipcRenderer.invoke('app:runtime-info'),
     openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
-    setAuthCache: (auth: { token: string; user: unknown }) =>
+    setAuthCache: (auth: { token: string; user: unknown; syncToken?: string | null }) =>
       ipcRenderer.invoke('app:set-auth-cache', auth),
+    setSyncToken: (sync: { token: string; userId?: string | null }) =>
+      ipcRenderer.invoke('app:set-sync-token', sync),
     clearAuthCache: () => ipcRenderer.invoke('app:clear-auth-cache'),
   },
 

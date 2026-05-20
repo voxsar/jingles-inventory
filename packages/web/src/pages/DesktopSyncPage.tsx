@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type {
   BackendRuntimeInfo,
   ElectronAppLogEntry,
@@ -10,6 +10,7 @@ import type {
   ElectronSyncStatus,
   RuntimeBuildInfo,
 } from '@jingles/shared';
+import { authApi } from '../api/client';
 import { emitDesktopOutboxChanged } from '../utils/desktopSync';
 import { isDesktopRuntime } from '../utils/runtime';
 
@@ -74,6 +75,19 @@ function summarizeSyncResult(label: string, result: ElectronSyncResult) {
   }
 
   return `${label} finished. Pushed ${result.pushed}, pulled ${result.pulled}, conflicts ${result.conflicts}.`;
+}
+
+function needsSyncAuthExchange(result: ElectronSyncResult) {
+  return result.errors.some((error) => {
+    const normalized = error.toLowerCase();
+    return (
+      normalized.includes('no cached host sync token') ||
+      normalized.includes('not authenticated') ||
+      normalized.includes('unauthorized') ||
+      normalized.includes('invalid or expired token') ||
+      normalized.includes('expired token')
+    );
+  });
 }
 
 function buildVersionLabel(buildInfo: RuntimeBuildInfo | null) {
@@ -223,6 +237,11 @@ export default function DesktopSyncPage() {
     message: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSyncAuthModal, setShowSyncAuthModal] = useState(false);
+  const [syncAuthPassword, setSyncAuthPassword] = useState('');
+  const [syncAuthError, setSyncAuthError] = useState<string | null>(null);
+  const [syncAuthSubmitting, setSyncAuthSubmitting] = useState(false);
+  const [pendingSyncAction, setPendingSyncAction] = useState<'runNow' | 'pushOnly' | 'pullOnly' | null>(null);
 
   const isDesktopShell = isDesktopRuntime();
   const hasBridge = hasElectronBridge();
@@ -364,6 +383,12 @@ export default function DesktopSyncPage() {
       const result = await window.electronAPI.sync[action]();
       emitDesktopOutboxChanged();
       await refreshState();
+      if (needsSyncAuthExchange(result)) {
+        setPendingSyncAction(action);
+        setSyncAuthPassword('');
+        setSyncAuthError(null);
+        setShowSyncAuthModal(true);
+      }
       setFeedback({
         tone: result.errors.length > 0 ? 'error' : 'success',
         message: summarizeSyncResult(
@@ -383,6 +408,69 @@ export default function DesktopSyncPage() {
       });
     } finally {
       setBusyAction(null);
+    }
+  }
+
+  function closeSyncAuthModal() {
+    if (syncAuthSubmitting) {
+      return;
+    }
+
+    setShowSyncAuthModal(false);
+    setSyncAuthPassword('');
+    setSyncAuthError(null);
+    setPendingSyncAction(null);
+  }
+
+  async function handleRefreshSyncToken(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!window.electronAPI?.app?.setSyncToken) {
+      setSyncAuthError('Desktop sync token storage is unavailable in this renderer.');
+      return;
+    }
+
+    setSyncAuthSubmitting(true);
+    setSyncAuthError(null);
+
+    try {
+      const response = await authApi.refreshSyncToken(syncAuthPassword);
+      const responseData = response.data?.data ?? response.data;
+      const syncToken =
+        typeof responseData?.syncToken === 'string' ? responseData.syncToken.trim() : '';
+      const userId =
+        typeof responseData?.userId === 'string' && responseData.userId.trim()
+          ? responseData.userId.trim()
+          : null;
+
+      if (!syncToken) {
+        throw new Error('The local backend did not return a host sync token.');
+      }
+
+      await window.electronAPI.app.setSyncToken({ token: syncToken, userId });
+      const retryAction = pendingSyncAction;
+
+      setShowSyncAuthModal(false);
+      setSyncAuthPassword('');
+      setPendingSyncAction(null);
+      setFeedback({
+        tone: 'info',
+        message: 'Host sync credentials refreshed. Retrying sync.',
+      });
+
+      if (retryAction) {
+        await handleSyncAction(retryAction);
+        return;
+      }
+
+      await refreshState();
+    } catch (error: any) {
+      setSyncAuthError(
+        error.response?.data?.error ??
+          (error instanceof Error ? error.message : 'Failed to refresh the host sync token.')
+      );
+    } finally {
+      setSyncAuthSubmitting(false);
     }
   }
 
@@ -904,6 +992,68 @@ export default function DesktopSyncPage() {
           </div>
         )}
       </section>
+
+      {showSyncAuthModal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title">Reconnect host sync</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Local access is still active. Enter the host password to refresh the sync token without logging out of the desktop app.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeSyncAuthModal}
+                disabled={syncAuthSubmitting}
+              >
+                ✕
+              </button>
+            </div>
+            <form onSubmit={(event) => void handleRefreshSyncToken(event)}>
+              <div className="modal-body space-y-4">
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-slate-700">Host password</span>
+                  <input
+                    type="password"
+                    value={syncAuthPassword}
+                    onChange={(event) => setSyncAuthPassword(event.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                    placeholder="Enter the host password"
+                    autoFocus
+                    required
+                    disabled={syncAuthSubmitting}
+                  />
+                </label>
+                {syncAuthError && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {syncAuthError}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className={secondaryButtonClass}
+                  onClick={closeSyncAuthModal}
+                  disabled={syncAuthSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={primaryButtonClass}
+                  disabled={syncAuthSubmitting || syncAuthPassword.trim().length === 0}
+                >
+                  {syncAuthSubmitting ? 'Refreshing...' : 'Refresh Host Sync'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

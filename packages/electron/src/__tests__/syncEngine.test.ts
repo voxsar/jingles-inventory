@@ -8,6 +8,7 @@ import {
   stopAutoSync,
   subscribeSyncHealth,
   syncAll,
+  syncPullOnly,
 } from '../sync/syncEngine';
 
 vi.mock('../offline/localDB', () => ({
@@ -67,10 +68,23 @@ const fetchMock = vi.fn();
 vi.stubGlobal('fetch', fetchMock);
 
 function createJsonResponse(payload: unknown, status = 200) {
+  const responseText = JSON.stringify(payload);
   return {
     ok: status >= 200 && status < 300,
     status,
-    text: vi.fn().mockResolvedValue(JSON.stringify(payload)),
+    headers: {
+      get: vi.fn((headerName: string) => {
+        const normalized = headerName.toLowerCase();
+        if (normalized === 'content-type') {
+          return 'application/json';
+        }
+        if (normalized === 'content-length') {
+          return String(responseText.length);
+        }
+        return null;
+      }),
+    },
+    text: vi.fn().mockResolvedValue(responseText),
     json: vi.fn().mockResolvedValue(payload),
   };
 }
@@ -79,6 +93,9 @@ function createEmptyResponse(status = 200) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: {
+      get: vi.fn().mockReturnValue(null),
+    },
     text: vi.fn().mockResolvedValue(''),
     json: vi.fn().mockResolvedValue(null),
   };
@@ -88,6 +105,18 @@ function createHtmlResponse(html: string, status = 500) {
   return {
     ok: status >= 200 && status < 300,
     status,
+    headers: {
+      get: vi.fn((headerName: string) => {
+        const normalized = headerName.toLowerCase();
+        if (normalized === 'content-type') {
+          return 'text/html';
+        }
+        if (normalized === 'content-length') {
+          return String(html.length);
+        }
+        return null;
+      }),
+    },
     text: vi.fn().mockResolvedValue(html),
     json: vi.fn().mockRejectedValue(new Error('Response body is not JSON')),
   };
@@ -871,5 +900,26 @@ describe('syncEngine', () => {
 
     expect(applyReplicaMutation).toHaveBeenCalledWith(realtimeEvent);
     expect(setConfig).toHaveBeenCalledWith('lastSyncTime', '2026-05-18T12:00:00.000Z');
+  });
+
+  it('reports a missing cached host token distinctly from invalid auth', async () => {
+    configureSyncEngine({
+      serverUrl: 'http://localhost:3001',
+      clientId: 'client-test-001',
+      getToken: () => null,
+    });
+
+    const result = await syncPullOnly();
+    const health = getSyncHealth();
+
+    expect(result).toEqual({
+      pushed: 0,
+      pulled: 0,
+      conflicts: 0,
+      errors: ['No cached host sync token'],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(health.lastSyncError).toBe('No cached host sync token');
+    expect(health.progress).toBeNull();
   });
 });

@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, AuthRequest, getCachedDesktopUserForToken } from '../middleware/auth';
 import logger from '../utils/logger';
-import { getUpstreamServerUrl, isLocalReplicaMode } from '../utils/runtimePaths';
+import { isLocalReplicaMode } from '../utils/runtimePaths';
 
 const router = Router();
 
@@ -19,6 +19,93 @@ type AuthPayload = {
     createdAt?: string | null;
   };
 };
+
+type UpstreamSyncTokenResult =
+  | { ok: true; token: string }
+  | { ok: false; status: number; error: string };
+
+function parseAuthPayload(payload: unknown): AuthPayload | null {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  const candidate =
+    'data' in payload && payload.data && typeof payload.data === 'object'
+      ? payload.data
+      : payload;
+
+  if (!candidate || typeof candidate !== 'object') {
+    return null;
+  }
+
+  const token = 'token' in candidate ? candidate.token : null;
+  const user = 'user' in candidate ? candidate.user : null;
+
+  if (typeof token !== 'string' || !user || typeof user !== 'object') {
+    return null;
+  }
+
+  const id = 'id' in user ? user.id : null;
+  const email = 'email' in user ? user.email : null;
+  const role = 'role' in user ? user.role : null;
+  const vendorId = 'vendorId' in user ? user.vendorId : null;
+  const createdAt = 'createdAt' in user ? user.createdAt : null;
+
+  if (typeof id !== 'string' || typeof email !== 'string' || typeof role !== 'string') {
+    return null;
+  }
+
+  return {
+    token,
+    user: {
+      id,
+      email,
+      role,
+      vendorId: typeof vendorId === 'string' || vendorId === null ? vendorId : null,
+      createdAt: typeof createdAt === 'string' || createdAt === null ? createdAt : null,
+    },
+  };
+}
+
+function readUpstreamAuthError(payload: unknown, fallback: string) {
+  if (!payload || typeof payload !== 'object') {
+    return fallback;
+  }
+
+  const directError =
+    'error' in payload && typeof payload.error === 'string' ? payload.error.trim() : '';
+  if (directError) {
+    return directError;
+  }
+
+  const directMessage =
+    'message' in payload && typeof payload.message === 'string' ? payload.message.trim() : '';
+  if (directMessage) {
+    return directMessage;
+  }
+
+  const nestedData = 'data' in payload && payload.data && typeof payload.data === 'object'
+    ? payload.data
+    : null;
+
+  if (nestedData) {
+    const nestedError =
+      'error' in nestedData && typeof nestedData.error === 'string' ? nestedData.error.trim() : '';
+    if (nestedError) {
+      return nestedError;
+    }
+
+    const nestedMessage =
+      'message' in nestedData && typeof nestedData.message === 'string'
+        ? nestedData.message.trim()
+        : '';
+    if (nestedMessage) {
+      return nestedMessage;
+    }
+  }
+
+  return fallback;
+}
 
 function buildJwtForUser(user: { id: string; email: string; role: string }) {
   const secret = process.env.JWT_SECRET?.trim();
@@ -84,91 +171,81 @@ async function findLocalUserById(id: string) {
   }
 }
 
-async function loginAgainstUpstream(email: string, password: string) {
-  const upstreamServerUrl = getUpstreamServerUrl();
-  if (!isLocalReplicaMode() || !upstreamServerUrl) {
-    return null;
+async function requestUpstreamSyncToken(
+  email: string,
+  password: string
+): Promise<UpstreamSyncTokenResult> {
+  if (!isLocalReplicaMode()) {
+    return {
+      ok: false,
+      status: 400,
+      error: 'Sync auth exchange is only available in local replica mode.',
+    };
   }
 
+  const upstreamUrl = process.env.JINGLES_UPSTREAM_SERVER_URL?.trim();
+  if (!upstreamUrl) {
+    return {
+      ok: false,
+      status: 503,
+      error: 'No upstream host is configured for desktop sync.',
+    };
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1500);
+
   try {
-    const response = await fetch(`${upstreamServerUrl}/api/auth/login`, {
+    const response = await fetch(new URL('/api/auth/login', `${upstreamUrl}/`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const payload = (await response.json().catch(() => ({}))) as Record<string, any>;
-
-    if (!response.ok) {
-      return {
-        ok: false as const,
-        status: response.status,
-        body: payload,
-      };
-    }
-
-    const authPayload = (payload?.data ?? payload) as AuthPayload;
-    if (!authPayload?.token || !authPayload?.user?.id) {
-      return {
-        ok: false as const,
-        status: 502,
-        body: { error: 'Upstream login response was missing token or user data' },
-      };
-    }
-
-    await cacheReplicaUser(authPayload.user);
-
-    return {
-      ok: true as const,
-      status: response.status,
-      body: payload,
-    };
-  } catch (error) {
-    logger.warn('Upstream login fallback failed', error);
-    return null;
-  }
-}
-
-async function fetchUpstreamCurrentUser(authorizationHeader: string) {
-  const upstreamServerUrl = getUpstreamServerUrl();
-  if (!isLocalReplicaMode() || !upstreamServerUrl) {
-    return null;
-  }
-
-  try {
-    const response = await fetch(`${upstreamServerUrl}/api/auth/me`, {
       headers: {
-        Authorization: authorizationHeader,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({ email, password }),
+      signal: controller.signal,
     });
-    const payload = (await response.json().catch(() => ({}))) as Record<string, any>;
 
     if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      const fallbackMessage =
+        response.status === 401 || response.status === 403
+          ? 'Host credentials were rejected. Re-enter the host password to continue syncing.'
+          : response.status >= 500
+            ? 'The host is unavailable right now.'
+            : `Host sync sign-in failed with HTTP ${response.status}.`;
+
       return {
-        ok: false as const,
-        status: response.status,
-        body: payload,
+        ok: false,
+        status: response.status === 401 || response.status === 403 ? 400 : Math.max(response.status, 400),
+        error: readUpstreamAuthError(payload, fallbackMessage),
       };
     }
 
-    const user = (payload?.data ?? payload) as AuthPayload['user'];
-    if (!user?.id) {
+    const payload = parseAuthPayload(await response.json().catch(() => null));
+    const token = payload?.token?.trim();
+    if (!token) {
       return {
-        ok: false as const,
+        ok: false,
         status: 502,
-        body: { error: 'Upstream /me response was missing user data' },
+        error: 'The host login response did not include a sync token.',
       };
     }
-
-    await cacheReplicaUser(user);
 
     return {
-      ok: true as const,
-      status: response.status,
-      body: payload,
+      ok: true,
+      token,
     };
   } catch (error) {
-    logger.warn('Upstream auth/me fallback failed', error);
-    return null;
+    logger.info('Unable to refresh the upstream sync token after local sign-in.', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return {
+      ok: false,
+      status: 503,
+      error: 'Unable to reach the host to refresh the sync token.',
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -196,7 +273,13 @@ router.post(
       if (valid) {
         const token = buildJwtForUser(user);
         if (token) {
-          res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+          const upstreamSyncTokenResult = await requestUpstreamSyncToken(email, password);
+          const syncToken = upstreamSyncTokenResult.ok ? upstreamSyncTokenResult.token : null;
+          res.json({
+            token,
+            user: { id: user.id, email: user.email, role: user.role },
+            ...(syncToken ? { syncToken } : {}),
+          });
           return;
         }
 
@@ -204,16 +287,6 @@ router.post(
           'Skipping local token issuance during login because JWT_SECRET is not configured.'
         );
       }
-    }
-
-    const upstreamResult = await loginAgainstUpstream(email, password);
-    if (upstreamResult?.ok) {
-      res.status(upstreamResult.status).json(upstreamResult.body);
-      return;
-    }
-    if (upstreamResult && !upstreamResult.ok) {
-      res.status(upstreamResult.status).json(upstreamResult.body);
-      return;
     }
 
     if (user && !user.isActive) {
@@ -226,7 +299,48 @@ router.post(
       return;
     }
 
-    res.status(503).json({ error: 'Login is unavailable locally and the upstream server could not be reached' });
+    if (user && (!user.passwordHash || user.passwordHash.length === 0)) {
+      res.status(503).json({
+        error:
+          'Local sign-in is not ready for this user on this desktop yet because no local password hash is cached.',
+      });
+      return;
+    }
+
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+);
+
+router.post(
+  '/sync-token',
+  authenticate,
+  [
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    if (!isLocalReplicaMode()) {
+      res.status(400).json({ error: 'Sync auth exchange is only available in local replica mode.' });
+      return;
+    }
+
+    const { password } = req.body as { password: string };
+    const upstreamSyncTokenResult = await requestUpstreamSyncToken(req.user!.email, password);
+
+    if (!upstreamSyncTokenResult.ok) {
+      res.status(upstreamSyncTokenResult.status).json({ error: upstreamSyncTokenResult.error });
+      return;
+    }
+
+    res.json({
+      syncToken: upstreamSyncTokenResult.token,
+      userId: req.user!.id,
+    });
   }
 );
 
@@ -235,18 +349,16 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise
   if (!user) {
     const authorization = req.headers.authorization;
     if (authorization) {
-      const upstreamResult = await fetchUpstreamCurrentUser(authorization);
-      if (upstreamResult?.ok) {
-        res.status(upstreamResult.status).json(upstreamResult.body);
-        return;
-      }
-      if (upstreamResult && !upstreamResult.ok) {
-        res.status(upstreamResult.status).json(upstreamResult.body);
+      const cachedUser = await getCachedDesktopUserForToken(
+        authorization.startsWith('Bearer ') ? authorization.slice(7) : authorization
+      );
+      if (cachedUser) {
+        res.json(cachedUser);
         return;
       }
     }
 
-    res.status(404).json({ error: 'User not found' });
+    res.json(req.user);
     return;
   }
   res.json(user);

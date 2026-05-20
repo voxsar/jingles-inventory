@@ -1,7 +1,7 @@
 import fs from 'fs';
 import http from 'http';
 import https from 'https';
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { spawn } from 'child_process';
 import path from 'path';
 import { app } from 'electron';
@@ -32,6 +32,39 @@ type LocalBackendRuntime = {
   child: LocalBackendChild;
   readyUrl: string;
 };
+
+const DESKTOP_LOCAL_JWT_SECRET_CONFIG_KEY = 'localJwtSecret';
+
+function ensureDesktopJwtSecret() {
+  const existingSecret = getConfig(DESKTOP_LOCAL_JWT_SECRET_CONFIG_KEY)?.trim();
+  if (existingSecret) {
+    return existingSecret;
+  }
+
+  const nextSecret = randomBytes(32).toString('hex');
+  setConfig(DESKTOP_LOCAL_JWT_SECRET_CONFIG_KEY, nextSecret);
+  return nextSecret;
+}
+
+function getDesktopSyncToken() {
+  const localSessionToken = getConfig('localSessionToken')?.trim();
+  if (!localSessionToken) {
+    return null;
+  }
+
+  const upstreamToken = getConfig('upstreamAuthToken')?.trim();
+  if (upstreamToken) {
+    return upstreamToken;
+  }
+
+  const legacyToken = getConfig('authToken')?.trim();
+  if (legacyToken) {
+    setConfig('upstreamAuthToken', legacyToken);
+    return legacyToken;
+  }
+
+  return null;
+}
 
 function isBrokenPipeError(error: unknown): error is NodeJS.ErrnoException {
   return (
@@ -84,6 +117,8 @@ function buildChildEnv(
   runtimeRoot: string,
   config: ReturnType<typeof getDesktopLocalApiConfig>
 ) {
+  const desktopJwtSecret = ensureDesktopJwtSecret();
+
   return {
     ...process.env,
     NODE_PATH: [path.join(app.getAppPath(), 'node_modules'), process.env.NODE_PATH ?? '']
@@ -96,6 +131,7 @@ function buildChildEnv(
     JINGLES_SERVER_AUTOSTART: 'true',
     JINGLES_UPSTREAM_SERVER_URL: config.upstreamUrl,
     LOCAL_SQLITE_DATABASE_URL: getDesktopSqliteDatabaseUrl(),
+    JWT_SECRET: desktopJwtSecret,
   };
 }
 
@@ -223,7 +259,7 @@ async function startLocalApiServer(): Promise<LocalApiServer> {
   configureSyncEngine({
     serverUrl: config.upstreamUrl,
     clientId,
-    getToken: () => getConfig('authToken'),
+    getToken: () => getDesktopSyncToken(),
   });
   let currentRuntime = await startBackendChild(localBackendEntryPath, runtimeRoot, config);
   let isClosing = false;

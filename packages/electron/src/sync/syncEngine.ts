@@ -1707,11 +1707,12 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
     updateSyncProgress({
       phase: 'pushing',
       label: 'Pushing desktop changes',
-      detail: 'Sign in again to sync local changes.',
+      detail:
+        'Local sign-in is active, but this desktop has no cached host sync token yet. Sign in once while online to bootstrap sync.',
       percent: SYNC_PROGRESS_PUSH_START_PERCENT,
       pending: syncStatus.outbox.pending,
     });
-    return { pushed: 0, conflicts: 0, errors: ['Not authenticated'], blockPull: true };
+    return { pushed: 0, conflicts: 0, errors: ['No cached host sync token'], blockPull: true };
   }
 
   const result = {
@@ -1899,11 +1900,12 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
     updateSyncProgress({
       phase: 'pulling',
       label: 'Refreshing desktop replica',
-      detail: 'Sign in again to refresh the desktop replica.',
+      detail:
+        'Local sign-in is active, but this desktop has no cached host sync token yet. Sign in once while online to bootstrap sync.',
       percent: SYNC_PROGRESS_PULL_LOG_PERCENT,
       pending: syncStatus.outbox.pending,
     });
-    return { pulled: 0, errors: ['Not authenticated'] };
+    return { pulled: 0, errors: ['No cached host sync token'] };
   }
 
   const result = { pulled: 0, errors: [] as string[] };

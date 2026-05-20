@@ -14,6 +14,7 @@ type SyncableRequestFile = {
 const SYNC_EXCLUDED_PREFIXES = [
 	'/health',
 	'/api/auth/login',
+	'/api/auth/sync-token',
 	'/api/auth/me',
 	'/api/inventory',
 	'/api/sync/push-ops',

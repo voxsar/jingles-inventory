@@ -26,9 +26,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 			const res = await authApi.login(email, password);
 			// Handle potential response structure variations
 			const responseData = res.data?.data ?? res.data;
-			const { token, user } = responseData;
+			const { token, user, syncToken } = responseData;
 			localStorage.setItem(branding.tokenStorageKey, token);
-			persistDesktopAuthCache(token, user);
+			persistDesktopAuthCache(token, user, syncToken);
 			set({ token, user, isLoading: false });
 		} catch (err: any) {
 			set({

@@ -3,6 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DesktopSyncPage from '../../pages/DesktopSyncPage';
 
+const refreshSyncTokenMock = vi.fn();
+
+vi.mock('../../api/client', () => ({
+  authApi: {
+    refreshSyncToken: (...args: unknown[]) => refreshSyncTokenMock(...args),
+  },
+}));
+
 function createDesktopSyncState() {
   return {
     databaseInfo: {
@@ -170,6 +178,7 @@ function installElectronAPI() {
       getRuntimeInfo: vi.fn().mockResolvedValue(state.runtimeInfo),
       openExternal: vi.fn().mockResolvedValue(undefined),
       setAuthCache: vi.fn().mockResolvedValue(undefined),
+      setSyncToken: vi.fn().mockResolvedValue(undefined),
       clearAuthCache: vi.fn().mockResolvedValue(undefined),
     },
     logs: {
@@ -196,6 +205,7 @@ describe('DesktopSyncPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    refreshSyncTokenMock.mockReset();
   });
 
   afterEach(() => {
@@ -244,6 +254,59 @@ describe('DesktopSyncPage', () => {
 
     await waitFor(() => {
       expect(switchFile).toHaveBeenCalledWith('new');
+    });
+  });
+
+  it('prompts for host sync credentials and retries the sync action when the host token is missing', async () => {
+    const { runNow } = installElectronAPI();
+    const setSyncToken = window.electronAPI?.app.setSyncToken as ReturnType<typeof vi.fn>;
+    const user = userEvent.setup();
+
+    runNow
+      .mockResolvedValueOnce({
+        pushed: 0,
+        pulled: 0,
+        conflicts: 0,
+        errors: ['No cached host sync token'],
+      })
+      .mockResolvedValueOnce({
+        pushed: 2,
+        pulled: 5,
+        conflicts: 0,
+        errors: [],
+      });
+    refreshSyncTokenMock.mockResolvedValue({
+      data: {
+        syncToken: 'upstream-sync-token-001',
+        userId: 'user-001',
+      },
+    });
+
+    render(<DesktopSyncPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Sync Now' })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Sync Now' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Reconnect host sync' })).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText('Host password'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Refresh Host Sync' }));
+
+    await waitFor(() => {
+      expect(refreshSyncTokenMock).toHaveBeenCalledWith('password123');
+      expect(setSyncToken).toHaveBeenCalledWith({
+        token: 'upstream-sync-token-001',
+        userId: 'user-001',
+      });
+      expect(runNow).toHaveBeenCalledTimes(2);
+      expect(
+        screen.getByText('Full sync finished. Pushed 2, pulled 5, conflicts 0.')
+      ).toBeInTheDocument();
     });
   });
 });

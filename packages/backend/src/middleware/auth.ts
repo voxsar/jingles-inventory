@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import prisma from '../prisma/client';
 import logger from '../utils/logger';
-import { getUpstreamServerUrl, isLocalReplicaMode } from '../utils/runtimePaths';
+import { isLocalReplicaMode } from '../utils/runtimePaths';
 
 export interface AuthTokenPayload {
   id: string;
@@ -41,49 +42,62 @@ function isAuthTokenPayload(value: unknown): value is AuthTokenPayload {
   );
 }
 
-async function verifyAuthTokenAgainstUpstream(token: string): Promise<UpstreamTokenVerificationResult> {
-  const upstreamServerUrl = getUpstreamServerUrl();
-  if (!isLocalReplicaMode() || !upstreamServerUrl) {
+type DesktopAuthConfigRow = {
+  key: string;
+  value: string;
+};
+
+type DesktopCachedSession = {
+  token: string;
+  user: AuthTokenPayload;
+};
+
+async function readDesktopCachedSession(): Promise<DesktopCachedSession | null> {
+  if (!isLocalReplicaMode()) {
     return null;
   }
 
   try {
-    const response = await fetch(`${upstreamServerUrl}/api/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    const rows = (await (prisma as typeof prisma & {
+      $queryRawUnsafe: (query: string, ...params: unknown[]) => Promise<DesktopAuthConfigRow[]>;
+    }).$queryRawUnsafe(
+      'SELECT key, value FROM config WHERE key IN (?, ?, ?)',
+      'localSessionToken',
+      'authUser',
+      'authToken'
+    )) as DesktopAuthConfigRow[];
 
-    if (!response.ok) {
-      return {
-        ok: false,
-        status: response.status,
-        error: typeof payload.error === 'string' ? payload.error : 'Invalid or expired token',
-      };
+    const authToken =
+      rows.find((row) => row.key === 'localSessionToken')?.value?.trim() ||
+      rows.find((row) => row.key === 'authToken')?.value?.trim();
+    const rawAuthUser = rows.find((row) => row.key === 'authUser')?.value;
+
+    if (!authToken || !rawAuthUser) {
+      return null;
     }
 
-    const userPayload = (payload.data ?? payload) as unknown;
-    if (!isAuthTokenPayload(userPayload)) {
-      return {
-        ok: false,
-        status: 502,
-        error: 'Upstream auth verification returned incomplete user data',
-      };
+    const parsedAuthUser = JSON.parse(rawAuthUser) as unknown;
+    if (!isAuthTokenPayload(parsedAuthUser)) {
+      return null;
     }
 
     return {
-      ok: true,
-      user: userPayload,
+      token: authToken,
+      user: parsedAuthUser,
     };
   } catch (error) {
-    logger.warn('Upstream token verification failed', error);
-    return {
-      ok: false,
-      status: 503,
-      error: 'Authentication is unavailable because the upstream server could not be reached',
-    };
+    logger.warn('Failed to read the cached desktop auth session', error);
+    return null;
   }
+}
+
+export async function getCachedDesktopUserForToken(token: string): Promise<AuthTokenPayload | null> {
+  const cachedSession = await readDesktopCachedSession();
+  if (!cachedSession || cachedSession.token !== token) {
+    return null;
+  }
+
+  return cachedSession.user;
 }
 
 export async function authenticate(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
@@ -99,26 +113,19 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
     req.user = verifyAuthToken(token);
     next();
   } catch (err) {
-    if (err instanceof Error && err.message === 'JWT_SECRET is not configured') {
-      const upstreamResult = await verifyAuthTokenAgainstUpstream(token);
-      if (upstreamResult?.ok) {
-        req.user = upstreamResult.user;
+    if (isLocalReplicaMode()) {
+      const cachedUser = await getCachedDesktopUserForToken(token);
+      if (cachedUser) {
+        req.user = cachedUser;
         next();
         return;
       }
 
-      if (upstreamResult && !upstreamResult.ok) {
-        if (upstreamResult.status >= 500) {
-          logger.error(err.message);
-        }
-
-        res.status(upstreamResult.status).json({ error: upstreamResult.error });
+      if (err instanceof Error && err.message === 'JWT_SECRET is not configured') {
+        logger.error(err.message);
+        res.status(500).json({ error: 'Desktop authentication is unavailable because the local JWT secret is missing' });
         return;
       }
-
-      logger.error(err.message);
-      res.status(500).json({ error: 'Server configuration error' });
-      return;
     }
 
     res.status(401).json({ error: 'Invalid or expired token' });

@@ -105,10 +105,10 @@ export function clearDesktopAuthCache() {
   void window.electronAPI?.app?.clearAuthCache?.();
 }
 
-export function persistDesktopAuthCache(token: string, user: unknown) {
+export function persistDesktopAuthCache(token: string, user: unknown, syncToken?: string | null) {
   if (!isDesktopRuntime()) {
     return;
   }
 
-  void window.electronAPI?.app?.setAuthCache?.({ token, user });
+  void window.electronAPI?.app?.setAuthCache?.({ token, user, syncToken });
 }

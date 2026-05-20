@@ -207,7 +207,15 @@ export interface ElectronAPI {
     getBuildInfo: () => Promise<RuntimeBuildInfo>;
     getRuntimeInfo: () => Promise<BackendRuntimeInfo>;
     openExternal: (url: string) => Promise<void>;
-    setAuthCache: (auth: { token: string; user: unknown }) => Promise<void>;
+    setAuthCache: (auth: {
+      token: string;
+      user: unknown;
+      syncToken?: string | null;
+    }) => Promise<void>;
+    setSyncToken: (sync: {
+      token: string;
+      userId?: string | null;
+    }) => Promise<void>;
     clearAuthCache: () => Promise<void>;
   };
   logs: {
