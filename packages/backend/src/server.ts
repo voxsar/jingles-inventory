@@ -38,6 +38,7 @@ import pricingOverlayRoutes from './routes/pricing-overlays';
 import tagRoutes from './routes/tags';
 import userRoutes from './routes/users';
 import importRoutes from './routes/imports';
+import posRoutes from './routes/pos';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 import { startReplicaRealtime } from './sync/realtime';
 import { getStorageRoot } from './utils/runtimePaths';
@@ -115,6 +116,7 @@ export function createApp() {
 	app.use('/api/tags', tagRoutes);
 	app.use('/api/users', userRoutes);
 	app.use('/api/imports', importRoutes);
+	app.use('/api/pos', posRoutes);
 
 	app.use(errorHandler);
 
