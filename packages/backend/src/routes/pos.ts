@@ -1,6 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { UserRole } from '@jingles/shared';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticatePosSyncRequest } from '../middleware/posSyncAuth';
 import {
   ensurePosCloudSchema,
   getPosCatalogSnapshot,
@@ -29,8 +28,7 @@ router.use(async (_req, res, next) => {
   }
 });
 
-router.use(authenticate);
-router.use(requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff));
+router.use(authenticatePosSyncRequest);
 
 router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   try {
