@@ -1,6 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { UserRole } from '@jingles/shared';
 
 const ensurePosCloudSchema = vi.fn();
 const getPosCatalogSnapshot = vi.fn();
@@ -14,6 +15,17 @@ vi.mock('../../services/posCloud', () => ({
   posSyncHandshake,
   posSyncPlayback,
   posSyncConfirm,
+}));
+
+vi.mock('../../middleware/auth', () => ({
+  authenticate: (req: any, _res: any, next: () => void) => {
+    req.user = {
+      id: 'inventory-user-1',
+      role: UserRole.Staff,
+    };
+    next();
+  },
+  requireRole: () => (_req: any, _res: any, next: () => void) => next(),
 }));
 
 const { default: posRouter } = await import('../../routes/pos');

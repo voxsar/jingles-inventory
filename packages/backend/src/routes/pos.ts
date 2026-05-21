@@ -1,4 +1,6 @@
 import { Request, Response, Router } from 'express';
+import { UserRole } from '@jingles/shared';
+import { authenticate, requireRole } from '../middleware/auth';
 import {
   ensurePosCloudSchema,
   getPosCatalogSnapshot,
@@ -26,6 +28,9 @@ router.use(async (_req, res, next) => {
     res.status(500).json({ error: 'POS cloud sync service is unavailable' });
   }
 });
+
+router.use(authenticate);
+router.use(requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff));
 
 router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   try {
