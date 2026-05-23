@@ -190,6 +190,10 @@ export default function PricingPage() {
 			),
 		},
 	];
+	const orderedColumns = [
+		...columns.filter((col) => col.key === 'actions'),
+		...columns.filter((col) => col.key !== 'actions'),
+	];
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -259,15 +263,16 @@ export default function PricingPage() {
 					<div className="px-6 py-8 text-center text-sm text-gray-500">No batches found</div>
 				) : (
 					<>
-						<div className="overflow-x-auto">
+						<div className="table-scroll-region overflow-x-auto">
 							<table className="min-w-full divide-y divide-gray-200">
 								<thead className="bg-gray-50">
 									<tr>
-										{columns.map((col) => (
+										{orderedColumns.map((col) => (
 											<th
 												key={col.key}
 												className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
-													}`}
+													} ${col.key === 'actions' ? 'table-sticky-cell table-sticky-cell--header' : ''}`}
+												style={col.key === 'actions' ? ({ ['--sticky-bg' as '--sticky-bg']: '#f9fafb' } as React.CSSProperties) : undefined}
 											>
 												{col.header}
 											</th>
@@ -278,11 +283,12 @@ export default function PricingPage() {
 									{batches.map((batch) => (
 										<>
 											<tr key={batch.id}>
-												{columns.map((col) => (
+												{orderedColumns.map((col) => (
 													<td
 														key={col.key}
 														className={`px-6 py-4 whitespace-nowrap text-sm ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
-															}`}
+															} ${col.key === 'actions' ? 'table-sticky-cell' : ''}`}
+														style={col.key === 'actions' ? ({ ['--sticky-bg' as '--sticky-bg']: '#ffffff' } as React.CSSProperties) : undefined}
 													>
 														{col.render(batch)}
 													</td>
@@ -290,7 +296,7 @@ export default function PricingPage() {
 											</tr>
 											{expandedBatchId === batch.id && batch.sellingPrice && (
 												<tr key={`${batch.id}-preview`}>
-													<td colSpan={columns.length} className="px-6 py-4 bg-gray-50">
+													<td colSpan={orderedColumns.length} className="px-6 py-4 bg-gray-50">
 														<EffectivePricePreview
 															skuId={batch.skuId}
 															variantId={batch.variantId}

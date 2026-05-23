@@ -32,6 +32,24 @@ const defaultForm = {
 };
 
 const PAGE_SIZE = 20;
+const categoryStickyActionCellStyle = {
+  padding: '8px 16px',
+  fontSize: '14px',
+  background: 'var(--bg-2)',
+  ['--sticky-bg' as '--sticky-bg']: 'var(--bg-2)',
+} as React.CSSProperties;
+const categoryStickyActionHeaderStyle = {
+  padding: '12px 16px',
+  textAlign: 'left',
+  fontSize: '12px',
+  fontWeight: 600,
+  color: 'var(--ink-3)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  borderBottom: '1px solid var(--line)',
+  background: 'var(--glass-pop)',
+  ['--sticky-bg' as '--sticky-bg']: 'var(--glass-pop)',
+} as React.CSSProperties;
 
 function CategoryRow({
   category,
@@ -49,6 +67,12 @@ function CategoryRow({
   return (
     <>
       <tr style={{ borderBottom: '1px solid var(--line)' }}>
+        <td className="table-sticky-cell" style={categoryStickyActionCellStyle}>
+          <div className="flex gap-2">
+            <button className="btn-sm" onClick={() => onEdit(category)}>Edit</button>
+            <button className="btn-sm text-red-600" onClick={() => onDelete(category)}>Delete</button>
+          </div>
+        </td>
         <td style={{ padding: '8px 16px', fontSize: '14px' }}>
           <div style={{ paddingLeft: `${depth * 20}px`, display: 'flex', alignItems: 'center', gap: '8px' }}>
             {depth > 0 && <span style={{ color: 'var(--ink-4)' }}>└</span>}
@@ -62,12 +86,6 @@ function CategoryRow({
           {category.isActive
             ? <UiBadge tone="success">Active</UiBadge>
             : <UiBadge tone="critical">Inactive</UiBadge>}
-        </td>
-        <td style={{ padding: '8px 16px', fontSize: '14px' }}>
-          <div className="flex gap-2">
-            <button className="btn-sm" onClick={() => onEdit(category)}>Edit</button>
-            <button className="btn-sm text-red-600" onClick={() => onDelete(category)}>Delete</button>
-          </div>
         </td>
       </tr>
       {category.children?.map(child => (
@@ -265,16 +283,16 @@ export default function CategoriesPage() {
         {isLoading ? (
           <div className="px-6 py-8 text-gray-500 text-sm">Loading…</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="table-scroll-region overflow-x-auto">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: 'var(--ink)' }}>
               <thead>
                 <tr style={{ background: 'var(--glass-pop)' }}>
+                  <th className="table-sticky-cell table-sticky-cell--header" style={categoryStickyActionHeaderStyle}>Actions</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Name</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Slug</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Description</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Order</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { searchSKUIdsFts } from '../utils/localSearch';
+import { assertVariantBelongsToSku } from '../modules/catalog/variantReferences';
 
 const router = Router();
 
@@ -157,9 +158,13 @@ const moveImagesToTarget = async (
 	targetId: string,
 	sourceId: string,
 	forcedVariantId?: string | null,
+	sourceVariantId?: string | null,
 ) => {
 	const sourceImages = await tx.productImage.findMany({
-		where: { skuId: sourceId },
+		where: {
+			skuId: sourceId,
+			...(sourceVariantId !== undefined ? { variantId: sourceVariantId } : {}),
+		},
 		orderBy: { sortOrder: 'asc' },
 	});
 
@@ -177,6 +182,53 @@ const moveImagesToTarget = async (
 				variantId,
 				sortOrder: (maxTargetImage?.sortOrder ?? -1) + 1,
 				isPrimary: variantId ? image.isPrimary : false,
+			},
+		});
+	}
+};
+
+const clearDefaultBarcodeForScope = async (
+	tx: Prisma.TransactionClient,
+	skuId: string,
+	variantId: string | null,
+	excludeId?: string,
+) => {
+	await tx.productBarcode.updateMany({
+		where: {
+			skuId,
+			variantId,
+			isDefault: true,
+			...(excludeId ? { id: { not: excludeId } } : {}),
+		},
+		data: { isDefault: false },
+	});
+};
+
+const moveBarcodesToTarget = async (
+	tx: Prisma.TransactionClient,
+	targetId: string,
+	sourceId: string,
+	forcedVariantId?: string | null,
+	sourceVariantId?: string | null,
+) => {
+	const sourceBarcodes = await tx.productBarcode.findMany({
+		where: {
+			skuId: sourceId,
+			...(sourceVariantId !== undefined ? { variantId: sourceVariantId } : {}),
+		},
+		orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
+	});
+
+	for (const barcode of sourceBarcodes) {
+		const variantId = forcedVariantId === undefined ? barcode.variantId : forcedVariantId;
+		if (barcode.isDefault) {
+			await clearDefaultBarcodeForScope(tx, targetId, variantId ?? null, barcode.id);
+		}
+		await tx.productBarcode.update({
+			where: { id: barcode.id },
+			data: {
+				skuId: targetId,
+				variantId,
 			},
 		});
 	}
@@ -272,9 +324,13 @@ const moveBatchesToTarget = async (
 	targetId: string,
 	sourceId: string,
 	forcedVariantId?: string | null,
+	sourceVariantId?: string | null,
 ) => {
 	const batches = await tx.batch.findMany({
-		where: { skuId: sourceId },
+		where: {
+			skuId: sourceId,
+			...(sourceVariantId !== undefined ? { variantId: sourceVariantId } : {}),
+		},
 		orderBy: { createdAt: 'asc' },
 	});
 
@@ -296,17 +352,25 @@ const moveStockTransferLinesToTarget = async (
 	targetId: string,
 	sourceId: string,
 	forcedVariantId?: string | null,
+	fallbackBatchId?: string | null,
+	sourceVariantId?: string | null,
 ) => {
-	const lines = await tx.stockTransferLine.findMany({ where: { skuId: sourceId } });
+	const lines = await tx.stockTransferLine.findMany({
+		where: {
+			skuId: sourceId,
+			...(sourceVariantId !== undefined ? { variantId: sourceVariantId } : {}),
+		},
+	});
 
 	for (const line of lines) {
 		const variantId = forcedVariantId === undefined ? line.variantId : forcedVariantId;
+		const batchId = line.batchId ?? fallbackBatchId ?? null;
 		const existing = await tx.stockTransferLine.findFirst({
 			where: {
 				transferId: line.transferId,
 				skuId: targetId,
 				variantId: variantId ?? null,
-				batchId: line.batchId ?? null,
+				batchId,
 				id: { not: line.id },
 			},
 		});
@@ -327,6 +391,7 @@ const moveStockTransferLinesToTarget = async (
 				data: {
 					skuId: targetId,
 					variantId,
+					batchId,
 				},
 			});
 		}
@@ -341,6 +406,175 @@ const makeUniqueVariantCode = async (tx: Prisma.TransactionClient, preferredCode
 		code = `${baseCode}-${suffix++}`;
 	}
 	return code;
+};
+
+const tokenizeOriginalName = (value: string) =>
+	(value ?? '')
+		.trim()
+		.split(/\s+/)
+		.filter(Boolean);
+
+const buildVariantFamilyNaming = (names: string[]) => {
+	const tokenLists = names.map(tokenizeOriginalName);
+	const normalizedTokenLists = tokenLists.map((tokens) =>
+		tokens.map((token) => normalizeText(token) || token.toLowerCase())
+	);
+	const shortestLength = normalizedTokenLists.reduce((min, tokens) => Math.min(min, tokens.length), normalizedTokenLists[0]?.length ?? 0);
+	let sharedPrefixTokenCount = 0;
+
+	for (let index = 0; index < shortestLength; index++) {
+		const token = normalizedTokenLists[0]?.[index];
+		if (!token || !normalizedTokenLists.every((tokens) => tokens[index] === token)) break;
+		sharedPrefixTokenCount += 1;
+	}
+
+	const baseName = sharedPrefixTokenCount > 0
+		? tokenLists[0]?.slice(0, sharedPrefixTokenCount).join(' ').trim()
+		: names[0]?.trim();
+
+	return {
+		baseName: baseName || names[0]?.trim() || '',
+		variantNameFor: (name: string) => {
+			if (sharedPrefixTokenCount === 0) return name.trim();
+			const tokens = tokenizeOriginalName(name);
+			return tokens.slice(sharedPrefixTokenCount).join(' ').trim() || name.trim();
+		},
+		sharedPrefixTokenCount,
+	};
+};
+
+const hasStandaloneSkuPricing = (sku: any) => (
+	sku.costPrice != null
+	|| sku.sellingPrice != null
+	|| sku.wholesalePrice != null
+	|| sku.bulkPrice != null
+	|| sku.marginType != null
+	|| sku.marginValue != null
+);
+
+const createSyntheticPricingBatchIfNeeded = async (
+	tx: Prisma.TransactionClient,
+	targetId: string,
+	variant: { id: string; variantCode: string },
+	source: any,
+	reason: string,
+) => {
+	if ((source._count?.batches ?? 0) > 0 || !hasStandaloneSkuPricing(source)) {
+		return null;
+	}
+
+	const sequenceNumber = await nextBatchSequence(tx, targetId, variant.id);
+	return tx.batch.create({
+		data: {
+			batchNumber: `${variant.variantCode}-B${String(sequenceNumber).padStart(3, '0')}`,
+			skuId: targetId,
+			variantId: variant.id,
+			sequenceNumber,
+			vendorId: source.vendorId ?? null,
+			costPrice: source.costPrice ?? null,
+			sellingPrice: source.sellingPrice ?? null,
+			wholesalePrice: source.wholesalePrice ?? null,
+			bulkPrice: source.bulkPrice ?? null,
+			currency: source.currency ?? 'LKR',
+			marginType: source.marginType ?? null,
+			marginValue: source.marginValue ?? null,
+			manufacturingDate: source.defaultManufacturingDate ?? null,
+			expiryDate: source.defaultExpiryDate ?? null,
+			notes: reason,
+		},
+	});
+};
+
+const reassignVariantScopedRows = async (
+	model: { updateMany: (args: any) => Promise<unknown> },
+	baseWhere: Record<string, unknown>,
+	targetId: string,
+	variantId: string,
+	fallbackBatchId?: string | null,
+) => {
+	if (fallbackBatchId) {
+		await model.updateMany({
+			where: { ...baseWhere, batchId: null },
+			data: {
+				skuId: targetId,
+				variantId,
+				batchId: fallbackBatchId,
+			},
+		});
+		await model.updateMany({
+			where: { ...baseWhere, batchId: { not: null } },
+			data: {
+				skuId: targetId,
+				variantId,
+			},
+		});
+		return;
+	}
+
+	await model.updateMany({
+		where: baseWhere,
+		data: {
+			skuId: targetId,
+			variantId,
+		},
+	});
+};
+
+const createVariantFromStandaloneSku = async ({
+	tx,
+	targetId,
+	source,
+	variantName,
+	matchedValues,
+	sourceVariantId,
+	mergePivots,
+	deleteSource,
+	syntheticBatchReason,
+}: {
+	tx: Prisma.TransactionClient;
+	targetId: string;
+	source: any;
+	variantName: string;
+	matchedValues: Array<{ attributeId: string; attributeValueId: string }>;
+	sourceVariantId?: string | null;
+	mergePivots: boolean;
+	deleteSource: boolean;
+	syntheticBatchReason: string;
+}) => {
+	const variant = await tx.sKUVariant.create({
+		data: {
+			skuId: targetId,
+			variantCode: await makeUniqueVariantCode(tx, source.skuCode),
+			name: variantName.trim() || source.name,
+		},
+	});
+
+	await ensureTargetVariantAttributes(tx, targetId, variant.id, matchedValues);
+
+	if (mergePivots && source.id !== targetId) {
+		await mergeSkuPivots(tx, targetId, source.id);
+		await mergeSkuAttributeSelections(tx, targetId, source.id);
+	}
+
+	const syntheticBatch = await createSyntheticPricingBatchIfNeeded(tx, targetId, variant, source, syntheticBatchReason);
+	const rowScope: Record<string, unknown> = {
+		skuId: source.id,
+		...(sourceVariantId !== undefined ? { variantId: sourceVariantId } : {}),
+	};
+
+	await moveImagesToTarget(tx, targetId, source.id, variant.id, sourceVariantId);
+	await moveBarcodesToTarget(tx, targetId, source.id, variant.id, sourceVariantId);
+	await moveBatchesToTarget(tx, targetId, source.id, variant.id, sourceVariantId);
+	await reassignVariantScopedRows(tx.inventoryRecord as any, rowScope, targetId, variant.id, syntheticBatch?.id ?? null);
+	await reassignVariantScopedRows(tx.gRNLine as any, rowScope, targetId, variant.id, syntheticBatch?.id ?? null);
+	await reassignVariantScopedRows(tx.pRNLine as any, rowScope, targetId, variant.id, syntheticBatch?.id ?? null);
+	await moveStockTransferLinesToTarget(tx, targetId, source.id, variant.id, syntheticBatch?.id ?? null, sourceVariantId);
+
+	if (deleteSource && source.id !== targetId) {
+		await tx.sKU.delete({ where: { id: source.id } });
+	}
+
+	return { variant, syntheticBatch };
 };
 
 const buildGeneralDuplicateGroups = (skus: any[], attributeValues: AttributeValueCandidate[], minScore: number) => {
@@ -622,7 +856,7 @@ router.post(
 				await mergeSkuPivots(tx, targetId, sourceId);
 				await mergeSkuAttributeSelections(tx, targetId, sourceId);
 				await moveImagesToTarget(tx, targetId, sourceId);
-				await tx.productBarcode.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId } });
+				await moveBarcodesToTarget(tx, targetId, sourceId);
 				await tx.sKUVariant.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId } });
 				await moveBatchesToTarget(tx, targetId, sourceId);
 				await tx.inventoryRecord.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId } });
@@ -681,28 +915,21 @@ router.post(
 					throw new Error('This product already has variants. Merge it or move its variants before variantizing it.');
 				}
 
-				const sourceVariantValues = stripKnownVariantValues(source.name, attributeValues).matchedValues;
-				const variant = await tx.sKUVariant.create({
-					data: {
-						skuId: targetId,
-						variantCode: await makeUniqueVariantCode(tx, source.skuCode),
-						name: source.name,
-					},
-				});
-
-				await ensureTargetVariantAttributes(tx, targetId, variant.id, sourceVariantValues.map((value) => ({
+				const sourceVariantValues = stripKnownVariantValues(source.name, attributeValues).matchedValues.map((value) => ({
 					attributeId: value.attributeId,
 					attributeValueId: value.attributeValueId,
-				})));
-				await mergeSkuPivots(tx, targetId, sourceId);
-				await moveImagesToTarget(tx, targetId, sourceId, variant.id);
-				await tx.productBarcode.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId } });
-				await moveBatchesToTarget(tx, targetId, sourceId, variant.id);
-				await tx.inventoryRecord.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId, variantId: variant.id } });
-				await tx.gRNLine.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId, variantId: variant.id } });
-				await tx.pRNLine.updateMany({ where: { skuId: sourceId }, data: { skuId: targetId, variantId: variant.id } });
-				await moveStockTransferLinesToTarget(tx, targetId, sourceId, variant.id);
-				await tx.sKU.delete({ where: { id: sourceId } });
+				}));
+				const { variant, syntheticBatch } = await createVariantFromStandaloneSku({
+					tx,
+					targetId,
+					source,
+					variantName: source.name,
+					matchedValues: sourceVariantValues,
+					sourceVariantId: null,
+					mergePivots: true,
+					deleteSource: true,
+					syntheticBatchReason: 'Auto-created while converting a standalone product into a variant.',
+				});
 
 				return {
 					targetId,
@@ -711,12 +938,144 @@ router.post(
 					variantName: variant.name,
 					movedInventoryRecords: source._count.inventoryRecords,
 					movedBatches: source._count.batches,
+					createdSyntheticBatch: Boolean(syntheticBatch),
 				};
 			});
 
 			res.json({ success: true, data: result });
 		} catch (err: any) {
 			res.status(400).json({ success: false, error: err.message ?? 'Failed to variantize product' });
+		}
+	}
+);
+
+router.post(
+	'/variant-families',
+	requireRole('Admin', 'Manager'),
+	[
+		body('masterSkuId').isUUID(),
+		body('sourceSkuIds').isArray({ min: 1 }),
+		body('sourceSkuIds.*').isUUID(),
+	],
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
+
+		const { masterSkuId, sourceSkuIds } = req.body as { masterSkuId: string; sourceSkuIds: string[] };
+		const uniqueSourceIds = Array.from(new Set(sourceSkuIds.filter(Boolean)));
+		if (uniqueSourceIds.includes(masterSkuId)) {
+			res.status(400).json({ success: false, error: 'The master product cannot also be listed as a source variant.' });
+			return;
+		}
+
+		try {
+			const attributeValues = await loadAttributeValueCandidates();
+			const result = await prisma.$transaction(async (tx) => {
+				const orderedIds = [masterSkuId, ...uniqueSourceIds];
+				const selectedSkus = await tx.sKU.findMany({
+					where: { id: { in: orderedIds } },
+					include: {
+						_count: { select: { inventoryRecords: true, batches: true, variants: true } },
+					},
+				});
+
+				if (selectedSkus.length !== orderedIds.length) {
+					throw new Error('One or more selected products could not be found.');
+				}
+
+				const skuById = new Map(selectedSkus.map((sku) => [sku.id, sku]));
+				const orderedSkus = orderedIds.map((id) => skuById.get(id)).filter(Boolean) as any[];
+				const [master, ...sources] = orderedSkus;
+
+				if (orderedSkus.some((sku) => (sku._count?.variants ?? 0) > 0)) {
+					throw new Error('Selected products already have variants. Merge them or variantize them individually first.');
+				}
+
+				const naming = buildVariantFamilyNaming(orderedSkus.map((sku) => sku.name));
+				const masterMatchedValues = stripKnownVariantValues(master.name, attributeValues).matchedValues.map((value) => ({
+					attributeId: value.attributeId,
+					attributeValueId: value.attributeValueId,
+				}));
+				const { variant: masterVariant, syntheticBatch: masterSyntheticBatch } = await createVariantFromStandaloneSku({
+					tx,
+					targetId: master.id,
+					source: master,
+					variantName: naming.variantNameFor(master.name),
+					matchedValues: masterMatchedValues,
+					sourceVariantId: null,
+					mergePivots: false,
+					deleteSource: false,
+					syntheticBatchReason: 'Auto-created while preserving the original master-product pricing during variant family creation.',
+				});
+
+				const trimmedBaseName = naming.baseName.trim();
+				if (trimmedBaseName && trimmedBaseName !== master.name) {
+					await tx.sKU.update({
+						where: { id: master.id },
+						data: { name: trimmedBaseName },
+					});
+				}
+
+				let movedInventoryRecords = master._count.inventoryRecords;
+				let movedBatches = master._count.batches;
+				let createdSyntheticBatches = masterSyntheticBatch ? 1 : 0;
+				const createdVariants = [
+					{
+						id: masterVariant.id,
+						variantCode: masterVariant.variantCode,
+						name: masterVariant.name,
+						sourceSkuId: master.id,
+						sourceSkuCode: master.skuCode,
+					},
+				];
+
+				for (const source of sources) {
+					const matchedValues = stripKnownVariantValues(source.name, attributeValues).matchedValues.map((value) => ({
+						attributeId: value.attributeId,
+						attributeValueId: value.attributeValueId,
+					}));
+					const { variant, syntheticBatch } = await createVariantFromStandaloneSku({
+						tx,
+						targetId: master.id,
+						source,
+						variantName: naming.variantNameFor(source.name),
+						matchedValues,
+						sourceVariantId: null,
+						mergePivots: true,
+						deleteSource: true,
+						syntheticBatchReason: 'Auto-created while preserving standalone product pricing during variant family creation.',
+					});
+
+					movedInventoryRecords += source._count.inventoryRecords;
+					movedBatches += source._count.batches;
+					createdSyntheticBatches += syntheticBatch ? 1 : 0;
+					createdVariants.push({
+						id: variant.id,
+						variantCode: variant.variantCode,
+						name: variant.name,
+						sourceSkuId: source.id,
+						sourceSkuCode: source.skuCode,
+					});
+				}
+
+				return {
+					masterSkuId: master.id,
+					masterName: trimmedBaseName || master.name,
+					createdVariantCount: createdVariants.length,
+					convertedSourceCount: sources.length,
+					movedInventoryRecords,
+					movedBatches,
+					createdSyntheticBatches,
+					variants: createdVariants,
+				};
+			});
+
+			res.json({ success: true, data: result });
+		} catch (err: any) {
+			res.status(400).json({ success: false, error: err.message ?? 'Failed to create variant family' });
 		}
 	}
 );
@@ -1067,15 +1426,24 @@ router.put(
 // --- Barcodes ---
 router.get(
 	'/:id/barcodes',
-	[param('id').isUUID()],
+	[param('id').isUUID(), query('variantId').optional().isUUID()],
 	async (req: AuthRequest, res: Response): Promise<void> => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
+		const variantId = typeof req.query.variantId === 'string' ? req.query.variantId : null;
+		if (variantId) {
+			await assertVariantBelongsToSku(prisma, req.params!.id, variantId, 'Barcode');
+		}
 		const barcodes = await prisma.productBarcode.findMany({
-			where: { skuId: req.params!.id },
+			where: { skuId: req.params!.id, ...(variantId ? { variantId } : {}) },
+			include: {
+				variant: {
+					select: { id: true, variantCode: true, name: true },
+				},
+			},
 			orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }],
 		});
 		res.json({ success: true, data: barcodes });
@@ -1085,32 +1453,47 @@ router.get(
 router.post(
 	'/:id/barcodes',
 	requireRole('Admin', 'Manager'),
-	[param('id').isUUID(), body('barcode').notEmpty()],
+	[
+		param('id').isUUID(),
+		body('barcode').notEmpty(),
+		body('variantId').optional({ nullable: true, checkFalsy: true }).isUUID(),
+	],
 	async (req: AuthRequest, res: Response): Promise<void> => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
 			res.status(400).json({ errors: errors.array() });
 			return;
 		}
-		const { barcode, barcodeType, isDefault, label } = req.body as {
+		const { barcode, barcodeType, isDefault, label, variantId } = req.body as {
 			barcode: string;
 			barcodeType?: string;
 			isDefault?: boolean;
 			label?: string;
+			variantId?: string | null;
 		};
+		const barcodeVariantId = variantId || null;
+		if (barcodeVariantId) {
+			await assertVariantBelongsToSku(prisma, req.params!.id, barcodeVariantId, 'Barcode');
+		}
 		if (isDefault) {
 			await prisma.productBarcode.updateMany({
-				where: { skuId: req.params!.id },
+				where: { skuId: req.params!.id, variantId: barcodeVariantId },
 				data: { isDefault: false },
 			});
 		}
 		const bc = await prisma.productBarcode.create({
 			data: {
 				skuId: req.params!.id,
+				variantId: barcodeVariantId,
 				barcode,
 				barcodeType: barcodeType ?? 'EAN13',
 				isDefault: isDefault ?? false,
 				label,
+			},
+			include: {
+				variant: {
+					select: { id: true, variantCode: true, name: true },
+				},
 			},
 		});
 		res.status(201).json({ success: true, data: bc });

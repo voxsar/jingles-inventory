@@ -4,6 +4,10 @@ import prisma from '../../prisma/client';
 import { recordEvent } from '../inventory/eventLedger';
 import { getStatusesByKeys, SpecialStatusKeys } from '../statuses/statusLookup';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
+import {
+	assertVariantBatchReferences,
+	buildDocumentLineContext,
+} from '../catalog/variantReferences';
 
 export async function createPRN(data: {
 	supplierId: string;
@@ -25,11 +29,20 @@ export async function createPRN(data: {
 	const statusMap = await getStatusesByKeys([SpecialStatusKeys.PRN_DRAFT]);
 	const prnDraftStatus = statusMap.get(SpecialStatusKeys.PRN_DRAFT) ?? 'Draft';
 
-	// For duplicate detection consider variantId when present
-	const lineKeys = data.lines.map(l => `${l.skuId}:${l.variantId ?? ''}`);
+	for (const [index, line] of data.lines.entries()) {
+		await assertVariantBatchReferences(prisma, {
+			skuId: line.skuId,
+			variantId: line.variantId ?? null,
+			batchId: line.batchId ?? null,
+			context: buildDocumentLineContext('PRN', index),
+		});
+	}
+
+	// Allow the same product/variant to appear on multiple lines only when each line targets a different batch.
+	const lineKeys = data.lines.map((line) => `${line.skuId}:${line.variantId ?? ''}:${line.batchId ?? ''}`);
 	const uniqueKeys = new Set(lineKeys);
 	if (uniqueKeys.size !== lineKeys.length) {
-		throw new Error('Duplicate SKUs (or SKU+variant combinations) in PRN lines detected');
+		throw new Error('Duplicate SKUs or SKU+variant+batch combinations in PRN lines detected');
 	}
 
 	const prn = await prisma.pRN.create({

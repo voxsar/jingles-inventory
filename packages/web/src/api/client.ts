@@ -54,6 +54,7 @@ export const skusApi = {
   getDuplicates: (id: string) => api.get(`/skus/${id}/duplicates`),
   mergeDuplicate: (id: string, sourceId: string) => api.post(`/skus/${id}/duplicates/${sourceId}/merge`),
   variantizeDuplicate: (id: string, sourceId: string) => api.post(`/skus/${id}/duplicates/${sourceId}/variantize`),
+  createVariantFamily: (data: { masterSkuId: string; sourceSkuIds: string[] }) => api.post('/skus/variant-families', data),
   // Barcodes
   getBarcodes: (id: string) => api.get(`/skus/${id}/barcodes`),
   addBarcode: (id: string, data: any) => api.post(`/skus/${id}/barcodes`, data),
@@ -183,6 +184,8 @@ export const vendorsApi = {
   get: (id: string) => api.get(`/vendors/${id}`),
   create: (data: any) => api.post('/vendors', data),
   update: (id: string, data: any) => api.put(`/vendors/${id}`, data),
+  getDuplicateGroups: (params?: Record<string, string>) => api.get('/vendors/duplicates', { params }),
+  mergeDuplicate: (id: string, sourceId: string) => api.post(`/vendors/${id}/duplicates/${sourceId}/merge`),
   getProducts: (id: string) => api.get(`/vendors/${id}/products`),
   delete: (id: string) => api.delete(`/vendors/${id}`),
 };

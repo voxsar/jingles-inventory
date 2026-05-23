@@ -212,12 +212,14 @@ CREATE TABLE IF NOT EXISTS "product_images" (
 CREATE TABLE IF NOT EXISTS "product_barcodes" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sku_id" TEXT NOT NULL,
+    "variant_id" TEXT,
     "barcode" TEXT NOT NULL,
     "barcode_type" TEXT NOT NULL DEFAULT 'EAN13',
     "is_default" BOOLEAN NOT NULL DEFAULT false,
     "label" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "product_barcodes_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "product_barcodes_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "product_barcodes_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "sku_variants" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
@@ -704,6 +706,7 @@ CREATE INDEX IF NOT EXISTS "product_images_sku_id_variant_id_sort_order_idx" ON 
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "product_barcodes_barcode_key" ON "product_barcodes"("barcode");
+CREATE INDEX IF NOT EXISTS "product_barcodes_sku_id_variant_id_is_default_idx" ON "product_barcodes"("sku_id", "variant_id", "is_default");
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "floors_branch_id_code_key" ON "floors"("branch_id", "code");
@@ -785,4 +788,3 @@ CREATE INDEX IF NOT EXISTS "status_options_deleted_at_idx" ON "status_options"("
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "status_options_entity_type_value_key" ON "status_options"("entity_type", "value");
-

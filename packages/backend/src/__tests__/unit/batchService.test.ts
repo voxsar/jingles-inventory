@@ -23,7 +23,7 @@ describe('Batch Service', () => {
 
 	describe('generateBatchNumber', () => {
 		it('generates batch number for SKU with format SKUCODE-B001', async () => {
-			prismaMock.sKUVariant.findUnique.mockResolvedValue(null);
+			prismaMock.sKUVariant.findFirst.mockResolvedValue(null);
 			prismaMock.sKU.findUnique.mockResolvedValue({
 				id: 'sku-001',
 				skuCode: 'PROD001',
@@ -35,9 +35,11 @@ describe('Batch Service', () => {
 		});
 
 		it('generates batch number for variant with format VARIANTCODE-B001', async () => {
-			prismaMock.sKUVariant.findUnique.mockResolvedValue({
+			prismaMock.sKUVariant.findFirst.mockResolvedValue({
 				id: 'var-001',
+				skuId: 'sku-001',
 				variantCode: 'VAR001',
+				name: 'Test Variant',
 			} as any);
 			prismaMock.batch.findFirst.mockResolvedValue(null);
 
@@ -65,10 +67,12 @@ describe('Batch Service', () => {
 			await expect(generateBatchNumber('invalid-sku')).rejects.toThrow('SKU not found');
 		});
 
-		it('throws error when Variant not found', async () => {
-			prismaMock.sKUVariant.findUnique.mockResolvedValue(null);
+		it('throws error when variant does not belong to the selected product', async () => {
+			prismaMock.sKUVariant.findFirst.mockResolvedValue(null);
 
-			await expect(generateBatchNumber('sku-001', 'invalid-var')).rejects.toThrow('Variant not found');
+			await expect(generateBatchNumber('sku-001', 'invalid-var')).rejects.toThrow(
+				'Batch: variant does not belong to the selected product',
+			);
 		});
 	});
 

@@ -6,6 +6,7 @@ interface Column<T> {
   render?: (row: T) => React.ReactNode;
   sortable?: boolean;
   align?: 'left' | 'right' | 'center';
+  isAction?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -27,6 +28,12 @@ export default function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const isActionColumn = (col: Column<T>) => col.isAction || String(col.key).toLowerCase() === 'actions' || col.header.trim().toLowerCase() === 'actions';
+  const orderedColumns = [
+    ...columns.filter((col) => isActionColumn(col)),
+    ...columns.filter((col) => !isActionColumn(col)),
+  ];
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -52,11 +59,11 @@ export default function DataTable<T extends Record<string, any>>({
       <table className="data-table">
         <thead>
           <tr>
-            {columns.map((col) => (
+            {orderedColumns.map((col) => (
               <th
                 key={String(col.key)}
                 onClick={() => col.sortable && handleSort(String(col.key))}
-                className={`data-table__header${col.sortable ? ' is-sortable' : ''}`}
+                className={`data-table__header${col.sortable ? ' is-sortable' : ''}${isActionColumn(col) ? ' is-sticky-left' : ''}`}
                 style={{
                   textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
                 }}
@@ -71,8 +78,11 @@ export default function DataTable<T extends Record<string, any>>({
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={i} className="data-table__row">
-                {Array.from({ length: columns.length }).map((_, j) => (
-                  <td key={j} className="data-table__cell">
+                {orderedColumns.map((col, j) => (
+                  <td
+                    key={`${String(col.key)}-${j}`}
+                    className={`data-table__cell${isActionColumn(col) ? ' is-sticky-left' : ''}`}
+                  >
                     <div className="data-table__skeleton" style={{ width: `${60 + (j * 13) % 40}%` }} />
                   </td>
                 ))}
@@ -80,7 +90,7 @@ export default function DataTable<T extends Record<string, any>>({
             ))
           ) : sortedData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="data-table__empty">
+              <td colSpan={orderedColumns.length} className="data-table__empty">
                 <div className="data-table__empty-icon">{emptyIcon}</div>
                 <span>{emptyMessage}</span>
               </td>
@@ -92,10 +102,10 @@ export default function DataTable<T extends Record<string, any>>({
                 onClick={() => onRowClick?.(row)}
                 className={`data-table__row${onRowClick ? ' is-clickable' : ''}`}
               >
-                {columns.map((col) => (
+                {orderedColumns.map((col) => (
                   <td
                     key={String(col.key)}
-                    className="data-table__cell"
+                    className={`data-table__cell${isActionColumn(col) ? ' is-sticky-left' : ''}`}
                     style={{
                       textAlign: col.align === 'right' ? 'right' : col.align === 'center' ? 'center' : 'left',
                     }}

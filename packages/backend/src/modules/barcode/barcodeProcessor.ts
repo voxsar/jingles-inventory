@@ -3,11 +3,45 @@ import prisma from '../../prisma/client';
 export interface BarcodeLookupResult {
   found: boolean;
   sku?: any;
+  variant?: any;
+  barcodeRecord?: any;
   inventoryRecords?: any[];
   error?: string;
 }
 
 export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResult> {
+  const barcodeRecord = await prisma.productBarcode.findUnique({
+    where: { barcode },
+    include: {
+      sku: { include: { vendor: { select: { id: true, name: true } } } },
+      variant: { select: { id: true, variantCode: true, name: true } },
+    },
+  });
+
+  if (barcodeRecord) {
+    const inventoryRecords = await prisma.inventoryRecord.findMany({
+      where: {
+        skuId: barcodeRecord.skuId,
+        ...(barcodeRecord.variantId ? { variantId: barcodeRecord.variantId } : {}),
+        quantity: { gt: 0 },
+      },
+      include: {
+        floor: true,
+        variant: { select: { id: true, variantCode: true, name: true } },
+        user: { select: { email: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return {
+      found: true,
+      sku: barcodeRecord.sku,
+      variant: barcodeRecord.variant,
+      barcodeRecord,
+      inventoryRecords,
+    };
+  }
+
   const sku = await prisma.sKU.findFirst({
     where: {
       OR: [
@@ -27,6 +61,7 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
     where: { skuId: sku.id, quantity: { gt: 0 } },
     include: {
       floor: true,
+      variant: { select: { id: true, variantCode: true, name: true } },
       user: { select: { email: true } },
     },
     orderBy: { updatedAt: 'desc' },

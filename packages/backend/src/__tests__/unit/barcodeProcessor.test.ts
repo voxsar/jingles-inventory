@@ -56,6 +56,48 @@ describe('lookupBarcode', () => {
 		expect(result.inventoryRecords).toHaveLength(0);
 	});
 
+	it('returns a variant-specific match when the barcode belongs to a variant', async () => {
+		const barcodeRecord = {
+			id: 'barcode-001',
+			barcode: 'VAR-001-BARCODE',
+			skuId: 'sku-variant-parent',
+			variantId: 'variant-red',
+			sku: {
+				id: 'sku-variant-parent',
+				skuCode: 'PARENT-001',
+				name: 'Widget Paint',
+				vendor: { id: 'vendor-001', name: 'Acme' },
+			},
+			variant: {
+				id: 'variant-red',
+				variantCode: 'RED-001',
+				name: 'Red',
+			},
+		};
+		const variantRecords = [
+			{ id: 'inv-variant-001', quantity: 8, variant: { id: 'variant-red', name: 'Red' } },
+		];
+
+		prismaMock.productBarcode.findUnique.mockResolvedValue(barcodeRecord as any);
+		prismaMock.inventoryRecord.findMany.mockResolvedValue(variantRecords as any);
+
+		const result = await lookupBarcode('VAR-001-BARCODE');
+
+		expect(result.found).toBe(true);
+		expect(result.sku).toEqual(barcodeRecord.sku);
+		expect(result.variant).toEqual(barcodeRecord.variant);
+		expect(result.inventoryRecords).toEqual(variantRecords);
+		expect(prismaMock.sKU.findFirst).not.toHaveBeenCalled();
+		expect(prismaMock.inventoryRecord.findMany).toHaveBeenCalledWith(
+			expect.objectContaining({
+				where: expect.objectContaining({
+					skuId: 'sku-variant-parent',
+					variantId: 'variant-red',
+				}),
+			}),
+		);
+	});
+
 	it('queries SKU by exact skuCode match', async () => {
 		prismaMock.sKU.findFirst.mockResolvedValue(null);
 

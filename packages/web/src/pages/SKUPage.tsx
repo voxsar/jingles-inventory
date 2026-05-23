@@ -77,7 +77,7 @@ export default function SKUPage() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveSuccess, setSaveSuccess] = useState(false);
 	const [barcodes, setBarcodes] = useState<any[]>([]);
-	const [newBarcode, setNewBarcode] = useState({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '' });
+	const [newBarcode, setNewBarcode] = useState({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '', variantId: '' });
 	const [inventoryLocations, setInventoryLocations] = useState<any[]>([]);
 	const [locationsLoading, setLocationsLoading] = useState(false);
 	const [isAssigningInventory, setIsAssigningInventory] = useState(false);
@@ -454,7 +454,7 @@ export default function SKUPage() {
 		e.preventDefault();
 		try {
 			await skusApi.addBarcode(editingSku.id, newBarcode);
-			setNewBarcode({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '' });
+			setNewBarcode({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '', variantId: '' });
 			await loadBarcodes();
 		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to add barcode'); }
 	};
@@ -1007,7 +1007,9 @@ export default function SKUPage() {
 		? `variant ${selectedImageVariant.name ?? selectedImageVariant.variantCode}`
 		: 'product';
 
-	const skuTableHeaders = ['', 'SKU Code', 'Product Name', 'Category', 'Vendor', 'UoM', 'Tags', 'Low Stock', 'Fragile', 'Status', ''];
+	const skuActionColumnLeft = 56;
+	const stickyTableShadow = '1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72)';
+	const skuTableHeaders = ['', 'Actions', 'SKU Code', 'Product Name', 'Category', 'Vendor', 'UoM', 'Tags', 'Low Stock', 'Fragile', 'Status'];
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -1108,12 +1110,32 @@ export default function SKUPage() {
 						</button>
 					)}
 				</div>
-				<div style={{ overflowX: 'auto' }}>
+				<div className="table-scroll-region" style={{ overflowX: 'auto' }}>
 					<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: 'var(--ink)' }}>
 						<thead>
 							<tr style={{ background: 'var(--glass-pop)' }}>
 								{skuTableHeaders.map((h, i) => (
-									<th key={i} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '12px', color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--line)', whiteSpace: 'nowrap' }}>{h}</th>
+									<th
+										key={i}
+										style={{
+											padding: '12px 16px',
+											textAlign: 'left',
+											fontWeight: 600,
+											fontSize: '12px',
+											color: 'var(--ink-3)',
+											textTransform: 'uppercase',
+											letterSpacing: '0.05em',
+											borderBottom: '1px solid var(--line)',
+											whiteSpace: 'nowrap',
+											...(i === 0
+												? { position: 'sticky', left: 0, zIndex: 5, background: 'var(--glass-pop)', boxShadow: stickyTableShadow, width: '56px' }
+												: i === 1
+													? { position: 'sticky', left: `${skuActionColumnLeft}px`, zIndex: 5, background: 'var(--glass-pop)', boxShadow: stickyTableShadow }
+													: null),
+										}}
+									>
+										{h}
+									</th>
 								))}
 							</tr>
 						</thead>
@@ -1122,7 +1144,18 @@ export default function SKUPage() {
 								Array.from({ length: 5 }).map((_, i) => (
 									<tr key={i}>
 										{skuTableHeaders.map((_, j) => (
-											<td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+											<td
+												key={j}
+												style={{
+													padding: '12px 16px',
+													borderBottom: '1px solid var(--line)',
+													...(j === 0
+														? { position: 'sticky', left: 0, zIndex: 3, background: 'var(--bg-2)', boxShadow: stickyTableShadow, width: '56px' }
+														: j === 1
+															? { position: 'sticky', left: `${skuActionColumnLeft}px`, zIndex: 3, background: 'var(--bg-2)', boxShadow: stickyTableShadow }
+															: null),
+												}}
+											>
 												<div style={{ height: '16px', background: 'var(--chip)', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
 											</td>
 										))}
@@ -1141,13 +1174,14 @@ export default function SKUPage() {
 									const isExpanded = expandedSkuIds.has(sku.id);
 									const isLoadingVariants = variantsLoadingIds.has(sku.id);
 									const variants = variantsBySkuId[sku.id] ?? [];
+									const rowBackground = idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)';
 									return (
 										<Fragment key={sku.id}>
 											<tr
 												onClick={() => openEdit(sku)}
-												style={{ cursor: 'pointer', background: idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)', borderBottom: isExpanded ? 'none' : '1px solid var(--line)', color: 'var(--ink)' }}
+												style={{ cursor: 'pointer', background: rowBackground, borderBottom: isExpanded ? 'none' : '1px solid var(--line)', color: 'var(--ink)' }}
 											>
-												<td style={{ padding: '12px 8px 12px 16px', width: '32px' }}>
+												<td style={{ padding: '12px 8px 12px 16px', width: '32px', position: 'sticky', left: 0, zIndex: 3, background: rowBackground, boxShadow: stickyTableShadow }}>
 													{variantCount > 0 && (
 														<button
 															onClick={(e) => { e.stopPropagation(); toggleSkuExpand(sku.id, variantCount); }}
@@ -1157,6 +1191,13 @@ export default function SKUPage() {
 															{isExpanded ? '−' : '+'}
 														</button>
 													)}
+												</td>
+												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap', position: 'sticky', left: `${skuActionColumnLeft}px`, zIndex: 3, background: rowBackground, boxShadow: stickyTableShadow }}>
+													<div className="flex gap-1">
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickGrn(sku); }}>Create GRN</button>
+														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</button>
+													</div>
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{sku.skuCode}</span></td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
@@ -1175,13 +1216,6 @@ export default function SKUPage() {
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.lowStockThreshold != null ? <span style={{ color: '#f59e0b', fontWeight: 500 }}>≤{sku.lowStockThreshold}</span> : '—'}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isFragile ? <UiBadge tone="warning">⚠️ Fragile</UiBadge> : <UiText>No</UiText>}</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{sku.isActive ? <UiBadge tone="success">● Active</UiBadge> : <UiBadge>○ Inactive</UiBadge>}</td>
-												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
-													<div className="flex gap-1">
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickGrn(sku); }}>Create GRN</button>
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</button>
-													</div>
-												</td>
 											</tr>
 											{isExpanded && (
 												isLoadingVariants ? (
@@ -1190,7 +1224,8 @@ export default function SKUPage() {
 													</tr>
 												) : variants.map((variant: any, vi: number) => (
 													<tr key={variant.id} style={{ background: idx % 2 === 1 ? 'rgba(var(--accent-glow), 0.08)' : 'var(--glass-pop)', borderBottom: vi === variants.length - 1 ? '1px solid var(--line)' : '1px solid rgba(var(--accent-glow), 0.08)', color: 'var(--ink)' }}>
-														<td style={{ padding: '8px 8px 8px 16px' }} />
+														<td style={{ padding: '8px 8px 8px 16px', position: 'sticky', left: 0, zIndex: 3, background: idx % 2 === 1 ? 'rgba(var(--accent-glow), 0.08)' : 'var(--glass-pop)', boxShadow: stickyTableShadow }} />
+														<td style={{ padding: '8px 16px', position: 'sticky', left: `${skuActionColumnLeft}px`, zIndex: 3, background: idx % 2 === 1 ? 'rgba(var(--accent-glow), 0.08)' : 'var(--glass-pop)', boxShadow: stickyTableShadow }} />
 														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>
 															<span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', paddingLeft: '16px', color: 'var(--ink-3)', borderLeft: '2px solid var(--line-strong)' }}>
 																<span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{variant.variantCode}</span>
@@ -1207,7 +1242,6 @@ export default function SKUPage() {
 															))}
 														</td>
 														<td style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>{variant.isActive ? <UiBadge tone="success">● Active</UiBadge> : <UiBadge>○ Inactive</UiBadge>}</td>
-														<td />
 													</tr>
 												))
 											)}
@@ -1265,11 +1299,17 @@ export default function SKUPage() {
 											</div>
 											<button className="btn-sm text-xs" onClick={() => openEdit(target)}>Open Target</button>
 										</div>
+										<div className="table-scroll-region overflow-x-auto">
 										<table className="w-full text-sm border-collapse">
 											<thead>
 												<tr className="bg-gray-50">
-													{['Candidate', 'Match', 'Counts', 'Variant Values', 'Actions'].map((header) => (
-														<th key={header} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{header}</th>
+													{['Actions', 'Candidate', 'Match', 'Counts', 'Variant Values'].map((header, index) => (
+														<th
+															key={header}
+															className={`px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200 ${index === 0 ? 'table-sticky-cell table-sticky-cell--header bg-gray-50' : ''}`}
+														>
+															{header}
+														</th>
 													))}
 												</tr>
 											</thead>
@@ -1281,7 +1321,17 @@ export default function SKUPage() {
 														: sku.vendor?.name;
 													const isWorking = duplicateActionId === sku.id;
 													return (
-														<tr key={sku.id} className="border-b border-gray-100 last:border-0 align-top">
+														<tr key={sku.id} className="group border-b border-gray-100 last:border-0 align-top">
+															<td className="table-sticky-cell px-3 py-3 bg-white group-hover:bg-gray-50">
+																<div className="flex flex-wrap gap-2">
+																	<button className="btn-sm text-xs" disabled={isWorking || (sku._count?.variants ?? 0) > 0} onClick={() => handleVariantizeDuplicateFor(target, candidate)}>
+																		{isWorking ? 'Working…' : 'Variantize'}
+																	</button>
+																	<button className="btn-sm text-red-600 text-xs" disabled={isWorking} onClick={() => handleMergeDuplicateFor(target, candidate)}>
+																		Merge
+																	</button>
+																</div>
+															</td>
 															<td className="px-3 py-3">
 																<div className="font-medium text-gray-800">{sku.name}</div>
 																<div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
@@ -1311,21 +1361,12 @@ export default function SKUPage() {
 																	)) : <span className="text-xs text-gray-400">None detected</span>}
 																</div>
 															</td>
-															<td className="px-3 py-3">
-																<div className="flex flex-wrap gap-2">
-																	<button className="btn-sm text-xs" disabled={isWorking || (sku._count?.variants ?? 0) > 0} onClick={() => handleVariantizeDuplicateFor(target, candidate)}>
-																		{isWorking ? 'Working…' : 'Variantize'}
-																	</button>
-																	<button className="btn-sm text-red-600 text-xs" disabled={isWorking} onClick={() => handleMergeDuplicateFor(target, candidate)}>
-																		Merge
-																	</button>
-																</div>
-															</td>
 														</tr>
 													);
 												})}
 											</tbody>
 										</table>
+										</div>
 									</div>
 								);
 							})}
@@ -2084,6 +2125,7 @@ export default function SKUPage() {
 												<div className="flex items-center gap-3">
 													<span className="font-mono text-sm">{bc.barcode}</span>
 													<UiBadge>{bc.barcodeType}</UiBadge>
+													{bc.variant && <UiBadge tone="warning">{bc.variant.name ?? bc.variant.variantCode}</UiBadge>}
 													{bc.isDefault && <UiBadge tone="info">Default</UiBadge>}
 													{bc.label && <span className="text-xs text-gray-500">({bc.label})</span>}
 												</div>
@@ -2111,6 +2153,22 @@ export default function SKUPage() {
 												<label className="form-label">Label (optional)</label>
 												<input className="input-field" type="text" value={newBarcode.label} onChange={(e) => setNewBarcode((b) => ({ ...b, label: e.target.value }))} />
 											</div>
+										</div>
+										<div className="form-group">
+											<label className="form-label">Scope</label>
+											<SearchableSelect
+												options={[
+													{ value: '', label: 'Product level' },
+													...skuVariants.map((variant: any) => ({
+														value: variant.id,
+														label: variant.name ?? variant.variantCode,
+													})),
+												]}
+												value={newBarcode.variantId}
+												onChange={(value) => setNewBarcode((b) => ({ ...b, variantId: value }))}
+												placeholder="Product level"
+												isClearable={false}
+											/>
 										</div>
 										<label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
 											<input type="checkbox" checked={newBarcode.isDefault} onChange={(e) => setNewBarcode((b) => ({ ...b, isDefault: e.target.checked }))} />
@@ -2362,17 +2420,26 @@ export default function SKUPage() {
 											{skuVariants.length === 0 ? (
 												<div className="text-center py-6 text-gray-400">No variants yet. Select attributes above and click Generate.</div>
 											) : (
+												<div className="table-scroll-region overflow-x-auto">
 												<table className="w-full text-sm border-collapse">
 													<thead>
 														<tr className="bg-gray-50">
-															{['Code', 'Variant', 'Attributes', 'Active', ''].map(h => (
-																<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+															{['Actions', 'Code', 'Variant', 'Attributes', 'Active'].map((h, index) => (
+																<th
+																	key={h}
+																	className={`px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200 ${index === 0 ? 'table-sticky-cell table-sticky-cell--header bg-gray-50' : ''}`}
+																>
+																	{h}
+																</th>
 															))}
 														</tr>
 													</thead>
 													<tbody>
 														{skuVariants.map((v: any) => (
-															<tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50">
+															<tr key={v.id} className="group border-b border-gray-100 hover:bg-gray-50">
+																<td className="table-sticky-cell px-3 py-2 bg-white group-hover:bg-gray-50">
+																	<button className="btn-sm text-red-600 text-xs" onClick={() => handleDeleteVariant(v.id, v.name)}>Delete</button>
+																</td>
 																<td className="px-3 py-2 font-mono text-xs text-gray-600">{v.variantCode}</td>
 																<td className="px-3 py-2 font-medium">{v.name}</td>
 																<td className="px-3 py-2">
@@ -2393,13 +2460,11 @@ export default function SKUPage() {
 																<td className="px-3 py-2">
 																	<input type="checkbox" checked={v.isActive} onChange={(e) => handleToggleVariant(v.id, e.target.checked)} />
 																</td>
-																<td className="px-3 py-2">
-																	<button className="btn-sm text-red-600 text-xs" onClick={() => handleDeleteVariant(v.id, v.name)}>Delete</button>
-																</td>
 															</tr>
 														))}
 													</tbody>
 												</table>
+												</div>
 											)}
 										</>
 									)}
@@ -2418,11 +2483,17 @@ export default function SKUPage() {
 											<p className="text-sm text-gray-400">No likely duplicates found for this product.</p>
 										</div>
 									) : (
+										<div className="table-scroll-region overflow-x-auto">
 										<table className="w-full text-sm border-collapse">
 											<thead>
 												<tr className="bg-gray-50">
-													{['Product', 'Match', 'Counts', 'Variant Values', ''].map(h => (
-														<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+													{['Actions', 'Product', 'Match', 'Counts', 'Variant Values'].map((h, index) => (
+														<th
+															key={h}
+															className={`px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200 ${index === 0 ? 'table-sticky-cell table-sticky-cell--header bg-gray-50' : ''}`}
+														>
+															{h}
+														</th>
 													))}
 												</tr>
 											</thead>
@@ -2434,7 +2505,29 @@ export default function SKUPage() {
 														? sku.skuVendors.map((sv: any) => sv.vendor?.name).filter(Boolean).join(', ')
 														: sku.vendor?.name;
 													return (
-														<tr key={sku.id} className="border-b border-gray-100 hover:bg-gray-50 align-top">
+														<tr key={sku.id} className="group border-b border-gray-100 hover:bg-gray-50 align-top">
+															<td className="table-sticky-cell px-3 py-3 bg-white group-hover:bg-gray-50">
+																<div className="flex flex-col gap-2 items-start">
+																	<button
+																		type="button"
+																		className="btn-sm text-xs"
+																		disabled={isWorking || (sku._count?.variants ?? 0) > 0}
+																		onClick={() => handleVariantizeDuplicate(candidate)}
+																		title={(sku._count?.variants ?? 0) > 0 ? 'Products that already have variants must be merged instead.' : 'Convert this product into a variant of the current product'}
+																	>
+																		{isWorking ? 'Working…' : 'Variantize'}
+																	</button>
+																	<button
+																		type="button"
+																		className="btn-sm text-red-600 text-xs"
+																		disabled={isWorking}
+																		onClick={() => handleMergeDuplicate(candidate)}
+																		title="Merge this duplicate into the current product"
+																	>
+																		Merge
+																	</button>
+																</div>
+															</td>
 															<td className="px-3 py-3">
 																<div className="font-medium text-gray-800">{sku.name}</div>
 																<div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
@@ -2473,33 +2566,12 @@ export default function SKUPage() {
 																	)}
 																</div>
 															</td>
-															<td className="px-3 py-3">
-																<div className="flex flex-col gap-2 items-start">
-																	<button
-																		type="button"
-																		className="btn-sm text-xs"
-																		disabled={isWorking || (sku._count?.variants ?? 0) > 0}
-																		onClick={() => handleVariantizeDuplicate(candidate)}
-																		title={(sku._count?.variants ?? 0) > 0 ? 'Products that already have variants must be merged instead.' : 'Convert this product into a variant of the current product'}
-																	>
-																		{isWorking ? 'Working…' : 'Variantize'}
-																	</button>
-																	<button
-																		type="button"
-																		className="btn-sm text-red-600 text-xs"
-																		disabled={isWorking}
-																		onClick={() => handleMergeDuplicate(candidate)}
-																		title="Merge this duplicate into the current product"
-																	>
-																		Merge
-																	</button>
-																</div>
-															</td>
 														</tr>
 													);
 												})}
 											</tbody>
 										</table>
+										</div>
 									)}
 								</div>
 							)}
@@ -2572,11 +2644,17 @@ export default function SKUPage() {
 										{batchPrices.length === 0 ? (
 											<p className="text-sm text-gray-400 mb-3">No batches found for this product. Create batches via GRN receipts.</p>
 										) : (
+											<div className="table-scroll-region overflow-x-auto">
 											<table className="w-full text-sm border-collapse mb-3">
 												<thead>
 													<tr className="bg-gray-50">
-														{['Batch #', 'Variant', 'Cost Price', 'Selling Price', 'Wholesale', 'Bulk Price', ''].map(h => (
-															<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+														{['Actions', 'Batch #', 'Variant', 'Cost Price', 'Selling Price', 'Wholesale', 'Bulk Price'].map((h, index) => (
+															<th
+																key={h}
+																className={`px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200 ${index === 0 ? 'table-sticky-cell table-sticky-cell--header bg-gray-50' : ''}`}
+															>
+																{h}
+															</th>
 														))}
 													</tr>
 												</thead>
@@ -2585,7 +2663,17 @@ export default function SKUPage() {
 														const isEditing = editingBatchPrice?.id === bp.id;
 														const ep = editingBatchPrice;
 														return (
-														<tr key={bp.id} className="border-b border-gray-100 hover:bg-gray-50">
+														<tr key={bp.id} className="group border-b border-gray-100 hover:bg-gray-50">
+															<td className="table-sticky-cell px-3 py-2 bg-white group-hover:bg-gray-50">
+																{isEditing && ep ? (
+																	<div className="flex gap-1">
+																		<button className="btn-sm text-xs" onClick={handleSaveBatchPrice}>Save</button>
+																		<button className="btn-sm text-xs text-gray-500" onClick={() => setEditingBatchPrice(null)}>Cancel</button>
+																	</div>
+																) : (
+																	<button className="btn-sm text-xs" onClick={() => handleEditBatchPrice(bp)}>Edit</button>
+																)}
+															</td>
 															<td className="px-3 py-2 font-mono text-xs">{bp.batchNumber}</td>
 															<td className="px-3 py-2 text-xs text-gray-500">{bp.variant?.name ?? bp.variant?.variantCode ?? '—'}</td>
 															{isEditing && ep ? (
@@ -2594,10 +2682,6 @@ export default function SKUPage() {
 																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.sellingPrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, sellingPrice: e.target.value } : p)} /></td>
 																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.wholesalePrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, wholesalePrice: e.target.value } : p)} /></td>
 																	<td className="px-3 py-2"><input className="input-field text-xs" style={{ width: '80px' }} type="number" step="0.01" value={ep.bulkPrice} onChange={e => setEditingBatchPrice(p => p ? { ...p, bulkPrice: e.target.value } : p)} /></td>
-																	<td className="px-3 py-2 flex gap-1">
-																		<button className="btn-sm text-xs" onClick={handleSaveBatchPrice}>Save</button>
-																		<button className="btn-sm text-xs text-gray-500" onClick={() => setEditingBatchPrice(null)}>Cancel</button>
-																	</td>
 																</>
 															) : (
 																<>
@@ -2605,9 +2689,6 @@ export default function SKUPage() {
 																	<td className="px-3 py-2">{bp.sellingPrice ?? '—'}</td>
 																	<td className="px-3 py-2">{bp.wholesalePrice ?? '—'}</td>
 																	<td className="px-3 py-2">{bp.bulkPrice ?? '—'}</td>
-																	<td className="px-3 py-2">
-																		<button className="btn-sm text-xs" onClick={() => handleEditBatchPrice(bp)}>Edit</button>
-																	</td>
 																</>
 															)}
 														</tr>
@@ -2615,6 +2696,7 @@ export default function SKUPage() {
 													})}
 												</tbody>
 											</table>
+											</div>
 										)}
 									</div>
 									{/* Quantity Tier Pricing */}
@@ -2623,28 +2705,35 @@ export default function SKUPage() {
 										{quantityTiers.length === 0 ? (
 											<p className="text-sm text-gray-400 mb-3">No quantity tiers set.</p>
 										) : (
+											<div className="table-scroll-region overflow-x-auto">
 											<table className="w-full text-sm border-collapse mb-3">
 												<thead>
 													<tr className="bg-gray-50">
-														{['Min Qty', 'Max Qty', 'Price', 'Currency', ''].map(h => (
-															<th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+														{['Actions', 'Min Qty', 'Max Qty', 'Price', 'Currency'].map((h, index) => (
+															<th
+																key={h}
+																className={`px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200 ${index === 0 ? 'table-sticky-cell table-sticky-cell--header bg-gray-50' : ''}`}
+															>
+																{h}
+															</th>
 														))}
 													</tr>
 												</thead>
 												<tbody>
 													{quantityTiers.map((tier: any, i: number) => (
-														<tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+														<tr key={i} className="group border-b border-gray-100 hover:bg-gray-50">
+															<td className="table-sticky-cell px-3 py-2 bg-white group-hover:bg-gray-50">
+																<button className="btn-sm text-red-600 text-xs" onClick={() => handleRemoveQtyTier(i)}>Remove</button>
+															</td>
 															<td className="px-3 py-2">{tier.minQty}</td>
 															<td className="px-3 py-2">{tier.maxQty ?? '∞'}</td>
 															<td className="px-3 py-2">{tier.price}</td>
 															<td className="px-3 py-2">{tier.currency}</td>
-															<td className="px-3 py-2">
-																<button className="btn-sm text-red-600 text-xs" onClick={() => handleRemoveQtyTier(i)}>Remove</button>
-															</td>
 														</tr>
 													))}
 												</tbody>
 											</table>
+											</div>
 										)}
 										<form onSubmit={handleAddQtyTier} className="flex flex-wrap gap-2 items-end">
 											<div className="flex flex-col gap-1">

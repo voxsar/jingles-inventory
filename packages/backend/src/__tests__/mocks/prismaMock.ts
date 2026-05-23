@@ -63,6 +63,15 @@ export const prismaMock = {
 		delete: vi.fn(),
 		count: vi.fn(),
 	},
+	productBarcode: {
+		findUnique: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		updateMany: vi.fn(),
+		delete: vi.fn(),
+		count: vi.fn(),
+	},
 	inventoryRecord: {
 		findUnique: vi.fn(),
 		findFirst: vi.fn(),

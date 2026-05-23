@@ -557,7 +557,7 @@ export default function BranchesPage() {
 						{shelfInventory.length > 0 && (
 							<div>
 								<h2 className="text-base font-semibold text-gray-700 mb-2">📋 Inventory on this shelf ({shelfInventory.length})</h2>
-								<div className="overflow-x-auto">
+								<div className="table-scroll-region overflow-x-auto">
 									<table className="min-w-full text-xs text-gray-700 border-collapse">
 										<thead><tr className="bg-gray-100">
 											<th className="px-3 py-2 text-left">SKU</th>

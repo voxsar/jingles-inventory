@@ -897,8 +897,13 @@
     background: var(--glass-pop);
   }
 
-  .table-container {
-    overflow-x: auto;
+  .table-container,
+  .table-scroll-region {
+    position: relative;
+    overflow: auto;
+    max-height: clamp(320px, calc(100vh - 360px), 640px);
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 
   .data-table {
@@ -907,6 +912,9 @@
   }
 
   .data-table__header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     padding: 14px 16px;
     border-bottom: 1px solid var(--line);
     background: var(--glass-pop);
@@ -921,6 +929,12 @@
 
   .data-table__header.is-sortable {
     cursor: pointer;
+  }
+
+  .data-table__header.is-sticky-left {
+    left: 0;
+    z-index: 4;
+    box-shadow: 1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72);
   }
 
   .data-table__row {
@@ -946,6 +960,39 @@
     font-size: 14px;
     vertical-align: middle;
     white-space: nowrap;
+  }
+
+  .data-table__cell.is-sticky-left {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-2);
+    box-shadow: 1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72);
+  }
+
+  .data-table__row:hover .data-table__cell.is-sticky-left {
+    background: var(--row-hover);
+  }
+
+  .table-sticky-cell {
+    position: sticky;
+    left: var(--sticky-left, 0px);
+    z-index: var(--sticky-z, 2);
+    background: var(--sticky-bg, var(--bg-2));
+    box-shadow: 1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72);
+  }
+
+  .table-sticky-cell--header {
+    top: 0;
+    z-index: var(--sticky-z, 4);
+    background: var(--sticky-bg, var(--glass-pop));
+  }
+
+  .table-scroll-region thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: inherit;
   }
 
   .data-table__skeleton {

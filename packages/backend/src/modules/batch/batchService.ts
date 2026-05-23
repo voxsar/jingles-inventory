@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../../prisma/client';
+import { assertVariantBelongsToSku } from '../catalog/variantReferences';
 
 export interface CreateBatchParams {
 	skuId: string;
@@ -40,11 +41,7 @@ export async function generateBatchNumber(skuId: string, variantId?: string | nu
 	let code: string;
 
 	if (variantId) {
-		const variant = await prisma.sKUVariant.findUnique({
-			where: { id: variantId },
-			select: { variantCode: true },
-		});
-		if (!variant) throw new Error('Variant not found');
+		const variant = await assertVariantBelongsToSku(prisma, skuId, variantId, 'Batch');
 		code = variant.variantCode;
 	} else {
 		const sku = await prisma.sKU.findUnique({
@@ -76,6 +73,10 @@ export async function generateBatchNumber(skuId: string, variantId?: string | nu
  * Inherits default dates and shelf life from SKU if not provided
  */
 export async function createBatch(params: CreateBatchParams) {
+	if (params.variantId) {
+		await assertVariantBelongsToSku(prisma, params.skuId, params.variantId, 'Batch');
+	}
+
 	const batchNumber = await generateBatchNumber(params.skuId, params.variantId);
 
 	// Get the sequence number from the batch number

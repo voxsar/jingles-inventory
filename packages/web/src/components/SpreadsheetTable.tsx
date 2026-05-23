@@ -53,6 +53,21 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
   const [addingNew, setAddingNew] = useState(false);
   const [newRowForm, setNewRowForm] = useState<Partial<T>>({});
   const tableRef = useRef<HTMLDivElement>(null);
+  const hasActions = canEdit || canDelete;
+  const stickyActionCellStyle = {
+    position: 'sticky' as const,
+    left: 0,
+    zIndex: 3,
+    background: 'var(--bg-2)',
+    boxShadow: '1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72)',
+  };
+  const stickyActionHeaderStyle = {
+    position: 'sticky' as const,
+    left: 0,
+    zIndex: 5,
+    background: 'var(--glass-pop)',
+    boxShadow: '1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72)',
+  };
 
   const startEdit = (row: T) => {
     const rowKey = getRowKey(row);
@@ -288,10 +303,28 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
   };
 
   return (
-    <div ref={tableRef} style={{ overflowX: 'auto', position: 'relative' }}>
+    <div ref={tableRef} className="table-scroll-region">
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: 'var(--ink)' }}>
         <thead>
           <tr style={{ background: 'var(--glass-pop)' }}>
+            {hasActions && (
+              <th
+                style={{
+                  ...stickyActionHeaderStyle,
+                  padding: '12px 16px',
+                  textAlign: 'center',
+                  fontWeight: 600,
+                  fontSize: '11px',
+                  color: 'var(--ink-3)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  borderBottom: '2px solid var(--line)',
+                  width: '120px',
+                }}
+              >
+                Actions
+              </th>
+            )}
             {columns.map((col) => (
               <th
                 key={String(col.key)}
@@ -312,31 +345,21 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                 {col.required && <span style={{ color: '#ef4444', marginLeft: '2px' }}>*</span>}
               </th>
             ))}
-            {(canEdit || canDelete) && (
-              <th
-                style={{
-                  padding: '12px 16px',
-                  textAlign: 'center',
-                  fontWeight: 600,
-                  fontSize: '11px',
-                  color: 'var(--ink-3)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  borderBottom: '2px solid var(--line)',
-                  width: '120px',
-                }}
-              >
-                Actions
-              </th>
-            )}
           </tr>
         </thead>
         <tbody>
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
-                {Array.from({ length: columns.length + 1 }).map((_, j) => (
-                  <td key={j} style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
+                {Array.from({ length: columns.length + (hasActions ? 1 : 0) }).map((_, j) => (
+                  <td
+                    key={j}
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--line)',
+                      ...(hasActions && j === 0 ? stickyActionCellStyle : null),
+                    }}
+                  >
                     <div style={{ height: '16px', background: 'var(--chip)', borderRadius: '4px', width: `${60 + (j * 13) % 40}%` }} />
                   </td>
                 ))}
@@ -347,38 +370,40 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
               {/* Add new row form */}
               {addingNew && (
                 <tr style={{ background: 'rgba(245, 158, 11, 0.12)', borderBottom: '2px solid rgba(245, 158, 11, 0.24)' }}>
+                  {hasActions && (
+                    <td style={{ ...stickyActionCellStyle, background: 'rgba(245, 158, 11, 0.12)', padding: '8px 12px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <button
+                          onClick={saveNewRow}
+                          disabled={isSaving}
+                          className="btn-sm"
+                          style={{ background: '#10b981', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          {isSaving ? '...' : '✓'}
+                        </button>
+                        <button
+                          onClick={cancelAdd}
+                          disabled={isSaving}
+                          className="btn-sm"
+                          style={{ background: '#6b7280', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
+                  )}
                   {columns.map((col) => (
                     <td key={String(col.key)} style={{ padding: '8px 12px', verticalAlign: 'top' }}>
                       {renderCell(col, {} as T, true, newRowForm, setNewRowForm)}
                     </td>
                   ))}
-                  <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                      <button
-                        onClick={saveNewRow}
-                        disabled={isSaving}
-                        className="btn-sm"
-                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        {isSaving ? '...' : '✓'}
-                      </button>
-                      <button
-                        onClick={cancelAdd}
-                        disabled={isSaving}
-                        className="btn-sm"
-                        style={{ background: '#6b7280', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               )}
 
               {/* Data rows */}
               {data.length === 0 && !addingNew ? (
                 <tr>
-                  <td colSpan={columns.length + 1} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--ink-3)' }}>
+                  <td colSpan={columns.length + (hasActions ? 1 : 0)} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--ink-3)' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{emptyIcon}</div>
                     <div>{emptyMessage}</div>
                   </td>
@@ -397,6 +422,58 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                         color: 'var(--ink)',
                       }}
                     >
+                      {hasActions && (
+                        <td
+                          style={{
+                            ...stickyActionCellStyle,
+                            background: isEditing ? 'rgba(59, 130, 246, 0.14)' : idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)',
+                            padding: '8px 12px',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {isEditing ? (
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                              <button
+                                onClick={() => saveEdit(row)}
+                                disabled={isSaving}
+                                className="btn-sm"
+                                style={{ background: '#10b981', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                              >
+                                {isSaving ? '...' : '✓'}
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                disabled={isSaving}
+                                className="btn-sm"
+                                style={{ background: '#6b7280', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                              {canEdit && (
+                                <button
+                                  onClick={() => startEdit(row)}
+                                  className="btn-sm"
+                                  style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                >
+                                  ✎
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button
+                                  onClick={() => handleDelete(row)}
+                                  className="btn-sm"
+                                  style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                >
+                                  🗑
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      )}
                       {columns.map((col) => (
                         <td
                           key={String(col.key)}
@@ -409,49 +486,6 @@ export default function SpreadsheetTable<T extends Record<string, any>>({
                           {renderCell(col, row, isEditing, editForm, setEditForm)}
                         </td>
                       ))}
-                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        {isEditing ? (
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                            <button
-                              onClick={() => saveEdit(row)}
-                              disabled={isSaving}
-                              className="btn-sm"
-                              style={{ background: '#10b981', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                            >
-                              {isSaving ? '...' : '✓'}
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              disabled={isSaving}
-                              className="btn-sm"
-                              style={{ background: '#6b7280', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                            {canEdit && (
-                              <button
-                                onClick={() => startEdit(row)}
-                                className="btn-sm"
-                                style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                              >
-                                ✎
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button
-                                onClick={() => handleDelete(row)}
-                                className="btn-sm"
-                                style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                              >
-                                🗑
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </td>
                     </tr>
                   );
                 })

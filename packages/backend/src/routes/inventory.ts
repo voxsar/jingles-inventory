@@ -14,6 +14,7 @@ import {
 	recordServerSyncChanges,
 	type SyncV2ChangeDescriptor,
 } from '../sync/syncV2';
+import { assertVariantBatchReferences } from '../modules/catalog/variantReferences';
 import logger from '../utils/logger';
 import { searchSKUIdsFts } from '../utils/localSearch';
 
@@ -223,6 +224,13 @@ router.post(
 				return;
 			}
 
+			await assertVariantBatchReferences(prisma, {
+				skuId,
+				variantId: variantId ?? null,
+				batchId: batchId ?? null,
+				context: 'Inventory record',
+			});
+
 			const statusMap = await getStatusesByKeys([SpecialStatusKeys.INVENTORY_UNINSPECTED]);
 			const defaultUninspectedState = statusMap.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)!;
 
@@ -382,6 +390,7 @@ router.post(
 				const createdPieceRecord = await tx.inventoryRecord.create({
 					data: {
 						skuId: boxRecord.skuId,
+						variantId: boxRecord.variantId,
 						batchId: boxRecord.batchId,
 						floorId: targetFloorId ?? boxRecord.floorId,
 						quantity: totalPieces,
@@ -484,6 +493,15 @@ router.put(
 				updateData.quantity = normalizedQuantity;
 			}
 			if (batchId !== undefined) updateData.batchId = batchId || null;
+
+			if (batchId) {
+				await assertVariantBatchReferences(prisma, {
+					skuId: existing.skuId,
+					variantId: existing.variantId ?? null,
+					batchId,
+					context: 'Inventory record',
+				});
+			}
 
 			const normalizedQuantity = quantity !== undefined ? normalizeQuantityInput(quantity) : undefined;
 			const record = await prisma.$transaction(async (tx: any) => {

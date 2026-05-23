@@ -4,7 +4,11 @@ import prisma from '../../prisma/client';
 import { recordEvent } from '../inventory/eventLedger';
 import { getStatusesByKeys, SpecialStatusKeys } from '../statuses/statusLookup';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
-import { createBatch, generateBatchNumber } from '../batch/batchService';
+import { createBatch } from '../batch/batchService';
+import {
+	assertVariantBatchReferences,
+	buildDocumentLineContext,
+} from '../catalog/variantReferences';
 
 export async function createGRN(data: {
 	supplierId: string;
@@ -42,11 +46,22 @@ export async function createGRN(data: {
 		}
 	}
 
-	// For duplicate detection consider variantId when present
-	const lineKeys = data.lines.map(l => `${l.skuId}:${l.variantId ?? ''}`);
+	for (const [index, line] of data.lines.entries()) {
+		await assertVariantBatchReferences(prisma, {
+			skuId: line.skuId,
+			variantId: line.variantId ?? null,
+			batchId: line.createNewBatch ? null : (line.batchId ?? null),
+			context: buildDocumentLineContext('GRN', index),
+		});
+	}
+
+	// Allow the same product/variant in multiple lines when each line targets a different batch.
+	const lineKeys = data.lines.map((line, index) =>
+		`${line.skuId}:${line.variantId ?? ''}:${line.createNewBatch ? `new-${index}` : (line.batchId ?? '')}`,
+	);
 	const uniqueKeys = new Set(lineKeys);
 	if (uniqueKeys.size !== lineKeys.length) {
-		throw new Error('Duplicate SKUs (or SKU+variant combinations) in GRN lines detected');
+		throw new Error('Duplicate SKUs or SKU+variant+batch combinations in GRN lines detected');
 	}
 
 	const grn = await prisma.gRN.create({
@@ -66,7 +81,7 @@ export async function createGRN(data: {
 					variantId: line.variantId,
 					expectedQuantity: line.expectedQuantity,
 					receivedQuantity: 0,
-					batchId: line.batchId,
+					batchId: line.createNewBatch ? undefined : line.batchId,
 					costPrice: line.costPrice,
 					sellingPrice: line.sellingPrice,
 					wholesalePrice: line.wholesalePrice,

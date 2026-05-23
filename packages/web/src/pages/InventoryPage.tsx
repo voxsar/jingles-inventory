@@ -365,7 +365,11 @@ export default function InventoryPage() {
             {barcodeScanResult && (
               <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
                 <span>✅</span>
-                <span>Found: <strong>{barcodeScanResult.sku?.name}</strong> — {barcodeScanResult.inventoryRecords?.length ?? 0} records</span>
+                <span>
+                  Found: <strong>{barcodeScanResult.sku?.name}</strong>
+                  {barcodeScanResult.variant && <> <span className="text-green-800">/ {barcodeScanResult.variant.name ?? barcodeScanResult.variant.variantCode}</span></>}
+                  {' '}— {barcodeScanResult.inventoryRecords?.length ?? 0} records
+                </span>
               </div>
             )}
           </div>

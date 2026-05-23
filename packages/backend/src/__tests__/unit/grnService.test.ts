@@ -71,6 +71,43 @@ describe('createGRN', () => {
     ).rejects.toThrow('Duplicate SKUs');
   });
 
+  it('allows the same SKU on different GRN lines when each line uses a different batch', async () => {
+    prismaMock.gRN.findFirst.mockResolvedValue(null);
+    prismaMock.batch.findUnique
+      .mockResolvedValueOnce({
+        id: 'batch-001',
+        skuId: SKUS.widgetBox.id,
+        variantId: null,
+        batchNumber: 'WGT-BOX-001-B001',
+      } as any)
+      .mockResolvedValueOnce({
+        id: 'batch-002',
+        skuId: SKUS.widgetBox.id,
+        variantId: null,
+        batchNumber: 'WGT-BOX-001-B002',
+      } as any);
+    prismaMock.gRN.create.mockResolvedValue({
+      ...GRNS.draftGRN,
+      lines: [
+        { ...GRN_LINES.draftLine1, batchId: 'batch-001' },
+        { ...GRN_LINES.draftLine2, skuId: SKUS.widgetBox.id, batchId: 'batch-002' },
+      ],
+    } as any);
+    prismaMock.inventoryEvent.create.mockResolvedValue({ id: 'event-batch-split' } as any);
+
+    const result = await createGRN({
+      supplierId: 'vendor-acme-001',
+      createdBy: USERS.admin.id,
+      lines: [
+        { skuId: SKUS.widgetBox.id, expectedQuantity: 10, batchId: 'batch-001' },
+        { skuId: SKUS.widgetBox.id, expectedQuantity: 12, batchId: 'batch-002' },
+      ],
+    });
+
+    expect(result.lines).toHaveLength(2);
+    expect(prismaMock.gRN.create).toHaveBeenCalledOnce();
+  });
+
   it('allows GRN without invoice reference', async () => {
     const grnWithoutInvoice = { ...GRNS.draftGRN, invoiceReference: null, lines: [] };
     prismaMock.gRN.create.mockResolvedValue(grnWithoutInvoice);

@@ -11,6 +11,7 @@ import prisma from '../prisma/client';
 import logger from '../utils/logger';
 import { performTransition } from '../modules/inventory/stateMachine';
 import { convert } from '../modules/conversion/unitConverter';
+import { assertVariantBatchReferences } from '../modules/catalog/variantReferences';
 import { getStatusesByKeys, SpecialStatusKeys } from '../modules/statuses/statusLookup';
 import {
   SYNC_V2_OPERATION_TYPES,
@@ -211,6 +212,13 @@ async function applySyncV2Create(
     throw new Error('quantity must be greater than 0');
   }
 
+  await assertVariantBatchReferences(prisma, {
+    skuId,
+    variantId: variantId ?? null,
+    batchId: batchId ?? null,
+    context: 'Sync inventory.create',
+  });
+
   const existing = await prisma.inventoryRecord.findUnique({ where: { id: recordId } });
   if (existing) {
     throw new SyncConflictError(
@@ -318,7 +326,16 @@ async function applySyncV2Update(
     updateData.boxId = readNullableStringField(payload, 'boxId', 'box_id') ?? null;
   }
   if (Object.prototype.hasOwnProperty.call(payload, 'batchId')) {
-    updateData.batchId = readNullableStringField(payload, 'batchId', 'batch_id') ?? null;
+    const nextBatchId = readNullableStringField(payload, 'batchId', 'batch_id') ?? null;
+    if (nextBatchId) {
+      await assertVariantBatchReferences(prisma, {
+        skuId: existing.skuId,
+        variantId: existing.variantId ?? null,
+        batchId: nextBatchId,
+        context: 'Sync inventory.update',
+      });
+    }
+    updateData.batchId = nextBatchId;
   }
   if (normalizedQuantity !== undefined) {
     updateData.quantity = normalizedQuantity;
@@ -472,6 +489,7 @@ async function applySyncV2BoxOpen(
     const pieceRecord = await tx.inventoryRecord.create({
       data: {
         skuId: boxRecord.skuId,
+        variantId: boxRecord.variantId,
         batchId: boxRecord.batchId,
         floorId: targetFloorId ?? boxRecord.floorId,
         quantity: totalPieces,

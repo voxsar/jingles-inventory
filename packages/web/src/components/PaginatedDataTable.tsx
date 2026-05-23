@@ -8,6 +8,7 @@ interface Column<T> {
   render?: (row: T) => React.ReactNode;
   sortable?: boolean;
   align?: 'left' | 'right' | 'center';
+  isAction?: boolean;
 }
 
 interface PaginatedDataTableProps<T> {

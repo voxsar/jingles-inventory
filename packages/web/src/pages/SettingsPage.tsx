@@ -780,40 +780,43 @@ export default function SettingsPage() {
 								return (
 									<div key={type}>
 										<h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">{type}</h3>
-										<table className="w-full border-collapse text-sm">
-											<thead>
-												<tr className="bg-gray-50">
-													{['Name', 'Abbreviation', 'Base Unit', 'Conversion Factor', 'Status', ''].map(h => (
-														<th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
-													))}
-												</tr>
-											</thead>
-											<tbody>
-												{items.map((unit: any) => (
-													<tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50">
-														<td className="px-4 py-2 font-medium">{unit.name}</td>
-														<td className="px-4 py-2 text-gray-500">{unit.abbreviation}</td>
-														<td className="px-4 py-2 text-gray-500">{unit.baseUnit ?? '—'}</td>
-														<td className="px-4 py-2 text-gray-500">{unit.conversionFactor ?? '—'}</td>
-														<td className="px-4 py-2">
-															{unit.isSystem
-																? <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>
-																: unit.isActive
-																	? <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">Active</span>
-																	: <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded-full">Inactive</span>}
-														</td>
-														<td className="px-4 py-2">
-															{!unit.isSystem && (
-																<div className="flex gap-2">
-																	<button className="btn-sm" onClick={() => openEditUnit(unit)}>Edit</button>
-																	<button className="btn-sm text-red-600" onClick={() => handleDeleteUnit(unit)}>Delete</button>
-																</div>
-															)}
-														</td>
+										<div className="table-scroll-region overflow-x-auto">
+											<table className="w-full border-collapse text-sm">
+												<thead>
+													<tr className="bg-gray-50">
+														<th className="table-sticky-cell table-sticky-cell--header bg-gray-50 px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">Actions</th>
+														{['Name', 'Abbreviation', 'Base Unit', 'Conversion Factor', 'Status'].map(h => (
+															<th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+														))}
 													</tr>
-												))}
-											</tbody>
-										</table>
+												</thead>
+												<tbody>
+													{items.map((unit: any) => (
+														<tr key={unit.id} className="group border-b border-gray-100 hover:bg-gray-50">
+															<td className="table-sticky-cell px-4 py-2 bg-white group-hover:bg-gray-50">
+																{!unit.isSystem && (
+																	<div className="flex gap-2">
+																		<button className="btn-sm" onClick={() => openEditUnit(unit)}>Edit</button>
+																		<button className="btn-sm text-red-600" onClick={() => handleDeleteUnit(unit)}>Delete</button>
+																	</div>
+																)}
+															</td>
+															<td className="px-4 py-2 font-medium">{unit.name}</td>
+															<td className="px-4 py-2 text-gray-500">{unit.abbreviation}</td>
+															<td className="px-4 py-2 text-gray-500">{unit.baseUnit ?? '—'}</td>
+															<td className="px-4 py-2 text-gray-500">{unit.conversionFactor ?? '—'}</td>
+															<td className="px-4 py-2">
+																{unit.isSystem
+																	? <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>
+																	: unit.isActive
+																		? <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">Active</span>
+																		: <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded-full">Inactive</span>}
+															</td>
+														</tr>
+													))}
+												</tbody>
+											</table>
+										</div>
 									</div>
 								);
 							})}
@@ -962,47 +965,50 @@ export default function SettingsPage() {
 					{statusesLoading ? (
 						<div className="px-6 py-8 text-center text-gray-500">Loading...</div>
 					) : (
-						<table className="w-full border-collapse text-sm">
-							<thead>
-								<tr className="bg-gray-50">
-									{['Color', 'Value', 'Label', 'Behaviour', 'Order', 'Default', 'System', ''].map(h => (
-										<th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								{statuses.map((status: any) => (
-									<tr key={status.id} className="border-b border-gray-100 hover:bg-gray-50">
-										<td className="px-4 py-2">
-											<span className="inline-block w-5 h-5 rounded-full border border-gray-200" style={{ background: status.color ?? '#6366f1' }} />
-										</td>
-										<td className="px-4 py-2 font-mono text-xs text-gray-600">{status.value}</td>
-										<td className="px-4 py-2 font-medium">{status.label}</td>
-										<td className="px-4 py-2">
-											{status.specialKey ? (
-												<span className="text-[11px] font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
-													{status.specialKey}
-												</span>
-											) : (
-												<span className="text-xs text-gray-400">—</span>
-											)}
-										</td>
-										<td className="px-4 py-2 text-gray-500">{status.sortOrder}</td>
-										<td className="px-4 py-2">{status.isDefault && <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">Default</span>}</td>
-										<td className="px-4 py-2">{status.isSystem && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>}</td>
-										<td className="px-4 py-2">
-											<div className="flex gap-2">
-												<button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
-												<button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
-											</div>
-										</td>
+						<div className="table-scroll-region overflow-x-auto">
+							<table className="w-full border-collapse text-sm">
+								<thead>
+									<tr className="bg-gray-50">
+										<th className="table-sticky-cell table-sticky-cell--header bg-gray-50 px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">Actions</th>
+										{['Color', 'Value', 'Label', 'Behaviour', 'Order', 'Default', 'System'].map(h => (
+											<th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase border-b border-gray-200">{h}</th>
+										))}
 									</tr>
-								))}
-								{statuses.length === 0 && (
-									<tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No status options configured for this type. Click "+ Add Status" to add one.</td></tr>
-								)}
-							</tbody>
-						</table>
+								</thead>
+								<tbody>
+									{statuses.map((status: any) => (
+										<tr key={status.id} className="group border-b border-gray-100 hover:bg-gray-50">
+											<td className="table-sticky-cell px-4 py-2 bg-white group-hover:bg-gray-50">
+												<div className="flex gap-2">
+													<button className="btn-sm" onClick={() => openEditStatus(status)}>Edit</button>
+													<button className="btn-sm text-red-600" onClick={() => handleDeleteStatus(status)}>Delete</button>
+												</div>
+											</td>
+											<td className="px-4 py-2">
+												<span className="inline-block w-5 h-5 rounded-full border border-gray-200" style={{ background: status.color ?? '#6366f1' }} />
+											</td>
+											<td className="px-4 py-2 font-mono text-xs text-gray-600">{status.value}</td>
+											<td className="px-4 py-2 font-medium">{status.label}</td>
+											<td className="px-4 py-2">
+												{status.specialKey ? (
+													<span className="text-[11px] font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+														{status.specialKey}
+													</span>
+												) : (
+													<span className="text-xs text-gray-400">—</span>
+												)}
+											</td>
+											<td className="px-4 py-2 text-gray-500">{status.sortOrder}</td>
+											<td className="px-4 py-2">{status.isDefault && <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">Default</span>}</td>
+											<td className="px-4 py-2">{status.isSystem && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">System</span>}</td>
+										</tr>
+									))}
+									{statuses.length === 0 && (
+										<tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">No status options configured for this type. Click "+ Add Status" to add one.</td></tr>
+									)}
+								</tbody>
+							</table>
+						</div>
 					)}
 				</div>
 			</div>
