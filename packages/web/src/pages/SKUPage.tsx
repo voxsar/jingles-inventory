@@ -122,6 +122,8 @@ export default function SKUPage() {
 	const [variantsBySkuId, setVariantsBySkuId] = useState<Record<string, any[]>>({});
 	const [variantsLoadingIds, setVariantsLoadingIds] = useState<Set<string>>(new Set());
 	const fetchingSkuIds = useRef<Set<string>>(new Set());
+	const [selectedSkuIds, setSelectedSkuIds] = useState<string[]>([]);
+	const [manualVariantFamilyBusy, setManualVariantFamilyBusy] = useState(false);
 
 	// Page-level duplicates
 	const [duplicateGroups, setDuplicateGroups] = useState<any[]>([]);
@@ -190,6 +192,10 @@ export default function SKUPage() {
 		if (pageTab === 'duplicates' && !duplicateGroupsLoaded) loadDuplicateGroups();
 	}, [pageTab, duplicateGroupsLoaded]);
 
+	useEffect(() => {
+		setSelectedSkuIds((current) => current.filter((id) => skus.some((sku: any) => sku.id === id)));
+	}, [skus]);
+
 	const toggleSkuExpand = async (skuId: string, variantCount: number) => {
 		if (variantCount === 0) return;
 		setExpandedSkuIds((prev) => {
@@ -220,6 +226,18 @@ export default function SKUPage() {
 		setSearchTerm(value);
 		if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
 		searchDebounceRef.current = setTimeout(() => { setDebouncedSearch(value); setPage(1); }, 300);
+	};
+
+	const toggleSkuSelection = (skuId: string) => {
+		setSelectedSkuIds((current) => (
+			current.includes(skuId)
+				? current.filter((id) => id !== skuId)
+				: [...current, skuId]
+		));
+	};
+
+	const clearSelectedSkus = () => {
+		setSelectedSkuIds([]);
 	};
 
 	const handleUnitChange = (unitId: string, setter: any) => {
@@ -860,6 +878,50 @@ export default function SKUPage() {
 		}
 	};
 
+	const handleCreateVariantFamilySelected = async () => {
+		if (selectedSkus.length < 2) {
+			alert('Select at least two products to create a variant family.');
+			return;
+		}
+
+		const [masterSku, ...sourceSkus] = selectedSkus;
+		const previewList = selectedSkus
+			.slice(0, 4)
+			.map((sku: any, index: number) => `${index === 0 ? '* Master' : `* Variant ${index}`}: ${sku.name}`)
+			.join('\n');
+		const extraCount = selectedSkus.length > 4 ? `\n* and ${selectedSkus.length - 4} more` : '';
+		if (!confirm(`Create a variant family with "${masterSku.name}" as the master product? A variant will be created for the master product itself, and ${sourceSkus.length} other product(s) will move under it.\n\n${previewList}${extraCount}`)) return;
+
+		const editingSkuId = editingSku?.id;
+		setManualVariantFamilyBusy(true);
+		try {
+			const res = await skusApi.createVariantFamily({
+				masterSkuId: masterSku.id,
+				sourceSkuIds: sourceSkus.map((sku: any) => sku.id),
+			});
+			const data = res.data?.data;
+			if (editingSkuId && sourceSkus.some((sku: any) => sku.id === editingSkuId)) {
+				setEditingSku(null);
+			}
+			clearSelectedSkus();
+			setExpandedSkuIds(new Set());
+			setVariantsBySkuId({});
+			await Promise.all([
+				load(),
+				loadDuplicateGroups(),
+				editingSkuId === masterSku.id ? refreshEditingSku() : Promise.resolve(),
+			]);
+			const syntheticBatchMessage = (data?.createdSyntheticBatches ?? 0) > 0
+				? ` Created ${data.createdSyntheticBatches} pricing batch(es) to preserve variant pricing.`
+				: '';
+			alert(`Created ${data?.createdVariantCount ?? selectedSkus.length} variant(s) under ${data?.masterName ?? masterSku.name}. Reassigned ${data?.movedInventoryRecords ?? 0} inventory record(s) and ${data?.movedBatches ?? 0} batch(es).${syntheticBatchMessage}`);
+		} catch (err: any) {
+			alert(err.response?.data?.error ?? 'Failed to create variant family');
+		} finally {
+			setManualVariantFamilyBusy(false);
+		}
+	};
+
 	const loadImageVariants = async () => {
 		if (!editingSku) return;
 		try {
@@ -1006,6 +1068,10 @@ export default function SKUPage() {
 	const imageScopeLabel = selectedImageVariant
 		? `variant ${selectedImageVariant.name ?? selectedImageVariant.variantCode}`
 		: 'product';
+	const selectedSkus = selectedSkuIds
+		.map((id) => skus.find((sku: any) => sku.id === id))
+		.filter(Boolean) as any[];
+	const selectedMasterSku = selectedSkus[0] ?? null;
 
 	const skuActionColumnLeft = 56;
 	const stickyTableShadow = '1px 0 0 var(--line), 16px 0 20px -20px rgba(15, 23, 42, 0.72)';
@@ -1110,6 +1176,55 @@ export default function SKUPage() {
 						</button>
 					)}
 				</div>
+				<div className="px-4 py-3 border-b border-gray-100">
+					<div className="flex flex-wrap items-start justify-between gap-3">
+						<div>
+							<p className="text-sm font-semibold text-gray-700">Manual variant family selection</p>
+							<p className="text-xs text-gray-500 mt-1">Select two or more products from the table. The first one you select becomes the master product, and every selected product becomes a variant under it.</p>
+						</div>
+						{selectedSkuIds.length > 0 && (
+							<button className="btn-secondary text-xs" disabled={manualVariantFamilyBusy} onClick={clearSelectedSkus}>
+								Clear selection
+							</button>
+						)}
+					</div>
+					{selectedSkus.length > 0 ? (
+						<div className="mt-3 flex flex-col gap-3">
+							<div className="text-xs text-gray-500">
+								<span className="font-medium text-gray-700">{selectedSkus.length} selected</span>
+								{selectedMasterSku ? ` • master: ${selectedMasterSku.name}` : ''}
+							</div>
+							<div className="flex flex-wrap gap-2">
+								{selectedSkus.map((sku: any, index: number) => (
+									<span
+										key={`selected-sku-${sku.id}`}
+										className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${index === 0 ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-700'}`}
+									>
+										{index === 0 ? 'Master' : `Variant ${index}`}
+										<span>•</span>
+										<span>{sku.name}</span>
+									</span>
+								))}
+							</div>
+							<div className="flex flex-wrap items-center gap-3">
+								<div className="text-xs text-gray-500">
+									{selectedSkus.length > 1
+										? `${selectedSkus.length} variant record(s) will sit under the master product after conversion`
+										: 'Select at least one more product to build a variant family'}
+								</div>
+								<button
+									className="btn-primary"
+									disabled={manualVariantFamilyBusy || selectedSkus.length < 2}
+									onClick={handleCreateVariantFamilySelected}
+								>
+									{manualVariantFamilyBusy ? 'Creating…' : `Create ${selectedSkus.length} Variants Under Master`}
+								</button>
+							</div>
+						</div>
+					) : (
+						<p className="mt-3 text-xs text-gray-500">Use the checkboxes in the actions column to build a manual variant family.</p>
+					)}
+				</div>
 				<div className="table-scroll-region" style={{ overflowX: 'auto' }}>
 					<table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: 'var(--ink)' }}>
 						<thead>
@@ -1175,6 +1290,7 @@ export default function SKUPage() {
 									const isLoadingVariants = variantsLoadingIds.has(sku.id);
 									const variants = variantsBySkuId[sku.id] ?? [];
 									const rowBackground = idx % 2 === 1 ? 'var(--glass-pop)' : 'var(--bg-2)';
+									const selectionIndex = selectedSkuIds.indexOf(sku.id);
 									return (
 										<Fragment key={sku.id}>
 											<tr
@@ -1193,10 +1309,28 @@ export default function SKUPage() {
 													)}
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap', position: 'sticky', left: `${skuActionColumnLeft}px`, zIndex: 3, background: rowBackground, boxShadow: stickyTableShadow }}>
-													<div className="flex gap-1">
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openQuickGrn(sku); }}>Create GRN</button>
-														<button className="btn-sm text-xs" onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</button>
+													<div className="flex items-center gap-2">
+														<label className="inline-flex items-center gap-1 text-xs text-gray-500">
+															<input
+																type="checkbox"
+																aria-label={`Select product ${sku.name}`}
+																checked={selectionIndex !== -1}
+																disabled={manualVariantFamilyBusy}
+																onChange={(e) => {
+																	e.stopPropagation();
+																	toggleSkuSelection(sku.id);
+																}}
+																onClick={(e) => e.stopPropagation()}
+															/>
+															{selectionIndex !== -1 && (
+																<span className={selectionIndex === 0 ? 'font-semibold text-amber-700' : 'font-semibold text-indigo-700'}>
+																	{selectionIndex === 0 ? 'Master' : `#${selectionIndex + 1}`}
+																</span>
+															)}
+														</label>
+														<button className="btn-sm text-xs" disabled={manualVariantFamilyBusy} onClick={(e: any) => { e.stopPropagation(); openQuickInventory(sku); }}>Add Inventory</button>
+														<button className="btn-sm text-xs" disabled={manualVariantFamilyBusy} onClick={(e: any) => { e.stopPropagation(); openQuickGrn(sku); }}>Create GRN</button>
+														<button className="btn-sm text-xs" disabled={manualVariantFamilyBusy} onClick={(e: any) => { e.stopPropagation(); openEdit(sku); }}>Edit</button>
 													</div>
 												</td>
 												<td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{sku.skuCode}</span></td>

@@ -966,6 +966,10 @@ router.post(
 
 		const { masterSkuId, sourceSkuIds } = req.body as { masterSkuId: string; sourceSkuIds: string[] };
 		const uniqueSourceIds = Array.from(new Set(sourceSkuIds.filter(Boolean)));
+		if (uniqueSourceIds.length === 0) {
+			res.status(400).json({ success: false, error: 'Select at least one source product to convert into a variant.' });
+			return;
+		}
 		if (uniqueSourceIds.includes(masterSkuId)) {
 			res.status(400).json({ success: false, error: 'The master product cannot also be listed as a source variant.' });
 			return;
