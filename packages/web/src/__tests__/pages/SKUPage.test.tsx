@@ -4,16 +4,19 @@ import userEvent from '@testing-library/user-event';
 import SKUPage from '../../pages/SKUPage';
 
 const listSkusMock = vi.fn();
+const getSkuMock = vi.fn();
 const getDuplicateGroupsMock = vi.fn();
 const createVariantFamilyMock = vi.fn();
 const listVendorsMock = vi.fn();
 const listCategoriesMock = vi.fn();
 const listUnitsMock = vi.fn();
 const getAllTagsMock = vi.fn();
+const listAttributesMock = vi.fn();
 
 vi.mock('../../api/client', () => ({
 	skusApi: {
 		list: (...args: unknown[]) => listSkusMock(...args),
+		get: (...args: unknown[]) => getSkuMock(...args),
 		getDuplicateGroups: (...args: unknown[]) => getDuplicateGroupsMock(...args),
 		createVariantFamily: (...args: unknown[]) => createVariantFamilyMock(...args),
 		getAllTags: (...args: unknown[]) => getAllTagsMock(...args),
@@ -28,7 +31,9 @@ vi.mock('../../api/client', () => ({
 		listUnits: (...args: unknown[]) => listUnitsMock(...args),
 	},
 	inventoryApi: {},
-	attributesApi: {},
+	attributesApi: {
+		list: (...args: unknown[]) => listAttributesMock(...args),
+	},
 	variantsApi: {},
 	batchesApi: {},
 	floorsApi: {},
@@ -89,6 +94,22 @@ describe('SKUPage', () => {
 		listCategoriesMock.mockResolvedValue({ data: { data: [] } });
 		listUnitsMock.mockResolvedValue({ data: { data: [] } });
 		getAllTagsMock.mockResolvedValue({ data: { data: [] } });
+		listAttributesMock.mockResolvedValue({ data: { data: [] } });
+		getSkuMock.mockResolvedValue({
+			data: {
+				data: {
+					id: '11111111-1111-4111-8111-111111111111',
+					skuCode: 'PADLOCK-701',
+					name: 'GLOBE PADLOCK 701 20MM',
+					skuVendors: [],
+					unitOfMeasure: 'Piece',
+					tags: [],
+					variants: [],
+					images: [],
+					isActive: true,
+				},
+			},
+		});
 		getDuplicateGroupsMock.mockResolvedValue({ data: { data: { items: [] } } });
 		createVariantFamilyMock.mockResolvedValue({
 			data: {
@@ -135,6 +156,34 @@ describe('SKUPage', () => {
 				sourceSkuIds: ['22222222-2222-4222-8222-222222222222'],
 			});
 			expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Created 2 variant(s) under GLOBE PADLOCK.'));
+		});
+	});
+
+	it('suggests existing products while typing a name and opens one in edit mode', async () => {
+		const user = userEvent.setup();
+
+		render(<SKUPage />);
+
+		await waitFor(() => {
+			expect(screen.getByText('GLOBE PADLOCK 701 20MM')).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByRole('button', { name: '+ New Product' }));
+
+		await waitFor(() => {
+			expect(screen.getByText('➕ Create New Product')).toBeInTheDocument();
+		});
+
+		await user.type(screen.getByLabelText('Product Name'), 'PADLOCK');
+
+		const option = await screen.findByRole('option', { name: /GLOBE PADLOCK 701 20MM/ });
+		expect(listSkusMock).toHaveBeenCalledWith({ search: 'PADLOCK', pageSize: '8' });
+
+		await user.click(option);
+
+		await waitFor(() => {
+			expect(getSkuMock).toHaveBeenCalledWith('11111111-1111-4111-8111-111111111111');
+			expect(screen.queryByText('➕ Create New Product')).not.toBeInTheDocument();
 		});
 	});
 });

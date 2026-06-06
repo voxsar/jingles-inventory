@@ -197,4 +197,33 @@ describe('SuppliersPage', () => {
       expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Merged 1 supplier(s) into Acme Trading Ltd.'));
     });
   });
+
+  it('suggests existing suppliers while typing a name and switches the form to edit mode', async () => {
+    const user = userEvent.setup();
+
+    render(<SuppliersPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Acme Trading Ltd')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: '+ New Supplier' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('➕ New Supplier')).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText('Name'), 'Acme');
+
+    const option = await screen.findByRole('option', { name: /Acme Trading Ltd/ });
+    expect(listMock).toHaveBeenCalledWith({ search: 'Acme', page: '1', pageSize: '8' });
+
+    await user.click(option);
+
+    await waitFor(() => {
+      expect(screen.getByText('✏️ Edit Supplier')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Update Supplier' })).toBeInTheDocument();
+      expect(screen.getByLabelText('Name')).toHaveValue('Acme Trading Ltd');
+    });
+  });
 });

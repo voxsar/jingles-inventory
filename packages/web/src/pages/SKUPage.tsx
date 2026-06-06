@@ -10,6 +10,7 @@ import ImageGalleryManager from '../components/ImageGalleryManager';
 import { branding } from '../config/branding';
 import SearchableSelect from '../components/SearchableSelect';
 import MultiSearchableSelect from '../components/MultiSearchableSelect';
+import NameSuggestInput, { type NameSuggestion } from '../components/NameSuggestInput';
 import { UiBadge, UiText } from '../components/UiPrimitives';
 import { buildHierarchicalCategoryOptionsFromFlat } from '../utils/categoryHelpers';
 import { formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
@@ -394,6 +395,26 @@ export default function SKUPage() {
 
 	const openEdit = (sku: any, initialTab: ModalTab = 'details') => {
 		applySkuToEditState(sku, initialTab);
+	};
+
+	const fetchSkuNameSuggestions = async (query: string): Promise<NameSuggestion[]> => {
+		const res = await skusApi.list({ search: query, pageSize: '8' });
+		const items: any[] = res.data?.data?.items ?? [];
+		return items.map((sku) => ({ id: sku.id, label: sku.name, sublabel: sku.skuCode, raw: sku }));
+	};
+
+	// Selecting an existing product from the name autocomplete closes the create
+	// form and opens that product in edit mode instead.
+	const handleSelectExistingSku = async (suggestion: NameSuggestion) => {
+		closeCreateForm();
+		let full = suggestion.raw;
+		try {
+			const res = await skusApi.get(suggestion.id);
+			full = res.data?.data ?? suggestion.raw;
+		} catch (err) {
+			console.error('Failed to load product for editing', err);
+		}
+		if (full) applySkuToEditState(full);
 	};
 
 	const handleSaveEdit = async () => {
@@ -1753,7 +1774,15 @@ export default function SKUPage() {
 									</div>
 									<div className="form-group">
 										<label className="form-label">Product Name *</label>
-										<input className="input-field" type="text" value={form.name} required onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+										<NameSuggestInput
+											value={form.name}
+											onChange={(name) => setForm((f) => ({ ...f, name }))}
+											fetchSuggestions={fetchSkuNameSuggestions}
+											onSelect={handleSelectExistingSku}
+											required
+											ariaLabel="Product Name"
+											hint="Existing products — click to edit"
+										/>
 									</div>
 								</div>
 								<div className="form-grid-2">

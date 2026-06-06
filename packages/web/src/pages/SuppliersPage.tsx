@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { vendorsApi, settingsApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
 import SearchableSelect from '../components/SearchableSelect';
+import NameSuggestInput, { type NameSuggestion } from '../components/NameSuggestInput';
 import { UiBadge } from '../components/UiPrimitives';
 
 const defaultForm = {
@@ -185,6 +186,18 @@ export default function SuppliersPage() {
     setEditingSupplier(null);
     setForm(defaultForm);
     setShowForm(true);
+  };
+
+  const fetchSupplierNameSuggestions = async (query: string): Promise<NameSuggestion[]> => {
+    const res = await vendorsApi.list({ search: query, page: '1', pageSize: '8' });
+    const items: any[] = res.data?.data?.items ?? res.data ?? [];
+    return items.map((vendor) => ({ id: vendor.id, label: vendor.name, sublabel: vendor.contactEmail, raw: vendor }));
+  };
+
+  // Picking an existing supplier from the name autocomplete switches the open
+  // form into edit mode for that supplier.
+  const handleSelectExistingSupplier = (suggestion: NameSuggestion) => {
+    if (suggestion.raw) openEdit(suggestion.raw);
   };
 
   const openEdit = (supplier: any) => {
@@ -648,7 +661,16 @@ export default function SuppliersPage() {
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Name *</label>
-                    <input className="input-field" type="text" value={form.name} required onChange={(e) => setForm((current) => ({ ...current, name: e.target.value }))} />
+                    <NameSuggestInput
+                      value={form.name}
+                      onChange={(name) => setForm((current) => ({ ...current, name }))}
+                      fetchSuggestions={fetchSupplierNameSuggestions}
+                      onSelect={handleSelectExistingSupplier}
+                      enabled={!editingSupplier}
+                      required
+                      ariaLabel="Name"
+                      hint="Existing suppliers — click to edit"
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Type *</label>
