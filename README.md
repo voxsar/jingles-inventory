@@ -377,6 +377,15 @@ GET    /api/sync/replica/export - Export full replica snapshot for desktop repla
 - Floor/shelf capacity usage percentage
 - Stacking rules: fragile items, max stack height, heavy-on-bottom
 
+### 7. Gift Voucher System 🎁
+- Create vouchers as products with variants for different denominations
+- Bulk generate unique voucher codes with custom prefixes
+- Balance tracking and partial redemptions
+- Category/product restrictions and exclusions
+- Cannot combine with discounts or other vouchers
+- Complete redemption history and audit trail
+- See [VOUCHER_SYSTEM.md](VOUCHER_SYSTEM.md) for full documentation
+
 ## Development Guide
 
 ### Project Structure

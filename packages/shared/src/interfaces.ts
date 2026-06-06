@@ -595,3 +595,115 @@ export interface IResolvedPrice {
 	appliedOverlays: IAppliedOverlay[];
 	warnings?: string[];
 }
+
+// ── Voucher System Interfaces ────────────────────────────────
+
+export interface IVoucherBatch {
+	id: string;
+	skuId: string;
+	variantId?: string | null;
+	batchName: string;
+	prefix?: string | null;
+	quantity: number;
+	generatedCount: number;
+	defaultValue: number;
+	expiryDays?: number | null;
+	defaultExpiresAt?: Date | null;
+	status: string; // VoucherBatchStatus enum
+	createdBy?: string | null;
+	createdAt: Date;
+	completedAt?: Date | null;
+}
+
+export interface IVoucherCode {
+	id: string;
+	code: string;
+	skuId: string;
+	variantId?: string | null;
+	batchId?: string | null;
+	voucherBatchId?: string | null;
+	initialValue: number;
+	currentBalance: number;
+	currency: string;
+	status: string; // VoucherStatus enum
+	issuedAt: Date;
+	expiresAt?: Date | null;
+	activatedAt?: Date | null;
+	fullyRedeemedAt?: Date | null;
+	customerId?: string | null;
+	orderId?: string | null;
+	purchaseReference?: string | null;
+	notes?: string | null;
+	createdBy?: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface IVoucherRedemptionItem {
+	skuId: string;
+	variantId?: string | null;
+	quantity: number;
+	originalPrice: number;
+	discountedPrice: number;
+}
+
+export interface IVoucherRedemption {
+	id: string;
+	voucherCodeId: string;
+	code: string;
+	redeemedAmount: number;
+	balanceBefore: number;
+	balanceAfter: number;
+	orderId?: string | null;
+	invoiceNumber?: string | null;
+	branchId?: string | null;
+	appliedToItems?: IVoucherRedemptionItem[] | null;
+	redeemedBy?: string | null;
+	redeemedAt: Date;
+	notes?: string | null;
+}
+
+export interface IVoucherRestriction {
+	id: string;
+	skuId: string;
+	restrictionType: string; // VoucherRestrictionType enum
+	targetCategoryIds?: string[] | null;
+	targetSkuIds?: string[] | null;
+	targetVariantIds?: string[] | null;
+	cannotCombineWithDiscounts: boolean;
+	cannotCombineWithOtherVouchers: boolean;
+	minPurchaseAmount?: number | null;
+	maxDiscountAmount?: number | null;
+	priority: number;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export interface IVoucherValidationContext {
+	voucherCode: string;
+	items: {
+		skuId: string;
+		variantId?: string | null;
+		categoryId?: string | null;
+		quantity: number;
+		price: number;
+	}[];
+	totalAmount: number;
+	branchId?: string | null;
+	hasOtherVouchers?: boolean;
+	hasDiscounts?: boolean;
+}
+
+export interface IVoucherValidationResult {
+	isValid: boolean;
+	voucher?: IVoucherCode;
+	maxRedeemableAmount?: number;
+	applicableItems?: {
+		skuId: string;
+		variantId?: string | null;
+		quantity: number;
+		maxDiscount: number;
+	}[];
+	errors?: string[];
+	warnings?: string[];
+}
