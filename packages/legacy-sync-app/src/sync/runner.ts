@@ -1,10 +1,9 @@
 import type { LegacySyncChunk } from '@jingles/shared';
-import type { AgentConfig } from './config';
+import type { AppConfig } from './config';
 import { connectLegacyDb } from './legacyDb';
-import { extractSnapshot, LegacySnapshot } from './extract';
-import { AgentState, hashRow, loadState, saveState } from './state';
+import { extractSnapshot } from './extract';
+import { hashRow, loadState, saveState } from './state';
 import { completeRun, openRun, sendChunk } from './serverClient';
-import { log } from './log';
 
 interface Keyed<T> {
 	key: string;
@@ -12,12 +11,18 @@ interface Keyed<T> {
 	row: T;
 }
 
-function diffRows<T>(prefix: string, rows: T[], keyOf: (row: T) => string, state: AgentState, force: boolean): Keyed<T>[] {
+function diffRows<T>(
+	prefix: string,
+	rows: T[],
+	keyOf: (row: T) => string,
+	hashes: Record<string, string>,
+	force: boolean,
+): Keyed<T>[] {
 	const changed: Keyed<T>[] = [];
 	for (const row of rows) {
 		const key = `${prefix}:${keyOf(row)}`;
 		const hash = hashRow(row);
-		if (force || state.hashes[key] !== hash) {
+		if (force || hashes[key] !== hash) {
 			changed.push({ key, hash, row });
 		}
 	}
@@ -32,75 +37,83 @@ function chunked<T>(items: T[], size: number): T[][] {
 	return result;
 }
 
-export interface CycleResult {
-	sent: number;
+export interface CycleSummary {
+	rowsSent: number;
 	warnings: number;
+	durationMs: number;
+	runId: string | null;
+	message: string;
 }
 
-export async function runSyncCycle(config: AgentConfig, options: { force?: boolean } = {}): Promise<CycleResult> {
+export async function runSyncCycle(
+	config: AppConfig,
+	userDataDir: string,
+	onLog: (message: string) => void,
+	options: { force?: boolean } = {},
+): Promise<CycleSummary> {
 	const startedAt = Date.now();
-	const state = loadState(config.stateFile);
+	const state = loadState(userDataDir);
 	const force = Boolean(options.force);
 
-	log.info(`Connecting to legacy ${config.legacyDatabase.dialect} database ${config.legacyDatabase.host}/${config.legacyDatabase.database}...`);
+	onLog(`Connecting to legacy ${config.legacyDatabase.dialect} at ${config.legacyDatabase.host}/${config.legacyDatabase.database}...`);
 	const db = await connectLegacyDb(config.legacyDatabase);
-	let snapshot: LegacySnapshot;
+	let snapshot;
 	try {
 		snapshot = await extractSnapshot(db);
 	} finally {
 		await db.close().catch(() => undefined);
 	}
 
-	log.info(
-		`Legacy snapshot: ${snapshot.products.length} products, ${snapshot.variants.length} color/size variants, `
+	onLog(
+		`Snapshot: ${snapshot.products.length} products, ${snapshot.variants.length} color/size variants, `
 		+ `${snapshot.suppliers.length} suppliers, ${snapshot.locations.length} locations, ${snapshot.units.length} units.`,
 	);
 
-	const changedUnits = diffRows('unit', snapshot.units, (row) => row.unitId, state, force);
-	const changedSuppliers = diffRows('supplier', snapshot.suppliers, (row) => row.supplierId, state, force);
-	const changedLocations = diffRows('location', snapshot.locations, (row) => row.locationId, state, force);
-	const changedProducts = diffRows('product', snapshot.products, (row) => row.productId, state, force);
-	const changedVariants = diffRows('variant', snapshot.variants, (row) => row.productColorSizeId, state, force);
+	const changedUnits = diffRows('unit', snapshot.units, (row) => row.unitId, state.hashes, force);
+	const changedSuppliers = diffRows('supplier', snapshot.suppliers, (row) => row.supplierId, state.hashes, force);
+	const changedLocations = diffRows('location', snapshot.locations, (row) => row.locationId, state.hashes, force);
+	const changedProducts = diffRows('product', snapshot.products, (row) => row.productId, state.hashes, force);
+	const changedVariants = diffRows('variant', snapshot.variants, (row) => row.productColorSizeId, state.hashes, force);
 
 	const totalChanged =
 		changedUnits.length + changedSuppliers.length + changedLocations.length
 		+ changedProducts.length + changedVariants.length;
 
 	if (totalChanged === 0) {
-		log.info('No changes since the last sync.');
 		state.lastRunAt = new Date().toISOString();
-		saveState(config.stateFile, state);
-		return { sent: 0, warnings: 0 };
+		saveState(userDataDir, state);
+		onLog('No changes since the last sync.');
+		return { rowsSent: 0, warnings: 0, durationMs: Date.now() - startedAt, runId: null, message: 'No changes' };
 	}
 
-	log.info(
-		`Changes to sync: ${changedProducts.length} products, ${changedVariants.length} variants, `
+	onLog(
+		`Changes: ${changedProducts.length} products, ${changedVariants.length} variants, `
 		+ `${changedSuppliers.length} suppliers, ${changedLocations.length} locations, ${changedUnits.length} units.`,
 	);
 
-	const run = await openRun(config);
-	log.info(`Opened sync run ${run.id}.`);
+	const run = await openRun(config, onLog);
+	onLog(`Opened sync run ${run.id}.`);
 
 	let warnings = 0;
-	let sent = 0;
+	let rowsSent = 0;
 	const acked: Keyed<unknown>[] = [];
 
-	const pushChunk = async (chunk: LegacySyncChunk, keys: Keyed<unknown>[], label: string) => {
-		const result = await sendChunk(config, run.id, chunk);
+	const push = async (chunk: LegacySyncChunk, keys: Keyed<unknown>[], label: string) => {
+		const result = await sendChunk(config, run.id, chunk, onLog);
 		acked.push(...keys);
-		sent += keys.length;
+		rowsSent += keys.length;
 		warnings += result.warnings.length;
 		for (const warning of result.warnings) {
-			log.warn(`server: ${warning}`);
+			onLog(`server: ${warning}`);
 		}
-		log.info(`Applied ${label} (${keys.length} rows, ${result.inventoryAdjustments} inventory adjustments).`);
+		onLog(`Applied ${label} (${keys.length} rows, ${result.inventoryAdjustments} inventory adjustments).`);
 	};
 
 	try {
 		// Master data first (small), then products, then variants — the server
 		// needs product links in place before color/size variants arrive.
 		if (changedUnits.length + changedSuppliers.length + changedLocations.length > 0) {
-			await pushChunk(
+			await push(
 				{
 					units: changedUnits.map((entry) => entry.row),
 					suppliers: changedSuppliers.map((entry) => entry.row),
@@ -110,35 +123,28 @@ export async function runSyncCycle(config: AgentConfig, options: { force?: boole
 				'master data',
 			);
 		}
-
 		for (const [index, group] of chunked(changedProducts, config.chunkSize).entries()) {
-			await pushChunk({ products: group.map((entry) => entry.row) }, group, `products chunk ${index + 1}`);
+			await push({ products: group.map((entry) => entry.row) }, group, `products chunk ${index + 1}`);
 		}
 		for (const [index, group] of chunked(changedVariants, config.chunkSize).entries()) {
-			await pushChunk({ variants: group.map((entry) => entry.row) }, group, `variants chunk ${index + 1}`);
+			await push({ variants: group.map((entry) => entry.row) }, group, `variants chunk ${index + 1}`);
 		}
 
 		await completeRun(config, run.id, {
 			status: warnings > 0 ? 'CompletedWithWarnings' : 'Completed',
-			stats: {
-				agentId: config.agentId,
-				durationMs: Date.now() - startedAt,
-				rowsSent: sent,
-				warnings,
-			},
-		});
+			stats: { agentId: config.agentId, durationMs: Date.now() - startedAt, rowsSent, warnings },
+		}, onLog);
 	} catch (error: any) {
 		await completeRun(config, run.id, {
 			status: 'Failed',
 			errorMessage: String(error?.message ?? error).slice(0, 4000),
-			stats: { agentId: config.agentId, durationMs: Date.now() - startedAt, rowsSent: sent, warnings },
-		}).catch(() => undefined);
-		// Keep the hashes of chunks the server acknowledged so they are not
-		// re-sent, then rethrow for the daemon loop to log.
+			stats: { agentId: config.agentId, durationMs: Date.now() - startedAt, rowsSent, warnings },
+		}, onLog).catch(() => undefined);
+		// Keep hashes for chunks the server acknowledged so they are not re-sent.
 		for (const entry of acked) {
 			state.hashes[entry.key] = entry.hash;
 		}
-		saveState(config.stateFile, state);
+		saveState(userDataDir, state);
 		throw error;
 	}
 
@@ -146,8 +152,8 @@ export async function runSyncCycle(config: AgentConfig, options: { force?: boole
 		state.hashes[entry.key] = entry.hash;
 	}
 
-	// Prune state entries for rows that vanished from the legacy database so
-	// they are re-sent if they ever reappear.
+	// Prune hashes for rows that vanished from the legacy database so they are
+	// re-sent if they ever reappear.
 	const liveKeys = new Set<string>([
 		...snapshot.units.map((row) => `unit:${row.unitId}`),
 		...snapshot.suppliers.map((row) => `supplier:${row.supplierId}`),
@@ -160,7 +166,9 @@ export async function runSyncCycle(config: AgentConfig, options: { force?: boole
 	}
 
 	state.lastRunAt = new Date().toISOString();
-	saveState(config.stateFile, state);
-	log.info(`Sync cycle finished: ${sent} rows in ${((Date.now() - startedAt) / 1000).toFixed(1)}s, ${warnings} warnings.`);
-	return { sent, warnings };
+	saveState(userDataDir, state);
+
+	const durationMs = Date.now() - startedAt;
+	onLog(`Cycle finished: ${rowsSent} rows in ${(durationMs / 1000).toFixed(1)}s, ${warnings} warnings.`);
+	return { rowsSent, warnings, durationMs, runId: run.id, message: `Synced ${rowsSent} rows` };
 }

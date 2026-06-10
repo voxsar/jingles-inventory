@@ -14,8 +14,9 @@ import {
 
 const router = Router();
 
-// Sync chunks can carry a few hundred product rows; the global JSON parser's
-// default limit is too small, so this router parses its own bodies.
+// Sync chunks pushed by the desktop app can carry a few hundred product rows;
+// the global JSON parser's default limit is too small, so this router parses
+// its own bodies (it is mounted before the global parser).
 router.use(express.json({ limit: '25mb' }));
 router.use(authenticateLegacySyncRequest);
 

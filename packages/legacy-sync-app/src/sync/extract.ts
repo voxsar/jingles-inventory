@@ -49,6 +49,9 @@ function joinParts(parts: Array<unknown>, separator = ', ') {
 	return parts.map(str).filter(Boolean).join(separator) || undefined;
 }
 
+// Pulls the full relevant slice of the legacy database with plain SELECTs.
+// These are master-data tables (not transactions), so a complete snapshot per
+// cycle is cheap; change detection happens afterwards against local hashes.
 export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 	const [
 		unitRows,

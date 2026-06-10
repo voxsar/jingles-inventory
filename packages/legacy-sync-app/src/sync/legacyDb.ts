@@ -1,4 +1,8 @@
-import type { LegacyDatabaseConfig } from './config';
+// Direct connection to the legacy POS database — a desktop MSSQL server.
+// Everything is sourced with plain SELECT queries; a MySQL dialect is also
+// supported for converted copies of the same schema.
+
+import type { AppConfig } from './config';
 
 export type LegacyRow = Record<string, unknown>;
 
@@ -7,11 +11,8 @@ export interface LegacyDb {
 	close(): Promise<void>;
 }
 
-// Both adapters expose the same lowercase table names used by the legacy
-// dump (MSSQL default collation is case-insensitive, so this works there too).
-
-async function createMssqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
-	// Lazy require so the mysql-only deployment does not need the mssql driver.
+async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<LegacyDb> {
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	const sql = require('mssql');
 	const pool = await new sql.ConnectionPool({
 		server: config.host,
@@ -20,17 +21,19 @@ async function createMssqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
 		user: config.user,
 		password: config.password,
 		options: {
-			encrypt: config.options?.encrypt ?? false,
-			trustServerCertificate: config.options?.trustServerCertificate ?? true,
+			encrypt: config.encrypt ?? false,
+			trustServerCertificate: config.trustServerCertificate ?? true,
 		},
-		connectionTimeout: config.options?.connectTimeoutMs ?? 15000,
-		requestTimeout: config.options?.requestTimeoutMs ?? 120000,
+		connectionTimeout: 15000,
+		requestTimeout: 120000,
 	}).connect();
 
-	const schema = config.schema ?? 'dbo';
+	const schema = config.schema || 'dbo';
 	return {
 		async query(sqlText: string) {
-			const prefixed = sqlText.replace(/\bFROM\s+`?(\w+)`?/gi, (_match, table) => `FROM [${schema}].[${table}]`);
+			// Queries use bare lowercase table names; MSSQL default collation is
+			// case-insensitive and the schema gets prefixed here.
+			const prefixed = sqlText.replace(/\bFROM\s+(\w+)/gi, (_match, table) => `FROM [${schema}].[${table}]`);
 			const result = await pool.request().query(prefixed);
 			return result.recordset as LegacyRow[];
 		},
@@ -40,7 +43,8 @@ async function createMssqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
 	};
 }
 
-async function createMysqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
+async function createMysqlDb(config: AppConfig['legacyDatabase']): Promise<LegacyDb> {
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	const mysql = require('mysql2/promise');
 	const pool = mysql.createPool({
 		host: config.host,
@@ -50,7 +54,7 @@ async function createMysqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
 		password: config.password,
 		decimalNumbers: true,
 		connectionLimit: 2,
-		connectTimeout: config.options?.connectTimeoutMs ?? 15000,
+		connectTimeout: 15000,
 	});
 
 	return {
@@ -64,6 +68,6 @@ async function createMysqlDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
 	};
 }
 
-export async function connectLegacyDb(config: LegacyDatabaseConfig): Promise<LegacyDb> {
+export async function connectLegacyDb(config: AppConfig['legacyDatabase']): Promise<LegacyDb> {
 	return config.dialect === 'mssql' ? createMssqlDb(config) : createMysqlDb(config);
 }

@@ -1,0 +1,48 @@
+{
+	"name": "@jingles/legacy-sync-app",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Standalone desktop app that syncs the legacy POS database (MSSQL) into the Jingles inventory system every 5 minutes.",
+	"main": "dist/main.js",
+	"scripts": {
+		"build": "tsc",
+		"start": "npm run build && electron .",
+		"dev": "npm run build && electron .",
+		"dist:win": "npm run build && electron-builder --win",
+		"test": "echo \"no tests\" && exit 0"
+	},
+	"dependencies": {
+		"mssql": "^11.0.1",
+		"mysql2": "^3.11.0"
+	},
+	"devDependencies": {
+		"@jingles/shared": "*",
+		"@types/node": "^20.10.6",
+		"electron": "^38.8.6",
+		"electron-builder": "^26.8.1",
+		"typescript": "^5.3.3"
+	},
+	"build": {
+		"appId": "com.jingles.legacysync",
+		"productName": "Jingles Legacy Sync",
+		"electronVersion": "38.8.6",
+		"directories": {
+			"output": "release"
+		},
+		"files": [
+			"dist/**/*",
+			"ui/**/*",
+			"package.json"
+		],
+		"win": {
+			"target": [
+				"nsis",
+				"portable"
+			]
+		},
+		"nsis": {
+			"oneClick": true,
+			"perMachine": false
+		}
+	}
+}

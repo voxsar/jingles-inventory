@@ -69,8 +69,8 @@ export function createApp() {
 			credentials: true,
 		})
 	);
-	// Mounted before the global JSON parser so the route can accept larger
-	// sync payloads with its own body limit.
+	// Mounted before the global JSON parser so the desktop legacy-sync app can
+	// push larger payloads (the router has its own body limit).
 	app.use('/api/legacy-sync', legacySyncRoutes);
 
 	app.use(express.json());

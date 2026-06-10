@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Jingles Legacy Sync</title>
+<style>
+	:root { color-scheme: dark; }
+	* { box-sizing: border-box; }
+	body {
+		margin: 0; padding: 16px 20px; font: 13px/1.5 'Segoe UI', system-ui, sans-serif;
+		background: #14151f; color: #d7d9e3;
+	}
+	h1 { font-size: 16px; margin: 0 0 4px; color: #fff; }
+	h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #8a8fa8; margin: 18px 0 8px; }
+	.status-bar {
+		display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+		padding: 10px 12px; background: #1d1f2e; border: 1px solid #2c2f45; border-radius: 8px; margin-top: 10px;
+	}
+	.pill { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+	.pill.ok { background: #143d2a; color: #5fd49a; }
+	.pill.warn { background: #463a14; color: #e9c356; }
+	.pill.bad { background: #461a1a; color: #ee8181; }
+	.pill.busy { background: #1d3046; color: #6fb3f0; }
+	.muted { color: #8a8fa8; }
+	form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; }
+	label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: #9aa0ba; }
+	input, select {
+		background: #11121b; color: #e7e9f4; border: 1px solid #32364f; border-radius: 6px; padding: 6px 8px; font-size: 13px;
+	}
+	input:focus, select:focus { outline: 1px solid #5a62dc; }
+	.span2 { grid-column: span 2; }
+	.row { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+	button {
+		background: #5a62dc; color: #fff; border: 0; border-radius: 6px; padding: 7px 14px;
+		font-size: 13px; font-weight: 600; cursor: pointer;
+	}
+	button.secondary { background: #2c2f45; color: #c9cce0; }
+	button.danger { background: #6b2330; }
+	button:disabled { opacity: .5; cursor: default; }
+	.check { flex-direction: row; align-items: center; gap: 6px; margin-top: 16px; }
+	#log {
+		background: #0d0e15; border: 1px solid #2c2f45; border-radius: 8px; padding: 10px 12px;
+		height: 230px; overflow-y: auto; white-space: pre-wrap; font: 12px/1.6 Consolas, monospace; color: #aab0c8;
+	}
+</style>
+</head>
+<body>
+	<h1>Jingles Legacy Sync</h1>
+	<div class="muted">Reads the legacy POS database directly with SELECT queries and pushes changes into the new inventory system.</div>
+
+	<div class="status-bar">
+		<span id="statePill" class="pill warn">Loading…</span>
+		<span id="lastRun" class="muted"></span>
+		<span id="nextRun" class="muted"></span>
+	</div>
+
+	<h2>Legacy database (desktop MSSQL server)</h2>
+	<form id="form" onsubmit="return false;">
+		<label>Dialect
+			<select id="dialect">
+				<option value="mssql">MSSQL (original POS)</option>
+				<option value="mysql">MySQL (converted copy)</option>
+			</select>
+		</label>
+		<label>Host<input id="dbHost" placeholder="localhost" /></label>
+		<label>Port<input id="dbPort" type="number" placeholder="1433" /></label>
+		<label>Database<input id="dbName" placeholder="inventory" /></label>
+		<label>User<input id="dbUser" /></label>
+		<label>Password<input id="dbPassword" type="password" /></label>
+		<label>Schema (MSSQL)<input id="dbSchema" placeholder="dbo" /></label>
+		<label>Sync every (minutes)<input id="interval" type="number" min="1" placeholder="5" /></label>
+
+		<label class="span2">New system URL<input id="serverUrl" placeholder="https://inventory.example.com" /></label>
+		<label class="span2">Sync token<input id="serverToken" type="password" placeholder="JINGLES_LEGACY_SYNC_TOKEN value" /></label>
+	</form>
+
+	<div class="row">
+		<label class="check"><input type="checkbox" id="autoSync" /> Sync automatically</label>
+		<span style="flex:1"></span>
+		<button id="saveBtn">Save settings</button>
+		<button id="syncBtn" class="secondary">Sync now</button>
+		<button id="fullBtn" class="secondary">Full re-sync</button>
+		<button id="resetBtn" class="danger" title="Clears local change detection; next cycle re-sends everything">Reset state</button>
+	</div>
+
+	<h2>Activity</h2>
+	<div id="log"></div>
+
+<script>
+	const api = window.legacySync;
+	const $ = (id) => document.getElementById(id);
+
+	function fillForm(config) {
+		$('dialect').value = config.legacyDatabase.dialect;
+		$('dbHost').value = config.legacyDatabase.host ?? '';
+		$('dbPort').value = config.legacyDatabase.port ?? '';
+		$('dbName').value = config.legacyDatabase.database ?? '';
+		$('dbUser').value = config.legacyDatabase.user ?? '';
+		$('dbPassword').value = config.legacyDatabase.password ?? '';
+		$('dbSchema').value = config.legacyDatabase.schema ?? 'dbo';
+		$('interval').value = config.intervalMinutes ?? 5;
+		$('serverUrl').value = config.server.baseUrl ?? '';
+		$('serverToken').value = config.server.token ?? '';
+		$('autoSync').checked = config.autoSync !== false;
+	}
+
+	function readForm() {
+		return {
+			autoSync: $('autoSync').checked,
+			intervalMinutes: Number($('interval').value) || 5,
+			legacyDatabase: {
+				dialect: $('dialect').value,
+				host: $('dbHost').value.trim(),
+				port: Number($('dbPort').value) || undefined,
+				database: $('dbName').value.trim(),
+				user: $('dbUser').value.trim(),
+				password: $('dbPassword').value,
+				schema: $('dbSchema').value.trim() || 'dbo',
+			},
+			server: {
+				baseUrl: $('serverUrl').value.trim(),
+				token: $('serverToken').value.trim(),
+			},
+		};
+	}
+
+	function renderStatus(status) {
+		const pill = $('statePill');
+		if (status.syncRunning) { pill.className = 'pill busy'; pill.textContent = 'Syncing…'; }
+		else if (!status.configured) { pill.className = 'pill warn'; pill.textContent = 'Not configured'; }
+		else if (status.lastCycle?.error) { pill.className = 'pill bad'; pill.textContent = 'Last sync failed'; }
+		else if (status.autoSync) { pill.className = 'pill ok'; pill.textContent = `Auto-sync every ${status.intervalMinutes} min`; }
+		else { pill.className = 'pill warn'; pill.textContent = 'Auto-sync off'; }
+
+		$('lastRun').textContent = status.lastCycle
+			? `Last: ${status.lastCycle.error ? 'failed — ' + status.lastCycle.error : status.lastCycle.message} (${new Date(status.lastCycle.at).toLocaleTimeString()})`
+			: 'No runs yet.';
+		$('nextRun').textContent = status.nextRunAt && status.autoSync && !status.syncRunning
+			? `Next: ${new Date(status.nextRunAt).toLocaleTimeString()}`
+			: '';
+		$('syncBtn').disabled = status.syncRunning;
+		$('fullBtn').disabled = status.syncRunning;
+	}
+
+	function appendLog(line) {
+		const log = $('log');
+		log.textContent += (log.textContent ? '\n' : '') + line;
+		log.scrollTop = log.scrollHeight;
+	}
+
+	(async () => {
+		fillForm(await api.getConfig());
+		renderStatus(await api.getStatus());
+		(await api.getLog()).forEach(appendLog);
+		api.onLog(appendLog);
+		api.onStatus(renderStatus);
+	})();
+
+	$('saveBtn').addEventListener('click', async () => {
+		fillForm(await api.saveConfig(readForm()));
+		renderStatus(await api.getStatus());
+	});
+	$('syncBtn').addEventListener('click', async () => {
+		await api.saveConfig(readForm());
+		renderStatus(await api.syncNow(false));
+	});
+	$('fullBtn').addEventListener('click', async () => {
+		await api.saveConfig(readForm());
+		renderStatus(await api.syncNow(true));
+	});
+	$('resetBtn').addEventListener('click', async () => {
+		await api.resetState();
+	});
+</script>
+</body>
+</html>

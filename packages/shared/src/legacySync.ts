@@ -1,6 +1,7 @@
-// Payload contract between the legacy desktop sync agent (packages/sync-agent)
-// and the backend /api/legacy-sync endpoints. All legacy primary keys travel
-// as strings so MSSQL bigint values survive JSON round-trips.
+// Row shapes used by the legacy desktop sync: the backend SELECTs these
+// directly from the legacy POS database (MSSQL, or a MySQL copy) and applies
+// them through the legacy-sync service. All legacy primary keys travel as
+// strings so MSSQL bigint values survive serialization.
 
 export interface LegacySyncSupplierRow {
 	supplierId: string;

@@ -20,8 +20,8 @@ function dimToMetres(value: number | null | undefined, fallbackM: number): numbe
 	return value > 5 ? value * CM2M : value;
 }
 
-const DEFAULT_FLOOR_LENGTH = 30; // metres, used when a zone has no recorded size
-const DEFAULT_FLOOR_WIDTH = 20;
+const DEFAULT_FLOOR_LENGTH = 16; // metres, used when a zone has no recorded size
+const DEFAULT_FLOOR_WIDTH = 12;
 const STOREY_HEIGHT = 4;         // metres between stacked floors in the overview
 const OVERVIEW_GAP = 8;          // metres between branch columns in the overview
 
@@ -198,6 +198,22 @@ let aframeLoaded = false;
 function ensureAframe(): Promise<void> {
 	if (aframeLoaded) return Promise.resolve();
 	return import('aframe').then(() => {
+		const AFRAME = (window as any).AFRAME;
+		// Entities with a `billboard` attribute turn to face the camera every frame
+		// so their text stays readable from any viewing angle.
+		if (AFRAME && !AFRAME.components.billboard) {
+			AFRAME.registerComponent('billboard', {
+				init(this: any) {
+					this.camWorldPos = new AFRAME.THREE.Vector3();
+				},
+				tick(this: any) {
+					const camera = this.el.sceneEl?.camera;
+					if (!camera) return;
+					camera.getWorldPosition(this.camWorldPos);
+					this.el.object3D.lookAt(this.camWorldPos);
+				},
+			});
+		}
 		aframeLoaded = true;
 	});
 }
@@ -223,6 +239,7 @@ function ShelfBoard({ w, d, y, shelfId }: { w: number; d: number; y: number; she
 function Post({ cx, cz, h }: { cx: number; cz: number; h: number }) {
 	return (
 		<a-box
+			data-rack-hit=""
 			position={`${cx} ${h / 2} ${cz}`}
 			width="0.04"
 			height={String(h)}
@@ -288,6 +305,7 @@ const RackEntity = memo(function RackEntity({
 
 			{/* Back brace */}
 			<a-box
+				data-rack-hit=""
 				position={`0 ${h - 0.02} ${-hd}`}
 				width={String(w)}
 				height="0.04"
@@ -314,13 +332,14 @@ const RackEntity = memo(function RackEntity({
 				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.06} ${si * levelH + 0.15} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
 			) : null)}
 
-			{/* Name label */}
+			{/* Name label — billboarded so it always faces the camera */}
 			<a-text
+				billboard=""
 				value={rack.name}
 				position={`0 ${h + 0.3} 0`}
 				align="center"
 				color="#FFFFFF"
-				scale="0.5 0.5 0.5"
+				scale="0.6 0.6 0.6"
 				width="3"
 			/>
 
@@ -347,7 +366,7 @@ const RackEntity = memo(function RackEntity({
 							color={colour}
 							roughness="0.7"
 						>
-							<a-text value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 0 ${bd / 2 + 0.01}`} align="center" color="#333" scale="0.15 0.15 0.15" width="4" />
+							<a-text billboard="" value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 ${bh / 2 + 0.07} 0`} align="center" color="#FFFFFF" scale="0.2 0.2 0.2" width="4" />
 						</a-box>
 					);
 				});
@@ -359,6 +378,7 @@ const RackEntity = memo(function RackEntity({
 				return prods.map((rec, ri) => (
 					<a-box
 						key={rec.id}
+						data-product-id={rec.id}
 						position={`${-w / 2 + 0.15 + ri * 0.28} ${boardTop(si) + 0.09} ${d / 4}`}
 						width="0.18"
 						height="0.18"
@@ -366,7 +386,7 @@ const RackEntity = memo(function RackEntity({
 						color={PRODUCT_COLOUR}
 						roughness="0.6"
 					>
-						<a-text value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.16 0" align="center" color="#0E5953" scale="0.2 0.2 0.2" width="4" />
+						<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.18 0" align="center" color="#BFFFF4" scale="0.2 0.2 0.2" width="4" />
 					</a-box>
 				));
 			})}
@@ -412,7 +432,7 @@ const FloorBox = memo(function FloorBox({
 			color={selectedBoxId === box.id ? SELECTED_COLOUR : '#C47A3A'}
 			roughness="0.8"
 		>
-			<a-text value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 0 ${bd / 2 + 0.01}`} align="center" color="#222" scale="0.2 0.2 0.2" width="3" />
+			<a-text billboard="" value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 ${bh / 2 + 0.08} 0`} align="center" color="#FFFFFF" scale="0.25 0.25 0.25" width="3" />
 		</a-box>
 	);
 });
@@ -437,7 +457,7 @@ const GridPlane = memo(function GridPlane({ w, d, gridSize }: { w: number; d: nu
 const FloorSlab = memo(function FloorSlab({ w, d }: { w: number; d: number }) {
 	return (
 		<a-entity>
-			<a-box position="0 -0.05 0" width={String(w)} height="0.1" depth={String(d)} color={FLOOR_COLOUR} roughness="0.9" />
+			<a-box data-floor-click="" position="0 -0.05 0" width={String(w)} height="0.1" depth={String(d)} color={FLOOR_COLOUR} roughness="0.9" />
 			<a-box position={`0 0.15 ${-d / 2}`} width={String(w)} height="0.3" depth="0.06" color={WALL_COLOUR} opacity="0.85" transparent="true" />
 			<a-box position={`0 0.15 ${d / 2}`} width={String(w)} height="0.3" depth="0.06" color={WALL_COLOUR} opacity="0.85" transparent="true" />
 			<a-box position={`${-w / 2} 0.15 0`} width="0.06" height="0.3" depth={String(d)} color={WALL_COLOUR} opacity="0.85" transparent="true" />
@@ -524,8 +544,29 @@ export default function WarehouseVisualizerPage() {
 		};
 	}, []); // reads only from refs – stable forever
 
-	// ── Double-click tracking ─────────────────────────────────────────────────
-	const lastClickRef = useRef<{ rackId: string | null; time: number }>({ rackId: null, time: 0 });
+	// ── Fly the camera to look at a world-space point from `dist` metres away ─
+	const focusCameraOn = useCallback((target: { x: number; y: number; z: number }, dist: number) => {
+		const cam = camRef.current;
+		// Approach along the current horizontal camera→target direction so the
+		// view swings as little as possible.
+		let dx = cam.camPos.x - target.x;
+		let dz = cam.camPos.z - target.z;
+		const hLen = Math.sqrt(dx * dx + dz * dz);
+		if (hLen < 0.001) { dx = 0; dz = 1; } else { dx /= hLen; dz /= hLen; }
+		const eye = clampCamPos({
+			x: target.x + dx * dist,
+			y: Math.max(1.2, target.y + dist * 0.35),
+			z: target.z + dz * dist,
+		});
+		const vx = target.x - eye.x;
+		const vy = target.y - eye.y;
+		const vz = target.z - eye.z;
+		const hDist = Math.sqrt(vx * vx + vz * vz) || 0.001;
+		setCamPos(eye);
+		// A-Frame yaw 0 faces −Z, so aim with the negated direction vector
+		setCamYaw(((Math.atan2(-vx, -vz) * 180) / Math.PI + 360) % 360);
+		setCamPitch(Math.max(-85, Math.min(85, (Math.atan2(vy, hDist) * 180) / Math.PI)));
+	}, [clampCamPos]);
 
 	// ── Derived camera position & rotation strings ────────────────────────────
 	const camPosStr = `${camPos.x.toFixed(2)} ${camPos.y.toFixed(2)} ${camPos.z.toFixed(2)}`;
@@ -756,7 +797,8 @@ export default function WarehouseVisualizerPage() {
 	}, [selectedRack, clampCamPos]);
 
 	// ── Mouse drag: look around (left/middle) or pan (right/Alt) ─────────────
-	const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; mode: 'look' | 'pan' }>({ active: false, lastX: 0, lastY: 0, mode: 'look' });
+	// `moved` accumulates pointer travel so click handlers can ignore drag-ends.
+	const dragRef = useRef<{ active: boolean; lastX: number; lastY: number; moved: number; mode: 'look' | 'pan' }>({ active: false, lastX: 0, lastY: 0, moved: 0, mode: 'look' });
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -780,7 +822,7 @@ export default function WarehouseVisualizerPage() {
 
 			function onMouseDown(e: MouseEvent) {
 				const mode: 'look' | 'pan' = (e.button === 2 || (e.button === 0 && e.altKey)) ? 'pan' : 'look';
-				dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, mode };
+				dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, moved: 0, mode };
 				e.preventDefault();
 			}
 
@@ -790,6 +832,7 @@ export default function WarehouseVisualizerPage() {
 				const dy = e.clientY - dragRef.current.lastY;
 				dragRef.current.lastX = e.clientX;
 				dragRef.current.lastY = e.clientY;
+				dragRef.current.moved += Math.abs(dx) + Math.abs(dy);
 				if (dragRef.current.mode === 'look') {
 					// drag right = look right (positive yaw change)
 					setCamYaw(v => (v - dx * 0.4 + 360) % 360);
@@ -856,31 +899,49 @@ export default function WarehouseVisualizerPage() {
 		};
 	}, [clampCamPos, aframeReady]);
 
-	// ── Click → select box/rack · double-click → centre view on rack ─────────
+	// ── Click → select & fly the camera to the rack / shelf / box ────────────
 	const sceneRef = useRef<HTMLElement & EventTarget>(null);
 	useEffect(() => {
 		const scene = sceneRef.current;
 		if (!scene) return;
 		function handler(e: Event) {
 			const ce = e as CustomEvent;
-			const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
+			// Only handle the A-Frame cursor's synthetic click (its detail carries
+			// the raycaster intersection); the browser's native click on the canvas
+			// arrives with a numeric detail and must be ignored or it would
+			// immediately undo the selection.
+			if (!ce.detail || typeof ce.detail !== 'object') return;
+			// The cursor emits the click on both the hit entity (which bubbles
+			// here) and the scene itself — process only the scene's own copy.
+			if (e.target !== scene) return;
+			// A click that ends a look/pan drag is not a selection
+			if (dragRef.current.moved > 6) return;
+
+			const intersection = ce.detail.intersection as
+				| { point?: { x: number; y: number; z: number }; object?: { el?: HTMLElement } }
+				| undefined;
+			const el = intersection?.object?.el;
+			const point = intersection?.point;
 			let rackId: string | null = null;
 			let shelfId: string | null = null;
 			let boxId: string | null = null;
+			let productId: string | null = null;
 			if (el) {
 				let node: HTMLElement | null = el;
 				while (node) {
 					const bid = node.getAttribute('data-box-id');
 					if (bid && !boxId) boxId = bid;
+					const pid = node.getAttribute('data-product-id');
+					if (pid && !productId) productId = pid;
 					const sid = node.getAttribute('data-shelf-id');
-					if (sid && sid !== '') shelfId = sid;
+					if (sid && sid !== '' && !shelfId) shelfId = sid;
 					const rid = node.getAttribute('data-rack-id');
 					if (rid) { rackId = rid; break; }
 					node = node.parentElement;
 				}
 			}
 
-			// Box click: show its contents, and select the parent rack when present
+			// Box click: show its contents, select the parent rack, zoom to the box
 			if (boxId) {
 				let found: IStorageBox | null = null;
 				for (const list of Object.values(shelfBoxes)) {
@@ -890,64 +951,50 @@ export default function WarehouseVisualizerPage() {
 				if (!found) found = floorBoxes.find(b => b.id === boxId) ?? null;
 				setSelectedBox(found);
 				if (rackId) setSelectedRack(rackId);
-				lastClickRef.current = { rackId: boxId, time: Date.now() };
+				if (point) focusCameraOn(point, 2.2);
 				return;
 			}
 
-			const now = Date.now();
-			const isDoubleClick =
-				(rackId !== null || shelfId !== null) &&
-				now - lastClickRef.current.time < 400 &&
-				(lastClickRef.current.rackId === rackId || lastClickRef.current.rackId === shelfId);
-			lastClickRef.current = { rackId: shelfId || rackId, time: now };
-
-			if (isDoubleClick && shelfId) {
-				// Find the parent rack to select it (no camera movement)
-				for (const [rid, rshelves] of Object.entries(rackShelves)) {
-					if (rshelves.findIndex(s => s.id === shelfId) !== -1) {
-						setSelectedRack(rid);
-						break;
-					}
-				}
+			// Loose product click: zoom right up to the product
+			if (productId) {
+				setSelectedBox(null);
+				if (rackId) setSelectedRack(rackId);
+				if (point) focusCameraOn(point, 1.6);
 				return;
 			}
 
-			if (isDoubleClick && rackId) {
-				// Centre view on rack: look at it and move closer
-				const p = rackPosRef.current[rackId];
-				if (p) {
-					const cam = camRef.current;
-					const rackH = 1.0; // approximate rack centre height
-					const dx = p.x - cam.camPos.x;
-					const dy = rackH - cam.camPos.y;
-					const dz = p.z - cam.camPos.z;
-					const hDist = Math.sqrt(dx * dx + dz * dz);
-					const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-					// A-Frame yaw 0 faces −Z, so aim with the negated direction vector
-					const newYaw = ((Math.atan2(-dx, -dz) * 180) / Math.PI + 360) % 360;
-					const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
-					// Move camera to 5 m away from the rack
-					const moveDist = Math.max(0, totalDist - 5);
-					const newPos = {
-						x: cam.camPos.x + (dx / totalDist) * moveDist,
-						y: Math.max(1.5, cam.camPos.y + (dy / totalDist) * moveDist),
-						z: cam.camPos.z + (dz / totalDist) * moveDist,
-					};
-					setCamPos(clampCamPos(newPos));
-					setCamYaw(newYaw);
-					setCamPitch(Math.max(-85, Math.min(85, newPitch)));
-				}
+			// Shelf board click: select the parent rack, zoom to that shelf level
+			if (shelfId && rackId) {
+				setSelectedBox(null);
 				setSelectedRack(rackId);
+				if (point) focusCameraOn(point, 2.8);
 				return;
 			}
 
-			// Just select rack, don't change view
+			// Rack frame click: select and frame the whole rack
+			if (rackId) {
+				setSelectedBox(null);
+				setSelectedRack(rackId);
+				const p = rackPosRef.current[rackId];
+				const rack = racks.find(r => r.id === rackId);
+				if (viewMode === 'single' && p && rack) {
+					const rw = Math.max(dimToMetres(rack.widthCm, 1.0), 0.4);
+					const rh = Math.max(dimToMetres(rack.heightCm, 2.0), 0.5);
+					focusCameraOn({ x: p.x, y: rh / 2, z: p.z }, Math.max(3, Math.max(rw, rh) * 1.6));
+				} else if (point) {
+					// Overview mode (or unknown position): aim at the clicked spot
+					focusCameraOn(point, 5);
+				}
+				return;
+			}
+
+			// Clicked the floor or empty space: deselect
 			setSelectedBox(null);
-			if (rackId) { setSelectedRack(rackId); } else { setSelectedRack(null); }
+			setSelectedRack(null);
 		}
 		scene.addEventListener('click', handler);
 		return () => scene.removeEventListener('click', handler);
-	}, [aframeReady, clampCamPos, rackShelves, shelfBoxes, floorBoxes]);
+	}, [aframeReady, viewMode, racks, focusCameraOn, shelfBoxes, floorBoxes]);
 
 	// ── Move rack helper (saves to DB) ────────────────────────────────────────
 	const moveRack = useCallback((dx: number, dz: number) => {
@@ -978,26 +1025,11 @@ export default function WarehouseVisualizerPage() {
 	const focusOnRack = useCallback((rackId: string) => {
 		const p = rackPos[rackId];
 		if (!p) return;
-		const cam = camRef.current;
-		const rackH = 1.0;
-		const dx = p.x - cam.camPos.x;
-		const dy = rackH - cam.camPos.y;
-		const dz = p.z - cam.camPos.z;
-		const hDist = Math.sqrt(dx * dx + dz * dz);
-		const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-		// A-Frame yaw 0 faces −Z, so aim with the negated direction vector
-		const newYaw = ((Math.atan2(-dx, -dz) * 180) / Math.PI + 360) % 360;
-		const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
-		const moveDist = Math.max(0, totalDist - 4);
-		const newPos = {
-			x: cam.camPos.x + (dx / (totalDist || 1)) * moveDist,
-			y: Math.max(1.5, cam.camPos.y + (dy / (totalDist || 1)) * moveDist),
-			z: cam.camPos.z + (dz / (totalDist || 1)) * moveDist,
-		};
-		setCamPos(clampCamPos(newPos));
-		setCamYaw(newYaw);
-		setCamPitch(Math.max(-85, Math.min(85, newPitch)));
-	}, [rackPos, clampCamPos]);
+		const rack = racks.find(r => r.id === rackId);
+		const rw = rack ? Math.max(dimToMetres(rack.widthCm, 1.0), 0.4) : 1.0;
+		const rh = rack ? Math.max(dimToMetres(rack.heightCm, 2.0), 0.5) : 2.0;
+		focusCameraOn({ x: p.x, y: rh / 2, z: p.z }, Math.max(3, Math.max(rw, rh) * 1.6));
+	}, [rackPos, racks, focusCameraOn]);
 
 	// ── Load all-floors overview data ─────────────────────────────────────────
 	const loadOverview = useCallback(async () => {
@@ -1246,7 +1278,7 @@ export default function WarehouseVisualizerPage() {
 					<span className="text-gray-400 text-xs italic">
 						{viewMode === 'overview'
 							? 'WASD=move · Q/E=down/up · Drag to look · Right/Alt-drag to pan · Scroll zoom'
-							: 'WASD=move · Q/E=down/up · Drag to look · Scroll zoom · Click a box for contents · Double-click rack to centre'}
+							: 'WASD=move · Q/E=down/up · Drag to look · Scroll zoom · Click a rack/shelf/box to focus on it'}
 					</span>
 				)}
 
@@ -1323,9 +1355,12 @@ export default function WarehouseVisualizerPage() {
 						ref={sceneRef as any}
 						embedded
 						style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
-						renderer="antialias: true; colorManagement: true;"
+						renderer="antialias: true; colorManagement: true; alpha: false"
 						vr-mode-ui="enabled: false"
+						xr-mode-ui="enabled: false"
 						background="color: #1a1a2e"
+						cursor="rayOrigin: mouse; fuse: false"
+						raycaster="objects: [data-rack-hit], [data-shelf-id], [data-box-id], [data-product-id], [data-floor-click]"
 					>
 						<a-light type="ambient" color="#ffffff" intensity="0.5" />
 						<a-light type="directional" color="#ffffff" intensity="0.8" position="5 10 5" />
@@ -1337,14 +1372,7 @@ export default function WarehouseVisualizerPage() {
 							rotation={camRotStr}
 							look-controls="enabled: false"
 							wasd-controls="enabled: false"
-						>
-							<a-cursor
-								color="#FFD700"
-								opacity="0.8"
-								scale="0.5 0.5 0.5"
-								raycaster="objects: [data-rack-id], [data-box-id]"
-							/>
-						</a-camera>
+						/>
 
 						<a-sky color="#1a1a2e" />
 
@@ -1369,6 +1397,7 @@ export default function WarehouseVisualizerPage() {
 								{/* Empty-floor hint */}
 								{!floorLoading && racks.length === 0 && floorBoxes.length === 0 && (
 									<a-text
+										billboard=""
 										value="No racks or boxes in this zone yet"
 										position="0 1.5 0"
 										align="center"
@@ -1414,6 +1443,7 @@ export default function WarehouseVisualizerPage() {
 								{floorProducts.map((rec, i) => (
 									<a-box
 										key={rec.id}
+										data-product-id={rec.id}
 										position={`${-floorW / 2 + 1 + (i % 20) * 0.6} 0.125 ${floorD / 2 - 2.4 - Math.floor(i / 20) * 0.6}`}
 										width="0.25"
 										height="0.25"
@@ -1421,7 +1451,7 @@ export default function WarehouseVisualizerPage() {
 										color={PRODUCT_COLOUR}
 										roughness="0.6"
 									>
-										<a-text value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.25 0" align="center" color="#0E5953" scale="0.25 0.25 0.25" width="4" />
+										<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.25 0" align="center" color="#BFFFF4" scale="0.25 0.25 0.25" width="4" />
 									</a-box>
 								))}
 							</>
@@ -1465,6 +1495,7 @@ export default function WarehouseVisualizerPage() {
 								{overviewLayout.branchLabels.map(label => (
 									<a-text
 										key={label.key}
+										billboard=""
 										value={label.name}
 										position={`${label.x} ${label.y + STOREY_HEIGHT} 0`}
 										align="center"

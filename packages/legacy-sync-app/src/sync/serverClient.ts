@@ -1,15 +1,21 @@
 import type { LegacySyncChunk, LegacySyncChunkResult } from '@jingles/shared';
-import type { AgentConfig } from './config';
-import { log } from './log';
+import type { AppConfig } from './config';
 
 const TOKEN_HEADER = 'x-jingles-legacy-sync-token';
 const MAX_ATTEMPTS = 3;
 
-async function request<T>(config: AgentConfig, method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(
+	config: AppConfig,
+	method: string,
+	path: string,
+	body: unknown,
+	onLog: (message: string) => void,
+): Promise<T> {
+	const baseUrl = config.server.baseUrl.replace(/\/+$/, '');
 	let lastError: unknown;
 	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
 		try {
-			const response = await fetch(`${config.server.baseUrl}${path}`, {
+			const response = await fetch(`${baseUrl}${path}`, {
 				method,
 				headers: {
 					'content-type': 'application/json',
@@ -33,25 +39,31 @@ async function request<T>(config: AgentConfig, method: string, path: string, bod
 			lastError = error;
 			if (error?.permanent || attempt === MAX_ATTEMPTS) break;
 			const delayMs = attempt * 5000;
-			log.warn(`${method} ${path} failed (attempt ${attempt}/${MAX_ATTEMPTS}): ${error?.message ?? error}. Retrying in ${delayMs / 1000}s.`);
+			onLog(`${method} ${path} failed (attempt ${attempt}/${MAX_ATTEMPTS}): ${error?.message ?? error}. Retrying in ${delayMs / 1000}s.`);
 			await new Promise((resolve) => setTimeout(resolve, delayMs));
 		}
 	}
 	throw lastError;
 }
 
-export async function openRun(config: AgentConfig): Promise<{ id: string }> {
-	return request(config, 'POST', '/api/legacy-sync/runs', { agentId: config.agentId });
+export async function openRun(config: AppConfig, onLog: (m: string) => void): Promise<{ id: string }> {
+	return request(config, 'POST', '/api/legacy-sync/runs', { agentId: config.agentId }, onLog);
 }
 
-export async function sendChunk(config: AgentConfig, runId: string, chunk: LegacySyncChunk): Promise<LegacySyncChunkResult> {
-	return request(config, 'POST', `/api/legacy-sync/runs/${runId}/chunks`, chunk);
+export async function sendChunk(
+	config: AppConfig,
+	runId: string,
+	chunk: LegacySyncChunk,
+	onLog: (m: string) => void,
+): Promise<LegacySyncChunkResult> {
+	return request(config, 'POST', `/api/legacy-sync/runs/${runId}/chunks`, chunk, onLog);
 }
 
 export async function completeRun(
-	config: AgentConfig,
+	config: AppConfig,
 	runId: string,
 	args: { status: string; stats?: unknown; errorMessage?: string },
+	onLog: (m: string) => void,
 ): Promise<void> {
-	await request(config, 'POST', `/api/legacy-sync/runs/${runId}/complete`, args);
+	await request(config, 'POST', `/api/legacy-sync/runs/${runId}/complete`, args, onLog);
 }
