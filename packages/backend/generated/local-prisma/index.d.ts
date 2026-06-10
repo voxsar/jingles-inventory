@@ -223,6 +223,36 @@ export type StatusOption = $Result.DefaultSelection<Prisma.$StatusOptionPayload>
  * 
  */
 export type DashboardStats = $Result.DefaultSelection<Prisma.$DashboardStatsPayload>
+/**
+ * Model VoucherBatch
+ * 
+ */
+export type VoucherBatch = $Result.DefaultSelection<Prisma.$VoucherBatchPayload>
+/**
+ * Model VoucherCode
+ * 
+ */
+export type VoucherCode = $Result.DefaultSelection<Prisma.$VoucherCodePayload>
+/**
+ * Model VoucherRedemption
+ * 
+ */
+export type VoucherRedemption = $Result.DefaultSelection<Prisma.$VoucherRedemptionPayload>
+/**
+ * Model LegacyEntityLink
+ * 
+ */
+export type LegacyEntityLink = $Result.DefaultSelection<Prisma.$LegacyEntityLinkPayload>
+/**
+ * Model LegacySyncRun
+ * 
+ */
+export type LegacySyncRun = $Result.DefaultSelection<Prisma.$LegacySyncRunPayload>
+/**
+ * Model VoucherRestriction
+ * 
+ */
+export type VoucherRestriction = $Result.DefaultSelection<Prisma.$VoucherRestrictionPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -766,6 +796,66 @@ export class PrismaClient<
     * ```
     */
   get dashboardStats(): Prisma.DashboardStatsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.voucherBatch`: Exposes CRUD operations for the **VoucherBatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VoucherBatches
+    * const voucherBatches = await prisma.voucherBatch.findMany()
+    * ```
+    */
+  get voucherBatch(): Prisma.VoucherBatchDelegate<ExtArgs>;
+
+  /**
+   * `prisma.voucherCode`: Exposes CRUD operations for the **VoucherCode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VoucherCodes
+    * const voucherCodes = await prisma.voucherCode.findMany()
+    * ```
+    */
+  get voucherCode(): Prisma.VoucherCodeDelegate<ExtArgs>;
+
+  /**
+   * `prisma.voucherRedemption`: Exposes CRUD operations for the **VoucherRedemption** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VoucherRedemptions
+    * const voucherRedemptions = await prisma.voucherRedemption.findMany()
+    * ```
+    */
+  get voucherRedemption(): Prisma.VoucherRedemptionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.legacyEntityLink`: Exposes CRUD operations for the **LegacyEntityLink** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LegacyEntityLinks
+    * const legacyEntityLinks = await prisma.legacyEntityLink.findMany()
+    * ```
+    */
+  get legacyEntityLink(): Prisma.LegacyEntityLinkDelegate<ExtArgs>;
+
+  /**
+   * `prisma.legacySyncRun`: Exposes CRUD operations for the **LegacySyncRun** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more LegacySyncRuns
+    * const legacySyncRuns = await prisma.legacySyncRun.findMany()
+    * ```
+    */
+  get legacySyncRun(): Prisma.LegacySyncRunDelegate<ExtArgs>;
+
+  /**
+   * `prisma.voucherRestriction`: Exposes CRUD operations for the **VoucherRestriction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VoucherRestrictions
+    * const voucherRestrictions = await prisma.voucherRestriction.findMany()
+    * ```
+    */
+  get voucherRestriction(): Prisma.VoucherRestrictionDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1248,7 +1338,13 @@ export namespace Prisma {
     SyncServerSequence: 'SyncServerSequence',
     SyncServerChange: 'SyncServerChange',
     StatusOption: 'StatusOption',
-    DashboardStats: 'DashboardStats'
+    DashboardStats: 'DashboardStats',
+    VoucherBatch: 'VoucherBatch',
+    VoucherCode: 'VoucherCode',
+    VoucherRedemption: 'VoucherRedemption',
+    LegacyEntityLink: 'LegacyEntityLink',
+    LegacySyncRun: 'LegacySyncRun',
+    VoucherRestriction: 'VoucherRestriction'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1264,7 +1360,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats"
+      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats" | "voucherBatch" | "voucherCode" | "voucherRedemption" | "legacyEntityLink" | "legacySyncRun" | "voucherRestriction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4208,6 +4304,426 @@ export namespace Prisma {
           }
         }
       }
+      VoucherBatch: {
+        payload: Prisma.$VoucherBatchPayload<ExtArgs>
+        fields: Prisma.VoucherBatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VoucherBatchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VoucherBatchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          findFirst: {
+            args: Prisma.VoucherBatchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VoucherBatchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          findMany: {
+            args: Prisma.VoucherBatchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>[]
+          }
+          create: {
+            args: Prisma.VoucherBatchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          createMany: {
+            args: Prisma.VoucherBatchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VoucherBatchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>[]
+          }
+          delete: {
+            args: Prisma.VoucherBatchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          update: {
+            args: Prisma.VoucherBatchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.VoucherBatchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VoucherBatchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VoucherBatchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherBatchPayload>
+          }
+          aggregate: {
+            args: Prisma.VoucherBatchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVoucherBatch>
+          }
+          groupBy: {
+            args: Prisma.VoucherBatchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VoucherBatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VoucherBatchCountArgs<ExtArgs>
+            result: $Utils.Optional<VoucherBatchCountAggregateOutputType> | number
+          }
+        }
+      }
+      VoucherCode: {
+        payload: Prisma.$VoucherCodePayload<ExtArgs>
+        fields: Prisma.VoucherCodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VoucherCodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VoucherCodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          findFirst: {
+            args: Prisma.VoucherCodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VoucherCodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          findMany: {
+            args: Prisma.VoucherCodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>[]
+          }
+          create: {
+            args: Prisma.VoucherCodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          createMany: {
+            args: Prisma.VoucherCodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VoucherCodeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>[]
+          }
+          delete: {
+            args: Prisma.VoucherCodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          update: {
+            args: Prisma.VoucherCodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          deleteMany: {
+            args: Prisma.VoucherCodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VoucherCodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VoucherCodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherCodePayload>
+          }
+          aggregate: {
+            args: Prisma.VoucherCodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVoucherCode>
+          }
+          groupBy: {
+            args: Prisma.VoucherCodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VoucherCodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VoucherCodeCountArgs<ExtArgs>
+            result: $Utils.Optional<VoucherCodeCountAggregateOutputType> | number
+          }
+        }
+      }
+      VoucherRedemption: {
+        payload: Prisma.$VoucherRedemptionPayload<ExtArgs>
+        fields: Prisma.VoucherRedemptionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VoucherRedemptionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VoucherRedemptionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          findFirst: {
+            args: Prisma.VoucherRedemptionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VoucherRedemptionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          findMany: {
+            args: Prisma.VoucherRedemptionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>[]
+          }
+          create: {
+            args: Prisma.VoucherRedemptionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          createMany: {
+            args: Prisma.VoucherRedemptionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VoucherRedemptionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>[]
+          }
+          delete: {
+            args: Prisma.VoucherRedemptionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          update: {
+            args: Prisma.VoucherRedemptionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          deleteMany: {
+            args: Prisma.VoucherRedemptionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VoucherRedemptionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VoucherRedemptionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRedemptionPayload>
+          }
+          aggregate: {
+            args: Prisma.VoucherRedemptionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVoucherRedemption>
+          }
+          groupBy: {
+            args: Prisma.VoucherRedemptionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VoucherRedemptionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VoucherRedemptionCountArgs<ExtArgs>
+            result: $Utils.Optional<VoucherRedemptionCountAggregateOutputType> | number
+          }
+        }
+      }
+      LegacyEntityLink: {
+        payload: Prisma.$LegacyEntityLinkPayload<ExtArgs>
+        fields: Prisma.LegacyEntityLinkFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LegacyEntityLinkFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LegacyEntityLinkFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          findFirst: {
+            args: Prisma.LegacyEntityLinkFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LegacyEntityLinkFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          findMany: {
+            args: Prisma.LegacyEntityLinkFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>[]
+          }
+          create: {
+            args: Prisma.LegacyEntityLinkCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          createMany: {
+            args: Prisma.LegacyEntityLinkCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LegacyEntityLinkCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>[]
+          }
+          delete: {
+            args: Prisma.LegacyEntityLinkDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          update: {
+            args: Prisma.LegacyEntityLinkUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          deleteMany: {
+            args: Prisma.LegacyEntityLinkDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LegacyEntityLinkUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.LegacyEntityLinkUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacyEntityLinkPayload>
+          }
+          aggregate: {
+            args: Prisma.LegacyEntityLinkAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLegacyEntityLink>
+          }
+          groupBy: {
+            args: Prisma.LegacyEntityLinkGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LegacyEntityLinkGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LegacyEntityLinkCountArgs<ExtArgs>
+            result: $Utils.Optional<LegacyEntityLinkCountAggregateOutputType> | number
+          }
+        }
+      }
+      LegacySyncRun: {
+        payload: Prisma.$LegacySyncRunPayload<ExtArgs>
+        fields: Prisma.LegacySyncRunFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.LegacySyncRunFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.LegacySyncRunFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          findFirst: {
+            args: Prisma.LegacySyncRunFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.LegacySyncRunFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          findMany: {
+            args: Prisma.LegacySyncRunFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>[]
+          }
+          create: {
+            args: Prisma.LegacySyncRunCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          createMany: {
+            args: Prisma.LegacySyncRunCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.LegacySyncRunCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>[]
+          }
+          delete: {
+            args: Prisma.LegacySyncRunDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          update: {
+            args: Prisma.LegacySyncRunUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          deleteMany: {
+            args: Prisma.LegacySyncRunDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.LegacySyncRunUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.LegacySyncRunUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$LegacySyncRunPayload>
+          }
+          aggregate: {
+            args: Prisma.LegacySyncRunAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateLegacySyncRun>
+          }
+          groupBy: {
+            args: Prisma.LegacySyncRunGroupByArgs<ExtArgs>
+            result: $Utils.Optional<LegacySyncRunGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.LegacySyncRunCountArgs<ExtArgs>
+            result: $Utils.Optional<LegacySyncRunCountAggregateOutputType> | number
+          }
+        }
+      }
+      VoucherRestriction: {
+        payload: Prisma.$VoucherRestrictionPayload<ExtArgs>
+        fields: Prisma.VoucherRestrictionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VoucherRestrictionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VoucherRestrictionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          findFirst: {
+            args: Prisma.VoucherRestrictionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VoucherRestrictionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          findMany: {
+            args: Prisma.VoucherRestrictionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>[]
+          }
+          create: {
+            args: Prisma.VoucherRestrictionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          createMany: {
+            args: Prisma.VoucherRestrictionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VoucherRestrictionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>[]
+          }
+          delete: {
+            args: Prisma.VoucherRestrictionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          update: {
+            args: Prisma.VoucherRestrictionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          deleteMany: {
+            args: Prisma.VoucherRestrictionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VoucherRestrictionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.VoucherRestrictionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VoucherRestrictionPayload>
+          }
+          aggregate: {
+            args: Prisma.VoucherRestrictionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVoucherRestriction>
+          }
+          groupBy: {
+            args: Prisma.VoucherRestrictionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VoucherRestrictionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VoucherRestrictionCountArgs<ExtArgs>
+            result: $Utils.Optional<VoucherRestrictionCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -4378,6 +4894,9 @@ export namespace Prisma {
     importJobs: number
     stockTransfersCreated: number
     stockTransfersApproved: number
+    voucherBatches: number
+    voucherCodes: number
+    voucherRedemptions: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4390,6 +4909,9 @@ export namespace Prisma {
     importJobs?: boolean | UserCountOutputTypeCountImportJobsArgs
     stockTransfersCreated?: boolean | UserCountOutputTypeCountStockTransfersCreatedArgs
     stockTransfersApproved?: boolean | UserCountOutputTypeCountStockTransfersApprovedArgs
+    voucherBatches?: boolean | UserCountOutputTypeCountVoucherBatchesArgs
+    voucherCodes?: boolean | UserCountOutputTypeCountVoucherCodesArgs
+    voucherRedemptions?: boolean | UserCountOutputTypeCountVoucherRedemptionsArgs
   }
 
   // Custom InputTypes
@@ -4464,6 +4986,27 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountStockTransfersApprovedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StockTransferWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVoucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherBatchWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVoucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVoucherRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRedemptionWhereInput
   }
 
 
@@ -4653,12 +5196,14 @@ export namespace Prisma {
     floors: number
     stockTransfersFrom: number
     stockTransfersTo: number
+    voucherRedemptions: number
   }
 
   export type BranchCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     floors?: boolean | BranchCountOutputTypeCountFloorsArgs
     stockTransfersFrom?: boolean | BranchCountOutputTypeCountStockTransfersFromArgs
     stockTransfersTo?: boolean | BranchCountOutputTypeCountStockTransfersToArgs
+    voucherRedemptions?: boolean | BranchCountOutputTypeCountVoucherRedemptionsArgs
   }
 
   // Custom InputTypes
@@ -4693,6 +5238,13 @@ export namespace Prisma {
     where?: StockTransferWhereInput
   }
 
+  /**
+   * BranchCountOutputType without action
+   */
+  export type BranchCountOutputTypeCountVoucherRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRedemptionWhereInput
+  }
+
 
   /**
    * Count Type SKUCountOutputType
@@ -4710,6 +5262,9 @@ export namespace Prisma {
     batches: number
     stockTransferLines: number
     skuVendors: number
+    voucherCodes: number
+    voucherRestrictions: number
+    voucherBatches: number
   }
 
   export type SKUCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4724,6 +5279,9 @@ export namespace Prisma {
     batches?: boolean | SKUCountOutputTypeCountBatchesArgs
     stockTransferLines?: boolean | SKUCountOutputTypeCountStockTransferLinesArgs
     skuVendors?: boolean | SKUCountOutputTypeCountSkuVendorsArgs
+    voucherCodes?: boolean | SKUCountOutputTypeCountVoucherCodesArgs
+    voucherRestrictions?: boolean | SKUCountOutputTypeCountVoucherRestrictionsArgs
+    voucherBatches?: boolean | SKUCountOutputTypeCountVoucherBatchesArgs
   }
 
   // Custom InputTypes
@@ -4812,6 +5370,27 @@ export namespace Prisma {
    */
   export type SKUCountOutputTypeCountSkuVendorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SKUVendorWhereInput
+  }
+
+  /**
+   * SKUCountOutputType without action
+   */
+  export type SKUCountOutputTypeCountVoucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
+  }
+
+  /**
+   * SKUCountOutputType without action
+   */
+  export type SKUCountOutputTypeCountVoucherRestrictionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRestrictionWhereInput
+  }
+
+  /**
+   * SKUCountOutputType without action
+   */
+  export type SKUCountOutputTypeCountVoucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherBatchWhereInput
   }
 
 
@@ -4947,6 +5526,9 @@ export namespace Prisma {
     batches: number
     stockTransferLines: number
     images: number
+    barcodes: number
+    voucherCodes: number
+    voucherBatches: number
   }
 
   export type SKUVariantCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4957,6 +5539,9 @@ export namespace Prisma {
     batches?: boolean | SKUVariantCountOutputTypeCountBatchesArgs
     stockTransferLines?: boolean | SKUVariantCountOutputTypeCountStockTransferLinesArgs
     images?: boolean | SKUVariantCountOutputTypeCountImagesArgs
+    barcodes?: boolean | SKUVariantCountOutputTypeCountBarcodesArgs
+    voucherCodes?: boolean | SKUVariantCountOutputTypeCountVoucherCodesArgs
+    voucherBatches?: boolean | SKUVariantCountOutputTypeCountVoucherBatchesArgs
   }
 
   // Custom InputTypes
@@ -5017,6 +5602,27 @@ export namespace Prisma {
    */
   export type SKUVariantCountOutputTypeCountImagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProductImageWhereInput
+  }
+
+  /**
+   * SKUVariantCountOutputType without action
+   */
+  export type SKUVariantCountOutputTypeCountBarcodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProductBarcodeWhereInput
+  }
+
+  /**
+   * SKUVariantCountOutputType without action
+   */
+  export type SKUVariantCountOutputTypeCountVoucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
+  }
+
+  /**
+   * SKUVariantCountOutputType without action
+   */
+  export type SKUVariantCountOutputTypeCountVoucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherBatchWhereInput
   }
 
 
@@ -5323,6 +5929,7 @@ export namespace Prisma {
     prnLines: number
     inventoryRecords: number
     stockTransferLines: number
+    voucherCodes: number
   }
 
   export type BatchCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5330,6 +5937,7 @@ export namespace Prisma {
     prnLines?: boolean | BatchCountOutputTypeCountPrnLinesArgs
     inventoryRecords?: boolean | BatchCountOutputTypeCountInventoryRecordsArgs
     stockTransferLines?: boolean | BatchCountOutputTypeCountStockTransferLinesArgs
+    voucherCodes?: boolean | BatchCountOutputTypeCountVoucherCodesArgs
   }
 
   // Custom InputTypes
@@ -5369,6 +5977,13 @@ export namespace Prisma {
    */
   export type BatchCountOutputTypeCountStockTransferLinesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StockTransferLineWhereInput
+  }
+
+  /**
+   * BatchCountOutputType without action
+   */
+  export type BatchCountOutputTypeCountVoucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
   }
 
 
@@ -5493,6 +6108,68 @@ export namespace Prisma {
    */
   export type ImportJobCountOutputTypeCountRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ImportRecordWhereInput
+  }
+
+
+  /**
+   * Count Type VoucherBatchCountOutputType
+   */
+
+  export type VoucherBatchCountOutputType = {
+    voucherCodes: number
+  }
+
+  export type VoucherBatchCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    voucherCodes?: boolean | VoucherBatchCountOutputTypeCountVoucherCodesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * VoucherBatchCountOutputType without action
+   */
+  export type VoucherBatchCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatchCountOutputType
+     */
+    select?: VoucherBatchCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * VoucherBatchCountOutputType without action
+   */
+  export type VoucherBatchCountOutputTypeCountVoucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
+  }
+
+
+  /**
+   * Count Type VoucherCodeCountOutputType
+   */
+
+  export type VoucherCodeCountOutputType = {
+    redemptions: number
+  }
+
+  export type VoucherCodeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    redemptions?: boolean | VoucherCodeCountOutputTypeCountRedemptionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * VoucherCodeCountOutputType without action
+   */
+  export type VoucherCodeCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCodeCountOutputType
+     */
+    select?: VoucherCodeCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * VoucherCodeCountOutputType without action
+   */
+  export type VoucherCodeCountOutputTypeCountRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRedemptionWhereInput
   }
 
 
@@ -5690,6 +6367,9 @@ export namespace Prisma {
     importJobs?: boolean | User$importJobsArgs<ExtArgs>
     stockTransfersCreated?: boolean | User$stockTransfersCreatedArgs<ExtArgs>
     stockTransfersApproved?: boolean | User$stockTransfersApprovedArgs<ExtArgs>
+    voucherBatches?: boolean | User$voucherBatchesArgs<ExtArgs>
+    voucherCodes?: boolean | User$voucherCodesArgs<ExtArgs>
+    voucherRedemptions?: boolean | User$voucherRedemptionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5725,6 +6405,9 @@ export namespace Prisma {
     importJobs?: boolean | User$importJobsArgs<ExtArgs>
     stockTransfersCreated?: boolean | User$stockTransfersCreatedArgs<ExtArgs>
     stockTransfersApproved?: boolean | User$stockTransfersApprovedArgs<ExtArgs>
+    voucherBatches?: boolean | User$voucherBatchesArgs<ExtArgs>
+    voucherCodes?: boolean | User$voucherCodesArgs<ExtArgs>
+    voucherRedemptions?: boolean | User$voucherRedemptionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5744,6 +6427,9 @@ export namespace Prisma {
       importJobs: Prisma.$ImportJobPayload<ExtArgs>[]
       stockTransfersCreated: Prisma.$StockTransferPayload<ExtArgs>[]
       stockTransfersApproved: Prisma.$StockTransferPayload<ExtArgs>[]
+      voucherBatches: Prisma.$VoucherBatchPayload<ExtArgs>[]
+      voucherCodes: Prisma.$VoucherCodePayload<ExtArgs>[]
+      voucherRedemptions: Prisma.$VoucherRedemptionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6127,6 +6813,9 @@ export namespace Prisma {
     importJobs<T extends User$importJobsArgs<ExtArgs> = {}>(args?: Subset<T, User$importJobsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ImportJobPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransfersCreated<T extends User$stockTransfersCreatedArgs<ExtArgs> = {}>(args?: Subset<T, User$stockTransfersCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransfersApproved<T extends User$stockTransfersApprovedArgs<ExtArgs> = {}>(args?: Subset<T, User$stockTransfersApprovedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany"> | Null>
+    voucherBatches<T extends User$voucherBatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$voucherBatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findMany"> | Null>
+    voucherCodes<T extends User$voucherCodesArgs<ExtArgs> = {}>(args?: Subset<T, User$voucherCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany"> | Null>
+    voucherRedemptions<T extends User$voucherRedemptionsArgs<ExtArgs> = {}>(args?: Subset<T, User$voucherRedemptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6671,6 +7360,66 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StockTransferScalarFieldEnum | StockTransferScalarFieldEnum[]
+  }
+
+  /**
+   * User.voucherBatches
+   */
+  export type User$voucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    where?: VoucherBatchWhereInput
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    cursor?: VoucherBatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
+  }
+
+  /**
+   * User.voucherCodes
+   */
+  export type User$voucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    cursor?: VoucherCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * User.voucherRedemptions
+   */
+  export type User$voucherRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    where?: VoucherRedemptionWhereInput
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    cursor?: VoucherRedemptionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
   }
 
   /**
@@ -11065,6 +11814,7 @@ export namespace Prisma {
     floors?: boolean | Branch$floorsArgs<ExtArgs>
     stockTransfersFrom?: boolean | Branch$stockTransfersFromArgs<ExtArgs>
     stockTransfersTo?: boolean | Branch$stockTransfersToArgs<ExtArgs>
+    voucherRedemptions?: boolean | Branch$voucherRedemptionsArgs<ExtArgs>
     _count?: boolean | BranchCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["branch"]>
 
@@ -11096,6 +11846,7 @@ export namespace Prisma {
     floors?: boolean | Branch$floorsArgs<ExtArgs>
     stockTransfersFrom?: boolean | Branch$stockTransfersFromArgs<ExtArgs>
     stockTransfersTo?: boolean | Branch$stockTransfersToArgs<ExtArgs>
+    voucherRedemptions?: boolean | Branch$voucherRedemptionsArgs<ExtArgs>
     _count?: boolean | BranchCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BranchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -11106,6 +11857,7 @@ export namespace Prisma {
       floors: Prisma.$FloorPayload<ExtArgs>[]
       stockTransfersFrom: Prisma.$StockTransferPayload<ExtArgs>[]
       stockTransfersTo: Prisma.$StockTransferPayload<ExtArgs>[]
+      voucherRedemptions: Prisma.$VoucherRedemptionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -11484,6 +12236,7 @@ export namespace Prisma {
     floors<T extends Branch$floorsArgs<ExtArgs> = {}>(args?: Subset<T, Branch$floorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FloorPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransfersFrom<T extends Branch$stockTransfersFromArgs<ExtArgs> = {}>(args?: Subset<T, Branch$stockTransfersFromArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransfersTo<T extends Branch$stockTransfersToArgs<ExtArgs> = {}>(args?: Subset<T, Branch$stockTransfersToArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferPayload<ExtArgs>, T, "findMany"> | Null>
+    voucherRedemptions<T extends Branch$voucherRedemptionsArgs<ExtArgs> = {}>(args?: Subset<T, Branch$voucherRedemptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -11894,6 +12647,26 @@ export namespace Prisma {
   }
 
   /**
+   * Branch.voucherRedemptions
+   */
+  export type Branch$voucherRedemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    where?: VoucherRedemptionWhereInput
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    cursor?: VoucherRedemptionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
+  }
+
+  /**
    * Branch without action
    */
   export type BranchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -11929,6 +12702,8 @@ export namespace Prisma {
     marginValue: number | null
     shelfLifeDays: number | null
     lowStockThreshold: number | null
+    voucherMinValue: number | null
+    voucherMaxValue: number | null
   }
 
   export type SKUSumAggregateOutputType = {
@@ -11940,6 +12715,8 @@ export namespace Prisma {
     marginValue: number | null
     shelfLifeDays: number | null
     lowStockThreshold: number | null
+    voucherMinValue: number | null
+    voucherMaxValue: number | null
   }
 
   export type SKUMinAggregateOutputType = {
@@ -11969,6 +12746,10 @@ export namespace Prisma {
     batchPricing: string | null
     batchReferencePricing: string | null
     lowStockThreshold: number | null
+    isVoucher: boolean | null
+    voucherValueType: string | null
+    voucherMinValue: number | null
+    voucherMaxValue: number | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -12001,6 +12782,10 @@ export namespace Prisma {
     batchPricing: string | null
     batchReferencePricing: string | null
     lowStockThreshold: number | null
+    isVoucher: boolean | null
+    voucherValueType: string | null
+    voucherMinValue: number | null
+    voucherMaxValue: number | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -12033,6 +12818,10 @@ export namespace Prisma {
     batchPricing: number
     batchReferencePricing: number
     lowStockThreshold: number
+    isVoucher: number
+    voucherValueType: number
+    voucherMinValue: number
+    voucherMaxValue: number
     isActive: number
     createdAt: number
     updatedAt: number
@@ -12049,6 +12838,8 @@ export namespace Prisma {
     marginValue?: true
     shelfLifeDays?: true
     lowStockThreshold?: true
+    voucherMinValue?: true
+    voucherMaxValue?: true
   }
 
   export type SKUSumAggregateInputType = {
@@ -12060,6 +12851,8 @@ export namespace Prisma {
     marginValue?: true
     shelfLifeDays?: true
     lowStockThreshold?: true
+    voucherMinValue?: true
+    voucherMaxValue?: true
   }
 
   export type SKUMinAggregateInputType = {
@@ -12089,6 +12882,10 @@ export namespace Prisma {
     batchPricing?: true
     batchReferencePricing?: true
     lowStockThreshold?: true
+    isVoucher?: true
+    voucherValueType?: true
+    voucherMinValue?: true
+    voucherMaxValue?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -12121,6 +12918,10 @@ export namespace Prisma {
     batchPricing?: true
     batchReferencePricing?: true
     lowStockThreshold?: true
+    isVoucher?: true
+    voucherValueType?: true
+    voucherMinValue?: true
+    voucherMaxValue?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -12153,6 +12954,10 @@ export namespace Prisma {
     batchPricing?: true
     batchReferencePricing?: true
     lowStockThreshold?: true
+    isVoucher?: true
+    voucherValueType?: true
+    voucherMinValue?: true
+    voucherMaxValue?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -12272,6 +13077,10 @@ export namespace Prisma {
     batchPricing: string | null
     batchReferencePricing: string | null
     lowStockThreshold: number | null
+    isVoucher: boolean
+    voucherValueType: string | null
+    voucherMinValue: number | null
+    voucherMaxValue: number | null
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -12323,6 +13132,10 @@ export namespace Prisma {
     batchPricing?: boolean
     batchReferencePricing?: boolean
     lowStockThreshold?: boolean
+    isVoucher?: boolean
+    voucherValueType?: boolean
+    voucherMinValue?: boolean
+    voucherMaxValue?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -12340,6 +13153,9 @@ export namespace Prisma {
     batches?: boolean | SKU$batchesArgs<ExtArgs>
     stockTransferLines?: boolean | SKU$stockTransferLinesArgs<ExtArgs>
     skuVendors?: boolean | SKU$skuVendorsArgs<ExtArgs>
+    voucherCodes?: boolean | SKU$voucherCodesArgs<ExtArgs>
+    voucherRestrictions?: boolean | SKU$voucherRestrictionsArgs<ExtArgs>
+    voucherBatches?: boolean | SKU$voucherBatchesArgs<ExtArgs>
     _count?: boolean | SKUCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sKU"]>
 
@@ -12370,6 +13186,10 @@ export namespace Prisma {
     batchPricing?: boolean
     batchReferencePricing?: boolean
     lowStockThreshold?: boolean
+    isVoucher?: boolean
+    voucherValueType?: boolean
+    voucherMinValue?: boolean
+    voucherMaxValue?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -12405,6 +13225,10 @@ export namespace Prisma {
     batchPricing?: boolean
     batchReferencePricing?: boolean
     lowStockThreshold?: boolean
+    isVoucher?: boolean
+    voucherValueType?: boolean
+    voucherMinValue?: boolean
+    voucherMaxValue?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -12425,6 +13249,9 @@ export namespace Prisma {
     batches?: boolean | SKU$batchesArgs<ExtArgs>
     stockTransferLines?: boolean | SKU$stockTransferLinesArgs<ExtArgs>
     skuVendors?: boolean | SKU$skuVendorsArgs<ExtArgs>
+    voucherCodes?: boolean | SKU$voucherCodesArgs<ExtArgs>
+    voucherRestrictions?: boolean | SKU$voucherRestrictionsArgs<ExtArgs>
+    voucherBatches?: boolean | SKU$voucherBatchesArgs<ExtArgs>
     _count?: boolean | SKUCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SKUIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12450,6 +13277,9 @@ export namespace Prisma {
       batches: Prisma.$BatchPayload<ExtArgs>[]
       stockTransferLines: Prisma.$StockTransferLinePayload<ExtArgs>[]
       skuVendors: Prisma.$SKUVendorPayload<ExtArgs>[]
+      voucherCodes: Prisma.$VoucherCodePayload<ExtArgs>[]
+      voucherRestrictions: Prisma.$VoucherRestrictionPayload<ExtArgs>[]
+      voucherBatches: Prisma.$VoucherBatchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -12478,6 +13308,10 @@ export namespace Prisma {
       batchPricing: string | null
       batchReferencePricing: string | null
       lowStockThreshold: number | null
+      isVoucher: boolean
+      voucherValueType: string | null
+      voucherMinValue: number | null
+      voucherMaxValue: number | null
       isActive: boolean
       createdAt: Date
       updatedAt: Date
@@ -12859,6 +13693,9 @@ export namespace Prisma {
     batches<T extends SKU$batchesArgs<ExtArgs> = {}>(args?: Subset<T, SKU$batchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BatchPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransferLines<T extends SKU$stockTransferLinesArgs<ExtArgs> = {}>(args?: Subset<T, SKU$stockTransferLinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferLinePayload<ExtArgs>, T, "findMany"> | Null>
     skuVendors<T extends SKU$skuVendorsArgs<ExtArgs> = {}>(args?: Subset<T, SKU$skuVendorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SKUVendorPayload<ExtArgs>, T, "findMany"> | Null>
+    voucherCodes<T extends SKU$voucherCodesArgs<ExtArgs> = {}>(args?: Subset<T, SKU$voucherCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany"> | Null>
+    voucherRestrictions<T extends SKU$voucherRestrictionsArgs<ExtArgs> = {}>(args?: Subset<T, SKU$voucherRestrictionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findMany"> | Null>
+    voucherBatches<T extends SKU$voucherBatchesArgs<ExtArgs> = {}>(args?: Subset<T, SKU$voucherBatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12914,6 +13751,10 @@ export namespace Prisma {
     readonly batchPricing: FieldRef<"SKU", 'String'>
     readonly batchReferencePricing: FieldRef<"SKU", 'String'>
     readonly lowStockThreshold: FieldRef<"SKU", 'Int'>
+    readonly isVoucher: FieldRef<"SKU", 'Boolean'>
+    readonly voucherValueType: FieldRef<"SKU", 'String'>
+    readonly voucherMinValue: FieldRef<"SKU", 'Float'>
+    readonly voucherMaxValue: FieldRef<"SKU", 'Float'>
     readonly isActive: FieldRef<"SKU", 'Boolean'>
     readonly createdAt: FieldRef<"SKU", 'DateTime'>
     readonly updatedAt: FieldRef<"SKU", 'DateTime'>
@@ -13480,6 +14321,66 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SKUVendorScalarFieldEnum | SKUVendorScalarFieldEnum[]
+  }
+
+  /**
+   * SKU.voucherCodes
+   */
+  export type SKU$voucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    cursor?: VoucherCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * SKU.voucherRestrictions
+   */
+  export type SKU$voucherRestrictionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    where?: VoucherRestrictionWhereInput
+    orderBy?: VoucherRestrictionOrderByWithRelationInput | VoucherRestrictionOrderByWithRelationInput[]
+    cursor?: VoucherRestrictionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherRestrictionScalarFieldEnum | VoucherRestrictionScalarFieldEnum[]
+  }
+
+  /**
+   * SKU.voucherBatches
+   */
+  export type SKU$voucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    where?: VoucherBatchWhereInput
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    cursor?: VoucherBatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
   }
 
   /**
@@ -19406,6 +20307,9 @@ export namespace Prisma {
     batches?: boolean | SKUVariant$batchesArgs<ExtArgs>
     stockTransferLines?: boolean | SKUVariant$stockTransferLinesArgs<ExtArgs>
     images?: boolean | SKUVariant$imagesArgs<ExtArgs>
+    barcodes?: boolean | SKUVariant$barcodesArgs<ExtArgs>
+    voucherCodes?: boolean | SKUVariant$voucherCodesArgs<ExtArgs>
+    voucherBatches?: boolean | SKUVariant$voucherBatchesArgs<ExtArgs>
     _count?: boolean | SKUVariantCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["sKUVariant"]>
 
@@ -19439,6 +20343,9 @@ export namespace Prisma {
     batches?: boolean | SKUVariant$batchesArgs<ExtArgs>
     stockTransferLines?: boolean | SKUVariant$stockTransferLinesArgs<ExtArgs>
     images?: boolean | SKUVariant$imagesArgs<ExtArgs>
+    barcodes?: boolean | SKUVariant$barcodesArgs<ExtArgs>
+    voucherCodes?: boolean | SKUVariant$voucherCodesArgs<ExtArgs>
+    voucherBatches?: boolean | SKUVariant$voucherBatchesArgs<ExtArgs>
     _count?: boolean | SKUVariantCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SKUVariantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -19456,6 +20363,9 @@ export namespace Prisma {
       batches: Prisma.$BatchPayload<ExtArgs>[]
       stockTransferLines: Prisma.$StockTransferLinePayload<ExtArgs>[]
       images: Prisma.$ProductImagePayload<ExtArgs>[]
+      barcodes: Prisma.$ProductBarcodePayload<ExtArgs>[]
+      voucherCodes: Prisma.$VoucherCodePayload<ExtArgs>[]
+      voucherBatches: Prisma.$VoucherBatchPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -19837,6 +20747,9 @@ export namespace Prisma {
     batches<T extends SKUVariant$batchesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$batchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BatchPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransferLines<T extends SKUVariant$stockTransferLinesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$stockTransferLinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferLinePayload<ExtArgs>, T, "findMany"> | Null>
     images<T extends SKUVariant$imagesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$imagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductImagePayload<ExtArgs>, T, "findMany"> | Null>
+    barcodes<T extends SKUVariant$barcodesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$barcodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductBarcodePayload<ExtArgs>, T, "findMany"> | Null>
+    voucherCodes<T extends SKUVariant$voucherCodesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$voucherCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany"> | Null>
+    voucherBatches<T extends SKUVariant$voucherBatchesArgs<ExtArgs> = {}>(args?: Subset<T, SKUVariant$voucherBatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -20326,6 +21239,66 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProductImageScalarFieldEnum | ProductImageScalarFieldEnum[]
+  }
+
+  /**
+   * SKUVariant.barcodes
+   */
+  export type SKUVariant$barcodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProductBarcode
+     */
+    select?: ProductBarcodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProductBarcodeInclude<ExtArgs> | null
+    where?: ProductBarcodeWhereInput
+    orderBy?: ProductBarcodeOrderByWithRelationInput | ProductBarcodeOrderByWithRelationInput[]
+    cursor?: ProductBarcodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProductBarcodeScalarFieldEnum | ProductBarcodeScalarFieldEnum[]
+  }
+
+  /**
+   * SKUVariant.voucherCodes
+   */
+  export type SKUVariant$voucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    cursor?: VoucherCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * SKUVariant.voucherBatches
+   */
+  export type SKUVariant$voucherBatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    where?: VoucherBatchWhereInput
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    cursor?: VoucherBatchWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
   }
 
   /**
@@ -22297,6 +23270,7 @@ export namespace Prisma {
   export type ProductBarcodeMinAggregateOutputType = {
     id: string | null
     skuId: string | null
+    variantId: string | null
     barcode: string | null
     barcodeType: string | null
     isDefault: boolean | null
@@ -22307,6 +23281,7 @@ export namespace Prisma {
   export type ProductBarcodeMaxAggregateOutputType = {
     id: string | null
     skuId: string | null
+    variantId: string | null
     barcode: string | null
     barcodeType: string | null
     isDefault: boolean | null
@@ -22317,6 +23292,7 @@ export namespace Prisma {
   export type ProductBarcodeCountAggregateOutputType = {
     id: number
     skuId: number
+    variantId: number
     barcode: number
     barcodeType: number
     isDefault: number
@@ -22329,6 +23305,7 @@ export namespace Prisma {
   export type ProductBarcodeMinAggregateInputType = {
     id?: true
     skuId?: true
+    variantId?: true
     barcode?: true
     barcodeType?: true
     isDefault?: true
@@ -22339,6 +23316,7 @@ export namespace Prisma {
   export type ProductBarcodeMaxAggregateInputType = {
     id?: true
     skuId?: true
+    variantId?: true
     barcode?: true
     barcodeType?: true
     isDefault?: true
@@ -22349,6 +23327,7 @@ export namespace Prisma {
   export type ProductBarcodeCountAggregateInputType = {
     id?: true
     skuId?: true
+    variantId?: true
     barcode?: true
     barcodeType?: true
     isDefault?: true
@@ -22432,6 +23411,7 @@ export namespace Prisma {
   export type ProductBarcodeGroupByOutputType = {
     id: string
     skuId: string
+    variantId: string | null
     barcode: string
     barcodeType: string
     isDefault: boolean
@@ -22459,28 +23439,33 @@ export namespace Prisma {
   export type ProductBarcodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     skuId?: boolean
+    variantId?: boolean
     barcode?: boolean
     barcodeType?: boolean
     isDefault?: boolean
     label?: boolean
     createdAt?: boolean
     sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | ProductBarcode$variantArgs<ExtArgs>
   }, ExtArgs["result"]["productBarcode"]>
 
   export type ProductBarcodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     skuId?: boolean
+    variantId?: boolean
     barcode?: boolean
     barcodeType?: boolean
     isDefault?: boolean
     label?: boolean
     createdAt?: boolean
     sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | ProductBarcode$variantArgs<ExtArgs>
   }, ExtArgs["result"]["productBarcode"]>
 
   export type ProductBarcodeSelectScalar = {
     id?: boolean
     skuId?: boolean
+    variantId?: boolean
     barcode?: boolean
     barcodeType?: boolean
     isDefault?: boolean
@@ -22490,19 +23475,23 @@ export namespace Prisma {
 
   export type ProductBarcodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | ProductBarcode$variantArgs<ExtArgs>
   }
   export type ProductBarcodeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | ProductBarcode$variantArgs<ExtArgs>
   }
 
   export type $ProductBarcodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ProductBarcode"
     objects: {
       sku: Prisma.$SKUPayload<ExtArgs>
+      variant: Prisma.$SKUVariantPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       skuId: string
+      variantId: string | null
       barcode: string
       barcodeType: string
       isDefault: boolean
@@ -22873,6 +23862,7 @@ export namespace Prisma {
   export interface Prisma__ProductBarcodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     sku<T extends SKUDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SKUDefaultArgs<ExtArgs>>): Prisma__SKUClient<$Result.GetResult<Prisma.$SKUPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    variant<T extends ProductBarcode$variantArgs<ExtArgs> = {}>(args?: Subset<T, ProductBarcode$variantArgs<ExtArgs>>): Prisma__SKUVariantClient<$Result.GetResult<Prisma.$SKUVariantPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -22904,6 +23894,7 @@ export namespace Prisma {
   interface ProductBarcodeFieldRefs {
     readonly id: FieldRef<"ProductBarcode", 'String'>
     readonly skuId: FieldRef<"ProductBarcode", 'String'>
+    readonly variantId: FieldRef<"ProductBarcode", 'String'>
     readonly barcode: FieldRef<"ProductBarcode", 'String'>
     readonly barcodeType: FieldRef<"ProductBarcode", 'String'>
     readonly isDefault: FieldRef<"ProductBarcode", 'Boolean'>
@@ -23222,6 +24213,21 @@ export namespace Prisma {
      * Filter which ProductBarcodes to delete
      */
     where?: ProductBarcodeWhereInput
+  }
+
+  /**
+   * ProductBarcode.variant
+   */
+  export type ProductBarcode$variantArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SKUVariant
+     */
+    select?: SKUVariantSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SKUVariantInclude<ExtArgs> | null
+    where?: SKUVariantWhereInput
   }
 
   /**
@@ -34908,6 +35914,7 @@ export namespace Prisma {
     prnLines?: boolean | Batch$prnLinesArgs<ExtArgs>
     inventoryRecords?: boolean | Batch$inventoryRecordsArgs<ExtArgs>
     stockTransferLines?: boolean | Batch$stockTransferLinesArgs<ExtArgs>
+    voucherCodes?: boolean | Batch$voucherCodesArgs<ExtArgs>
     _count?: boolean | BatchCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["batch"]>
 
@@ -34966,6 +35973,7 @@ export namespace Prisma {
     prnLines?: boolean | Batch$prnLinesArgs<ExtArgs>
     inventoryRecords?: boolean | Batch$inventoryRecordsArgs<ExtArgs>
     stockTransferLines?: boolean | Batch$stockTransferLinesArgs<ExtArgs>
+    voucherCodes?: boolean | Batch$voucherCodesArgs<ExtArgs>
     _count?: boolean | BatchCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -34984,6 +35992,7 @@ export namespace Prisma {
       prnLines: Prisma.$PRNLinePayload<ExtArgs>[]
       inventoryRecords: Prisma.$InventoryRecordPayload<ExtArgs>[]
       stockTransferLines: Prisma.$StockTransferLinePayload<ExtArgs>[]
+      voucherCodes: Prisma.$VoucherCodePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -35376,6 +36385,7 @@ export namespace Prisma {
     prnLines<T extends Batch$prnLinesArgs<ExtArgs> = {}>(args?: Subset<T, Batch$prnLinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PRNLinePayload<ExtArgs>, T, "findMany"> | Null>
     inventoryRecords<T extends Batch$inventoryRecordsArgs<ExtArgs> = {}>(args?: Subset<T, Batch$inventoryRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryRecordPayload<ExtArgs>, T, "findMany"> | Null>
     stockTransferLines<T extends Batch$stockTransferLinesArgs<ExtArgs> = {}>(args?: Subset<T, Batch$stockTransferLinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StockTransferLinePayload<ExtArgs>, T, "findMany"> | Null>
+    voucherCodes<T extends Batch$voucherCodesArgs<ExtArgs> = {}>(args?: Subset<T, Batch$voucherCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -35847,6 +36857,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StockTransferLineScalarFieldEnum | StockTransferLineScalarFieldEnum[]
+  }
+
+  /**
+   * Batch.voucherCodes
+   */
+  export type Batch$voucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    cursor?: VoucherCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
   }
 
   /**
@@ -50282,6 +51312,6470 @@ export namespace Prisma {
 
 
   /**
+   * Model VoucherBatch
+   */
+
+  export type AggregateVoucherBatch = {
+    _count: VoucherBatchCountAggregateOutputType | null
+    _avg: VoucherBatchAvgAggregateOutputType | null
+    _sum: VoucherBatchSumAggregateOutputType | null
+    _min: VoucherBatchMinAggregateOutputType | null
+    _max: VoucherBatchMaxAggregateOutputType | null
+  }
+
+  export type VoucherBatchAvgAggregateOutputType = {
+    quantity: number | null
+    generatedCount: number | null
+    defaultValue: number | null
+    expiryDays: number | null
+  }
+
+  export type VoucherBatchSumAggregateOutputType = {
+    quantity: number | null
+    generatedCount: number | null
+    defaultValue: number | null
+    expiryDays: number | null
+  }
+
+  export type VoucherBatchMinAggregateOutputType = {
+    id: string | null
+    skuId: string | null
+    variantId: string | null
+    batchName: string | null
+    prefix: string | null
+    quantity: number | null
+    generatedCount: number | null
+    defaultValue: number | null
+    expiryDays: number | null
+    defaultExpiresAt: Date | null
+    status: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type VoucherBatchMaxAggregateOutputType = {
+    id: string | null
+    skuId: string | null
+    variantId: string | null
+    batchName: string | null
+    prefix: string | null
+    quantity: number | null
+    generatedCount: number | null
+    defaultValue: number | null
+    expiryDays: number | null
+    defaultExpiresAt: Date | null
+    status: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type VoucherBatchCountAggregateOutputType = {
+    id: number
+    skuId: number
+    variantId: number
+    batchName: number
+    prefix: number
+    quantity: number
+    generatedCount: number
+    defaultValue: number
+    expiryDays: number
+    defaultExpiresAt: number
+    status: number
+    createdBy: number
+    createdAt: number
+    completedAt: number
+    _all: number
+  }
+
+
+  export type VoucherBatchAvgAggregateInputType = {
+    quantity?: true
+    generatedCount?: true
+    defaultValue?: true
+    expiryDays?: true
+  }
+
+  export type VoucherBatchSumAggregateInputType = {
+    quantity?: true
+    generatedCount?: true
+    defaultValue?: true
+    expiryDays?: true
+  }
+
+  export type VoucherBatchMinAggregateInputType = {
+    id?: true
+    skuId?: true
+    variantId?: true
+    batchName?: true
+    prefix?: true
+    quantity?: true
+    generatedCount?: true
+    defaultValue?: true
+    expiryDays?: true
+    defaultExpiresAt?: true
+    status?: true
+    createdBy?: true
+    createdAt?: true
+    completedAt?: true
+  }
+
+  export type VoucherBatchMaxAggregateInputType = {
+    id?: true
+    skuId?: true
+    variantId?: true
+    batchName?: true
+    prefix?: true
+    quantity?: true
+    generatedCount?: true
+    defaultValue?: true
+    expiryDays?: true
+    defaultExpiresAt?: true
+    status?: true
+    createdBy?: true
+    createdAt?: true
+    completedAt?: true
+  }
+
+  export type VoucherBatchCountAggregateInputType = {
+    id?: true
+    skuId?: true
+    variantId?: true
+    batchName?: true
+    prefix?: true
+    quantity?: true
+    generatedCount?: true
+    defaultValue?: true
+    expiryDays?: true
+    defaultExpiresAt?: true
+    status?: true
+    createdBy?: true
+    createdAt?: true
+    completedAt?: true
+    _all?: true
+  }
+
+  export type VoucherBatchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherBatch to aggregate.
+     */
+    where?: VoucherBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherBatches to fetch.
+     */
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VoucherBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VoucherBatches
+    **/
+    _count?: true | VoucherBatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VoucherBatchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VoucherBatchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VoucherBatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VoucherBatchMaxAggregateInputType
+  }
+
+  export type GetVoucherBatchAggregateType<T extends VoucherBatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateVoucherBatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVoucherBatch[P]>
+      : GetScalarType<T[P], AggregateVoucherBatch[P]>
+  }
+
+
+
+
+  export type VoucherBatchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherBatchWhereInput
+    orderBy?: VoucherBatchOrderByWithAggregationInput | VoucherBatchOrderByWithAggregationInput[]
+    by: VoucherBatchScalarFieldEnum[] | VoucherBatchScalarFieldEnum
+    having?: VoucherBatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VoucherBatchCountAggregateInputType | true
+    _avg?: VoucherBatchAvgAggregateInputType
+    _sum?: VoucherBatchSumAggregateInputType
+    _min?: VoucherBatchMinAggregateInputType
+    _max?: VoucherBatchMaxAggregateInputType
+  }
+
+  export type VoucherBatchGroupByOutputType = {
+    id: string
+    skuId: string
+    variantId: string | null
+    batchName: string
+    prefix: string | null
+    quantity: number
+    generatedCount: number
+    defaultValue: number
+    expiryDays: number | null
+    defaultExpiresAt: Date | null
+    status: string
+    createdBy: string | null
+    createdAt: Date
+    completedAt: Date | null
+    _count: VoucherBatchCountAggregateOutputType | null
+    _avg: VoucherBatchAvgAggregateOutputType | null
+    _sum: VoucherBatchSumAggregateOutputType | null
+    _min: VoucherBatchMinAggregateOutputType | null
+    _max: VoucherBatchMaxAggregateOutputType | null
+  }
+
+  type GetVoucherBatchGroupByPayload<T extends VoucherBatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VoucherBatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VoucherBatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VoucherBatchGroupByOutputType[P]>
+            : GetScalarType<T[P], VoucherBatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VoucherBatchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchName?: boolean
+    prefix?: boolean
+    quantity?: boolean
+    generatedCount?: boolean
+    defaultValue?: boolean
+    expiryDays?: boolean
+    defaultExpiresAt?: boolean
+    status?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherBatch$variantArgs<ExtArgs>
+    creator?: boolean | VoucherBatch$creatorArgs<ExtArgs>
+    voucherCodes?: boolean | VoucherBatch$voucherCodesArgs<ExtArgs>
+    _count?: boolean | VoucherBatchCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherBatch"]>
+
+  export type VoucherBatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchName?: boolean
+    prefix?: boolean
+    quantity?: boolean
+    generatedCount?: boolean
+    defaultValue?: boolean
+    expiryDays?: boolean
+    defaultExpiresAt?: boolean
+    status?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherBatch$variantArgs<ExtArgs>
+    creator?: boolean | VoucherBatch$creatorArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherBatch"]>
+
+  export type VoucherBatchSelectScalar = {
+    id?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchName?: boolean
+    prefix?: boolean
+    quantity?: boolean
+    generatedCount?: boolean
+    defaultValue?: boolean
+    expiryDays?: boolean
+    defaultExpiresAt?: boolean
+    status?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    completedAt?: boolean
+  }
+
+  export type VoucherBatchInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherBatch$variantArgs<ExtArgs>
+    creator?: boolean | VoucherBatch$creatorArgs<ExtArgs>
+    voucherCodes?: boolean | VoucherBatch$voucherCodesArgs<ExtArgs>
+    _count?: boolean | VoucherBatchCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type VoucherBatchIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherBatch$variantArgs<ExtArgs>
+    creator?: boolean | VoucherBatch$creatorArgs<ExtArgs>
+  }
+
+  export type $VoucherBatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VoucherBatch"
+    objects: {
+      sku: Prisma.$SKUPayload<ExtArgs>
+      variant: Prisma.$SKUVariantPayload<ExtArgs> | null
+      creator: Prisma.$UserPayload<ExtArgs> | null
+      voucherCodes: Prisma.$VoucherCodePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      skuId: string
+      variantId: string | null
+      batchName: string
+      prefix: string | null
+      quantity: number
+      generatedCount: number
+      defaultValue: number
+      expiryDays: number | null
+      defaultExpiresAt: Date | null
+      status: string
+      createdBy: string | null
+      createdAt: Date
+      completedAt: Date | null
+    }, ExtArgs["result"]["voucherBatch"]>
+    composites: {}
+  }
+
+  type VoucherBatchGetPayload<S extends boolean | null | undefined | VoucherBatchDefaultArgs> = $Result.GetResult<Prisma.$VoucherBatchPayload, S>
+
+  type VoucherBatchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VoucherBatchFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VoucherBatchCountAggregateInputType | true
+    }
+
+  export interface VoucherBatchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VoucherBatch'], meta: { name: 'VoucherBatch' } }
+    /**
+     * Find zero or one VoucherBatch that matches the filter.
+     * @param {VoucherBatchFindUniqueArgs} args - Arguments to find a VoucherBatch
+     * @example
+     * // Get one VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VoucherBatchFindUniqueArgs>(args: SelectSubset<T, VoucherBatchFindUniqueArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VoucherBatch that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VoucherBatchFindUniqueOrThrowArgs} args - Arguments to find a VoucherBatch
+     * @example
+     * // Get one VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VoucherBatchFindUniqueOrThrowArgs>(args: SelectSubset<T, VoucherBatchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VoucherBatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchFindFirstArgs} args - Arguments to find a VoucherBatch
+     * @example
+     * // Get one VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VoucherBatchFindFirstArgs>(args?: SelectSubset<T, VoucherBatchFindFirstArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VoucherBatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchFindFirstOrThrowArgs} args - Arguments to find a VoucherBatch
+     * @example
+     * // Get one VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VoucherBatchFindFirstOrThrowArgs>(args?: SelectSubset<T, VoucherBatchFindFirstOrThrowArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VoucherBatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VoucherBatches
+     * const voucherBatches = await prisma.voucherBatch.findMany()
+     * 
+     * // Get first 10 VoucherBatches
+     * const voucherBatches = await prisma.voucherBatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const voucherBatchWithIdOnly = await prisma.voucherBatch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VoucherBatchFindManyArgs>(args?: SelectSubset<T, VoucherBatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VoucherBatch.
+     * @param {VoucherBatchCreateArgs} args - Arguments to create a VoucherBatch.
+     * @example
+     * // Create one VoucherBatch
+     * const VoucherBatch = await prisma.voucherBatch.create({
+     *   data: {
+     *     // ... data to create a VoucherBatch
+     *   }
+     * })
+     * 
+     */
+    create<T extends VoucherBatchCreateArgs>(args: SelectSubset<T, VoucherBatchCreateArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VoucherBatches.
+     * @param {VoucherBatchCreateManyArgs} args - Arguments to create many VoucherBatches.
+     * @example
+     * // Create many VoucherBatches
+     * const voucherBatch = await prisma.voucherBatch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VoucherBatchCreateManyArgs>(args?: SelectSubset<T, VoucherBatchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VoucherBatches and returns the data saved in the database.
+     * @param {VoucherBatchCreateManyAndReturnArgs} args - Arguments to create many VoucherBatches.
+     * @example
+     * // Create many VoucherBatches
+     * const voucherBatch = await prisma.voucherBatch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VoucherBatches and only return the `id`
+     * const voucherBatchWithIdOnly = await prisma.voucherBatch.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VoucherBatchCreateManyAndReturnArgs>(args?: SelectSubset<T, VoucherBatchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a VoucherBatch.
+     * @param {VoucherBatchDeleteArgs} args - Arguments to delete one VoucherBatch.
+     * @example
+     * // Delete one VoucherBatch
+     * const VoucherBatch = await prisma.voucherBatch.delete({
+     *   where: {
+     *     // ... filter to delete one VoucherBatch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VoucherBatchDeleteArgs>(args: SelectSubset<T, VoucherBatchDeleteArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VoucherBatch.
+     * @param {VoucherBatchUpdateArgs} args - Arguments to update one VoucherBatch.
+     * @example
+     * // Update one VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VoucherBatchUpdateArgs>(args: SelectSubset<T, VoucherBatchUpdateArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VoucherBatches.
+     * @param {VoucherBatchDeleteManyArgs} args - Arguments to filter VoucherBatches to delete.
+     * @example
+     * // Delete a few VoucherBatches
+     * const { count } = await prisma.voucherBatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VoucherBatchDeleteManyArgs>(args?: SelectSubset<T, VoucherBatchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VoucherBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VoucherBatches
+     * const voucherBatch = await prisma.voucherBatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VoucherBatchUpdateManyArgs>(args: SelectSubset<T, VoucherBatchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VoucherBatch.
+     * @param {VoucherBatchUpsertArgs} args - Arguments to update or create a VoucherBatch.
+     * @example
+     * // Update or create a VoucherBatch
+     * const voucherBatch = await prisma.voucherBatch.upsert({
+     *   create: {
+     *     // ... data to create a VoucherBatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VoucherBatch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VoucherBatchUpsertArgs>(args: SelectSubset<T, VoucherBatchUpsertArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VoucherBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchCountArgs} args - Arguments to filter VoucherBatches to count.
+     * @example
+     * // Count the number of VoucherBatches
+     * const count = await prisma.voucherBatch.count({
+     *   where: {
+     *     // ... the filter for the VoucherBatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends VoucherBatchCountArgs>(
+      args?: Subset<T, VoucherBatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VoucherBatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VoucherBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VoucherBatchAggregateArgs>(args: Subset<T, VoucherBatchAggregateArgs>): Prisma.PrismaPromise<GetVoucherBatchAggregateType<T>>
+
+    /**
+     * Group by VoucherBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherBatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VoucherBatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VoucherBatchGroupByArgs['orderBy'] }
+        : { orderBy?: VoucherBatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VoucherBatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVoucherBatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VoucherBatch model
+   */
+  readonly fields: VoucherBatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VoucherBatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VoucherBatchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    sku<T extends SKUDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SKUDefaultArgs<ExtArgs>>): Prisma__SKUClient<$Result.GetResult<Prisma.$SKUPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    variant<T extends VoucherBatch$variantArgs<ExtArgs> = {}>(args?: Subset<T, VoucherBatch$variantArgs<ExtArgs>>): Prisma__SKUVariantClient<$Result.GetResult<Prisma.$SKUVariantPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    creator<T extends VoucherBatch$creatorArgs<ExtArgs> = {}>(args?: Subset<T, VoucherBatch$creatorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    voucherCodes<T extends VoucherBatch$voucherCodesArgs<ExtArgs> = {}>(args?: Subset<T, VoucherBatch$voucherCodesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VoucherBatch model
+   */ 
+  interface VoucherBatchFieldRefs {
+    readonly id: FieldRef<"VoucherBatch", 'String'>
+    readonly skuId: FieldRef<"VoucherBatch", 'String'>
+    readonly variantId: FieldRef<"VoucherBatch", 'String'>
+    readonly batchName: FieldRef<"VoucherBatch", 'String'>
+    readonly prefix: FieldRef<"VoucherBatch", 'String'>
+    readonly quantity: FieldRef<"VoucherBatch", 'Int'>
+    readonly generatedCount: FieldRef<"VoucherBatch", 'Int'>
+    readonly defaultValue: FieldRef<"VoucherBatch", 'Float'>
+    readonly expiryDays: FieldRef<"VoucherBatch", 'Int'>
+    readonly defaultExpiresAt: FieldRef<"VoucherBatch", 'DateTime'>
+    readonly status: FieldRef<"VoucherBatch", 'String'>
+    readonly createdBy: FieldRef<"VoucherBatch", 'String'>
+    readonly createdAt: FieldRef<"VoucherBatch", 'DateTime'>
+    readonly completedAt: FieldRef<"VoucherBatch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VoucherBatch findUnique
+   */
+  export type VoucherBatchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherBatch to fetch.
+     */
+    where: VoucherBatchWhereUniqueInput
+  }
+
+  /**
+   * VoucherBatch findUniqueOrThrow
+   */
+  export type VoucherBatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherBatch to fetch.
+     */
+    where: VoucherBatchWhereUniqueInput
+  }
+
+  /**
+   * VoucherBatch findFirst
+   */
+  export type VoucherBatchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherBatch to fetch.
+     */
+    where?: VoucherBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherBatches to fetch.
+     */
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherBatches.
+     */
+    cursor?: VoucherBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherBatches.
+     */
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherBatch findFirstOrThrow
+   */
+  export type VoucherBatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherBatch to fetch.
+     */
+    where?: VoucherBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherBatches to fetch.
+     */
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherBatches.
+     */
+    cursor?: VoucherBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherBatches.
+     */
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherBatch findMany
+   */
+  export type VoucherBatchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherBatches to fetch.
+     */
+    where?: VoucherBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherBatches to fetch.
+     */
+    orderBy?: VoucherBatchOrderByWithRelationInput | VoucherBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VoucherBatches.
+     */
+    cursor?: VoucherBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherBatches.
+     */
+    skip?: number
+    distinct?: VoucherBatchScalarFieldEnum | VoucherBatchScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherBatch create
+   */
+  export type VoucherBatchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VoucherBatch.
+     */
+    data: XOR<VoucherBatchCreateInput, VoucherBatchUncheckedCreateInput>
+  }
+
+  /**
+   * VoucherBatch createMany
+   */
+  export type VoucherBatchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VoucherBatches.
+     */
+    data: VoucherBatchCreateManyInput | VoucherBatchCreateManyInput[]
+  }
+
+  /**
+   * VoucherBatch createManyAndReturn
+   */
+  export type VoucherBatchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many VoucherBatches.
+     */
+    data: VoucherBatchCreateManyInput | VoucherBatchCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VoucherBatch update
+   */
+  export type VoucherBatchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VoucherBatch.
+     */
+    data: XOR<VoucherBatchUpdateInput, VoucherBatchUncheckedUpdateInput>
+    /**
+     * Choose, which VoucherBatch to update.
+     */
+    where: VoucherBatchWhereUniqueInput
+  }
+
+  /**
+   * VoucherBatch updateMany
+   */
+  export type VoucherBatchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VoucherBatches.
+     */
+    data: XOR<VoucherBatchUpdateManyMutationInput, VoucherBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which VoucherBatches to update
+     */
+    where?: VoucherBatchWhereInput
+  }
+
+  /**
+   * VoucherBatch upsert
+   */
+  export type VoucherBatchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VoucherBatch to update in case it exists.
+     */
+    where: VoucherBatchWhereUniqueInput
+    /**
+     * In case the VoucherBatch found by the `where` argument doesn't exist, create a new VoucherBatch with this data.
+     */
+    create: XOR<VoucherBatchCreateInput, VoucherBatchUncheckedCreateInput>
+    /**
+     * In case the VoucherBatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VoucherBatchUpdateInput, VoucherBatchUncheckedUpdateInput>
+  }
+
+  /**
+   * VoucherBatch delete
+   */
+  export type VoucherBatchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    /**
+     * Filter which VoucherBatch to delete.
+     */
+    where: VoucherBatchWhereUniqueInput
+  }
+
+  /**
+   * VoucherBatch deleteMany
+   */
+  export type VoucherBatchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherBatches to delete
+     */
+    where?: VoucherBatchWhereInput
+  }
+
+  /**
+   * VoucherBatch.variant
+   */
+  export type VoucherBatch$variantArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SKUVariant
+     */
+    select?: SKUVariantSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SKUVariantInclude<ExtArgs> | null
+    where?: SKUVariantWhereInput
+  }
+
+  /**
+   * VoucherBatch.creator
+   */
+  export type VoucherBatch$creatorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * VoucherBatch.voucherCodes
+   */
+  export type VoucherBatch$voucherCodesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    cursor?: VoucherCodeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherBatch without action
+   */
+  export type VoucherBatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model VoucherCode
+   */
+
+  export type AggregateVoucherCode = {
+    _count: VoucherCodeCountAggregateOutputType | null
+    _avg: VoucherCodeAvgAggregateOutputType | null
+    _sum: VoucherCodeSumAggregateOutputType | null
+    _min: VoucherCodeMinAggregateOutputType | null
+    _max: VoucherCodeMaxAggregateOutputType | null
+  }
+
+  export type VoucherCodeAvgAggregateOutputType = {
+    initialValue: number | null
+    currentBalance: number | null
+  }
+
+  export type VoucherCodeSumAggregateOutputType = {
+    initialValue: number | null
+    currentBalance: number | null
+  }
+
+  export type VoucherCodeMinAggregateOutputType = {
+    id: string | null
+    code: string | null
+    skuId: string | null
+    variantId: string | null
+    batchId: string | null
+    voucherBatchId: string | null
+    initialValue: number | null
+    currentBalance: number | null
+    currency: string | null
+    status: string | null
+    issuedAt: Date | null
+    expiresAt: Date | null
+    activatedAt: Date | null
+    fullyRedeemedAt: Date | null
+    customerId: string | null
+    orderId: string | null
+    purchaseReference: string | null
+    notes: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VoucherCodeMaxAggregateOutputType = {
+    id: string | null
+    code: string | null
+    skuId: string | null
+    variantId: string | null
+    batchId: string | null
+    voucherBatchId: string | null
+    initialValue: number | null
+    currentBalance: number | null
+    currency: string | null
+    status: string | null
+    issuedAt: Date | null
+    expiresAt: Date | null
+    activatedAt: Date | null
+    fullyRedeemedAt: Date | null
+    customerId: string | null
+    orderId: string | null
+    purchaseReference: string | null
+    notes: string | null
+    createdBy: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VoucherCodeCountAggregateOutputType = {
+    id: number
+    code: number
+    skuId: number
+    variantId: number
+    batchId: number
+    voucherBatchId: number
+    initialValue: number
+    currentBalance: number
+    currency: number
+    status: number
+    issuedAt: number
+    expiresAt: number
+    activatedAt: number
+    fullyRedeemedAt: number
+    customerId: number
+    orderId: number
+    purchaseReference: number
+    notes: number
+    createdBy: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type VoucherCodeAvgAggregateInputType = {
+    initialValue?: true
+    currentBalance?: true
+  }
+
+  export type VoucherCodeSumAggregateInputType = {
+    initialValue?: true
+    currentBalance?: true
+  }
+
+  export type VoucherCodeMinAggregateInputType = {
+    id?: true
+    code?: true
+    skuId?: true
+    variantId?: true
+    batchId?: true
+    voucherBatchId?: true
+    initialValue?: true
+    currentBalance?: true
+    currency?: true
+    status?: true
+    issuedAt?: true
+    expiresAt?: true
+    activatedAt?: true
+    fullyRedeemedAt?: true
+    customerId?: true
+    orderId?: true
+    purchaseReference?: true
+    notes?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VoucherCodeMaxAggregateInputType = {
+    id?: true
+    code?: true
+    skuId?: true
+    variantId?: true
+    batchId?: true
+    voucherBatchId?: true
+    initialValue?: true
+    currentBalance?: true
+    currency?: true
+    status?: true
+    issuedAt?: true
+    expiresAt?: true
+    activatedAt?: true
+    fullyRedeemedAt?: true
+    customerId?: true
+    orderId?: true
+    purchaseReference?: true
+    notes?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VoucherCodeCountAggregateInputType = {
+    id?: true
+    code?: true
+    skuId?: true
+    variantId?: true
+    batchId?: true
+    voucherBatchId?: true
+    initialValue?: true
+    currentBalance?: true
+    currency?: true
+    status?: true
+    issuedAt?: true
+    expiresAt?: true
+    activatedAt?: true
+    fullyRedeemedAt?: true
+    customerId?: true
+    orderId?: true
+    purchaseReference?: true
+    notes?: true
+    createdBy?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type VoucherCodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherCode to aggregate.
+     */
+    where?: VoucherCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherCodes to fetch.
+     */
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VoucherCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VoucherCodes
+    **/
+    _count?: true | VoucherCodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VoucherCodeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VoucherCodeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VoucherCodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VoucherCodeMaxAggregateInputType
+  }
+
+  export type GetVoucherCodeAggregateType<T extends VoucherCodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateVoucherCode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVoucherCode[P]>
+      : GetScalarType<T[P], AggregateVoucherCode[P]>
+  }
+
+
+
+
+  export type VoucherCodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherCodeWhereInput
+    orderBy?: VoucherCodeOrderByWithAggregationInput | VoucherCodeOrderByWithAggregationInput[]
+    by: VoucherCodeScalarFieldEnum[] | VoucherCodeScalarFieldEnum
+    having?: VoucherCodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VoucherCodeCountAggregateInputType | true
+    _avg?: VoucherCodeAvgAggregateInputType
+    _sum?: VoucherCodeSumAggregateInputType
+    _min?: VoucherCodeMinAggregateInputType
+    _max?: VoucherCodeMaxAggregateInputType
+  }
+
+  export type VoucherCodeGroupByOutputType = {
+    id: string
+    code: string
+    skuId: string
+    variantId: string | null
+    batchId: string | null
+    voucherBatchId: string | null
+    initialValue: number
+    currentBalance: number
+    currency: string
+    status: string
+    issuedAt: Date
+    expiresAt: Date | null
+    activatedAt: Date | null
+    fullyRedeemedAt: Date | null
+    customerId: string | null
+    orderId: string | null
+    purchaseReference: string | null
+    notes: string | null
+    createdBy: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: VoucherCodeCountAggregateOutputType | null
+    _avg: VoucherCodeAvgAggregateOutputType | null
+    _sum: VoucherCodeSumAggregateOutputType | null
+    _min: VoucherCodeMinAggregateOutputType | null
+    _max: VoucherCodeMaxAggregateOutputType | null
+  }
+
+  type GetVoucherCodeGroupByPayload<T extends VoucherCodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VoucherCodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VoucherCodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VoucherCodeGroupByOutputType[P]>
+            : GetScalarType<T[P], VoucherCodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VoucherCodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchId?: boolean
+    voucherBatchId?: boolean
+    initialValue?: boolean
+    currentBalance?: boolean
+    currency?: boolean
+    status?: boolean
+    issuedAt?: boolean
+    expiresAt?: boolean
+    activatedAt?: boolean
+    fullyRedeemedAt?: boolean
+    customerId?: boolean
+    orderId?: boolean
+    purchaseReference?: boolean
+    notes?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherCode$variantArgs<ExtArgs>
+    batch?: boolean | VoucherCode$batchArgs<ExtArgs>
+    voucherBatch?: boolean | VoucherCode$voucherBatchArgs<ExtArgs>
+    creator?: boolean | VoucherCode$creatorArgs<ExtArgs>
+    redemptions?: boolean | VoucherCode$redemptionsArgs<ExtArgs>
+    _count?: boolean | VoucherCodeCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherCode"]>
+
+  export type VoucherCodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchId?: boolean
+    voucherBatchId?: boolean
+    initialValue?: boolean
+    currentBalance?: boolean
+    currency?: boolean
+    status?: boolean
+    issuedAt?: boolean
+    expiresAt?: boolean
+    activatedAt?: boolean
+    fullyRedeemedAt?: boolean
+    customerId?: boolean
+    orderId?: boolean
+    purchaseReference?: boolean
+    notes?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherCode$variantArgs<ExtArgs>
+    batch?: boolean | VoucherCode$batchArgs<ExtArgs>
+    voucherBatch?: boolean | VoucherCode$voucherBatchArgs<ExtArgs>
+    creator?: boolean | VoucherCode$creatorArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherCode"]>
+
+  export type VoucherCodeSelectScalar = {
+    id?: boolean
+    code?: boolean
+    skuId?: boolean
+    variantId?: boolean
+    batchId?: boolean
+    voucherBatchId?: boolean
+    initialValue?: boolean
+    currentBalance?: boolean
+    currency?: boolean
+    status?: boolean
+    issuedAt?: boolean
+    expiresAt?: boolean
+    activatedAt?: boolean
+    fullyRedeemedAt?: boolean
+    customerId?: boolean
+    orderId?: boolean
+    purchaseReference?: boolean
+    notes?: boolean
+    createdBy?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type VoucherCodeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherCode$variantArgs<ExtArgs>
+    batch?: boolean | VoucherCode$batchArgs<ExtArgs>
+    voucherBatch?: boolean | VoucherCode$voucherBatchArgs<ExtArgs>
+    creator?: boolean | VoucherCode$creatorArgs<ExtArgs>
+    redemptions?: boolean | VoucherCode$redemptionsArgs<ExtArgs>
+    _count?: boolean | VoucherCodeCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type VoucherCodeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+    variant?: boolean | VoucherCode$variantArgs<ExtArgs>
+    batch?: boolean | VoucherCode$batchArgs<ExtArgs>
+    voucherBatch?: boolean | VoucherCode$voucherBatchArgs<ExtArgs>
+    creator?: boolean | VoucherCode$creatorArgs<ExtArgs>
+  }
+
+  export type $VoucherCodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VoucherCode"
+    objects: {
+      sku: Prisma.$SKUPayload<ExtArgs>
+      variant: Prisma.$SKUVariantPayload<ExtArgs> | null
+      batch: Prisma.$BatchPayload<ExtArgs> | null
+      voucherBatch: Prisma.$VoucherBatchPayload<ExtArgs> | null
+      creator: Prisma.$UserPayload<ExtArgs> | null
+      redemptions: Prisma.$VoucherRedemptionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      code: string
+      skuId: string
+      variantId: string | null
+      batchId: string | null
+      voucherBatchId: string | null
+      initialValue: number
+      currentBalance: number
+      currency: string
+      status: string
+      issuedAt: Date
+      expiresAt: Date | null
+      activatedAt: Date | null
+      fullyRedeemedAt: Date | null
+      customerId: string | null
+      orderId: string | null
+      purchaseReference: string | null
+      notes: string | null
+      createdBy: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["voucherCode"]>
+    composites: {}
+  }
+
+  type VoucherCodeGetPayload<S extends boolean | null | undefined | VoucherCodeDefaultArgs> = $Result.GetResult<Prisma.$VoucherCodePayload, S>
+
+  type VoucherCodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VoucherCodeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VoucherCodeCountAggregateInputType | true
+    }
+
+  export interface VoucherCodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VoucherCode'], meta: { name: 'VoucherCode' } }
+    /**
+     * Find zero or one VoucherCode that matches the filter.
+     * @param {VoucherCodeFindUniqueArgs} args - Arguments to find a VoucherCode
+     * @example
+     * // Get one VoucherCode
+     * const voucherCode = await prisma.voucherCode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VoucherCodeFindUniqueArgs>(args: SelectSubset<T, VoucherCodeFindUniqueArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VoucherCode that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VoucherCodeFindUniqueOrThrowArgs} args - Arguments to find a VoucherCode
+     * @example
+     * // Get one VoucherCode
+     * const voucherCode = await prisma.voucherCode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VoucherCodeFindUniqueOrThrowArgs>(args: SelectSubset<T, VoucherCodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VoucherCode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeFindFirstArgs} args - Arguments to find a VoucherCode
+     * @example
+     * // Get one VoucherCode
+     * const voucherCode = await prisma.voucherCode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VoucherCodeFindFirstArgs>(args?: SelectSubset<T, VoucherCodeFindFirstArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VoucherCode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeFindFirstOrThrowArgs} args - Arguments to find a VoucherCode
+     * @example
+     * // Get one VoucherCode
+     * const voucherCode = await prisma.voucherCode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VoucherCodeFindFirstOrThrowArgs>(args?: SelectSubset<T, VoucherCodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VoucherCodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VoucherCodes
+     * const voucherCodes = await prisma.voucherCode.findMany()
+     * 
+     * // Get first 10 VoucherCodes
+     * const voucherCodes = await prisma.voucherCode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const voucherCodeWithIdOnly = await prisma.voucherCode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VoucherCodeFindManyArgs>(args?: SelectSubset<T, VoucherCodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VoucherCode.
+     * @param {VoucherCodeCreateArgs} args - Arguments to create a VoucherCode.
+     * @example
+     * // Create one VoucherCode
+     * const VoucherCode = await prisma.voucherCode.create({
+     *   data: {
+     *     // ... data to create a VoucherCode
+     *   }
+     * })
+     * 
+     */
+    create<T extends VoucherCodeCreateArgs>(args: SelectSubset<T, VoucherCodeCreateArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VoucherCodes.
+     * @param {VoucherCodeCreateManyArgs} args - Arguments to create many VoucherCodes.
+     * @example
+     * // Create many VoucherCodes
+     * const voucherCode = await prisma.voucherCode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VoucherCodeCreateManyArgs>(args?: SelectSubset<T, VoucherCodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VoucherCodes and returns the data saved in the database.
+     * @param {VoucherCodeCreateManyAndReturnArgs} args - Arguments to create many VoucherCodes.
+     * @example
+     * // Create many VoucherCodes
+     * const voucherCode = await prisma.voucherCode.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VoucherCodes and only return the `id`
+     * const voucherCodeWithIdOnly = await prisma.voucherCode.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VoucherCodeCreateManyAndReturnArgs>(args?: SelectSubset<T, VoucherCodeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a VoucherCode.
+     * @param {VoucherCodeDeleteArgs} args - Arguments to delete one VoucherCode.
+     * @example
+     * // Delete one VoucherCode
+     * const VoucherCode = await prisma.voucherCode.delete({
+     *   where: {
+     *     // ... filter to delete one VoucherCode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VoucherCodeDeleteArgs>(args: SelectSubset<T, VoucherCodeDeleteArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VoucherCode.
+     * @param {VoucherCodeUpdateArgs} args - Arguments to update one VoucherCode.
+     * @example
+     * // Update one VoucherCode
+     * const voucherCode = await prisma.voucherCode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VoucherCodeUpdateArgs>(args: SelectSubset<T, VoucherCodeUpdateArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VoucherCodes.
+     * @param {VoucherCodeDeleteManyArgs} args - Arguments to filter VoucherCodes to delete.
+     * @example
+     * // Delete a few VoucherCodes
+     * const { count } = await prisma.voucherCode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VoucherCodeDeleteManyArgs>(args?: SelectSubset<T, VoucherCodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VoucherCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VoucherCodes
+     * const voucherCode = await prisma.voucherCode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VoucherCodeUpdateManyArgs>(args: SelectSubset<T, VoucherCodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VoucherCode.
+     * @param {VoucherCodeUpsertArgs} args - Arguments to update or create a VoucherCode.
+     * @example
+     * // Update or create a VoucherCode
+     * const voucherCode = await prisma.voucherCode.upsert({
+     *   create: {
+     *     // ... data to create a VoucherCode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VoucherCode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VoucherCodeUpsertArgs>(args: SelectSubset<T, VoucherCodeUpsertArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VoucherCodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeCountArgs} args - Arguments to filter VoucherCodes to count.
+     * @example
+     * // Count the number of VoucherCodes
+     * const count = await prisma.voucherCode.count({
+     *   where: {
+     *     // ... the filter for the VoucherCodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends VoucherCodeCountArgs>(
+      args?: Subset<T, VoucherCodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VoucherCodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VoucherCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VoucherCodeAggregateArgs>(args: Subset<T, VoucherCodeAggregateArgs>): Prisma.PrismaPromise<GetVoucherCodeAggregateType<T>>
+
+    /**
+     * Group by VoucherCode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherCodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VoucherCodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VoucherCodeGroupByArgs['orderBy'] }
+        : { orderBy?: VoucherCodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VoucherCodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVoucherCodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VoucherCode model
+   */
+  readonly fields: VoucherCodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VoucherCode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VoucherCodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    sku<T extends SKUDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SKUDefaultArgs<ExtArgs>>): Prisma__SKUClient<$Result.GetResult<Prisma.$SKUPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    variant<T extends VoucherCode$variantArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCode$variantArgs<ExtArgs>>): Prisma__SKUVariantClient<$Result.GetResult<Prisma.$SKUVariantPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    batch<T extends VoucherCode$batchArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCode$batchArgs<ExtArgs>>): Prisma__BatchClient<$Result.GetResult<Prisma.$BatchPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    voucherBatch<T extends VoucherCode$voucherBatchArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCode$voucherBatchArgs<ExtArgs>>): Prisma__VoucherBatchClient<$Result.GetResult<Prisma.$VoucherBatchPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    creator<T extends VoucherCode$creatorArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCode$creatorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    redemptions<T extends VoucherCode$redemptionsArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCode$redemptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VoucherCode model
+   */ 
+  interface VoucherCodeFieldRefs {
+    readonly id: FieldRef<"VoucherCode", 'String'>
+    readonly code: FieldRef<"VoucherCode", 'String'>
+    readonly skuId: FieldRef<"VoucherCode", 'String'>
+    readonly variantId: FieldRef<"VoucherCode", 'String'>
+    readonly batchId: FieldRef<"VoucherCode", 'String'>
+    readonly voucherBatchId: FieldRef<"VoucherCode", 'String'>
+    readonly initialValue: FieldRef<"VoucherCode", 'Float'>
+    readonly currentBalance: FieldRef<"VoucherCode", 'Float'>
+    readonly currency: FieldRef<"VoucherCode", 'String'>
+    readonly status: FieldRef<"VoucherCode", 'String'>
+    readonly issuedAt: FieldRef<"VoucherCode", 'DateTime'>
+    readonly expiresAt: FieldRef<"VoucherCode", 'DateTime'>
+    readonly activatedAt: FieldRef<"VoucherCode", 'DateTime'>
+    readonly fullyRedeemedAt: FieldRef<"VoucherCode", 'DateTime'>
+    readonly customerId: FieldRef<"VoucherCode", 'String'>
+    readonly orderId: FieldRef<"VoucherCode", 'String'>
+    readonly purchaseReference: FieldRef<"VoucherCode", 'String'>
+    readonly notes: FieldRef<"VoucherCode", 'String'>
+    readonly createdBy: FieldRef<"VoucherCode", 'String'>
+    readonly createdAt: FieldRef<"VoucherCode", 'DateTime'>
+    readonly updatedAt: FieldRef<"VoucherCode", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VoucherCode findUnique
+   */
+  export type VoucherCodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherCode to fetch.
+     */
+    where: VoucherCodeWhereUniqueInput
+  }
+
+  /**
+   * VoucherCode findUniqueOrThrow
+   */
+  export type VoucherCodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherCode to fetch.
+     */
+    where: VoucherCodeWhereUniqueInput
+  }
+
+  /**
+   * VoucherCode findFirst
+   */
+  export type VoucherCodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherCode to fetch.
+     */
+    where?: VoucherCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherCodes to fetch.
+     */
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherCodes.
+     */
+    cursor?: VoucherCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherCodes.
+     */
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherCode findFirstOrThrow
+   */
+  export type VoucherCodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherCode to fetch.
+     */
+    where?: VoucherCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherCodes to fetch.
+     */
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherCodes.
+     */
+    cursor?: VoucherCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherCodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherCodes.
+     */
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherCode findMany
+   */
+  export type VoucherCodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherCodes to fetch.
+     */
+    where?: VoucherCodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherCodes to fetch.
+     */
+    orderBy?: VoucherCodeOrderByWithRelationInput | VoucherCodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VoucherCodes.
+     */
+    cursor?: VoucherCodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherCodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherCodes.
+     */
+    skip?: number
+    distinct?: VoucherCodeScalarFieldEnum | VoucherCodeScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherCode create
+   */
+  export type VoucherCodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VoucherCode.
+     */
+    data: XOR<VoucherCodeCreateInput, VoucherCodeUncheckedCreateInput>
+  }
+
+  /**
+   * VoucherCode createMany
+   */
+  export type VoucherCodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VoucherCodes.
+     */
+    data: VoucherCodeCreateManyInput | VoucherCodeCreateManyInput[]
+  }
+
+  /**
+   * VoucherCode createManyAndReturn
+   */
+  export type VoucherCodeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many VoucherCodes.
+     */
+    data: VoucherCodeCreateManyInput | VoucherCodeCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VoucherCode update
+   */
+  export type VoucherCodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VoucherCode.
+     */
+    data: XOR<VoucherCodeUpdateInput, VoucherCodeUncheckedUpdateInput>
+    /**
+     * Choose, which VoucherCode to update.
+     */
+    where: VoucherCodeWhereUniqueInput
+  }
+
+  /**
+   * VoucherCode updateMany
+   */
+  export type VoucherCodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VoucherCodes.
+     */
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyInput>
+    /**
+     * Filter which VoucherCodes to update
+     */
+    where?: VoucherCodeWhereInput
+  }
+
+  /**
+   * VoucherCode upsert
+   */
+  export type VoucherCodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VoucherCode to update in case it exists.
+     */
+    where: VoucherCodeWhereUniqueInput
+    /**
+     * In case the VoucherCode found by the `where` argument doesn't exist, create a new VoucherCode with this data.
+     */
+    create: XOR<VoucherCodeCreateInput, VoucherCodeUncheckedCreateInput>
+    /**
+     * In case the VoucherCode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VoucherCodeUpdateInput, VoucherCodeUncheckedUpdateInput>
+  }
+
+  /**
+   * VoucherCode delete
+   */
+  export type VoucherCodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+    /**
+     * Filter which VoucherCode to delete.
+     */
+    where: VoucherCodeWhereUniqueInput
+  }
+
+  /**
+   * VoucherCode deleteMany
+   */
+  export type VoucherCodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherCodes to delete
+     */
+    where?: VoucherCodeWhereInput
+  }
+
+  /**
+   * VoucherCode.variant
+   */
+  export type VoucherCode$variantArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SKUVariant
+     */
+    select?: SKUVariantSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SKUVariantInclude<ExtArgs> | null
+    where?: SKUVariantWhereInput
+  }
+
+  /**
+   * VoucherCode.batch
+   */
+  export type VoucherCode$batchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Batch
+     */
+    select?: BatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BatchInclude<ExtArgs> | null
+    where?: BatchWhereInput
+  }
+
+  /**
+   * VoucherCode.voucherBatch
+   */
+  export type VoucherCode$voucherBatchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherBatch
+     */
+    select?: VoucherBatchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherBatchInclude<ExtArgs> | null
+    where?: VoucherBatchWhereInput
+  }
+
+  /**
+   * VoucherCode.creator
+   */
+  export type VoucherCode$creatorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * VoucherCode.redemptions
+   */
+  export type VoucherCode$redemptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    where?: VoucherRedemptionWhereInput
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    cursor?: VoucherRedemptionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherCode without action
+   */
+  export type VoucherCodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherCode
+     */
+    select?: VoucherCodeSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherCodeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model VoucherRedemption
+   */
+
+  export type AggregateVoucherRedemption = {
+    _count: VoucherRedemptionCountAggregateOutputType | null
+    _avg: VoucherRedemptionAvgAggregateOutputType | null
+    _sum: VoucherRedemptionSumAggregateOutputType | null
+    _min: VoucherRedemptionMinAggregateOutputType | null
+    _max: VoucherRedemptionMaxAggregateOutputType | null
+  }
+
+  export type VoucherRedemptionAvgAggregateOutputType = {
+    redeemedAmount: number | null
+    balanceBefore: number | null
+    balanceAfter: number | null
+  }
+
+  export type VoucherRedemptionSumAggregateOutputType = {
+    redeemedAmount: number | null
+    balanceBefore: number | null
+    balanceAfter: number | null
+  }
+
+  export type VoucherRedemptionMinAggregateOutputType = {
+    id: string | null
+    voucherCodeId: string | null
+    code: string | null
+    redeemedAmount: number | null
+    balanceBefore: number | null
+    balanceAfter: number | null
+    orderId: string | null
+    invoiceNumber: string | null
+    branchId: string | null
+    appliedToItems: string | null
+    redeemedBy: string | null
+    redeemedAt: Date | null
+    notes: string | null
+  }
+
+  export type VoucherRedemptionMaxAggregateOutputType = {
+    id: string | null
+    voucherCodeId: string | null
+    code: string | null
+    redeemedAmount: number | null
+    balanceBefore: number | null
+    balanceAfter: number | null
+    orderId: string | null
+    invoiceNumber: string | null
+    branchId: string | null
+    appliedToItems: string | null
+    redeemedBy: string | null
+    redeemedAt: Date | null
+    notes: string | null
+  }
+
+  export type VoucherRedemptionCountAggregateOutputType = {
+    id: number
+    voucherCodeId: number
+    code: number
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId: number
+    invoiceNumber: number
+    branchId: number
+    appliedToItems: number
+    redeemedBy: number
+    redeemedAt: number
+    notes: number
+    _all: number
+  }
+
+
+  export type VoucherRedemptionAvgAggregateInputType = {
+    redeemedAmount?: true
+    balanceBefore?: true
+    balanceAfter?: true
+  }
+
+  export type VoucherRedemptionSumAggregateInputType = {
+    redeemedAmount?: true
+    balanceBefore?: true
+    balanceAfter?: true
+  }
+
+  export type VoucherRedemptionMinAggregateInputType = {
+    id?: true
+    voucherCodeId?: true
+    code?: true
+    redeemedAmount?: true
+    balanceBefore?: true
+    balanceAfter?: true
+    orderId?: true
+    invoiceNumber?: true
+    branchId?: true
+    appliedToItems?: true
+    redeemedBy?: true
+    redeemedAt?: true
+    notes?: true
+  }
+
+  export type VoucherRedemptionMaxAggregateInputType = {
+    id?: true
+    voucherCodeId?: true
+    code?: true
+    redeemedAmount?: true
+    balanceBefore?: true
+    balanceAfter?: true
+    orderId?: true
+    invoiceNumber?: true
+    branchId?: true
+    appliedToItems?: true
+    redeemedBy?: true
+    redeemedAt?: true
+    notes?: true
+  }
+
+  export type VoucherRedemptionCountAggregateInputType = {
+    id?: true
+    voucherCodeId?: true
+    code?: true
+    redeemedAmount?: true
+    balanceBefore?: true
+    balanceAfter?: true
+    orderId?: true
+    invoiceNumber?: true
+    branchId?: true
+    appliedToItems?: true
+    redeemedBy?: true
+    redeemedAt?: true
+    notes?: true
+    _all?: true
+  }
+
+  export type VoucherRedemptionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherRedemption to aggregate.
+     */
+    where?: VoucherRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRedemptions to fetch.
+     */
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VoucherRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VoucherRedemptions
+    **/
+    _count?: true | VoucherRedemptionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VoucherRedemptionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VoucherRedemptionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VoucherRedemptionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VoucherRedemptionMaxAggregateInputType
+  }
+
+  export type GetVoucherRedemptionAggregateType<T extends VoucherRedemptionAggregateArgs> = {
+        [P in keyof T & keyof AggregateVoucherRedemption]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVoucherRedemption[P]>
+      : GetScalarType<T[P], AggregateVoucherRedemption[P]>
+  }
+
+
+
+
+  export type VoucherRedemptionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRedemptionWhereInput
+    orderBy?: VoucherRedemptionOrderByWithAggregationInput | VoucherRedemptionOrderByWithAggregationInput[]
+    by: VoucherRedemptionScalarFieldEnum[] | VoucherRedemptionScalarFieldEnum
+    having?: VoucherRedemptionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VoucherRedemptionCountAggregateInputType | true
+    _avg?: VoucherRedemptionAvgAggregateInputType
+    _sum?: VoucherRedemptionSumAggregateInputType
+    _min?: VoucherRedemptionMinAggregateInputType
+    _max?: VoucherRedemptionMaxAggregateInputType
+  }
+
+  export type VoucherRedemptionGroupByOutputType = {
+    id: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId: string | null
+    invoiceNumber: string | null
+    branchId: string | null
+    appliedToItems: string | null
+    redeemedBy: string | null
+    redeemedAt: Date
+    notes: string | null
+    _count: VoucherRedemptionCountAggregateOutputType | null
+    _avg: VoucherRedemptionAvgAggregateOutputType | null
+    _sum: VoucherRedemptionSumAggregateOutputType | null
+    _min: VoucherRedemptionMinAggregateOutputType | null
+    _max: VoucherRedemptionMaxAggregateOutputType | null
+  }
+
+  type GetVoucherRedemptionGroupByPayload<T extends VoucherRedemptionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VoucherRedemptionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VoucherRedemptionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VoucherRedemptionGroupByOutputType[P]>
+            : GetScalarType<T[P], VoucherRedemptionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VoucherRedemptionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    voucherCodeId?: boolean
+    code?: boolean
+    redeemedAmount?: boolean
+    balanceBefore?: boolean
+    balanceAfter?: boolean
+    orderId?: boolean
+    invoiceNumber?: boolean
+    branchId?: boolean
+    appliedToItems?: boolean
+    redeemedBy?: boolean
+    redeemedAt?: boolean
+    notes?: boolean
+    voucherCode?: boolean | VoucherCodeDefaultArgs<ExtArgs>
+    branch?: boolean | VoucherRedemption$branchArgs<ExtArgs>
+    redeemer?: boolean | VoucherRedemption$redeemerArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherRedemption"]>
+
+  export type VoucherRedemptionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    voucherCodeId?: boolean
+    code?: boolean
+    redeemedAmount?: boolean
+    balanceBefore?: boolean
+    balanceAfter?: boolean
+    orderId?: boolean
+    invoiceNumber?: boolean
+    branchId?: boolean
+    appliedToItems?: boolean
+    redeemedBy?: boolean
+    redeemedAt?: boolean
+    notes?: boolean
+    voucherCode?: boolean | VoucherCodeDefaultArgs<ExtArgs>
+    branch?: boolean | VoucherRedemption$branchArgs<ExtArgs>
+    redeemer?: boolean | VoucherRedemption$redeemerArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherRedemption"]>
+
+  export type VoucherRedemptionSelectScalar = {
+    id?: boolean
+    voucherCodeId?: boolean
+    code?: boolean
+    redeemedAmount?: boolean
+    balanceBefore?: boolean
+    balanceAfter?: boolean
+    orderId?: boolean
+    invoiceNumber?: boolean
+    branchId?: boolean
+    appliedToItems?: boolean
+    redeemedBy?: boolean
+    redeemedAt?: boolean
+    notes?: boolean
+  }
+
+  export type VoucherRedemptionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    voucherCode?: boolean | VoucherCodeDefaultArgs<ExtArgs>
+    branch?: boolean | VoucherRedemption$branchArgs<ExtArgs>
+    redeemer?: boolean | VoucherRedemption$redeemerArgs<ExtArgs>
+  }
+  export type VoucherRedemptionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    voucherCode?: boolean | VoucherCodeDefaultArgs<ExtArgs>
+    branch?: boolean | VoucherRedemption$branchArgs<ExtArgs>
+    redeemer?: boolean | VoucherRedemption$redeemerArgs<ExtArgs>
+  }
+
+  export type $VoucherRedemptionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VoucherRedemption"
+    objects: {
+      voucherCode: Prisma.$VoucherCodePayload<ExtArgs>
+      branch: Prisma.$BranchPayload<ExtArgs> | null
+      redeemer: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      voucherCodeId: string
+      code: string
+      redeemedAmount: number
+      balanceBefore: number
+      balanceAfter: number
+      orderId: string | null
+      invoiceNumber: string | null
+      branchId: string | null
+      appliedToItems: string | null
+      redeemedBy: string | null
+      redeemedAt: Date
+      notes: string | null
+    }, ExtArgs["result"]["voucherRedemption"]>
+    composites: {}
+  }
+
+  type VoucherRedemptionGetPayload<S extends boolean | null | undefined | VoucherRedemptionDefaultArgs> = $Result.GetResult<Prisma.$VoucherRedemptionPayload, S>
+
+  type VoucherRedemptionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VoucherRedemptionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VoucherRedemptionCountAggregateInputType | true
+    }
+
+  export interface VoucherRedemptionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VoucherRedemption'], meta: { name: 'VoucherRedemption' } }
+    /**
+     * Find zero or one VoucherRedemption that matches the filter.
+     * @param {VoucherRedemptionFindUniqueArgs} args - Arguments to find a VoucherRedemption
+     * @example
+     * // Get one VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VoucherRedemptionFindUniqueArgs>(args: SelectSubset<T, VoucherRedemptionFindUniqueArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VoucherRedemption that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VoucherRedemptionFindUniqueOrThrowArgs} args - Arguments to find a VoucherRedemption
+     * @example
+     * // Get one VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VoucherRedemptionFindUniqueOrThrowArgs>(args: SelectSubset<T, VoucherRedemptionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VoucherRedemption that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionFindFirstArgs} args - Arguments to find a VoucherRedemption
+     * @example
+     * // Get one VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VoucherRedemptionFindFirstArgs>(args?: SelectSubset<T, VoucherRedemptionFindFirstArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VoucherRedemption that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionFindFirstOrThrowArgs} args - Arguments to find a VoucherRedemption
+     * @example
+     * // Get one VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VoucherRedemptionFindFirstOrThrowArgs>(args?: SelectSubset<T, VoucherRedemptionFindFirstOrThrowArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VoucherRedemptions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VoucherRedemptions
+     * const voucherRedemptions = await prisma.voucherRedemption.findMany()
+     * 
+     * // Get first 10 VoucherRedemptions
+     * const voucherRedemptions = await prisma.voucherRedemption.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const voucherRedemptionWithIdOnly = await prisma.voucherRedemption.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VoucherRedemptionFindManyArgs>(args?: SelectSubset<T, VoucherRedemptionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VoucherRedemption.
+     * @param {VoucherRedemptionCreateArgs} args - Arguments to create a VoucherRedemption.
+     * @example
+     * // Create one VoucherRedemption
+     * const VoucherRedemption = await prisma.voucherRedemption.create({
+     *   data: {
+     *     // ... data to create a VoucherRedemption
+     *   }
+     * })
+     * 
+     */
+    create<T extends VoucherRedemptionCreateArgs>(args: SelectSubset<T, VoucherRedemptionCreateArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VoucherRedemptions.
+     * @param {VoucherRedemptionCreateManyArgs} args - Arguments to create many VoucherRedemptions.
+     * @example
+     * // Create many VoucherRedemptions
+     * const voucherRedemption = await prisma.voucherRedemption.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VoucherRedemptionCreateManyArgs>(args?: SelectSubset<T, VoucherRedemptionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VoucherRedemptions and returns the data saved in the database.
+     * @param {VoucherRedemptionCreateManyAndReturnArgs} args - Arguments to create many VoucherRedemptions.
+     * @example
+     * // Create many VoucherRedemptions
+     * const voucherRedemption = await prisma.voucherRedemption.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VoucherRedemptions and only return the `id`
+     * const voucherRedemptionWithIdOnly = await prisma.voucherRedemption.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VoucherRedemptionCreateManyAndReturnArgs>(args?: SelectSubset<T, VoucherRedemptionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a VoucherRedemption.
+     * @param {VoucherRedemptionDeleteArgs} args - Arguments to delete one VoucherRedemption.
+     * @example
+     * // Delete one VoucherRedemption
+     * const VoucherRedemption = await prisma.voucherRedemption.delete({
+     *   where: {
+     *     // ... filter to delete one VoucherRedemption
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VoucherRedemptionDeleteArgs>(args: SelectSubset<T, VoucherRedemptionDeleteArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VoucherRedemption.
+     * @param {VoucherRedemptionUpdateArgs} args - Arguments to update one VoucherRedemption.
+     * @example
+     * // Update one VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VoucherRedemptionUpdateArgs>(args: SelectSubset<T, VoucherRedemptionUpdateArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VoucherRedemptions.
+     * @param {VoucherRedemptionDeleteManyArgs} args - Arguments to filter VoucherRedemptions to delete.
+     * @example
+     * // Delete a few VoucherRedemptions
+     * const { count } = await prisma.voucherRedemption.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VoucherRedemptionDeleteManyArgs>(args?: SelectSubset<T, VoucherRedemptionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VoucherRedemptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VoucherRedemptions
+     * const voucherRedemption = await prisma.voucherRedemption.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VoucherRedemptionUpdateManyArgs>(args: SelectSubset<T, VoucherRedemptionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VoucherRedemption.
+     * @param {VoucherRedemptionUpsertArgs} args - Arguments to update or create a VoucherRedemption.
+     * @example
+     * // Update or create a VoucherRedemption
+     * const voucherRedemption = await prisma.voucherRedemption.upsert({
+     *   create: {
+     *     // ... data to create a VoucherRedemption
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VoucherRedemption we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VoucherRedemptionUpsertArgs>(args: SelectSubset<T, VoucherRedemptionUpsertArgs<ExtArgs>>): Prisma__VoucherRedemptionClient<$Result.GetResult<Prisma.$VoucherRedemptionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VoucherRedemptions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionCountArgs} args - Arguments to filter VoucherRedemptions to count.
+     * @example
+     * // Count the number of VoucherRedemptions
+     * const count = await prisma.voucherRedemption.count({
+     *   where: {
+     *     // ... the filter for the VoucherRedemptions we want to count
+     *   }
+     * })
+    **/
+    count<T extends VoucherRedemptionCountArgs>(
+      args?: Subset<T, VoucherRedemptionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VoucherRedemptionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VoucherRedemption.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VoucherRedemptionAggregateArgs>(args: Subset<T, VoucherRedemptionAggregateArgs>): Prisma.PrismaPromise<GetVoucherRedemptionAggregateType<T>>
+
+    /**
+     * Group by VoucherRedemption.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRedemptionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VoucherRedemptionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VoucherRedemptionGroupByArgs['orderBy'] }
+        : { orderBy?: VoucherRedemptionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VoucherRedemptionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVoucherRedemptionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VoucherRedemption model
+   */
+  readonly fields: VoucherRedemptionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VoucherRedemption.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VoucherRedemptionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    voucherCode<T extends VoucherCodeDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VoucherCodeDefaultArgs<ExtArgs>>): Prisma__VoucherCodeClient<$Result.GetResult<Prisma.$VoucherCodePayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    branch<T extends VoucherRedemption$branchArgs<ExtArgs> = {}>(args?: Subset<T, VoucherRedemption$branchArgs<ExtArgs>>): Prisma__BranchClient<$Result.GetResult<Prisma.$BranchPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    redeemer<T extends VoucherRedemption$redeemerArgs<ExtArgs> = {}>(args?: Subset<T, VoucherRedemption$redeemerArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VoucherRedemption model
+   */ 
+  interface VoucherRedemptionFieldRefs {
+    readonly id: FieldRef<"VoucherRedemption", 'String'>
+    readonly voucherCodeId: FieldRef<"VoucherRedemption", 'String'>
+    readonly code: FieldRef<"VoucherRedemption", 'String'>
+    readonly redeemedAmount: FieldRef<"VoucherRedemption", 'Float'>
+    readonly balanceBefore: FieldRef<"VoucherRedemption", 'Float'>
+    readonly balanceAfter: FieldRef<"VoucherRedemption", 'Float'>
+    readonly orderId: FieldRef<"VoucherRedemption", 'String'>
+    readonly invoiceNumber: FieldRef<"VoucherRedemption", 'String'>
+    readonly branchId: FieldRef<"VoucherRedemption", 'String'>
+    readonly appliedToItems: FieldRef<"VoucherRedemption", 'String'>
+    readonly redeemedBy: FieldRef<"VoucherRedemption", 'String'>
+    readonly redeemedAt: FieldRef<"VoucherRedemption", 'DateTime'>
+    readonly notes: FieldRef<"VoucherRedemption", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VoucherRedemption findUnique
+   */
+  export type VoucherRedemptionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRedemption to fetch.
+     */
+    where: VoucherRedemptionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRedemption findUniqueOrThrow
+   */
+  export type VoucherRedemptionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRedemption to fetch.
+     */
+    where: VoucherRedemptionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRedemption findFirst
+   */
+  export type VoucherRedemptionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRedemption to fetch.
+     */
+    where?: VoucherRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRedemptions to fetch.
+     */
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherRedemptions.
+     */
+    cursor?: VoucherRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherRedemptions.
+     */
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRedemption findFirstOrThrow
+   */
+  export type VoucherRedemptionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRedemption to fetch.
+     */
+    where?: VoucherRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRedemptions to fetch.
+     */
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherRedemptions.
+     */
+    cursor?: VoucherRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRedemptions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherRedemptions.
+     */
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRedemption findMany
+   */
+  export type VoucherRedemptionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRedemptions to fetch.
+     */
+    where?: VoucherRedemptionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRedemptions to fetch.
+     */
+    orderBy?: VoucherRedemptionOrderByWithRelationInput | VoucherRedemptionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VoucherRedemptions.
+     */
+    cursor?: VoucherRedemptionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRedemptions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRedemptions.
+     */
+    skip?: number
+    distinct?: VoucherRedemptionScalarFieldEnum | VoucherRedemptionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRedemption create
+   */
+  export type VoucherRedemptionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VoucherRedemption.
+     */
+    data: XOR<VoucherRedemptionCreateInput, VoucherRedemptionUncheckedCreateInput>
+  }
+
+  /**
+   * VoucherRedemption createMany
+   */
+  export type VoucherRedemptionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VoucherRedemptions.
+     */
+    data: VoucherRedemptionCreateManyInput | VoucherRedemptionCreateManyInput[]
+  }
+
+  /**
+   * VoucherRedemption createManyAndReturn
+   */
+  export type VoucherRedemptionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many VoucherRedemptions.
+     */
+    data: VoucherRedemptionCreateManyInput | VoucherRedemptionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VoucherRedemption update
+   */
+  export type VoucherRedemptionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VoucherRedemption.
+     */
+    data: XOR<VoucherRedemptionUpdateInput, VoucherRedemptionUncheckedUpdateInput>
+    /**
+     * Choose, which VoucherRedemption to update.
+     */
+    where: VoucherRedemptionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRedemption updateMany
+   */
+  export type VoucherRedemptionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VoucherRedemptions.
+     */
+    data: XOR<VoucherRedemptionUpdateManyMutationInput, VoucherRedemptionUncheckedUpdateManyInput>
+    /**
+     * Filter which VoucherRedemptions to update
+     */
+    where?: VoucherRedemptionWhereInput
+  }
+
+  /**
+   * VoucherRedemption upsert
+   */
+  export type VoucherRedemptionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VoucherRedemption to update in case it exists.
+     */
+    where: VoucherRedemptionWhereUniqueInput
+    /**
+     * In case the VoucherRedemption found by the `where` argument doesn't exist, create a new VoucherRedemption with this data.
+     */
+    create: XOR<VoucherRedemptionCreateInput, VoucherRedemptionUncheckedCreateInput>
+    /**
+     * In case the VoucherRedemption was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VoucherRedemptionUpdateInput, VoucherRedemptionUncheckedUpdateInput>
+  }
+
+  /**
+   * VoucherRedemption delete
+   */
+  export type VoucherRedemptionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+    /**
+     * Filter which VoucherRedemption to delete.
+     */
+    where: VoucherRedemptionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRedemption deleteMany
+   */
+  export type VoucherRedemptionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherRedemptions to delete
+     */
+    where?: VoucherRedemptionWhereInput
+  }
+
+  /**
+   * VoucherRedemption.branch
+   */
+  export type VoucherRedemption$branchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Branch
+     */
+    select?: BranchSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BranchInclude<ExtArgs> | null
+    where?: BranchWhereInput
+  }
+
+  /**
+   * VoucherRedemption.redeemer
+   */
+  export type VoucherRedemption$redeemerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * VoucherRedemption without action
+   */
+  export type VoucherRedemptionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRedemption
+     */
+    select?: VoucherRedemptionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRedemptionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LegacyEntityLink
+   */
+
+  export type AggregateLegacyEntityLink = {
+    _count: LegacyEntityLinkCountAggregateOutputType | null
+    _min: LegacyEntityLinkMinAggregateOutputType | null
+    _max: LegacyEntityLinkMaxAggregateOutputType | null
+  }
+
+  export type LegacyEntityLinkMinAggregateOutputType = {
+    id: string | null
+    sourceType: string | null
+    sourceId: string | null
+    sourceCode: string | null
+    targetType: string | null
+    targetId: string | null
+    resolution: string | null
+    isLocked: boolean | null
+    lastApplied: string | null
+    lastSeenAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LegacyEntityLinkMaxAggregateOutputType = {
+    id: string | null
+    sourceType: string | null
+    sourceId: string | null
+    sourceCode: string | null
+    targetType: string | null
+    targetId: string | null
+    resolution: string | null
+    isLocked: boolean | null
+    lastApplied: string | null
+    lastSeenAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type LegacyEntityLinkCountAggregateOutputType = {
+    id: number
+    sourceType: number
+    sourceId: number
+    sourceCode: number
+    targetType: number
+    targetId: number
+    resolution: number
+    isLocked: number
+    lastApplied: number
+    lastSeenAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type LegacyEntityLinkMinAggregateInputType = {
+    id?: true
+    sourceType?: true
+    sourceId?: true
+    sourceCode?: true
+    targetType?: true
+    targetId?: true
+    resolution?: true
+    isLocked?: true
+    lastApplied?: true
+    lastSeenAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LegacyEntityLinkMaxAggregateInputType = {
+    id?: true
+    sourceType?: true
+    sourceId?: true
+    sourceCode?: true
+    targetType?: true
+    targetId?: true
+    resolution?: true
+    isLocked?: true
+    lastApplied?: true
+    lastSeenAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type LegacyEntityLinkCountAggregateInputType = {
+    id?: true
+    sourceType?: true
+    sourceId?: true
+    sourceCode?: true
+    targetType?: true
+    targetId?: true
+    resolution?: true
+    isLocked?: true
+    lastApplied?: true
+    lastSeenAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type LegacyEntityLinkAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LegacyEntityLink to aggregate.
+     */
+    where?: LegacyEntityLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacyEntityLinks to fetch.
+     */
+    orderBy?: LegacyEntityLinkOrderByWithRelationInput | LegacyEntityLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LegacyEntityLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacyEntityLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacyEntityLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LegacyEntityLinks
+    **/
+    _count?: true | LegacyEntityLinkCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LegacyEntityLinkMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LegacyEntityLinkMaxAggregateInputType
+  }
+
+  export type GetLegacyEntityLinkAggregateType<T extends LegacyEntityLinkAggregateArgs> = {
+        [P in keyof T & keyof AggregateLegacyEntityLink]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLegacyEntityLink[P]>
+      : GetScalarType<T[P], AggregateLegacyEntityLink[P]>
+  }
+
+
+
+
+  export type LegacyEntityLinkGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LegacyEntityLinkWhereInput
+    orderBy?: LegacyEntityLinkOrderByWithAggregationInput | LegacyEntityLinkOrderByWithAggregationInput[]
+    by: LegacyEntityLinkScalarFieldEnum[] | LegacyEntityLinkScalarFieldEnum
+    having?: LegacyEntityLinkScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LegacyEntityLinkCountAggregateInputType | true
+    _min?: LegacyEntityLinkMinAggregateInputType
+    _max?: LegacyEntityLinkMaxAggregateInputType
+  }
+
+  export type LegacyEntityLinkGroupByOutputType = {
+    id: string
+    sourceType: string
+    sourceId: string
+    sourceCode: string | null
+    targetType: string
+    targetId: string
+    resolution: string
+    isLocked: boolean
+    lastApplied: string | null
+    lastSeenAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: LegacyEntityLinkCountAggregateOutputType | null
+    _min: LegacyEntityLinkMinAggregateOutputType | null
+    _max: LegacyEntityLinkMaxAggregateOutputType | null
+  }
+
+  type GetLegacyEntityLinkGroupByPayload<T extends LegacyEntityLinkGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LegacyEntityLinkGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LegacyEntityLinkGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LegacyEntityLinkGroupByOutputType[P]>
+            : GetScalarType<T[P], LegacyEntityLinkGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LegacyEntityLinkSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    sourceCode?: boolean
+    targetType?: boolean
+    targetId?: boolean
+    resolution?: boolean
+    isLocked?: boolean
+    lastApplied?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["legacyEntityLink"]>
+
+  export type LegacyEntityLinkSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    sourceCode?: boolean
+    targetType?: boolean
+    targetId?: boolean
+    resolution?: boolean
+    isLocked?: boolean
+    lastApplied?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["legacyEntityLink"]>
+
+  export type LegacyEntityLinkSelectScalar = {
+    id?: boolean
+    sourceType?: boolean
+    sourceId?: boolean
+    sourceCode?: boolean
+    targetType?: boolean
+    targetId?: boolean
+    resolution?: boolean
+    isLocked?: boolean
+    lastApplied?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $LegacyEntityLinkPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LegacyEntityLink"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      sourceType: string
+      sourceId: string
+      sourceCode: string | null
+      targetType: string
+      targetId: string
+      resolution: string
+      isLocked: boolean
+      lastApplied: string | null
+      lastSeenAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["legacyEntityLink"]>
+    composites: {}
+  }
+
+  type LegacyEntityLinkGetPayload<S extends boolean | null | undefined | LegacyEntityLinkDefaultArgs> = $Result.GetResult<Prisma.$LegacyEntityLinkPayload, S>
+
+  type LegacyEntityLinkCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<LegacyEntityLinkFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: LegacyEntityLinkCountAggregateInputType | true
+    }
+
+  export interface LegacyEntityLinkDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LegacyEntityLink'], meta: { name: 'LegacyEntityLink' } }
+    /**
+     * Find zero or one LegacyEntityLink that matches the filter.
+     * @param {LegacyEntityLinkFindUniqueArgs} args - Arguments to find a LegacyEntityLink
+     * @example
+     * // Get one LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LegacyEntityLinkFindUniqueArgs>(args: SelectSubset<T, LegacyEntityLinkFindUniqueArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one LegacyEntityLink that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {LegacyEntityLinkFindUniqueOrThrowArgs} args - Arguments to find a LegacyEntityLink
+     * @example
+     * // Get one LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LegacyEntityLinkFindUniqueOrThrowArgs>(args: SelectSubset<T, LegacyEntityLinkFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first LegacyEntityLink that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkFindFirstArgs} args - Arguments to find a LegacyEntityLink
+     * @example
+     * // Get one LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LegacyEntityLinkFindFirstArgs>(args?: SelectSubset<T, LegacyEntityLinkFindFirstArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first LegacyEntityLink that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkFindFirstOrThrowArgs} args - Arguments to find a LegacyEntityLink
+     * @example
+     * // Get one LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LegacyEntityLinkFindFirstOrThrowArgs>(args?: SelectSubset<T, LegacyEntityLinkFindFirstOrThrowArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more LegacyEntityLinks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LegacyEntityLinks
+     * const legacyEntityLinks = await prisma.legacyEntityLink.findMany()
+     * 
+     * // Get first 10 LegacyEntityLinks
+     * const legacyEntityLinks = await prisma.legacyEntityLink.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const legacyEntityLinkWithIdOnly = await prisma.legacyEntityLink.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LegacyEntityLinkFindManyArgs>(args?: SelectSubset<T, LegacyEntityLinkFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a LegacyEntityLink.
+     * @param {LegacyEntityLinkCreateArgs} args - Arguments to create a LegacyEntityLink.
+     * @example
+     * // Create one LegacyEntityLink
+     * const LegacyEntityLink = await prisma.legacyEntityLink.create({
+     *   data: {
+     *     // ... data to create a LegacyEntityLink
+     *   }
+     * })
+     * 
+     */
+    create<T extends LegacyEntityLinkCreateArgs>(args: SelectSubset<T, LegacyEntityLinkCreateArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many LegacyEntityLinks.
+     * @param {LegacyEntityLinkCreateManyArgs} args - Arguments to create many LegacyEntityLinks.
+     * @example
+     * // Create many LegacyEntityLinks
+     * const legacyEntityLink = await prisma.legacyEntityLink.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LegacyEntityLinkCreateManyArgs>(args?: SelectSubset<T, LegacyEntityLinkCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LegacyEntityLinks and returns the data saved in the database.
+     * @param {LegacyEntityLinkCreateManyAndReturnArgs} args - Arguments to create many LegacyEntityLinks.
+     * @example
+     * // Create many LegacyEntityLinks
+     * const legacyEntityLink = await prisma.legacyEntityLink.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LegacyEntityLinks and only return the `id`
+     * const legacyEntityLinkWithIdOnly = await prisma.legacyEntityLink.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LegacyEntityLinkCreateManyAndReturnArgs>(args?: SelectSubset<T, LegacyEntityLinkCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a LegacyEntityLink.
+     * @param {LegacyEntityLinkDeleteArgs} args - Arguments to delete one LegacyEntityLink.
+     * @example
+     * // Delete one LegacyEntityLink
+     * const LegacyEntityLink = await prisma.legacyEntityLink.delete({
+     *   where: {
+     *     // ... filter to delete one LegacyEntityLink
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LegacyEntityLinkDeleteArgs>(args: SelectSubset<T, LegacyEntityLinkDeleteArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one LegacyEntityLink.
+     * @param {LegacyEntityLinkUpdateArgs} args - Arguments to update one LegacyEntityLink.
+     * @example
+     * // Update one LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LegacyEntityLinkUpdateArgs>(args: SelectSubset<T, LegacyEntityLinkUpdateArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more LegacyEntityLinks.
+     * @param {LegacyEntityLinkDeleteManyArgs} args - Arguments to filter LegacyEntityLinks to delete.
+     * @example
+     * // Delete a few LegacyEntityLinks
+     * const { count } = await prisma.legacyEntityLink.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LegacyEntityLinkDeleteManyArgs>(args?: SelectSubset<T, LegacyEntityLinkDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LegacyEntityLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LegacyEntityLinks
+     * const legacyEntityLink = await prisma.legacyEntityLink.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LegacyEntityLinkUpdateManyArgs>(args: SelectSubset<T, LegacyEntityLinkUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one LegacyEntityLink.
+     * @param {LegacyEntityLinkUpsertArgs} args - Arguments to update or create a LegacyEntityLink.
+     * @example
+     * // Update or create a LegacyEntityLink
+     * const legacyEntityLink = await prisma.legacyEntityLink.upsert({
+     *   create: {
+     *     // ... data to create a LegacyEntityLink
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LegacyEntityLink we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LegacyEntityLinkUpsertArgs>(args: SelectSubset<T, LegacyEntityLinkUpsertArgs<ExtArgs>>): Prisma__LegacyEntityLinkClient<$Result.GetResult<Prisma.$LegacyEntityLinkPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of LegacyEntityLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkCountArgs} args - Arguments to filter LegacyEntityLinks to count.
+     * @example
+     * // Count the number of LegacyEntityLinks
+     * const count = await prisma.legacyEntityLink.count({
+     *   where: {
+     *     // ... the filter for the LegacyEntityLinks we want to count
+     *   }
+     * })
+    **/
+    count<T extends LegacyEntityLinkCountArgs>(
+      args?: Subset<T, LegacyEntityLinkCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LegacyEntityLinkCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LegacyEntityLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LegacyEntityLinkAggregateArgs>(args: Subset<T, LegacyEntityLinkAggregateArgs>): Prisma.PrismaPromise<GetLegacyEntityLinkAggregateType<T>>
+
+    /**
+     * Group by LegacyEntityLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacyEntityLinkGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LegacyEntityLinkGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LegacyEntityLinkGroupByArgs['orderBy'] }
+        : { orderBy?: LegacyEntityLinkGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LegacyEntityLinkGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLegacyEntityLinkGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LegacyEntityLink model
+   */
+  readonly fields: LegacyEntityLinkFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LegacyEntityLink.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LegacyEntityLinkClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LegacyEntityLink model
+   */ 
+  interface LegacyEntityLinkFieldRefs {
+    readonly id: FieldRef<"LegacyEntityLink", 'String'>
+    readonly sourceType: FieldRef<"LegacyEntityLink", 'String'>
+    readonly sourceId: FieldRef<"LegacyEntityLink", 'String'>
+    readonly sourceCode: FieldRef<"LegacyEntityLink", 'String'>
+    readonly targetType: FieldRef<"LegacyEntityLink", 'String'>
+    readonly targetId: FieldRef<"LegacyEntityLink", 'String'>
+    readonly resolution: FieldRef<"LegacyEntityLink", 'String'>
+    readonly isLocked: FieldRef<"LegacyEntityLink", 'Boolean'>
+    readonly lastApplied: FieldRef<"LegacyEntityLink", 'String'>
+    readonly lastSeenAt: FieldRef<"LegacyEntityLink", 'DateTime'>
+    readonly createdAt: FieldRef<"LegacyEntityLink", 'DateTime'>
+    readonly updatedAt: FieldRef<"LegacyEntityLink", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LegacyEntityLink findUnique
+   */
+  export type LegacyEntityLinkFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacyEntityLink to fetch.
+     */
+    where: LegacyEntityLinkWhereUniqueInput
+  }
+
+  /**
+   * LegacyEntityLink findUniqueOrThrow
+   */
+  export type LegacyEntityLinkFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacyEntityLink to fetch.
+     */
+    where: LegacyEntityLinkWhereUniqueInput
+  }
+
+  /**
+   * LegacyEntityLink findFirst
+   */
+  export type LegacyEntityLinkFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacyEntityLink to fetch.
+     */
+    where?: LegacyEntityLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacyEntityLinks to fetch.
+     */
+    orderBy?: LegacyEntityLinkOrderByWithRelationInput | LegacyEntityLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LegacyEntityLinks.
+     */
+    cursor?: LegacyEntityLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacyEntityLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacyEntityLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LegacyEntityLinks.
+     */
+    distinct?: LegacyEntityLinkScalarFieldEnum | LegacyEntityLinkScalarFieldEnum[]
+  }
+
+  /**
+   * LegacyEntityLink findFirstOrThrow
+   */
+  export type LegacyEntityLinkFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacyEntityLink to fetch.
+     */
+    where?: LegacyEntityLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacyEntityLinks to fetch.
+     */
+    orderBy?: LegacyEntityLinkOrderByWithRelationInput | LegacyEntityLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LegacyEntityLinks.
+     */
+    cursor?: LegacyEntityLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacyEntityLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacyEntityLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LegacyEntityLinks.
+     */
+    distinct?: LegacyEntityLinkScalarFieldEnum | LegacyEntityLinkScalarFieldEnum[]
+  }
+
+  /**
+   * LegacyEntityLink findMany
+   */
+  export type LegacyEntityLinkFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacyEntityLinks to fetch.
+     */
+    where?: LegacyEntityLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacyEntityLinks to fetch.
+     */
+    orderBy?: LegacyEntityLinkOrderByWithRelationInput | LegacyEntityLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LegacyEntityLinks.
+     */
+    cursor?: LegacyEntityLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacyEntityLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacyEntityLinks.
+     */
+    skip?: number
+    distinct?: LegacyEntityLinkScalarFieldEnum | LegacyEntityLinkScalarFieldEnum[]
+  }
+
+  /**
+   * LegacyEntityLink create
+   */
+  export type LegacyEntityLinkCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * The data needed to create a LegacyEntityLink.
+     */
+    data: XOR<LegacyEntityLinkCreateInput, LegacyEntityLinkUncheckedCreateInput>
+  }
+
+  /**
+   * LegacyEntityLink createMany
+   */
+  export type LegacyEntityLinkCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LegacyEntityLinks.
+     */
+    data: LegacyEntityLinkCreateManyInput | LegacyEntityLinkCreateManyInput[]
+  }
+
+  /**
+   * LegacyEntityLink createManyAndReturn
+   */
+  export type LegacyEntityLinkCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many LegacyEntityLinks.
+     */
+    data: LegacyEntityLinkCreateManyInput | LegacyEntityLinkCreateManyInput[]
+  }
+
+  /**
+   * LegacyEntityLink update
+   */
+  export type LegacyEntityLinkUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * The data needed to update a LegacyEntityLink.
+     */
+    data: XOR<LegacyEntityLinkUpdateInput, LegacyEntityLinkUncheckedUpdateInput>
+    /**
+     * Choose, which LegacyEntityLink to update.
+     */
+    where: LegacyEntityLinkWhereUniqueInput
+  }
+
+  /**
+   * LegacyEntityLink updateMany
+   */
+  export type LegacyEntityLinkUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LegacyEntityLinks.
+     */
+    data: XOR<LegacyEntityLinkUpdateManyMutationInput, LegacyEntityLinkUncheckedUpdateManyInput>
+    /**
+     * Filter which LegacyEntityLinks to update
+     */
+    where?: LegacyEntityLinkWhereInput
+  }
+
+  /**
+   * LegacyEntityLink upsert
+   */
+  export type LegacyEntityLinkUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * The filter to search for the LegacyEntityLink to update in case it exists.
+     */
+    where: LegacyEntityLinkWhereUniqueInput
+    /**
+     * In case the LegacyEntityLink found by the `where` argument doesn't exist, create a new LegacyEntityLink with this data.
+     */
+    create: XOR<LegacyEntityLinkCreateInput, LegacyEntityLinkUncheckedCreateInput>
+    /**
+     * In case the LegacyEntityLink was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LegacyEntityLinkUpdateInput, LegacyEntityLinkUncheckedUpdateInput>
+  }
+
+  /**
+   * LegacyEntityLink delete
+   */
+  export type LegacyEntityLinkDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+    /**
+     * Filter which LegacyEntityLink to delete.
+     */
+    where: LegacyEntityLinkWhereUniqueInput
+  }
+
+  /**
+   * LegacyEntityLink deleteMany
+   */
+  export type LegacyEntityLinkDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LegacyEntityLinks to delete
+     */
+    where?: LegacyEntityLinkWhereInput
+  }
+
+  /**
+   * LegacyEntityLink without action
+   */
+  export type LegacyEntityLinkDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacyEntityLink
+     */
+    select?: LegacyEntityLinkSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model LegacySyncRun
+   */
+
+  export type AggregateLegacySyncRun = {
+    _count: LegacySyncRunCountAggregateOutputType | null
+    _min: LegacySyncRunMinAggregateOutputType | null
+    _max: LegacySyncRunMaxAggregateOutputType | null
+  }
+
+  export type LegacySyncRunMinAggregateOutputType = {
+    id: string | null
+    agentId: string | null
+    status: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    stats: string | null
+    errorMessage: string | null
+  }
+
+  export type LegacySyncRunMaxAggregateOutputType = {
+    id: string | null
+    agentId: string | null
+    status: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    stats: string | null
+    errorMessage: string | null
+  }
+
+  export type LegacySyncRunCountAggregateOutputType = {
+    id: number
+    agentId: number
+    status: number
+    startedAt: number
+    finishedAt: number
+    stats: number
+    errorMessage: number
+    _all: number
+  }
+
+
+  export type LegacySyncRunMinAggregateInputType = {
+    id?: true
+    agentId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    stats?: true
+    errorMessage?: true
+  }
+
+  export type LegacySyncRunMaxAggregateInputType = {
+    id?: true
+    agentId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    stats?: true
+    errorMessage?: true
+  }
+
+  export type LegacySyncRunCountAggregateInputType = {
+    id?: true
+    agentId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    stats?: true
+    errorMessage?: true
+    _all?: true
+  }
+
+  export type LegacySyncRunAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LegacySyncRun to aggregate.
+     */
+    where?: LegacySyncRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacySyncRuns to fetch.
+     */
+    orderBy?: LegacySyncRunOrderByWithRelationInput | LegacySyncRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: LegacySyncRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacySyncRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacySyncRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned LegacySyncRuns
+    **/
+    _count?: true | LegacySyncRunCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: LegacySyncRunMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: LegacySyncRunMaxAggregateInputType
+  }
+
+  export type GetLegacySyncRunAggregateType<T extends LegacySyncRunAggregateArgs> = {
+        [P in keyof T & keyof AggregateLegacySyncRun]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateLegacySyncRun[P]>
+      : GetScalarType<T[P], AggregateLegacySyncRun[P]>
+  }
+
+
+
+
+  export type LegacySyncRunGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: LegacySyncRunWhereInput
+    orderBy?: LegacySyncRunOrderByWithAggregationInput | LegacySyncRunOrderByWithAggregationInput[]
+    by: LegacySyncRunScalarFieldEnum[] | LegacySyncRunScalarFieldEnum
+    having?: LegacySyncRunScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: LegacySyncRunCountAggregateInputType | true
+    _min?: LegacySyncRunMinAggregateInputType
+    _max?: LegacySyncRunMaxAggregateInputType
+  }
+
+  export type LegacySyncRunGroupByOutputType = {
+    id: string
+    agentId: string | null
+    status: string
+    startedAt: Date
+    finishedAt: Date | null
+    stats: string | null
+    errorMessage: string | null
+    _count: LegacySyncRunCountAggregateOutputType | null
+    _min: LegacySyncRunMinAggregateOutputType | null
+    _max: LegacySyncRunMaxAggregateOutputType | null
+  }
+
+  type GetLegacySyncRunGroupByPayload<T extends LegacySyncRunGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<LegacySyncRunGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof LegacySyncRunGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], LegacySyncRunGroupByOutputType[P]>
+            : GetScalarType<T[P], LegacySyncRunGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type LegacySyncRunSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    agentId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    stats?: boolean
+    errorMessage?: boolean
+  }, ExtArgs["result"]["legacySyncRun"]>
+
+  export type LegacySyncRunSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    agentId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    stats?: boolean
+    errorMessage?: boolean
+  }, ExtArgs["result"]["legacySyncRun"]>
+
+  export type LegacySyncRunSelectScalar = {
+    id?: boolean
+    agentId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    stats?: boolean
+    errorMessage?: boolean
+  }
+
+
+  export type $LegacySyncRunPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "LegacySyncRun"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      agentId: string | null
+      status: string
+      startedAt: Date
+      finishedAt: Date | null
+      stats: string | null
+      errorMessage: string | null
+    }, ExtArgs["result"]["legacySyncRun"]>
+    composites: {}
+  }
+
+  type LegacySyncRunGetPayload<S extends boolean | null | undefined | LegacySyncRunDefaultArgs> = $Result.GetResult<Prisma.$LegacySyncRunPayload, S>
+
+  type LegacySyncRunCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<LegacySyncRunFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: LegacySyncRunCountAggregateInputType | true
+    }
+
+  export interface LegacySyncRunDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['LegacySyncRun'], meta: { name: 'LegacySyncRun' } }
+    /**
+     * Find zero or one LegacySyncRun that matches the filter.
+     * @param {LegacySyncRunFindUniqueArgs} args - Arguments to find a LegacySyncRun
+     * @example
+     * // Get one LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends LegacySyncRunFindUniqueArgs>(args: SelectSubset<T, LegacySyncRunFindUniqueArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one LegacySyncRun that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {LegacySyncRunFindUniqueOrThrowArgs} args - Arguments to find a LegacySyncRun
+     * @example
+     * // Get one LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends LegacySyncRunFindUniqueOrThrowArgs>(args: SelectSubset<T, LegacySyncRunFindUniqueOrThrowArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first LegacySyncRun that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunFindFirstArgs} args - Arguments to find a LegacySyncRun
+     * @example
+     * // Get one LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends LegacySyncRunFindFirstArgs>(args?: SelectSubset<T, LegacySyncRunFindFirstArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first LegacySyncRun that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunFindFirstOrThrowArgs} args - Arguments to find a LegacySyncRun
+     * @example
+     * // Get one LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends LegacySyncRunFindFirstOrThrowArgs>(args?: SelectSubset<T, LegacySyncRunFindFirstOrThrowArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more LegacySyncRuns that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all LegacySyncRuns
+     * const legacySyncRuns = await prisma.legacySyncRun.findMany()
+     * 
+     * // Get first 10 LegacySyncRuns
+     * const legacySyncRuns = await prisma.legacySyncRun.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const legacySyncRunWithIdOnly = await prisma.legacySyncRun.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends LegacySyncRunFindManyArgs>(args?: SelectSubset<T, LegacySyncRunFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a LegacySyncRun.
+     * @param {LegacySyncRunCreateArgs} args - Arguments to create a LegacySyncRun.
+     * @example
+     * // Create one LegacySyncRun
+     * const LegacySyncRun = await prisma.legacySyncRun.create({
+     *   data: {
+     *     // ... data to create a LegacySyncRun
+     *   }
+     * })
+     * 
+     */
+    create<T extends LegacySyncRunCreateArgs>(args: SelectSubset<T, LegacySyncRunCreateArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many LegacySyncRuns.
+     * @param {LegacySyncRunCreateManyArgs} args - Arguments to create many LegacySyncRuns.
+     * @example
+     * // Create many LegacySyncRuns
+     * const legacySyncRun = await prisma.legacySyncRun.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends LegacySyncRunCreateManyArgs>(args?: SelectSubset<T, LegacySyncRunCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many LegacySyncRuns and returns the data saved in the database.
+     * @param {LegacySyncRunCreateManyAndReturnArgs} args - Arguments to create many LegacySyncRuns.
+     * @example
+     * // Create many LegacySyncRuns
+     * const legacySyncRun = await prisma.legacySyncRun.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many LegacySyncRuns and only return the `id`
+     * const legacySyncRunWithIdOnly = await prisma.legacySyncRun.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends LegacySyncRunCreateManyAndReturnArgs>(args?: SelectSubset<T, LegacySyncRunCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a LegacySyncRun.
+     * @param {LegacySyncRunDeleteArgs} args - Arguments to delete one LegacySyncRun.
+     * @example
+     * // Delete one LegacySyncRun
+     * const LegacySyncRun = await prisma.legacySyncRun.delete({
+     *   where: {
+     *     // ... filter to delete one LegacySyncRun
+     *   }
+     * })
+     * 
+     */
+    delete<T extends LegacySyncRunDeleteArgs>(args: SelectSubset<T, LegacySyncRunDeleteArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one LegacySyncRun.
+     * @param {LegacySyncRunUpdateArgs} args - Arguments to update one LegacySyncRun.
+     * @example
+     * // Update one LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends LegacySyncRunUpdateArgs>(args: SelectSubset<T, LegacySyncRunUpdateArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more LegacySyncRuns.
+     * @param {LegacySyncRunDeleteManyArgs} args - Arguments to filter LegacySyncRuns to delete.
+     * @example
+     * // Delete a few LegacySyncRuns
+     * const { count } = await prisma.legacySyncRun.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends LegacySyncRunDeleteManyArgs>(args?: SelectSubset<T, LegacySyncRunDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more LegacySyncRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many LegacySyncRuns
+     * const legacySyncRun = await prisma.legacySyncRun.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends LegacySyncRunUpdateManyArgs>(args: SelectSubset<T, LegacySyncRunUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one LegacySyncRun.
+     * @param {LegacySyncRunUpsertArgs} args - Arguments to update or create a LegacySyncRun.
+     * @example
+     * // Update or create a LegacySyncRun
+     * const legacySyncRun = await prisma.legacySyncRun.upsert({
+     *   create: {
+     *     // ... data to create a LegacySyncRun
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the LegacySyncRun we want to update
+     *   }
+     * })
+     */
+    upsert<T extends LegacySyncRunUpsertArgs>(args: SelectSubset<T, LegacySyncRunUpsertArgs<ExtArgs>>): Prisma__LegacySyncRunClient<$Result.GetResult<Prisma.$LegacySyncRunPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of LegacySyncRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunCountArgs} args - Arguments to filter LegacySyncRuns to count.
+     * @example
+     * // Count the number of LegacySyncRuns
+     * const count = await prisma.legacySyncRun.count({
+     *   where: {
+     *     // ... the filter for the LegacySyncRuns we want to count
+     *   }
+     * })
+    **/
+    count<T extends LegacySyncRunCountArgs>(
+      args?: Subset<T, LegacySyncRunCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], LegacySyncRunCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a LegacySyncRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends LegacySyncRunAggregateArgs>(args: Subset<T, LegacySyncRunAggregateArgs>): Prisma.PrismaPromise<GetLegacySyncRunAggregateType<T>>
+
+    /**
+     * Group by LegacySyncRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {LegacySyncRunGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends LegacySyncRunGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: LegacySyncRunGroupByArgs['orderBy'] }
+        : { orderBy?: LegacySyncRunGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, LegacySyncRunGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetLegacySyncRunGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the LegacySyncRun model
+   */
+  readonly fields: LegacySyncRunFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for LegacySyncRun.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__LegacySyncRunClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the LegacySyncRun model
+   */ 
+  interface LegacySyncRunFieldRefs {
+    readonly id: FieldRef<"LegacySyncRun", 'String'>
+    readonly agentId: FieldRef<"LegacySyncRun", 'String'>
+    readonly status: FieldRef<"LegacySyncRun", 'String'>
+    readonly startedAt: FieldRef<"LegacySyncRun", 'DateTime'>
+    readonly finishedAt: FieldRef<"LegacySyncRun", 'DateTime'>
+    readonly stats: FieldRef<"LegacySyncRun", 'String'>
+    readonly errorMessage: FieldRef<"LegacySyncRun", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * LegacySyncRun findUnique
+   */
+  export type LegacySyncRunFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacySyncRun to fetch.
+     */
+    where: LegacySyncRunWhereUniqueInput
+  }
+
+  /**
+   * LegacySyncRun findUniqueOrThrow
+   */
+  export type LegacySyncRunFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacySyncRun to fetch.
+     */
+    where: LegacySyncRunWhereUniqueInput
+  }
+
+  /**
+   * LegacySyncRun findFirst
+   */
+  export type LegacySyncRunFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacySyncRun to fetch.
+     */
+    where?: LegacySyncRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacySyncRuns to fetch.
+     */
+    orderBy?: LegacySyncRunOrderByWithRelationInput | LegacySyncRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LegacySyncRuns.
+     */
+    cursor?: LegacySyncRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacySyncRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacySyncRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LegacySyncRuns.
+     */
+    distinct?: LegacySyncRunScalarFieldEnum | LegacySyncRunScalarFieldEnum[]
+  }
+
+  /**
+   * LegacySyncRun findFirstOrThrow
+   */
+  export type LegacySyncRunFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacySyncRun to fetch.
+     */
+    where?: LegacySyncRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacySyncRuns to fetch.
+     */
+    orderBy?: LegacySyncRunOrderByWithRelationInput | LegacySyncRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for LegacySyncRuns.
+     */
+    cursor?: LegacySyncRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacySyncRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacySyncRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of LegacySyncRuns.
+     */
+    distinct?: LegacySyncRunScalarFieldEnum | LegacySyncRunScalarFieldEnum[]
+  }
+
+  /**
+   * LegacySyncRun findMany
+   */
+  export type LegacySyncRunFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter, which LegacySyncRuns to fetch.
+     */
+    where?: LegacySyncRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of LegacySyncRuns to fetch.
+     */
+    orderBy?: LegacySyncRunOrderByWithRelationInput | LegacySyncRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing LegacySyncRuns.
+     */
+    cursor?: LegacySyncRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` LegacySyncRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` LegacySyncRuns.
+     */
+    skip?: number
+    distinct?: LegacySyncRunScalarFieldEnum | LegacySyncRunScalarFieldEnum[]
+  }
+
+  /**
+   * LegacySyncRun create
+   */
+  export type LegacySyncRunCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * The data needed to create a LegacySyncRun.
+     */
+    data?: XOR<LegacySyncRunCreateInput, LegacySyncRunUncheckedCreateInput>
+  }
+
+  /**
+   * LegacySyncRun createMany
+   */
+  export type LegacySyncRunCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many LegacySyncRuns.
+     */
+    data: LegacySyncRunCreateManyInput | LegacySyncRunCreateManyInput[]
+  }
+
+  /**
+   * LegacySyncRun createManyAndReturn
+   */
+  export type LegacySyncRunCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many LegacySyncRuns.
+     */
+    data: LegacySyncRunCreateManyInput | LegacySyncRunCreateManyInput[]
+  }
+
+  /**
+   * LegacySyncRun update
+   */
+  export type LegacySyncRunUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * The data needed to update a LegacySyncRun.
+     */
+    data: XOR<LegacySyncRunUpdateInput, LegacySyncRunUncheckedUpdateInput>
+    /**
+     * Choose, which LegacySyncRun to update.
+     */
+    where: LegacySyncRunWhereUniqueInput
+  }
+
+  /**
+   * LegacySyncRun updateMany
+   */
+  export type LegacySyncRunUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update LegacySyncRuns.
+     */
+    data: XOR<LegacySyncRunUpdateManyMutationInput, LegacySyncRunUncheckedUpdateManyInput>
+    /**
+     * Filter which LegacySyncRuns to update
+     */
+    where?: LegacySyncRunWhereInput
+  }
+
+  /**
+   * LegacySyncRun upsert
+   */
+  export type LegacySyncRunUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * The filter to search for the LegacySyncRun to update in case it exists.
+     */
+    where: LegacySyncRunWhereUniqueInput
+    /**
+     * In case the LegacySyncRun found by the `where` argument doesn't exist, create a new LegacySyncRun with this data.
+     */
+    create: XOR<LegacySyncRunCreateInput, LegacySyncRunUncheckedCreateInput>
+    /**
+     * In case the LegacySyncRun was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<LegacySyncRunUpdateInput, LegacySyncRunUncheckedUpdateInput>
+  }
+
+  /**
+   * LegacySyncRun delete
+   */
+  export type LegacySyncRunDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+    /**
+     * Filter which LegacySyncRun to delete.
+     */
+    where: LegacySyncRunWhereUniqueInput
+  }
+
+  /**
+   * LegacySyncRun deleteMany
+   */
+  export type LegacySyncRunDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which LegacySyncRuns to delete
+     */
+    where?: LegacySyncRunWhereInput
+  }
+
+  /**
+   * LegacySyncRun without action
+   */
+  export type LegacySyncRunDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LegacySyncRun
+     */
+    select?: LegacySyncRunSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model VoucherRestriction
+   */
+
+  export type AggregateVoucherRestriction = {
+    _count: VoucherRestrictionCountAggregateOutputType | null
+    _avg: VoucherRestrictionAvgAggregateOutputType | null
+    _sum: VoucherRestrictionSumAggregateOutputType | null
+    _min: VoucherRestrictionMinAggregateOutputType | null
+    _max: VoucherRestrictionMaxAggregateOutputType | null
+  }
+
+  export type VoucherRestrictionAvgAggregateOutputType = {
+    minPurchaseAmount: number | null
+    maxDiscountAmount: number | null
+    priority: number | null
+  }
+
+  export type VoucherRestrictionSumAggregateOutputType = {
+    minPurchaseAmount: number | null
+    maxDiscountAmount: number | null
+    priority: number | null
+  }
+
+  export type VoucherRestrictionMinAggregateOutputType = {
+    id: string | null
+    skuId: string | null
+    restrictionType: string | null
+    targetCategoryIds: string | null
+    targetSkuIds: string | null
+    targetVariantIds: string | null
+    cannotCombineWithDiscounts: boolean | null
+    cannotCombineWithOtherVouchers: boolean | null
+    minPurchaseAmount: number | null
+    maxDiscountAmount: number | null
+    priority: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VoucherRestrictionMaxAggregateOutputType = {
+    id: string | null
+    skuId: string | null
+    restrictionType: string | null
+    targetCategoryIds: string | null
+    targetSkuIds: string | null
+    targetVariantIds: string | null
+    cannotCombineWithDiscounts: boolean | null
+    cannotCombineWithOtherVouchers: boolean | null
+    minPurchaseAmount: number | null
+    maxDiscountAmount: number | null
+    priority: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type VoucherRestrictionCountAggregateOutputType = {
+    id: number
+    skuId: number
+    restrictionType: number
+    targetCategoryIds: number
+    targetSkuIds: number
+    targetVariantIds: number
+    cannotCombineWithDiscounts: number
+    cannotCombineWithOtherVouchers: number
+    minPurchaseAmount: number
+    maxDiscountAmount: number
+    priority: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type VoucherRestrictionAvgAggregateInputType = {
+    minPurchaseAmount?: true
+    maxDiscountAmount?: true
+    priority?: true
+  }
+
+  export type VoucherRestrictionSumAggregateInputType = {
+    minPurchaseAmount?: true
+    maxDiscountAmount?: true
+    priority?: true
+  }
+
+  export type VoucherRestrictionMinAggregateInputType = {
+    id?: true
+    skuId?: true
+    restrictionType?: true
+    targetCategoryIds?: true
+    targetSkuIds?: true
+    targetVariantIds?: true
+    cannotCombineWithDiscounts?: true
+    cannotCombineWithOtherVouchers?: true
+    minPurchaseAmount?: true
+    maxDiscountAmount?: true
+    priority?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VoucherRestrictionMaxAggregateInputType = {
+    id?: true
+    skuId?: true
+    restrictionType?: true
+    targetCategoryIds?: true
+    targetSkuIds?: true
+    targetVariantIds?: true
+    cannotCombineWithDiscounts?: true
+    cannotCombineWithOtherVouchers?: true
+    minPurchaseAmount?: true
+    maxDiscountAmount?: true
+    priority?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type VoucherRestrictionCountAggregateInputType = {
+    id?: true
+    skuId?: true
+    restrictionType?: true
+    targetCategoryIds?: true
+    targetSkuIds?: true
+    targetVariantIds?: true
+    cannotCombineWithDiscounts?: true
+    cannotCombineWithOtherVouchers?: true
+    minPurchaseAmount?: true
+    maxDiscountAmount?: true
+    priority?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type VoucherRestrictionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherRestriction to aggregate.
+     */
+    where?: VoucherRestrictionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRestrictions to fetch.
+     */
+    orderBy?: VoucherRestrictionOrderByWithRelationInput | VoucherRestrictionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VoucherRestrictionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRestrictions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRestrictions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VoucherRestrictions
+    **/
+    _count?: true | VoucherRestrictionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VoucherRestrictionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VoucherRestrictionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VoucherRestrictionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VoucherRestrictionMaxAggregateInputType
+  }
+
+  export type GetVoucherRestrictionAggregateType<T extends VoucherRestrictionAggregateArgs> = {
+        [P in keyof T & keyof AggregateVoucherRestriction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVoucherRestriction[P]>
+      : GetScalarType<T[P], AggregateVoucherRestriction[P]>
+  }
+
+
+
+
+  export type VoucherRestrictionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VoucherRestrictionWhereInput
+    orderBy?: VoucherRestrictionOrderByWithAggregationInput | VoucherRestrictionOrderByWithAggregationInput[]
+    by: VoucherRestrictionScalarFieldEnum[] | VoucherRestrictionScalarFieldEnum
+    having?: VoucherRestrictionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VoucherRestrictionCountAggregateInputType | true
+    _avg?: VoucherRestrictionAvgAggregateInputType
+    _sum?: VoucherRestrictionSumAggregateInputType
+    _min?: VoucherRestrictionMinAggregateInputType
+    _max?: VoucherRestrictionMaxAggregateInputType
+  }
+
+  export type VoucherRestrictionGroupByOutputType = {
+    id: string
+    skuId: string
+    restrictionType: string
+    targetCategoryIds: string | null
+    targetSkuIds: string | null
+    targetVariantIds: string | null
+    cannotCombineWithDiscounts: boolean
+    cannotCombineWithOtherVouchers: boolean
+    minPurchaseAmount: number | null
+    maxDiscountAmount: number | null
+    priority: number
+    createdAt: Date
+    updatedAt: Date
+    _count: VoucherRestrictionCountAggregateOutputType | null
+    _avg: VoucherRestrictionAvgAggregateOutputType | null
+    _sum: VoucherRestrictionSumAggregateOutputType | null
+    _min: VoucherRestrictionMinAggregateOutputType | null
+    _max: VoucherRestrictionMaxAggregateOutputType | null
+  }
+
+  type GetVoucherRestrictionGroupByPayload<T extends VoucherRestrictionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VoucherRestrictionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VoucherRestrictionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VoucherRestrictionGroupByOutputType[P]>
+            : GetScalarType<T[P], VoucherRestrictionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VoucherRestrictionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    skuId?: boolean
+    restrictionType?: boolean
+    targetCategoryIds?: boolean
+    targetSkuIds?: boolean
+    targetVariantIds?: boolean
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: boolean
+    maxDiscountAmount?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherRestriction"]>
+
+  export type VoucherRestrictionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    skuId?: boolean
+    restrictionType?: boolean
+    targetCategoryIds?: boolean
+    targetSkuIds?: boolean
+    targetVariantIds?: boolean
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: boolean
+    maxDiscountAmount?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["voucherRestriction"]>
+
+  export type VoucherRestrictionSelectScalar = {
+    id?: boolean
+    skuId?: boolean
+    restrictionType?: boolean
+    targetCategoryIds?: boolean
+    targetSkuIds?: boolean
+    targetVariantIds?: boolean
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: boolean
+    maxDiscountAmount?: boolean
+    priority?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type VoucherRestrictionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+  }
+  export type VoucherRestrictionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    sku?: boolean | SKUDefaultArgs<ExtArgs>
+  }
+
+  export type $VoucherRestrictionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VoucherRestriction"
+    objects: {
+      sku: Prisma.$SKUPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      skuId: string
+      restrictionType: string
+      targetCategoryIds: string | null
+      targetSkuIds: string | null
+      targetVariantIds: string | null
+      cannotCombineWithDiscounts: boolean
+      cannotCombineWithOtherVouchers: boolean
+      minPurchaseAmount: number | null
+      maxDiscountAmount: number | null
+      priority: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["voucherRestriction"]>
+    composites: {}
+  }
+
+  type VoucherRestrictionGetPayload<S extends boolean | null | undefined | VoucherRestrictionDefaultArgs> = $Result.GetResult<Prisma.$VoucherRestrictionPayload, S>
+
+  type VoucherRestrictionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<VoucherRestrictionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: VoucherRestrictionCountAggregateInputType | true
+    }
+
+  export interface VoucherRestrictionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VoucherRestriction'], meta: { name: 'VoucherRestriction' } }
+    /**
+     * Find zero or one VoucherRestriction that matches the filter.
+     * @param {VoucherRestrictionFindUniqueArgs} args - Arguments to find a VoucherRestriction
+     * @example
+     * // Get one VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VoucherRestrictionFindUniqueArgs>(args: SelectSubset<T, VoucherRestrictionFindUniqueArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one VoucherRestriction that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {VoucherRestrictionFindUniqueOrThrowArgs} args - Arguments to find a VoucherRestriction
+     * @example
+     * // Get one VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VoucherRestrictionFindUniqueOrThrowArgs>(args: SelectSubset<T, VoucherRestrictionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first VoucherRestriction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionFindFirstArgs} args - Arguments to find a VoucherRestriction
+     * @example
+     * // Get one VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VoucherRestrictionFindFirstArgs>(args?: SelectSubset<T, VoucherRestrictionFindFirstArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first VoucherRestriction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionFindFirstOrThrowArgs} args - Arguments to find a VoucherRestriction
+     * @example
+     * // Get one VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VoucherRestrictionFindFirstOrThrowArgs>(args?: SelectSubset<T, VoucherRestrictionFindFirstOrThrowArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more VoucherRestrictions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VoucherRestrictions
+     * const voucherRestrictions = await prisma.voucherRestriction.findMany()
+     * 
+     * // Get first 10 VoucherRestrictions
+     * const voucherRestrictions = await prisma.voucherRestriction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const voucherRestrictionWithIdOnly = await prisma.voucherRestriction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VoucherRestrictionFindManyArgs>(args?: SelectSubset<T, VoucherRestrictionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a VoucherRestriction.
+     * @param {VoucherRestrictionCreateArgs} args - Arguments to create a VoucherRestriction.
+     * @example
+     * // Create one VoucherRestriction
+     * const VoucherRestriction = await prisma.voucherRestriction.create({
+     *   data: {
+     *     // ... data to create a VoucherRestriction
+     *   }
+     * })
+     * 
+     */
+    create<T extends VoucherRestrictionCreateArgs>(args: SelectSubset<T, VoucherRestrictionCreateArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many VoucherRestrictions.
+     * @param {VoucherRestrictionCreateManyArgs} args - Arguments to create many VoucherRestrictions.
+     * @example
+     * // Create many VoucherRestrictions
+     * const voucherRestriction = await prisma.voucherRestriction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VoucherRestrictionCreateManyArgs>(args?: SelectSubset<T, VoucherRestrictionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VoucherRestrictions and returns the data saved in the database.
+     * @param {VoucherRestrictionCreateManyAndReturnArgs} args - Arguments to create many VoucherRestrictions.
+     * @example
+     * // Create many VoucherRestrictions
+     * const voucherRestriction = await prisma.voucherRestriction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VoucherRestrictions and only return the `id`
+     * const voucherRestrictionWithIdOnly = await prisma.voucherRestriction.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VoucherRestrictionCreateManyAndReturnArgs>(args?: SelectSubset<T, VoucherRestrictionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a VoucherRestriction.
+     * @param {VoucherRestrictionDeleteArgs} args - Arguments to delete one VoucherRestriction.
+     * @example
+     * // Delete one VoucherRestriction
+     * const VoucherRestriction = await prisma.voucherRestriction.delete({
+     *   where: {
+     *     // ... filter to delete one VoucherRestriction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VoucherRestrictionDeleteArgs>(args: SelectSubset<T, VoucherRestrictionDeleteArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one VoucherRestriction.
+     * @param {VoucherRestrictionUpdateArgs} args - Arguments to update one VoucherRestriction.
+     * @example
+     * // Update one VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VoucherRestrictionUpdateArgs>(args: SelectSubset<T, VoucherRestrictionUpdateArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more VoucherRestrictions.
+     * @param {VoucherRestrictionDeleteManyArgs} args - Arguments to filter VoucherRestrictions to delete.
+     * @example
+     * // Delete a few VoucherRestrictions
+     * const { count } = await prisma.voucherRestriction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VoucherRestrictionDeleteManyArgs>(args?: SelectSubset<T, VoucherRestrictionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VoucherRestrictions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VoucherRestrictions
+     * const voucherRestriction = await prisma.voucherRestriction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VoucherRestrictionUpdateManyArgs>(args: SelectSubset<T, VoucherRestrictionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one VoucherRestriction.
+     * @param {VoucherRestrictionUpsertArgs} args - Arguments to update or create a VoucherRestriction.
+     * @example
+     * // Update or create a VoucherRestriction
+     * const voucherRestriction = await prisma.voucherRestriction.upsert({
+     *   create: {
+     *     // ... data to create a VoucherRestriction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VoucherRestriction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VoucherRestrictionUpsertArgs>(args: SelectSubset<T, VoucherRestrictionUpsertArgs<ExtArgs>>): Prisma__VoucherRestrictionClient<$Result.GetResult<Prisma.$VoucherRestrictionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of VoucherRestrictions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionCountArgs} args - Arguments to filter VoucherRestrictions to count.
+     * @example
+     * // Count the number of VoucherRestrictions
+     * const count = await prisma.voucherRestriction.count({
+     *   where: {
+     *     // ... the filter for the VoucherRestrictions we want to count
+     *   }
+     * })
+    **/
+    count<T extends VoucherRestrictionCountArgs>(
+      args?: Subset<T, VoucherRestrictionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VoucherRestrictionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VoucherRestriction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VoucherRestrictionAggregateArgs>(args: Subset<T, VoucherRestrictionAggregateArgs>): Prisma.PrismaPromise<GetVoucherRestrictionAggregateType<T>>
+
+    /**
+     * Group by VoucherRestriction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VoucherRestrictionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VoucherRestrictionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VoucherRestrictionGroupByArgs['orderBy'] }
+        : { orderBy?: VoucherRestrictionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VoucherRestrictionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVoucherRestrictionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VoucherRestriction model
+   */
+  readonly fields: VoucherRestrictionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VoucherRestriction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VoucherRestrictionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    sku<T extends SKUDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SKUDefaultArgs<ExtArgs>>): Prisma__SKUClient<$Result.GetResult<Prisma.$SKUPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VoucherRestriction model
+   */ 
+  interface VoucherRestrictionFieldRefs {
+    readonly id: FieldRef<"VoucherRestriction", 'String'>
+    readonly skuId: FieldRef<"VoucherRestriction", 'String'>
+    readonly restrictionType: FieldRef<"VoucherRestriction", 'String'>
+    readonly targetCategoryIds: FieldRef<"VoucherRestriction", 'String'>
+    readonly targetSkuIds: FieldRef<"VoucherRestriction", 'String'>
+    readonly targetVariantIds: FieldRef<"VoucherRestriction", 'String'>
+    readonly cannotCombineWithDiscounts: FieldRef<"VoucherRestriction", 'Boolean'>
+    readonly cannotCombineWithOtherVouchers: FieldRef<"VoucherRestriction", 'Boolean'>
+    readonly minPurchaseAmount: FieldRef<"VoucherRestriction", 'Float'>
+    readonly maxDiscountAmount: FieldRef<"VoucherRestriction", 'Float'>
+    readonly priority: FieldRef<"VoucherRestriction", 'Int'>
+    readonly createdAt: FieldRef<"VoucherRestriction", 'DateTime'>
+    readonly updatedAt: FieldRef<"VoucherRestriction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VoucherRestriction findUnique
+   */
+  export type VoucherRestrictionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRestriction to fetch.
+     */
+    where: VoucherRestrictionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRestriction findUniqueOrThrow
+   */
+  export type VoucherRestrictionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRestriction to fetch.
+     */
+    where: VoucherRestrictionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRestriction findFirst
+   */
+  export type VoucherRestrictionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRestriction to fetch.
+     */
+    where?: VoucherRestrictionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRestrictions to fetch.
+     */
+    orderBy?: VoucherRestrictionOrderByWithRelationInput | VoucherRestrictionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherRestrictions.
+     */
+    cursor?: VoucherRestrictionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRestrictions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRestrictions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherRestrictions.
+     */
+    distinct?: VoucherRestrictionScalarFieldEnum | VoucherRestrictionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRestriction findFirstOrThrow
+   */
+  export type VoucherRestrictionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRestriction to fetch.
+     */
+    where?: VoucherRestrictionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRestrictions to fetch.
+     */
+    orderBy?: VoucherRestrictionOrderByWithRelationInput | VoucherRestrictionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VoucherRestrictions.
+     */
+    cursor?: VoucherRestrictionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRestrictions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRestrictions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VoucherRestrictions.
+     */
+    distinct?: VoucherRestrictionScalarFieldEnum | VoucherRestrictionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRestriction findMany
+   */
+  export type VoucherRestrictionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter, which VoucherRestrictions to fetch.
+     */
+    where?: VoucherRestrictionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VoucherRestrictions to fetch.
+     */
+    orderBy?: VoucherRestrictionOrderByWithRelationInput | VoucherRestrictionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VoucherRestrictions.
+     */
+    cursor?: VoucherRestrictionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VoucherRestrictions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VoucherRestrictions.
+     */
+    skip?: number
+    distinct?: VoucherRestrictionScalarFieldEnum | VoucherRestrictionScalarFieldEnum[]
+  }
+
+  /**
+   * VoucherRestriction create
+   */
+  export type VoucherRestrictionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VoucherRestriction.
+     */
+    data: XOR<VoucherRestrictionCreateInput, VoucherRestrictionUncheckedCreateInput>
+  }
+
+  /**
+   * VoucherRestriction createMany
+   */
+  export type VoucherRestrictionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VoucherRestrictions.
+     */
+    data: VoucherRestrictionCreateManyInput | VoucherRestrictionCreateManyInput[]
+  }
+
+  /**
+   * VoucherRestriction createManyAndReturn
+   */
+  export type VoucherRestrictionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many VoucherRestrictions.
+     */
+    data: VoucherRestrictionCreateManyInput | VoucherRestrictionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VoucherRestriction update
+   */
+  export type VoucherRestrictionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VoucherRestriction.
+     */
+    data: XOR<VoucherRestrictionUpdateInput, VoucherRestrictionUncheckedUpdateInput>
+    /**
+     * Choose, which VoucherRestriction to update.
+     */
+    where: VoucherRestrictionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRestriction updateMany
+   */
+  export type VoucherRestrictionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VoucherRestrictions.
+     */
+    data: XOR<VoucherRestrictionUpdateManyMutationInput, VoucherRestrictionUncheckedUpdateManyInput>
+    /**
+     * Filter which VoucherRestrictions to update
+     */
+    where?: VoucherRestrictionWhereInput
+  }
+
+  /**
+   * VoucherRestriction upsert
+   */
+  export type VoucherRestrictionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VoucherRestriction to update in case it exists.
+     */
+    where: VoucherRestrictionWhereUniqueInput
+    /**
+     * In case the VoucherRestriction found by the `where` argument doesn't exist, create a new VoucherRestriction with this data.
+     */
+    create: XOR<VoucherRestrictionCreateInput, VoucherRestrictionUncheckedCreateInput>
+    /**
+     * In case the VoucherRestriction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VoucherRestrictionUpdateInput, VoucherRestrictionUncheckedUpdateInput>
+  }
+
+  /**
+   * VoucherRestriction delete
+   */
+  export type VoucherRestrictionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+    /**
+     * Filter which VoucherRestriction to delete.
+     */
+    where: VoucherRestrictionWhereUniqueInput
+  }
+
+  /**
+   * VoucherRestriction deleteMany
+   */
+  export type VoucherRestrictionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VoucherRestrictions to delete
+     */
+    where?: VoucherRestrictionWhereInput
+  }
+
+  /**
+   * VoucherRestriction without action
+   */
+  export type VoucherRestrictionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VoucherRestriction
+     */
+    select?: VoucherRestrictionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VoucherRestrictionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -50404,6 +57898,10 @@ export namespace Prisma {
     batchPricing: 'batchPricing',
     batchReferencePricing: 'batchReferencePricing',
     lowStockThreshold: 'lowStockThreshold',
+    isVoucher: 'isVoucher',
+    voucherValueType: 'voucherValueType',
+    voucherMinValue: 'voucherMinValue',
+    voucherMaxValue: 'voucherMaxValue',
     isActive: 'isActive',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -50509,6 +58007,7 @@ export namespace Prisma {
   export const ProductBarcodeScalarFieldEnum: {
     id: 'id',
     skuId: 'skuId',
+    variantId: 'variantId',
     barcode: 'barcode',
     barcodeType: 'barcodeType',
     isDefault: 'isDefault',
@@ -50964,6 +58463,122 @@ export namespace Prisma {
   export type DashboardStatsScalarFieldEnum = (typeof DashboardStatsScalarFieldEnum)[keyof typeof DashboardStatsScalarFieldEnum]
 
 
+  export const VoucherBatchScalarFieldEnum: {
+    id: 'id',
+    skuId: 'skuId',
+    variantId: 'variantId',
+    batchName: 'batchName',
+    prefix: 'prefix',
+    quantity: 'quantity',
+    generatedCount: 'generatedCount',
+    defaultValue: 'defaultValue',
+    expiryDays: 'expiryDays',
+    defaultExpiresAt: 'defaultExpiresAt',
+    status: 'status',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    completedAt: 'completedAt'
+  };
+
+  export type VoucherBatchScalarFieldEnum = (typeof VoucherBatchScalarFieldEnum)[keyof typeof VoucherBatchScalarFieldEnum]
+
+
+  export const VoucherCodeScalarFieldEnum: {
+    id: 'id',
+    code: 'code',
+    skuId: 'skuId',
+    variantId: 'variantId',
+    batchId: 'batchId',
+    voucherBatchId: 'voucherBatchId',
+    initialValue: 'initialValue',
+    currentBalance: 'currentBalance',
+    currency: 'currency',
+    status: 'status',
+    issuedAt: 'issuedAt',
+    expiresAt: 'expiresAt',
+    activatedAt: 'activatedAt',
+    fullyRedeemedAt: 'fullyRedeemedAt',
+    customerId: 'customerId',
+    orderId: 'orderId',
+    purchaseReference: 'purchaseReference',
+    notes: 'notes',
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type VoucherCodeScalarFieldEnum = (typeof VoucherCodeScalarFieldEnum)[keyof typeof VoucherCodeScalarFieldEnum]
+
+
+  export const VoucherRedemptionScalarFieldEnum: {
+    id: 'id',
+    voucherCodeId: 'voucherCodeId',
+    code: 'code',
+    redeemedAmount: 'redeemedAmount',
+    balanceBefore: 'balanceBefore',
+    balanceAfter: 'balanceAfter',
+    orderId: 'orderId',
+    invoiceNumber: 'invoiceNumber',
+    branchId: 'branchId',
+    appliedToItems: 'appliedToItems',
+    redeemedBy: 'redeemedBy',
+    redeemedAt: 'redeemedAt',
+    notes: 'notes'
+  };
+
+  export type VoucherRedemptionScalarFieldEnum = (typeof VoucherRedemptionScalarFieldEnum)[keyof typeof VoucherRedemptionScalarFieldEnum]
+
+
+  export const LegacyEntityLinkScalarFieldEnum: {
+    id: 'id',
+    sourceType: 'sourceType',
+    sourceId: 'sourceId',
+    sourceCode: 'sourceCode',
+    targetType: 'targetType',
+    targetId: 'targetId',
+    resolution: 'resolution',
+    isLocked: 'isLocked',
+    lastApplied: 'lastApplied',
+    lastSeenAt: 'lastSeenAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type LegacyEntityLinkScalarFieldEnum = (typeof LegacyEntityLinkScalarFieldEnum)[keyof typeof LegacyEntityLinkScalarFieldEnum]
+
+
+  export const LegacySyncRunScalarFieldEnum: {
+    id: 'id',
+    agentId: 'agentId',
+    status: 'status',
+    startedAt: 'startedAt',
+    finishedAt: 'finishedAt',
+    stats: 'stats',
+    errorMessage: 'errorMessage'
+  };
+
+  export type LegacySyncRunScalarFieldEnum = (typeof LegacySyncRunScalarFieldEnum)[keyof typeof LegacySyncRunScalarFieldEnum]
+
+
+  export const VoucherRestrictionScalarFieldEnum: {
+    id: 'id',
+    skuId: 'skuId',
+    restrictionType: 'restrictionType',
+    targetCategoryIds: 'targetCategoryIds',
+    targetSkuIds: 'targetSkuIds',
+    targetVariantIds: 'targetVariantIds',
+    cannotCombineWithDiscounts: 'cannotCombineWithDiscounts',
+    cannotCombineWithOtherVouchers: 'cannotCombineWithOtherVouchers',
+    minPurchaseAmount: 'minPurchaseAmount',
+    maxDiscountAmount: 'maxDiscountAmount',
+    priority: 'priority',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type VoucherRestrictionScalarFieldEnum = (typeof VoucherRestrictionScalarFieldEnum)[keyof typeof VoucherRestrictionScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -51044,6 +58659,9 @@ export namespace Prisma {
     importJobs?: ImportJobListRelationFilter
     stockTransfersCreated?: StockTransferListRelationFilter
     stockTransfersApproved?: StockTransferListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherRedemptions?: VoucherRedemptionListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -51064,6 +58682,9 @@ export namespace Prisma {
     importJobs?: ImportJobOrderByRelationAggregateInput
     stockTransfersCreated?: StockTransferOrderByRelationAggregateInput
     stockTransfersApproved?: StockTransferOrderByRelationAggregateInput
+    voucherBatches?: VoucherBatchOrderByRelationAggregateInput
+    voucherCodes?: VoucherCodeOrderByRelationAggregateInput
+    voucherRedemptions?: VoucherRedemptionOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -51087,6 +58708,9 @@ export namespace Prisma {
     importJobs?: ImportJobListRelationFilter
     stockTransfersCreated?: StockTransferListRelationFilter
     stockTransfersApproved?: StockTransferListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherRedemptions?: VoucherRedemptionListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -51441,6 +59065,7 @@ export namespace Prisma {
     floors?: FloorListRelationFilter
     stockTransfersFrom?: StockTransferListRelationFilter
     stockTransfersTo?: StockTransferListRelationFilter
+    voucherRedemptions?: VoucherRedemptionListRelationFilter
   }
 
   export type BranchOrderByWithRelationInput = {
@@ -51456,6 +59081,7 @@ export namespace Prisma {
     floors?: FloorOrderByRelationAggregateInput
     stockTransfersFrom?: StockTransferOrderByRelationAggregateInput
     stockTransfersTo?: StockTransferOrderByRelationAggregateInput
+    voucherRedemptions?: VoucherRedemptionOrderByRelationAggregateInput
   }
 
   export type BranchWhereUniqueInput = Prisma.AtLeast<{
@@ -51474,6 +59100,7 @@ export namespace Prisma {
     floors?: FloorListRelationFilter
     stockTransfersFrom?: StockTransferListRelationFilter
     stockTransfersTo?: StockTransferListRelationFilter
+    voucherRedemptions?: VoucherRedemptionListRelationFilter
   }, "id" | "code">
 
   export type BranchOrderByWithAggregationInput = {
@@ -51536,6 +59163,10 @@ export namespace Prisma {
     batchPricing?: StringNullableFilter<"SKU"> | string | null
     batchReferencePricing?: StringNullableFilter<"SKU"> | string | null
     lowStockThreshold?: IntNullableFilter<"SKU"> | number | null
+    isVoucher?: BoolFilter<"SKU"> | boolean
+    voucherValueType?: StringNullableFilter<"SKU"> | string | null
+    voucherMinValue?: FloatNullableFilter<"SKU"> | number | null
+    voucherMaxValue?: FloatNullableFilter<"SKU"> | number | null
     isActive?: BoolFilter<"SKU"> | boolean
     createdAt?: DateTimeFilter<"SKU"> | Date | string
     updatedAt?: DateTimeFilter<"SKU"> | Date | string
@@ -51553,6 +59184,9 @@ export namespace Prisma {
     batches?: BatchListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
     skuVendors?: SKUVendorListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherRestrictions?: VoucherRestrictionListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
   }
 
   export type SKUOrderByWithRelationInput = {
@@ -51582,6 +59216,10 @@ export namespace Prisma {
     batchPricing?: SortOrderInput | SortOrder
     batchReferencePricing?: SortOrderInput | SortOrder
     lowStockThreshold?: SortOrderInput | SortOrder
+    isVoucher?: SortOrder
+    voucherValueType?: SortOrderInput | SortOrder
+    voucherMinValue?: SortOrderInput | SortOrder
+    voucherMaxValue?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -51599,6 +59237,9 @@ export namespace Prisma {
     batches?: BatchOrderByRelationAggregateInput
     stockTransferLines?: StockTransferLineOrderByRelationAggregateInput
     skuVendors?: SKUVendorOrderByRelationAggregateInput
+    voucherCodes?: VoucherCodeOrderByRelationAggregateInput
+    voucherRestrictions?: VoucherRestrictionOrderByRelationAggregateInput
+    voucherBatches?: VoucherBatchOrderByRelationAggregateInput
   }
 
   export type SKUWhereUniqueInput = Prisma.AtLeast<{
@@ -51631,6 +59272,10 @@ export namespace Prisma {
     batchPricing?: StringNullableFilter<"SKU"> | string | null
     batchReferencePricing?: StringNullableFilter<"SKU"> | string | null
     lowStockThreshold?: IntNullableFilter<"SKU"> | number | null
+    isVoucher?: BoolFilter<"SKU"> | boolean
+    voucherValueType?: StringNullableFilter<"SKU"> | string | null
+    voucherMinValue?: FloatNullableFilter<"SKU"> | number | null
+    voucherMaxValue?: FloatNullableFilter<"SKU"> | number | null
     isActive?: BoolFilter<"SKU"> | boolean
     createdAt?: DateTimeFilter<"SKU"> | Date | string
     updatedAt?: DateTimeFilter<"SKU"> | Date | string
@@ -51648,6 +59293,9 @@ export namespace Prisma {
     batches?: BatchListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
     skuVendors?: SKUVendorListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherRestrictions?: VoucherRestrictionListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
   }, "id" | "skuCode">
 
   export type SKUOrderByWithAggregationInput = {
@@ -51677,6 +59325,10 @@ export namespace Prisma {
     batchPricing?: SortOrderInput | SortOrder
     batchReferencePricing?: SortOrderInput | SortOrder
     lowStockThreshold?: SortOrderInput | SortOrder
+    isVoucher?: SortOrder
+    voucherValueType?: SortOrderInput | SortOrder
+    voucherMinValue?: SortOrderInput | SortOrder
+    voucherMaxValue?: SortOrderInput | SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -51717,6 +59369,10 @@ export namespace Prisma {
     batchPricing?: StringNullableWithAggregatesFilter<"SKU"> | string | null
     batchReferencePricing?: StringNullableWithAggregatesFilter<"SKU"> | string | null
     lowStockThreshold?: IntNullableWithAggregatesFilter<"SKU"> | number | null
+    isVoucher?: BoolWithAggregatesFilter<"SKU"> | boolean
+    voucherValueType?: StringNullableWithAggregatesFilter<"SKU"> | string | null
+    voucherMinValue?: FloatNullableWithAggregatesFilter<"SKU"> | number | null
+    voucherMaxValue?: FloatNullableWithAggregatesFilter<"SKU"> | number | null
     isActive?: BoolWithAggregatesFilter<"SKU"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"SKU"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"SKU"> | Date | string
@@ -52067,6 +59723,9 @@ export namespace Prisma {
     batches?: BatchListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
     images?: ProductImageListRelationFilter
+    barcodes?: ProductBarcodeListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
   }
 
   export type SKUVariantOrderByWithRelationInput = {
@@ -52085,6 +59744,9 @@ export namespace Prisma {
     batches?: BatchOrderByRelationAggregateInput
     stockTransferLines?: StockTransferLineOrderByRelationAggregateInput
     images?: ProductImageOrderByRelationAggregateInput
+    barcodes?: ProductBarcodeOrderByRelationAggregateInput
+    voucherCodes?: VoucherCodeOrderByRelationAggregateInput
+    voucherBatches?: VoucherBatchOrderByRelationAggregateInput
   }
 
   export type SKUVariantWhereUniqueInput = Prisma.AtLeast<{
@@ -52106,6 +59768,9 @@ export namespace Prisma {
     batches?: BatchListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
     images?: ProductImageListRelationFilter
+    barcodes?: ProductBarcodeListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
+    voucherBatches?: VoucherBatchListRelationFilter
   }, "id" | "variantCode">
 
   export type SKUVariantOrderByWithAggregationInput = {
@@ -52267,23 +59932,27 @@ export namespace Prisma {
     NOT?: ProductBarcodeWhereInput | ProductBarcodeWhereInput[]
     id?: StringFilter<"ProductBarcode"> | string
     skuId?: StringFilter<"ProductBarcode"> | string
+    variantId?: StringNullableFilter<"ProductBarcode"> | string | null
     barcode?: StringFilter<"ProductBarcode"> | string
     barcodeType?: StringFilter<"ProductBarcode"> | string
     isDefault?: BoolFilter<"ProductBarcode"> | boolean
     label?: StringNullableFilter<"ProductBarcode"> | string | null
     createdAt?: DateTimeFilter<"ProductBarcode"> | Date | string
     sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
   }
 
   export type ProductBarcodeOrderByWithRelationInput = {
     id?: SortOrder
     skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
     barcode?: SortOrder
     barcodeType?: SortOrder
     isDefault?: SortOrder
     label?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     sku?: SKUOrderByWithRelationInput
+    variant?: SKUVariantOrderByWithRelationInput
   }
 
   export type ProductBarcodeWhereUniqueInput = Prisma.AtLeast<{
@@ -52293,16 +59962,19 @@ export namespace Prisma {
     OR?: ProductBarcodeWhereInput[]
     NOT?: ProductBarcodeWhereInput | ProductBarcodeWhereInput[]
     skuId?: StringFilter<"ProductBarcode"> | string
+    variantId?: StringNullableFilter<"ProductBarcode"> | string | null
     barcodeType?: StringFilter<"ProductBarcode"> | string
     isDefault?: BoolFilter<"ProductBarcode"> | boolean
     label?: StringNullableFilter<"ProductBarcode"> | string | null
     createdAt?: DateTimeFilter<"ProductBarcode"> | Date | string
     sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
   }, "id" | "barcode">
 
   export type ProductBarcodeOrderByWithAggregationInput = {
     id?: SortOrder
     skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
     barcode?: SortOrder
     barcodeType?: SortOrder
     isDefault?: SortOrder
@@ -52319,6 +59991,7 @@ export namespace Prisma {
     NOT?: ProductBarcodeScalarWhereWithAggregatesInput | ProductBarcodeScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ProductBarcode"> | string
     skuId?: StringWithAggregatesFilter<"ProductBarcode"> | string
+    variantId?: StringNullableWithAggregatesFilter<"ProductBarcode"> | string | null
     barcode?: StringWithAggregatesFilter<"ProductBarcode"> | string
     barcodeType?: StringWithAggregatesFilter<"ProductBarcode"> | string
     isDefault?: BoolWithAggregatesFilter<"ProductBarcode"> | boolean
@@ -53388,6 +61061,7 @@ export namespace Prisma {
     prnLines?: PRNLineListRelationFilter
     inventoryRecords?: InventoryRecordListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
   }
 
   export type BatchOrderByWithRelationInput = {
@@ -53417,6 +61091,7 @@ export namespace Prisma {
     prnLines?: PRNLineOrderByRelationAggregateInput
     inventoryRecords?: InventoryRecordOrderByRelationAggregateInput
     stockTransferLines?: StockTransferLineOrderByRelationAggregateInput
+    voucherCodes?: VoucherCodeOrderByRelationAggregateInput
   }
 
   export type BatchWhereUniqueInput = Prisma.AtLeast<{
@@ -53450,6 +61125,7 @@ export namespace Prisma {
     prnLines?: PRNLineListRelationFilter
     inventoryRecords?: InventoryRecordListRelationFilter
     stockTransferLines?: StockTransferLineListRelationFilter
+    voucherCodes?: VoucherCodeListRelationFilter
   }, "id" | "batchNumber" | "skuId_variantId_sequenceNumber">
 
   export type BatchOrderByWithAggregationInput = {
@@ -54752,6 +62428,620 @@ export namespace Prisma {
     lastUpdated?: DateTimeWithAggregatesFilter<"DashboardStats"> | Date | string
   }
 
+  export type VoucherBatchWhereInput = {
+    AND?: VoucherBatchWhereInput | VoucherBatchWhereInput[]
+    OR?: VoucherBatchWhereInput[]
+    NOT?: VoucherBatchWhereInput | VoucherBatchWhereInput[]
+    id?: StringFilter<"VoucherBatch"> | string
+    skuId?: StringFilter<"VoucherBatch"> | string
+    variantId?: StringNullableFilter<"VoucherBatch"> | string | null
+    batchName?: StringFilter<"VoucherBatch"> | string
+    prefix?: StringNullableFilter<"VoucherBatch"> | string | null
+    quantity?: IntFilter<"VoucherBatch"> | number
+    generatedCount?: IntFilter<"VoucherBatch"> | number
+    defaultValue?: FloatFilter<"VoucherBatch"> | number
+    expiryDays?: IntNullableFilter<"VoucherBatch"> | number | null
+    defaultExpiresAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+    status?: StringFilter<"VoucherBatch"> | string
+    createdBy?: StringNullableFilter<"VoucherBatch"> | string | null
+    createdAt?: DateTimeFilter<"VoucherBatch"> | Date | string
+    completedAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
+    creator?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    voucherCodes?: VoucherCodeListRelationFilter
+  }
+
+  export type VoucherBatchOrderByWithRelationInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
+    batchName?: SortOrder
+    prefix?: SortOrderInput | SortOrder
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrderInput | SortOrder
+    defaultExpiresAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    sku?: SKUOrderByWithRelationInput
+    variant?: SKUVariantOrderByWithRelationInput
+    creator?: UserOrderByWithRelationInput
+    voucherCodes?: VoucherCodeOrderByRelationAggregateInput
+  }
+
+  export type VoucherBatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: VoucherBatchWhereInput | VoucherBatchWhereInput[]
+    OR?: VoucherBatchWhereInput[]
+    NOT?: VoucherBatchWhereInput | VoucherBatchWhereInput[]
+    skuId?: StringFilter<"VoucherBatch"> | string
+    variantId?: StringNullableFilter<"VoucherBatch"> | string | null
+    batchName?: StringFilter<"VoucherBatch"> | string
+    prefix?: StringNullableFilter<"VoucherBatch"> | string | null
+    quantity?: IntFilter<"VoucherBatch"> | number
+    generatedCount?: IntFilter<"VoucherBatch"> | number
+    defaultValue?: FloatFilter<"VoucherBatch"> | number
+    expiryDays?: IntNullableFilter<"VoucherBatch"> | number | null
+    defaultExpiresAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+    status?: StringFilter<"VoucherBatch"> | string
+    createdBy?: StringNullableFilter<"VoucherBatch"> | string | null
+    createdAt?: DateTimeFilter<"VoucherBatch"> | Date | string
+    completedAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
+    creator?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    voucherCodes?: VoucherCodeListRelationFilter
+  }, "id">
+
+  export type VoucherBatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
+    batchName?: SortOrder
+    prefix?: SortOrderInput | SortOrder
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrderInput | SortOrder
+    defaultExpiresAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    _count?: VoucherBatchCountOrderByAggregateInput
+    _avg?: VoucherBatchAvgOrderByAggregateInput
+    _max?: VoucherBatchMaxOrderByAggregateInput
+    _min?: VoucherBatchMinOrderByAggregateInput
+    _sum?: VoucherBatchSumOrderByAggregateInput
+  }
+
+  export type VoucherBatchScalarWhereWithAggregatesInput = {
+    AND?: VoucherBatchScalarWhereWithAggregatesInput | VoucherBatchScalarWhereWithAggregatesInput[]
+    OR?: VoucherBatchScalarWhereWithAggregatesInput[]
+    NOT?: VoucherBatchScalarWhereWithAggregatesInput | VoucherBatchScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VoucherBatch"> | string
+    skuId?: StringWithAggregatesFilter<"VoucherBatch"> | string
+    variantId?: StringNullableWithAggregatesFilter<"VoucherBatch"> | string | null
+    batchName?: StringWithAggregatesFilter<"VoucherBatch"> | string
+    prefix?: StringNullableWithAggregatesFilter<"VoucherBatch"> | string | null
+    quantity?: IntWithAggregatesFilter<"VoucherBatch"> | number
+    generatedCount?: IntWithAggregatesFilter<"VoucherBatch"> | number
+    defaultValue?: FloatWithAggregatesFilter<"VoucherBatch"> | number
+    expiryDays?: IntNullableWithAggregatesFilter<"VoucherBatch"> | number | null
+    defaultExpiresAt?: DateTimeNullableWithAggregatesFilter<"VoucherBatch"> | Date | string | null
+    status?: StringWithAggregatesFilter<"VoucherBatch"> | string
+    createdBy?: StringNullableWithAggregatesFilter<"VoucherBatch"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"VoucherBatch"> | Date | string
+    completedAt?: DateTimeNullableWithAggregatesFilter<"VoucherBatch"> | Date | string | null
+  }
+
+  export type VoucherCodeWhereInput = {
+    AND?: VoucherCodeWhereInput | VoucherCodeWhereInput[]
+    OR?: VoucherCodeWhereInput[]
+    NOT?: VoucherCodeWhereInput | VoucherCodeWhereInput[]
+    id?: StringFilter<"VoucherCode"> | string
+    code?: StringFilter<"VoucherCode"> | string
+    skuId?: StringFilter<"VoucherCode"> | string
+    variantId?: StringNullableFilter<"VoucherCode"> | string | null
+    batchId?: StringNullableFilter<"VoucherCode"> | string | null
+    voucherBatchId?: StringNullableFilter<"VoucherCode"> | string | null
+    initialValue?: FloatFilter<"VoucherCode"> | number
+    currentBalance?: FloatFilter<"VoucherCode"> | number
+    currency?: StringFilter<"VoucherCode"> | string
+    status?: StringFilter<"VoucherCode"> | string
+    issuedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    expiresAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    activatedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    fullyRedeemedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    customerId?: StringNullableFilter<"VoucherCode"> | string | null
+    orderId?: StringNullableFilter<"VoucherCode"> | string | null
+    purchaseReference?: StringNullableFilter<"VoucherCode"> | string | null
+    notes?: StringNullableFilter<"VoucherCode"> | string | null
+    createdBy?: StringNullableFilter<"VoucherCode"> | string | null
+    createdAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
+    batch?: XOR<BatchNullableRelationFilter, BatchWhereInput> | null
+    voucherBatch?: XOR<VoucherBatchNullableRelationFilter, VoucherBatchWhereInput> | null
+    creator?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    redemptions?: VoucherRedemptionListRelationFilter
+  }
+
+  export type VoucherCodeOrderByWithRelationInput = {
+    id?: SortOrder
+    code?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
+    batchId?: SortOrderInput | SortOrder
+    voucherBatchId?: SortOrderInput | SortOrder
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+    currency?: SortOrder
+    status?: SortOrder
+    issuedAt?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    fullyRedeemedAt?: SortOrderInput | SortOrder
+    customerId?: SortOrderInput | SortOrder
+    orderId?: SortOrderInput | SortOrder
+    purchaseReference?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    sku?: SKUOrderByWithRelationInput
+    variant?: SKUVariantOrderByWithRelationInput
+    batch?: BatchOrderByWithRelationInput
+    voucherBatch?: VoucherBatchOrderByWithRelationInput
+    creator?: UserOrderByWithRelationInput
+    redemptions?: VoucherRedemptionOrderByRelationAggregateInput
+  }
+
+  export type VoucherCodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    code?: string
+    AND?: VoucherCodeWhereInput | VoucherCodeWhereInput[]
+    OR?: VoucherCodeWhereInput[]
+    NOT?: VoucherCodeWhereInput | VoucherCodeWhereInput[]
+    skuId?: StringFilter<"VoucherCode"> | string
+    variantId?: StringNullableFilter<"VoucherCode"> | string | null
+    batchId?: StringNullableFilter<"VoucherCode"> | string | null
+    voucherBatchId?: StringNullableFilter<"VoucherCode"> | string | null
+    initialValue?: FloatFilter<"VoucherCode"> | number
+    currentBalance?: FloatFilter<"VoucherCode"> | number
+    currency?: StringFilter<"VoucherCode"> | string
+    status?: StringFilter<"VoucherCode"> | string
+    issuedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    expiresAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    activatedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    fullyRedeemedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    customerId?: StringNullableFilter<"VoucherCode"> | string | null
+    orderId?: StringNullableFilter<"VoucherCode"> | string | null
+    purchaseReference?: StringNullableFilter<"VoucherCode"> | string | null
+    notes?: StringNullableFilter<"VoucherCode"> | string | null
+    createdBy?: StringNullableFilter<"VoucherCode"> | string | null
+    createdAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+    variant?: XOR<SKUVariantNullableRelationFilter, SKUVariantWhereInput> | null
+    batch?: XOR<BatchNullableRelationFilter, BatchWhereInput> | null
+    voucherBatch?: XOR<VoucherBatchNullableRelationFilter, VoucherBatchWhereInput> | null
+    creator?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    redemptions?: VoucherRedemptionListRelationFilter
+  }, "id" | "code">
+
+  export type VoucherCodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    code?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrderInput | SortOrder
+    batchId?: SortOrderInput | SortOrder
+    voucherBatchId?: SortOrderInput | SortOrder
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+    currency?: SortOrder
+    status?: SortOrder
+    issuedAt?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    activatedAt?: SortOrderInput | SortOrder
+    fullyRedeemedAt?: SortOrderInput | SortOrder
+    customerId?: SortOrderInput | SortOrder
+    orderId?: SortOrderInput | SortOrder
+    purchaseReference?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    createdBy?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: VoucherCodeCountOrderByAggregateInput
+    _avg?: VoucherCodeAvgOrderByAggregateInput
+    _max?: VoucherCodeMaxOrderByAggregateInput
+    _min?: VoucherCodeMinOrderByAggregateInput
+    _sum?: VoucherCodeSumOrderByAggregateInput
+  }
+
+  export type VoucherCodeScalarWhereWithAggregatesInput = {
+    AND?: VoucherCodeScalarWhereWithAggregatesInput | VoucherCodeScalarWhereWithAggregatesInput[]
+    OR?: VoucherCodeScalarWhereWithAggregatesInput[]
+    NOT?: VoucherCodeScalarWhereWithAggregatesInput | VoucherCodeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VoucherCode"> | string
+    code?: StringWithAggregatesFilter<"VoucherCode"> | string
+    skuId?: StringWithAggregatesFilter<"VoucherCode"> | string
+    variantId?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    batchId?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    voucherBatchId?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    initialValue?: FloatWithAggregatesFilter<"VoucherCode"> | number
+    currentBalance?: FloatWithAggregatesFilter<"VoucherCode"> | number
+    currency?: StringWithAggregatesFilter<"VoucherCode"> | string
+    status?: StringWithAggregatesFilter<"VoucherCode"> | string
+    issuedAt?: DateTimeWithAggregatesFilter<"VoucherCode"> | Date | string
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"VoucherCode"> | Date | string | null
+    activatedAt?: DateTimeNullableWithAggregatesFilter<"VoucherCode"> | Date | string | null
+    fullyRedeemedAt?: DateTimeNullableWithAggregatesFilter<"VoucherCode"> | Date | string | null
+    customerId?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    orderId?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    purchaseReference?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    createdBy?: StringNullableWithAggregatesFilter<"VoucherCode"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"VoucherCode"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"VoucherCode"> | Date | string
+  }
+
+  export type VoucherRedemptionWhereInput = {
+    AND?: VoucherRedemptionWhereInput | VoucherRedemptionWhereInput[]
+    OR?: VoucherRedemptionWhereInput[]
+    NOT?: VoucherRedemptionWhereInput | VoucherRedemptionWhereInput[]
+    id?: StringFilter<"VoucherRedemption"> | string
+    voucherCodeId?: StringFilter<"VoucherRedemption"> | string
+    code?: StringFilter<"VoucherRedemption"> | string
+    redeemedAmount?: FloatFilter<"VoucherRedemption"> | number
+    balanceBefore?: FloatFilter<"VoucherRedemption"> | number
+    balanceAfter?: FloatFilter<"VoucherRedemption"> | number
+    orderId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    invoiceNumber?: StringNullableFilter<"VoucherRedemption"> | string | null
+    branchId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    appliedToItems?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedBy?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"VoucherRedemption"> | Date | string
+    notes?: StringNullableFilter<"VoucherRedemption"> | string | null
+    voucherCode?: XOR<VoucherCodeRelationFilter, VoucherCodeWhereInput>
+    branch?: XOR<BranchNullableRelationFilter, BranchWhereInput> | null
+    redeemer?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+  }
+
+  export type VoucherRedemptionOrderByWithRelationInput = {
+    id?: SortOrder
+    voucherCodeId?: SortOrder
+    code?: SortOrder
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+    orderId?: SortOrderInput | SortOrder
+    invoiceNumber?: SortOrderInput | SortOrder
+    branchId?: SortOrderInput | SortOrder
+    appliedToItems?: SortOrderInput | SortOrder
+    redeemedBy?: SortOrderInput | SortOrder
+    redeemedAt?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    voucherCode?: VoucherCodeOrderByWithRelationInput
+    branch?: BranchOrderByWithRelationInput
+    redeemer?: UserOrderByWithRelationInput
+  }
+
+  export type VoucherRedemptionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: VoucherRedemptionWhereInput | VoucherRedemptionWhereInput[]
+    OR?: VoucherRedemptionWhereInput[]
+    NOT?: VoucherRedemptionWhereInput | VoucherRedemptionWhereInput[]
+    voucherCodeId?: StringFilter<"VoucherRedemption"> | string
+    code?: StringFilter<"VoucherRedemption"> | string
+    redeemedAmount?: FloatFilter<"VoucherRedemption"> | number
+    balanceBefore?: FloatFilter<"VoucherRedemption"> | number
+    balanceAfter?: FloatFilter<"VoucherRedemption"> | number
+    orderId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    invoiceNumber?: StringNullableFilter<"VoucherRedemption"> | string | null
+    branchId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    appliedToItems?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedBy?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"VoucherRedemption"> | Date | string
+    notes?: StringNullableFilter<"VoucherRedemption"> | string | null
+    voucherCode?: XOR<VoucherCodeRelationFilter, VoucherCodeWhereInput>
+    branch?: XOR<BranchNullableRelationFilter, BranchWhereInput> | null
+    redeemer?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type VoucherRedemptionOrderByWithAggregationInput = {
+    id?: SortOrder
+    voucherCodeId?: SortOrder
+    code?: SortOrder
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+    orderId?: SortOrderInput | SortOrder
+    invoiceNumber?: SortOrderInput | SortOrder
+    branchId?: SortOrderInput | SortOrder
+    appliedToItems?: SortOrderInput | SortOrder
+    redeemedBy?: SortOrderInput | SortOrder
+    redeemedAt?: SortOrder
+    notes?: SortOrderInput | SortOrder
+    _count?: VoucherRedemptionCountOrderByAggregateInput
+    _avg?: VoucherRedemptionAvgOrderByAggregateInput
+    _max?: VoucherRedemptionMaxOrderByAggregateInput
+    _min?: VoucherRedemptionMinOrderByAggregateInput
+    _sum?: VoucherRedemptionSumOrderByAggregateInput
+  }
+
+  export type VoucherRedemptionScalarWhereWithAggregatesInput = {
+    AND?: VoucherRedemptionScalarWhereWithAggregatesInput | VoucherRedemptionScalarWhereWithAggregatesInput[]
+    OR?: VoucherRedemptionScalarWhereWithAggregatesInput[]
+    NOT?: VoucherRedemptionScalarWhereWithAggregatesInput | VoucherRedemptionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VoucherRedemption"> | string
+    voucherCodeId?: StringWithAggregatesFilter<"VoucherRedemption"> | string
+    code?: StringWithAggregatesFilter<"VoucherRedemption"> | string
+    redeemedAmount?: FloatWithAggregatesFilter<"VoucherRedemption"> | number
+    balanceBefore?: FloatWithAggregatesFilter<"VoucherRedemption"> | number
+    balanceAfter?: FloatWithAggregatesFilter<"VoucherRedemption"> | number
+    orderId?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+    invoiceNumber?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+    branchId?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+    appliedToItems?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+    redeemedBy?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+    redeemedAt?: DateTimeWithAggregatesFilter<"VoucherRedemption"> | Date | string
+    notes?: StringNullableWithAggregatesFilter<"VoucherRedemption"> | string | null
+  }
+
+  export type LegacyEntityLinkWhereInput = {
+    AND?: LegacyEntityLinkWhereInput | LegacyEntityLinkWhereInput[]
+    OR?: LegacyEntityLinkWhereInput[]
+    NOT?: LegacyEntityLinkWhereInput | LegacyEntityLinkWhereInput[]
+    id?: StringFilter<"LegacyEntityLink"> | string
+    sourceType?: StringFilter<"LegacyEntityLink"> | string
+    sourceId?: StringFilter<"LegacyEntityLink"> | string
+    sourceCode?: StringNullableFilter<"LegacyEntityLink"> | string | null
+    targetType?: StringFilter<"LegacyEntityLink"> | string
+    targetId?: StringFilter<"LegacyEntityLink"> | string
+    resolution?: StringFilter<"LegacyEntityLink"> | string
+    isLocked?: BoolFilter<"LegacyEntityLink"> | boolean
+    lastApplied?: StringNullableFilter<"LegacyEntityLink"> | string | null
+    lastSeenAt?: DateTimeNullableFilter<"LegacyEntityLink"> | Date | string | null
+    createdAt?: DateTimeFilter<"LegacyEntityLink"> | Date | string
+    updatedAt?: DateTimeFilter<"LegacyEntityLink"> | Date | string
+  }
+
+  export type LegacyEntityLinkOrderByWithRelationInput = {
+    id?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    sourceCode?: SortOrderInput | SortOrder
+    targetType?: SortOrder
+    targetId?: SortOrder
+    resolution?: SortOrder
+    isLocked?: SortOrder
+    lastApplied?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LegacyEntityLinkWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    sourceType_sourceId?: LegacyEntityLinkSourceTypeSourceIdCompoundUniqueInput
+    AND?: LegacyEntityLinkWhereInput | LegacyEntityLinkWhereInput[]
+    OR?: LegacyEntityLinkWhereInput[]
+    NOT?: LegacyEntityLinkWhereInput | LegacyEntityLinkWhereInput[]
+    sourceType?: StringFilter<"LegacyEntityLink"> | string
+    sourceId?: StringFilter<"LegacyEntityLink"> | string
+    sourceCode?: StringNullableFilter<"LegacyEntityLink"> | string | null
+    targetType?: StringFilter<"LegacyEntityLink"> | string
+    targetId?: StringFilter<"LegacyEntityLink"> | string
+    resolution?: StringFilter<"LegacyEntityLink"> | string
+    isLocked?: BoolFilter<"LegacyEntityLink"> | boolean
+    lastApplied?: StringNullableFilter<"LegacyEntityLink"> | string | null
+    lastSeenAt?: DateTimeNullableFilter<"LegacyEntityLink"> | Date | string | null
+    createdAt?: DateTimeFilter<"LegacyEntityLink"> | Date | string
+    updatedAt?: DateTimeFilter<"LegacyEntityLink"> | Date | string
+  }, "id" | "sourceType_sourceId">
+
+  export type LegacyEntityLinkOrderByWithAggregationInput = {
+    id?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    sourceCode?: SortOrderInput | SortOrder
+    targetType?: SortOrder
+    targetId?: SortOrder
+    resolution?: SortOrder
+    isLocked?: SortOrder
+    lastApplied?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: LegacyEntityLinkCountOrderByAggregateInput
+    _max?: LegacyEntityLinkMaxOrderByAggregateInput
+    _min?: LegacyEntityLinkMinOrderByAggregateInput
+  }
+
+  export type LegacyEntityLinkScalarWhereWithAggregatesInput = {
+    AND?: LegacyEntityLinkScalarWhereWithAggregatesInput | LegacyEntityLinkScalarWhereWithAggregatesInput[]
+    OR?: LegacyEntityLinkScalarWhereWithAggregatesInput[]
+    NOT?: LegacyEntityLinkScalarWhereWithAggregatesInput | LegacyEntityLinkScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    sourceType?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    sourceId?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    sourceCode?: StringNullableWithAggregatesFilter<"LegacyEntityLink"> | string | null
+    targetType?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    targetId?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    resolution?: StringWithAggregatesFilter<"LegacyEntityLink"> | string
+    isLocked?: BoolWithAggregatesFilter<"LegacyEntityLink"> | boolean
+    lastApplied?: StringNullableWithAggregatesFilter<"LegacyEntityLink"> | string | null
+    lastSeenAt?: DateTimeNullableWithAggregatesFilter<"LegacyEntityLink"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"LegacyEntityLink"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"LegacyEntityLink"> | Date | string
+  }
+
+  export type LegacySyncRunWhereInput = {
+    AND?: LegacySyncRunWhereInput | LegacySyncRunWhereInput[]
+    OR?: LegacySyncRunWhereInput[]
+    NOT?: LegacySyncRunWhereInput | LegacySyncRunWhereInput[]
+    id?: StringFilter<"LegacySyncRun"> | string
+    agentId?: StringNullableFilter<"LegacySyncRun"> | string | null
+    status?: StringFilter<"LegacySyncRun"> | string
+    startedAt?: DateTimeFilter<"LegacySyncRun"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"LegacySyncRun"> | Date | string | null
+    stats?: StringNullableFilter<"LegacySyncRun"> | string | null
+    errorMessage?: StringNullableFilter<"LegacySyncRun"> | string | null
+  }
+
+  export type LegacySyncRunOrderByWithRelationInput = {
+    id?: SortOrder
+    agentId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    stats?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+  }
+
+  export type LegacySyncRunWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: LegacySyncRunWhereInput | LegacySyncRunWhereInput[]
+    OR?: LegacySyncRunWhereInput[]
+    NOT?: LegacySyncRunWhereInput | LegacySyncRunWhereInput[]
+    agentId?: StringNullableFilter<"LegacySyncRun"> | string | null
+    status?: StringFilter<"LegacySyncRun"> | string
+    startedAt?: DateTimeFilter<"LegacySyncRun"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"LegacySyncRun"> | Date | string | null
+    stats?: StringNullableFilter<"LegacySyncRun"> | string | null
+    errorMessage?: StringNullableFilter<"LegacySyncRun"> | string | null
+  }, "id">
+
+  export type LegacySyncRunOrderByWithAggregationInput = {
+    id?: SortOrder
+    agentId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    stats?: SortOrderInput | SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    _count?: LegacySyncRunCountOrderByAggregateInput
+    _max?: LegacySyncRunMaxOrderByAggregateInput
+    _min?: LegacySyncRunMinOrderByAggregateInput
+  }
+
+  export type LegacySyncRunScalarWhereWithAggregatesInput = {
+    AND?: LegacySyncRunScalarWhereWithAggregatesInput | LegacySyncRunScalarWhereWithAggregatesInput[]
+    OR?: LegacySyncRunScalarWhereWithAggregatesInput[]
+    NOT?: LegacySyncRunScalarWhereWithAggregatesInput | LegacySyncRunScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"LegacySyncRun"> | string
+    agentId?: StringNullableWithAggregatesFilter<"LegacySyncRun"> | string | null
+    status?: StringWithAggregatesFilter<"LegacySyncRun"> | string
+    startedAt?: DateTimeWithAggregatesFilter<"LegacySyncRun"> | Date | string
+    finishedAt?: DateTimeNullableWithAggregatesFilter<"LegacySyncRun"> | Date | string | null
+    stats?: StringNullableWithAggregatesFilter<"LegacySyncRun"> | string | null
+    errorMessage?: StringNullableWithAggregatesFilter<"LegacySyncRun"> | string | null
+  }
+
+  export type VoucherRestrictionWhereInput = {
+    AND?: VoucherRestrictionWhereInput | VoucherRestrictionWhereInput[]
+    OR?: VoucherRestrictionWhereInput[]
+    NOT?: VoucherRestrictionWhereInput | VoucherRestrictionWhereInput[]
+    id?: StringFilter<"VoucherRestriction"> | string
+    skuId?: StringFilter<"VoucherRestriction"> | string
+    restrictionType?: StringFilter<"VoucherRestriction"> | string
+    targetCategoryIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetSkuIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetVariantIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    cannotCombineWithDiscounts?: BoolFilter<"VoucherRestriction"> | boolean
+    cannotCombineWithOtherVouchers?: BoolFilter<"VoucherRestriction"> | boolean
+    minPurchaseAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    maxDiscountAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    priority?: IntFilter<"VoucherRestriction"> | number
+    createdAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+  }
+
+  export type VoucherRestrictionOrderByWithRelationInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    restrictionType?: SortOrder
+    targetCategoryIds?: SortOrderInput | SortOrder
+    targetSkuIds?: SortOrderInput | SortOrder
+    targetVariantIds?: SortOrderInput | SortOrder
+    cannotCombineWithDiscounts?: SortOrder
+    cannotCombineWithOtherVouchers?: SortOrder
+    minPurchaseAmount?: SortOrderInput | SortOrder
+    maxDiscountAmount?: SortOrderInput | SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    sku?: SKUOrderByWithRelationInput
+  }
+
+  export type VoucherRestrictionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    skuId_restrictionType?: VoucherRestrictionSkuIdRestrictionTypeCompoundUniqueInput
+    AND?: VoucherRestrictionWhereInput | VoucherRestrictionWhereInput[]
+    OR?: VoucherRestrictionWhereInput[]
+    NOT?: VoucherRestrictionWhereInput | VoucherRestrictionWhereInput[]
+    skuId?: StringFilter<"VoucherRestriction"> | string
+    restrictionType?: StringFilter<"VoucherRestriction"> | string
+    targetCategoryIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetSkuIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetVariantIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    cannotCombineWithDiscounts?: BoolFilter<"VoucherRestriction"> | boolean
+    cannotCombineWithOtherVouchers?: BoolFilter<"VoucherRestriction"> | boolean
+    minPurchaseAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    maxDiscountAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    priority?: IntFilter<"VoucherRestriction"> | number
+    createdAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+    sku?: XOR<SKURelationFilter, SKUWhereInput>
+  }, "id" | "skuId_restrictionType">
+
+  export type VoucherRestrictionOrderByWithAggregationInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    restrictionType?: SortOrder
+    targetCategoryIds?: SortOrderInput | SortOrder
+    targetSkuIds?: SortOrderInput | SortOrder
+    targetVariantIds?: SortOrderInput | SortOrder
+    cannotCombineWithDiscounts?: SortOrder
+    cannotCombineWithOtherVouchers?: SortOrder
+    minPurchaseAmount?: SortOrderInput | SortOrder
+    maxDiscountAmount?: SortOrderInput | SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: VoucherRestrictionCountOrderByAggregateInput
+    _avg?: VoucherRestrictionAvgOrderByAggregateInput
+    _max?: VoucherRestrictionMaxOrderByAggregateInput
+    _min?: VoucherRestrictionMinOrderByAggregateInput
+    _sum?: VoucherRestrictionSumOrderByAggregateInput
+  }
+
+  export type VoucherRestrictionScalarWhereWithAggregatesInput = {
+    AND?: VoucherRestrictionScalarWhereWithAggregatesInput | VoucherRestrictionScalarWhereWithAggregatesInput[]
+    OR?: VoucherRestrictionScalarWhereWithAggregatesInput[]
+    NOT?: VoucherRestrictionScalarWhereWithAggregatesInput | VoucherRestrictionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VoucherRestriction"> | string
+    skuId?: StringWithAggregatesFilter<"VoucherRestriction"> | string
+    restrictionType?: StringWithAggregatesFilter<"VoucherRestriction"> | string
+    targetCategoryIds?: StringNullableWithAggregatesFilter<"VoucherRestriction"> | string | null
+    targetSkuIds?: StringNullableWithAggregatesFilter<"VoucherRestriction"> | string | null
+    targetVariantIds?: StringNullableWithAggregatesFilter<"VoucherRestriction"> | string | null
+    cannotCombineWithDiscounts?: BoolWithAggregatesFilter<"VoucherRestriction"> | boolean
+    cannotCombineWithOtherVouchers?: BoolWithAggregatesFilter<"VoucherRestriction"> | boolean
+    minPurchaseAmount?: FloatNullableWithAggregatesFilter<"VoucherRestriction"> | number | null
+    maxDiscountAmount?: FloatNullableWithAggregatesFilter<"VoucherRestriction"> | number | null
+    priority?: IntWithAggregatesFilter<"VoucherRestriction"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"VoucherRestriction"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"VoucherRestriction"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -54769,6 +63059,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -54788,6 +63081,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUpdateInput = {
@@ -54807,6 +63103,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -54826,6 +63125,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -55224,6 +63526,7 @@ export namespace Prisma {
     floors?: FloorCreateNestedManyWithoutBranchInput
     stockTransfersFrom?: StockTransferCreateNestedManyWithoutFromBranchInput
     stockTransfersTo?: StockTransferCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutBranchInput
   }
 
   export type BranchUncheckedCreateInput = {
@@ -55239,6 +63542,7 @@ export namespace Prisma {
     floors?: FloorUncheckedCreateNestedManyWithoutBranchInput
     stockTransfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromBranchInput
     stockTransfersTo?: StockTransferUncheckedCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutBranchInput
   }
 
   export type BranchUpdateInput = {
@@ -55254,6 +63558,7 @@ export namespace Prisma {
     floors?: FloorUpdateManyWithoutBranchNestedInput
     stockTransfersFrom?: StockTransferUpdateManyWithoutFromBranchNestedInput
     stockTransfersTo?: StockTransferUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchUncheckedUpdateInput = {
@@ -55269,6 +63574,7 @@ export namespace Prisma {
     floors?: FloorUncheckedUpdateManyWithoutBranchNestedInput
     stockTransfersFrom?: StockTransferUncheckedUpdateManyWithoutFromBranchNestedInput
     stockTransfersTo?: StockTransferUncheckedUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchCreateManyInput = {
@@ -55331,6 +63637,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -55348,6 +63658,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateInput = {
@@ -55377,6 +63690,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -55391,6 +63708,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUpdateInput = {
@@ -55417,6 +63737,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -55434,6 +63758,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateInput = {
@@ -55463,6 +63790,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -55477,6 +63808,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUCreateManyInput = {
@@ -55506,6 +63840,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -55535,6 +63873,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -55567,6 +63909,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -55885,6 +64231,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateInput = {
@@ -55902,6 +64251,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUpdateInput = {
@@ -55919,6 +64271,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateInput = {
@@ -55936,6 +64291,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantCreateManyInput = {
@@ -56090,11 +64448,13 @@ export namespace Prisma {
     label?: string | null
     createdAt?: Date | string
     sku: SKUCreateNestedOneWithoutBarcodesInput
+    variant?: SKUVariantCreateNestedOneWithoutBarcodesInput
   }
 
   export type ProductBarcodeUncheckedCreateInput = {
     id?: string
     skuId: string
+    variantId?: string | null
     barcode: string
     barcodeType?: string
     isDefault?: boolean
@@ -56110,11 +64470,13 @@ export namespace Prisma {
     label?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sku?: SKUUpdateOneRequiredWithoutBarcodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutBarcodesNestedInput
   }
 
   export type ProductBarcodeUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
     barcode?: StringFieldUpdateOperationsInput | string
     barcodeType?: StringFieldUpdateOperationsInput | string
     isDefault?: BoolFieldUpdateOperationsInput | boolean
@@ -56125,6 +64487,7 @@ export namespace Prisma {
   export type ProductBarcodeCreateManyInput = {
     id?: string
     skuId: string
+    variantId?: string | null
     barcode: string
     barcodeType?: string
     isDefault?: boolean
@@ -56144,6 +64507,7 @@ export namespace Prisma {
   export type ProductBarcodeUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
     barcode?: StringFieldUpdateOperationsInput | string
     barcodeType?: StringFieldUpdateOperationsInput | string
     isDefault?: BoolFieldUpdateOperationsInput | boolean
@@ -57267,6 +65631,7 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateInput = {
@@ -57293,6 +65658,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUpdateInput = {
@@ -57319,6 +65685,7 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateInput = {
@@ -57345,6 +65712,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchCreateManyInput = {
@@ -58791,6 +67159,688 @@ export namespace Prisma {
     lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type VoucherBatchCreateInput = {
+    id?: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    sku: SKUCreateNestedOneWithoutVoucherBatchesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherBatchesInput
+    creator?: UserCreateNestedOneWithoutVoucherBatchesInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchUncheckedCreateInput = {
+    id?: string
+    skuId: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sku?: SKUUpdateOneRequiredWithoutVoucherBatchesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherBatchesNestedInput
+    creator?: UserUpdateOneWithoutVoucherBatchesNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchCreateManyInput = {
+    id?: string
+    skuId: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type VoucherBatchUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type VoucherBatchUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type VoucherCodeCreateInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeCreateManyInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherCodeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherCodeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRedemptionCreateInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+    voucherCode: VoucherCodeCreateNestedOneWithoutRedemptionsInput
+    branch?: BranchCreateNestedOneWithoutVoucherRedemptionsInput
+    redeemer?: UserCreateNestedOneWithoutVoucherRedemptionsInput
+  }
+
+  export type VoucherRedemptionUncheckedCreateInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherCode?: VoucherCodeUpdateOneRequiredWithoutRedemptionsNestedInput
+    branch?: BranchUpdateOneWithoutVoucherRedemptionsNestedInput
+    redeemer?: UserUpdateOneWithoutVoucherRedemptionsNestedInput
+  }
+
+  export type VoucherRedemptionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRedemptionCreateManyInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LegacyEntityLinkCreateInput = {
+    id?: string
+    sourceType: string
+    sourceId: string
+    sourceCode?: string | null
+    targetType: string
+    targetId: string
+    resolution?: string
+    isLocked?: boolean
+    lastApplied?: string | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LegacyEntityLinkUncheckedCreateInput = {
+    id?: string
+    sourceType: string
+    sourceId: string
+    sourceCode?: string | null
+    targetType: string
+    targetId: string
+    resolution?: string
+    isLocked?: boolean
+    lastApplied?: string | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LegacyEntityLinkUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    sourceCode?: NullableStringFieldUpdateOperationsInput | string | null
+    targetType?: StringFieldUpdateOperationsInput | string
+    targetId?: StringFieldUpdateOperationsInput | string
+    resolution?: StringFieldUpdateOperationsInput | string
+    isLocked?: BoolFieldUpdateOperationsInput | boolean
+    lastApplied?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LegacyEntityLinkUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    sourceCode?: NullableStringFieldUpdateOperationsInput | string | null
+    targetType?: StringFieldUpdateOperationsInput | string
+    targetId?: StringFieldUpdateOperationsInput | string
+    resolution?: StringFieldUpdateOperationsInput | string
+    isLocked?: BoolFieldUpdateOperationsInput | boolean
+    lastApplied?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LegacyEntityLinkCreateManyInput = {
+    id?: string
+    sourceType: string
+    sourceId: string
+    sourceCode?: string | null
+    targetType: string
+    targetId: string
+    resolution?: string
+    isLocked?: boolean
+    lastApplied?: string | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type LegacyEntityLinkUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    sourceCode?: NullableStringFieldUpdateOperationsInput | string | null
+    targetType?: StringFieldUpdateOperationsInput | string
+    targetId?: StringFieldUpdateOperationsInput | string
+    resolution?: StringFieldUpdateOperationsInput | string
+    isLocked?: BoolFieldUpdateOperationsInput | boolean
+    lastApplied?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LegacyEntityLinkUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceType?: StringFieldUpdateOperationsInput | string
+    sourceId?: StringFieldUpdateOperationsInput | string
+    sourceCode?: NullableStringFieldUpdateOperationsInput | string | null
+    targetType?: StringFieldUpdateOperationsInput | string
+    targetId?: StringFieldUpdateOperationsInput | string
+    resolution?: StringFieldUpdateOperationsInput | string
+    isLocked?: BoolFieldUpdateOperationsInput | boolean
+    lastApplied?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type LegacySyncRunCreateInput = {
+    id?: string
+    agentId?: string | null
+    status?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    stats?: string | null
+    errorMessage?: string | null
+  }
+
+  export type LegacySyncRunUncheckedCreateInput = {
+    id?: string
+    agentId?: string | null
+    status?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    stats?: string | null
+    errorMessage?: string | null
+  }
+
+  export type LegacySyncRunUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stats?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LegacySyncRunUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stats?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LegacySyncRunCreateManyInput = {
+    id?: string
+    agentId?: string | null
+    status?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    stats?: string | null
+    errorMessage?: string | null
+  }
+
+  export type LegacySyncRunUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stats?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type LegacySyncRunUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    stats?: NullableStringFieldUpdateOperationsInput | string | null
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRestrictionCreateInput = {
+    id?: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherRestrictionsInput
+  }
+
+  export type VoucherRestrictionUncheckedCreateInput = {
+    id?: string
+    skuId: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRestrictionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherRestrictionsNestedInput
+  }
+
+  export type VoucherRestrictionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRestrictionCreateManyInput = {
+    id?: string
+    skuId: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRestrictionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRestrictionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -58888,6 +67938,24 @@ export namespace Prisma {
     none?: StockTransferWhereInput
   }
 
+  export type VoucherBatchListRelationFilter = {
+    every?: VoucherBatchWhereInput
+    some?: VoucherBatchWhereInput
+    none?: VoucherBatchWhereInput
+  }
+
+  export type VoucherCodeListRelationFilter = {
+    every?: VoucherCodeWhereInput
+    some?: VoucherCodeWhereInput
+    none?: VoucherCodeWhereInput
+  }
+
+  export type VoucherRedemptionListRelationFilter = {
+    every?: VoucherRedemptionWhereInput
+    some?: VoucherRedemptionWhereInput
+    none?: VoucherRedemptionWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -58922,6 +67990,18 @@ export namespace Prisma {
   }
 
   export type StockTransferOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VoucherBatchOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VoucherCodeOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VoucherRedemptionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -59401,6 +68481,12 @@ export namespace Prisma {
     none?: StockTransferLineWhereInput
   }
 
+  export type VoucherRestrictionListRelationFilter = {
+    every?: VoucherRestrictionWhereInput
+    some?: VoucherRestrictionWhereInput
+    none?: VoucherRestrictionWhereInput
+  }
+
   export type GRNLineOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -59426,6 +68512,10 @@ export namespace Prisma {
   }
 
   export type StockTransferLineOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VoucherRestrictionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -59456,6 +68546,10 @@ export namespace Prisma {
     batchPricing?: SortOrder
     batchReferencePricing?: SortOrder
     lowStockThreshold?: SortOrder
+    isVoucher?: SortOrder
+    voucherValueType?: SortOrder
+    voucherMinValue?: SortOrder
+    voucherMaxValue?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -59470,6 +68564,8 @@ export namespace Prisma {
     marginValue?: SortOrder
     shelfLifeDays?: SortOrder
     lowStockThreshold?: SortOrder
+    voucherMinValue?: SortOrder
+    voucherMaxValue?: SortOrder
   }
 
   export type SKUMaxOrderByAggregateInput = {
@@ -59499,6 +68595,10 @@ export namespace Prisma {
     batchPricing?: SortOrder
     batchReferencePricing?: SortOrder
     lowStockThreshold?: SortOrder
+    isVoucher?: SortOrder
+    voucherValueType?: SortOrder
+    voucherMinValue?: SortOrder
+    voucherMaxValue?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -59531,6 +68631,10 @@ export namespace Prisma {
     batchPricing?: SortOrder
     batchReferencePricing?: SortOrder
     lowStockThreshold?: SortOrder
+    isVoucher?: SortOrder
+    voucherValueType?: SortOrder
+    voucherMinValue?: SortOrder
+    voucherMaxValue?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -59545,6 +68649,8 @@ export namespace Prisma {
     marginValue?: SortOrder
     shelfLifeDays?: SortOrder
     lowStockThreshold?: SortOrder
+    voucherMinValue?: SortOrder
+    voucherMaxValue?: SortOrder
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -59900,6 +69006,7 @@ export namespace Prisma {
   export type ProductBarcodeCountOrderByAggregateInput = {
     id?: SortOrder
     skuId?: SortOrder
+    variantId?: SortOrder
     barcode?: SortOrder
     barcodeType?: SortOrder
     isDefault?: SortOrder
@@ -59910,6 +69017,7 @@ export namespace Prisma {
   export type ProductBarcodeMaxOrderByAggregateInput = {
     id?: SortOrder
     skuId?: SortOrder
+    variantId?: SortOrder
     barcode?: SortOrder
     barcodeType?: SortOrder
     isDefault?: SortOrder
@@ -59920,6 +69028,7 @@ export namespace Prisma {
   export type ProductBarcodeMinOrderByAggregateInput = {
     id?: SortOrder
     skuId?: SortOrder
+    variantId?: SortOrder
     barcode?: SortOrder
     barcodeType?: SortOrder
     isDefault?: SortOrder
@@ -61475,6 +70584,368 @@ export namespace Prisma {
     openGRNs?: SortOrder
   }
 
+  export type VoucherBatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchName?: SortOrder
+    prefix?: SortOrder
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrder
+    defaultExpiresAt?: SortOrder
+    status?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type VoucherBatchAvgOrderByAggregateInput = {
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrder
+  }
+
+  export type VoucherBatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchName?: SortOrder
+    prefix?: SortOrder
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrder
+    defaultExpiresAt?: SortOrder
+    status?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type VoucherBatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchName?: SortOrder
+    prefix?: SortOrder
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrder
+    defaultExpiresAt?: SortOrder
+    status?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type VoucherBatchSumOrderByAggregateInput = {
+    quantity?: SortOrder
+    generatedCount?: SortOrder
+    defaultValue?: SortOrder
+    expiryDays?: SortOrder
+  }
+
+  export type VoucherBatchNullableRelationFilter = {
+    is?: VoucherBatchWhereInput | null
+    isNot?: VoucherBatchWhereInput | null
+  }
+
+  export type VoucherCodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchId?: SortOrder
+    voucherBatchId?: SortOrder
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+    currency?: SortOrder
+    status?: SortOrder
+    issuedAt?: SortOrder
+    expiresAt?: SortOrder
+    activatedAt?: SortOrder
+    fullyRedeemedAt?: SortOrder
+    customerId?: SortOrder
+    orderId?: SortOrder
+    purchaseReference?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherCodeAvgOrderByAggregateInput = {
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+  }
+
+  export type VoucherCodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchId?: SortOrder
+    voucherBatchId?: SortOrder
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+    currency?: SortOrder
+    status?: SortOrder
+    issuedAt?: SortOrder
+    expiresAt?: SortOrder
+    activatedAt?: SortOrder
+    fullyRedeemedAt?: SortOrder
+    customerId?: SortOrder
+    orderId?: SortOrder
+    purchaseReference?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherCodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    skuId?: SortOrder
+    variantId?: SortOrder
+    batchId?: SortOrder
+    voucherBatchId?: SortOrder
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+    currency?: SortOrder
+    status?: SortOrder
+    issuedAt?: SortOrder
+    expiresAt?: SortOrder
+    activatedAt?: SortOrder
+    fullyRedeemedAt?: SortOrder
+    customerId?: SortOrder
+    orderId?: SortOrder
+    purchaseReference?: SortOrder
+    notes?: SortOrder
+    createdBy?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherCodeSumOrderByAggregateInput = {
+    initialValue?: SortOrder
+    currentBalance?: SortOrder
+  }
+
+  export type VoucherCodeRelationFilter = {
+    is?: VoucherCodeWhereInput
+    isNot?: VoucherCodeWhereInput
+  }
+
+  export type VoucherRedemptionCountOrderByAggregateInput = {
+    id?: SortOrder
+    voucherCodeId?: SortOrder
+    code?: SortOrder
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+    orderId?: SortOrder
+    invoiceNumber?: SortOrder
+    branchId?: SortOrder
+    appliedToItems?: SortOrder
+    redeemedBy?: SortOrder
+    redeemedAt?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type VoucherRedemptionAvgOrderByAggregateInput = {
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+  }
+
+  export type VoucherRedemptionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    voucherCodeId?: SortOrder
+    code?: SortOrder
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+    orderId?: SortOrder
+    invoiceNumber?: SortOrder
+    branchId?: SortOrder
+    appliedToItems?: SortOrder
+    redeemedBy?: SortOrder
+    redeemedAt?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type VoucherRedemptionMinOrderByAggregateInput = {
+    id?: SortOrder
+    voucherCodeId?: SortOrder
+    code?: SortOrder
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+    orderId?: SortOrder
+    invoiceNumber?: SortOrder
+    branchId?: SortOrder
+    appliedToItems?: SortOrder
+    redeemedBy?: SortOrder
+    redeemedAt?: SortOrder
+    notes?: SortOrder
+  }
+
+  export type VoucherRedemptionSumOrderByAggregateInput = {
+    redeemedAmount?: SortOrder
+    balanceBefore?: SortOrder
+    balanceAfter?: SortOrder
+  }
+
+  export type LegacyEntityLinkSourceTypeSourceIdCompoundUniqueInput = {
+    sourceType: string
+    sourceId: string
+  }
+
+  export type LegacyEntityLinkCountOrderByAggregateInput = {
+    id?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    sourceCode?: SortOrder
+    targetType?: SortOrder
+    targetId?: SortOrder
+    resolution?: SortOrder
+    isLocked?: SortOrder
+    lastApplied?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LegacyEntityLinkMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    sourceCode?: SortOrder
+    targetType?: SortOrder
+    targetId?: SortOrder
+    resolution?: SortOrder
+    isLocked?: SortOrder
+    lastApplied?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LegacyEntityLinkMinOrderByAggregateInput = {
+    id?: SortOrder
+    sourceType?: SortOrder
+    sourceId?: SortOrder
+    sourceCode?: SortOrder
+    targetType?: SortOrder
+    targetId?: SortOrder
+    resolution?: SortOrder
+    isLocked?: SortOrder
+    lastApplied?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type LegacySyncRunCountOrderByAggregateInput = {
+    id?: SortOrder
+    agentId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    stats?: SortOrder
+    errorMessage?: SortOrder
+  }
+
+  export type LegacySyncRunMaxOrderByAggregateInput = {
+    id?: SortOrder
+    agentId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    stats?: SortOrder
+    errorMessage?: SortOrder
+  }
+
+  export type LegacySyncRunMinOrderByAggregateInput = {
+    id?: SortOrder
+    agentId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    stats?: SortOrder
+    errorMessage?: SortOrder
+  }
+
+  export type VoucherRestrictionSkuIdRestrictionTypeCompoundUniqueInput = {
+    skuId: string
+    restrictionType: string
+  }
+
+  export type VoucherRestrictionCountOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    restrictionType?: SortOrder
+    targetCategoryIds?: SortOrder
+    targetSkuIds?: SortOrder
+    targetVariantIds?: SortOrder
+    cannotCombineWithDiscounts?: SortOrder
+    cannotCombineWithOtherVouchers?: SortOrder
+    minPurchaseAmount?: SortOrder
+    maxDiscountAmount?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherRestrictionAvgOrderByAggregateInput = {
+    minPurchaseAmount?: SortOrder
+    maxDiscountAmount?: SortOrder
+    priority?: SortOrder
+  }
+
+  export type VoucherRestrictionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    restrictionType?: SortOrder
+    targetCategoryIds?: SortOrder
+    targetSkuIds?: SortOrder
+    targetVariantIds?: SortOrder
+    cannotCombineWithDiscounts?: SortOrder
+    cannotCombineWithOtherVouchers?: SortOrder
+    minPurchaseAmount?: SortOrder
+    maxDiscountAmount?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherRestrictionMinOrderByAggregateInput = {
+    id?: SortOrder
+    skuId?: SortOrder
+    restrictionType?: SortOrder
+    targetCategoryIds?: SortOrder
+    targetSkuIds?: SortOrder
+    targetVariantIds?: SortOrder
+    cannotCombineWithDiscounts?: SortOrder
+    cannotCombineWithOtherVouchers?: SortOrder
+    minPurchaseAmount?: SortOrder
+    maxDiscountAmount?: SortOrder
+    priority?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type VoucherRestrictionSumOrderByAggregateInput = {
+    minPurchaseAmount?: SortOrder
+    maxDiscountAmount?: SortOrder
+    priority?: SortOrder
+  }
+
   export type VendorCreateNestedOneWithoutUsersInput = {
     create?: XOR<VendorCreateWithoutUsersInput, VendorUncheckedCreateWithoutUsersInput>
     connectOrCreate?: VendorCreateOrConnectWithoutUsersInput
@@ -61544,6 +71015,27 @@ export namespace Prisma {
     connect?: StockTransferWhereUniqueInput | StockTransferWhereUniqueInput[]
   }
 
+  export type VoucherBatchCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput> | VoucherBatchCreateWithoutCreatorInput[] | VoucherBatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutCreatorInput | VoucherBatchCreateOrConnectWithoutCreatorInput[]
+    createMany?: VoucherBatchCreateManyCreatorInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+  }
+
+  export type VoucherCodeCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput> | VoucherCodeCreateWithoutCreatorInput[] | VoucherCodeUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutCreatorInput | VoucherCodeCreateOrConnectWithoutCreatorInput[]
+    createMany?: VoucherCodeCreateManyCreatorInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherRedemptionCreateNestedManyWithoutRedeemerInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput> | VoucherRedemptionCreateWithoutRedeemerInput[] | VoucherRedemptionUncheckedCreateWithoutRedeemerInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutRedeemerInput | VoucherRedemptionCreateOrConnectWithoutRedeemerInput[]
+    createMany?: VoucherRedemptionCreateManyRedeemerInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+  }
+
   export type InventoryRecordUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<InventoryRecordCreateWithoutUserInput, InventoryRecordUncheckedCreateWithoutUserInput> | InventoryRecordCreateWithoutUserInput[] | InventoryRecordUncheckedCreateWithoutUserInput[]
     connectOrCreate?: InventoryRecordCreateOrConnectWithoutUserInput | InventoryRecordCreateOrConnectWithoutUserInput[]
@@ -61605,6 +71097,27 @@ export namespace Prisma {
     connectOrCreate?: StockTransferCreateOrConnectWithoutApproverInput | StockTransferCreateOrConnectWithoutApproverInput[]
     createMany?: StockTransferCreateManyApproverInputEnvelope
     connect?: StockTransferWhereUniqueInput | StockTransferWhereUniqueInput[]
+  }
+
+  export type VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput> | VoucherBatchCreateWithoutCreatorInput[] | VoucherBatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutCreatorInput | VoucherBatchCreateOrConnectWithoutCreatorInput[]
+    createMany?: VoucherBatchCreateManyCreatorInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+  }
+
+  export type VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput> | VoucherCodeCreateWithoutCreatorInput[] | VoucherCodeUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutCreatorInput | VoucherCodeCreateOrConnectWithoutCreatorInput[]
+    createMany?: VoucherCodeCreateManyCreatorInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput> | VoucherRedemptionCreateWithoutRedeemerInput[] | VoucherRedemptionUncheckedCreateWithoutRedeemerInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutRedeemerInput | VoucherRedemptionCreateOrConnectWithoutRedeemerInput[]
+    createMany?: VoucherRedemptionCreateManyRedeemerInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -61755,6 +71268,48 @@ export namespace Prisma {
     deleteMany?: StockTransferScalarWhereInput | StockTransferScalarWhereInput[]
   }
 
+  export type VoucherBatchUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput> | VoucherBatchCreateWithoutCreatorInput[] | VoucherBatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutCreatorInput | VoucherBatchCreateOrConnectWithoutCreatorInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutCreatorInput | VoucherBatchUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: VoucherBatchCreateManyCreatorInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutCreatorInput | VoucherBatchUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutCreatorInput | VoucherBatchUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+  }
+
+  export type VoucherCodeUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput> | VoucherCodeCreateWithoutCreatorInput[] | VoucherCodeUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutCreatorInput | VoucherCodeCreateOrConnectWithoutCreatorInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutCreatorInput | VoucherCodeUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: VoucherCodeCreateManyCreatorInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutCreatorInput | VoucherCodeUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutCreatorInput | VoucherCodeUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherRedemptionUpdateManyWithoutRedeemerNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput> | VoucherRedemptionCreateWithoutRedeemerInput[] | VoucherRedemptionUncheckedCreateWithoutRedeemerInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutRedeemerInput | VoucherRedemptionCreateOrConnectWithoutRedeemerInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutRedeemerInput | VoucherRedemptionUpsertWithWhereUniqueWithoutRedeemerInput[]
+    createMany?: VoucherRedemptionCreateManyRedeemerInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput | VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput | VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+  }
+
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
   }
@@ -61883,6 +71438,48 @@ export namespace Prisma {
     update?: StockTransferUpdateWithWhereUniqueWithoutApproverInput | StockTransferUpdateWithWhereUniqueWithoutApproverInput[]
     updateMany?: StockTransferUpdateManyWithWhereWithoutApproverInput | StockTransferUpdateManyWithWhereWithoutApproverInput[]
     deleteMany?: StockTransferScalarWhereInput | StockTransferScalarWhereInput[]
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput> | VoucherBatchCreateWithoutCreatorInput[] | VoucherBatchUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutCreatorInput | VoucherBatchCreateOrConnectWithoutCreatorInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutCreatorInput | VoucherBatchUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: VoucherBatchCreateManyCreatorInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutCreatorInput | VoucherBatchUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutCreatorInput | VoucherBatchUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput> | VoucherCodeCreateWithoutCreatorInput[] | VoucherCodeUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutCreatorInput | VoucherCodeCreateOrConnectWithoutCreatorInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutCreatorInput | VoucherCodeUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: VoucherCodeCreateManyCreatorInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutCreatorInput | VoucherCodeUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutCreatorInput | VoucherCodeUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput> | VoucherRedemptionCreateWithoutRedeemerInput[] | VoucherRedemptionUncheckedCreateWithoutRedeemerInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutRedeemerInput | VoucherRedemptionCreateOrConnectWithoutRedeemerInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutRedeemerInput | VoucherRedemptionUpsertWithWhereUniqueWithoutRedeemerInput[]
+    createMany?: VoucherRedemptionCreateManyRedeemerInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput | VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput | VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
   }
 
   export type UserCreateNestedManyWithoutVendorInput = {
@@ -62358,6 +71955,13 @@ export namespace Prisma {
     connect?: StockTransferWhereUniqueInput | StockTransferWhereUniqueInput[]
   }
 
+  export type VoucherRedemptionCreateNestedManyWithoutBranchInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput> | VoucherRedemptionCreateWithoutBranchInput[] | VoucherRedemptionUncheckedCreateWithoutBranchInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutBranchInput | VoucherRedemptionCreateOrConnectWithoutBranchInput[]
+    createMany?: VoucherRedemptionCreateManyBranchInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+  }
+
   export type FloorUncheckedCreateNestedManyWithoutBranchInput = {
     create?: XOR<FloorCreateWithoutBranchInput, FloorUncheckedCreateWithoutBranchInput> | FloorCreateWithoutBranchInput[] | FloorUncheckedCreateWithoutBranchInput[]
     connectOrCreate?: FloorCreateOrConnectWithoutBranchInput | FloorCreateOrConnectWithoutBranchInput[]
@@ -62377,6 +71981,13 @@ export namespace Prisma {
     connectOrCreate?: StockTransferCreateOrConnectWithoutToBranchInput | StockTransferCreateOrConnectWithoutToBranchInput[]
     createMany?: StockTransferCreateManyToBranchInputEnvelope
     connect?: StockTransferWhereUniqueInput | StockTransferWhereUniqueInput[]
+  }
+
+  export type VoucherRedemptionUncheckedCreateNestedManyWithoutBranchInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput> | VoucherRedemptionCreateWithoutBranchInput[] | VoucherRedemptionUncheckedCreateWithoutBranchInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutBranchInput | VoucherRedemptionCreateOrConnectWithoutBranchInput[]
+    createMany?: VoucherRedemptionCreateManyBranchInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
   }
 
   export type FloorUpdateManyWithoutBranchNestedInput = {
@@ -62421,6 +72032,20 @@ export namespace Prisma {
     deleteMany?: StockTransferScalarWhereInput | StockTransferScalarWhereInput[]
   }
 
+  export type VoucherRedemptionUpdateManyWithoutBranchNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput> | VoucherRedemptionCreateWithoutBranchInput[] | VoucherRedemptionUncheckedCreateWithoutBranchInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutBranchInput | VoucherRedemptionCreateOrConnectWithoutBranchInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutBranchInput | VoucherRedemptionUpsertWithWhereUniqueWithoutBranchInput[]
+    createMany?: VoucherRedemptionCreateManyBranchInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutBranchInput | VoucherRedemptionUpdateWithWhereUniqueWithoutBranchInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutBranchInput | VoucherRedemptionUpdateManyWithWhereWithoutBranchInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+  }
+
   export type FloorUncheckedUpdateManyWithoutBranchNestedInput = {
     create?: XOR<FloorCreateWithoutBranchInput, FloorUncheckedCreateWithoutBranchInput> | FloorCreateWithoutBranchInput[] | FloorUncheckedCreateWithoutBranchInput[]
     connectOrCreate?: FloorCreateOrConnectWithoutBranchInput | FloorCreateOrConnectWithoutBranchInput[]
@@ -62461,6 +72086,20 @@ export namespace Prisma {
     update?: StockTransferUpdateWithWhereUniqueWithoutToBranchInput | StockTransferUpdateWithWhereUniqueWithoutToBranchInput[]
     updateMany?: StockTransferUpdateManyWithWhereWithoutToBranchInput | StockTransferUpdateManyWithWhereWithoutToBranchInput[]
     deleteMany?: StockTransferScalarWhereInput | StockTransferScalarWhereInput[]
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutBranchNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput> | VoucherRedemptionCreateWithoutBranchInput[] | VoucherRedemptionUncheckedCreateWithoutBranchInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutBranchInput | VoucherRedemptionCreateOrConnectWithoutBranchInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutBranchInput | VoucherRedemptionUpsertWithWhereUniqueWithoutBranchInput[]
+    createMany?: VoucherRedemptionCreateManyBranchInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutBranchInput | VoucherRedemptionUpdateWithWhereUniqueWithoutBranchInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutBranchInput | VoucherRedemptionUpdateManyWithWhereWithoutBranchInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
   }
 
   export type VendorCreateNestedOneWithoutSkusInput = {
@@ -62558,6 +72197,27 @@ export namespace Prisma {
     connect?: SKUVendorWhereUniqueInput | SKUVendorWhereUniqueInput[]
   }
 
+  export type VoucherCodeCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput> | VoucherCodeCreateWithoutSkuInput[] | VoucherCodeUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutSkuInput | VoucherCodeCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherCodeCreateManySkuInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherRestrictionCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput> | VoucherRestrictionCreateWithoutSkuInput[] | VoucherRestrictionUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherRestrictionCreateOrConnectWithoutSkuInput | VoucherRestrictionCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherRestrictionCreateManySkuInputEnvelope
+    connect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+  }
+
+  export type VoucherBatchCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput> | VoucherBatchCreateWithoutSkuInput[] | VoucherBatchUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutSkuInput | VoucherBatchCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherBatchCreateManySkuInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+  }
+
   export type InventoryRecordUncheckedCreateNestedManyWithoutSkuInput = {
     create?: XOR<InventoryRecordCreateWithoutSkuInput, InventoryRecordUncheckedCreateWithoutSkuInput> | InventoryRecordCreateWithoutSkuInput[] | InventoryRecordUncheckedCreateWithoutSkuInput[]
     connectOrCreate?: InventoryRecordCreateOrConnectWithoutSkuInput | InventoryRecordCreateOrConnectWithoutSkuInput[]
@@ -62633,6 +72293,27 @@ export namespace Prisma {
     connectOrCreate?: SKUVendorCreateOrConnectWithoutSkuInput | SKUVendorCreateOrConnectWithoutSkuInput[]
     createMany?: SKUVendorCreateManySkuInputEnvelope
     connect?: SKUVendorWhereUniqueInput | SKUVendorWhereUniqueInput[]
+  }
+
+  export type VoucherCodeUncheckedCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput> | VoucherCodeCreateWithoutSkuInput[] | VoucherCodeUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutSkuInput | VoucherCodeCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherCodeCreateManySkuInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput> | VoucherRestrictionCreateWithoutSkuInput[] | VoucherRestrictionUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherRestrictionCreateOrConnectWithoutSkuInput | VoucherRestrictionCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherRestrictionCreateManySkuInputEnvelope
+    connect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+  }
+
+  export type VoucherBatchUncheckedCreateNestedManyWithoutSkuInput = {
+    create?: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput> | VoucherBatchCreateWithoutSkuInput[] | VoucherBatchUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutSkuInput | VoucherBatchCreateOrConnectWithoutSkuInput[]
+    createMany?: VoucherBatchCreateManySkuInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -62829,6 +72510,48 @@ export namespace Prisma {
     deleteMany?: SKUVendorScalarWhereInput | SKUVendorScalarWhereInput[]
   }
 
+  export type VoucherCodeUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput> | VoucherCodeCreateWithoutSkuInput[] | VoucherCodeUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutSkuInput | VoucherCodeCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutSkuInput | VoucherCodeUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherCodeCreateManySkuInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutSkuInput | VoucherCodeUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutSkuInput | VoucherCodeUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherRestrictionUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput> | VoucherRestrictionCreateWithoutSkuInput[] | VoucherRestrictionUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherRestrictionCreateOrConnectWithoutSkuInput | VoucherRestrictionCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherRestrictionUpsertWithWhereUniqueWithoutSkuInput | VoucherRestrictionUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherRestrictionCreateManySkuInputEnvelope
+    set?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    disconnect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    delete?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    connect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    update?: VoucherRestrictionUpdateWithWhereUniqueWithoutSkuInput | VoucherRestrictionUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherRestrictionUpdateManyWithWhereWithoutSkuInput | VoucherRestrictionUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherRestrictionScalarWhereInput | VoucherRestrictionScalarWhereInput[]
+  }
+
+  export type VoucherBatchUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput> | VoucherBatchCreateWithoutSkuInput[] | VoucherBatchUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutSkuInput | VoucherBatchCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutSkuInput | VoucherBatchUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherBatchCreateManySkuInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutSkuInput | VoucherBatchUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutSkuInput | VoucherBatchUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+  }
+
   export type InventoryRecordUncheckedUpdateManyWithoutSkuNestedInput = {
     create?: XOR<InventoryRecordCreateWithoutSkuInput, InventoryRecordUncheckedCreateWithoutSkuInput> | InventoryRecordCreateWithoutSkuInput[] | InventoryRecordUncheckedCreateWithoutSkuInput[]
     connectOrCreate?: InventoryRecordCreateOrConnectWithoutSkuInput | InventoryRecordCreateOrConnectWithoutSkuInput[]
@@ -62981,6 +72704,48 @@ export namespace Prisma {
     update?: SKUVendorUpdateWithWhereUniqueWithoutSkuInput | SKUVendorUpdateWithWhereUniqueWithoutSkuInput[]
     updateMany?: SKUVendorUpdateManyWithWhereWithoutSkuInput | SKUVendorUpdateManyWithWhereWithoutSkuInput[]
     deleteMany?: SKUVendorScalarWhereInput | SKUVendorScalarWhereInput[]
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput> | VoucherCodeCreateWithoutSkuInput[] | VoucherCodeUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutSkuInput | VoucherCodeCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutSkuInput | VoucherCodeUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherCodeCreateManySkuInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutSkuInput | VoucherCodeUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutSkuInput | VoucherCodeUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput> | VoucherRestrictionCreateWithoutSkuInput[] | VoucherRestrictionUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherRestrictionCreateOrConnectWithoutSkuInput | VoucherRestrictionCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherRestrictionUpsertWithWhereUniqueWithoutSkuInput | VoucherRestrictionUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherRestrictionCreateManySkuInputEnvelope
+    set?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    disconnect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    delete?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    connect?: VoucherRestrictionWhereUniqueInput | VoucherRestrictionWhereUniqueInput[]
+    update?: VoucherRestrictionUpdateWithWhereUniqueWithoutSkuInput | VoucherRestrictionUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherRestrictionUpdateManyWithWhereWithoutSkuInput | VoucherRestrictionUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherRestrictionScalarWhereInput | VoucherRestrictionScalarWhereInput[]
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput> | VoucherBatchCreateWithoutSkuInput[] | VoucherBatchUncheckedCreateWithoutSkuInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutSkuInput | VoucherBatchCreateOrConnectWithoutSkuInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutSkuInput | VoucherBatchUpsertWithWhereUniqueWithoutSkuInput[]
+    createMany?: VoucherBatchCreateManySkuInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutSkuInput | VoucherBatchUpdateWithWhereUniqueWithoutSkuInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutSkuInput | VoucherBatchUpdateManyWithWhereWithoutSkuInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
   }
 
   export type SKUCreateNestedOneWithoutSkuVendorsInput = {
@@ -63416,6 +73181,27 @@ export namespace Prisma {
     connect?: ProductImageWhereUniqueInput | ProductImageWhereUniqueInput[]
   }
 
+  export type ProductBarcodeCreateNestedManyWithoutVariantInput = {
+    create?: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput> | ProductBarcodeCreateWithoutVariantInput[] | ProductBarcodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: ProductBarcodeCreateOrConnectWithoutVariantInput | ProductBarcodeCreateOrConnectWithoutVariantInput[]
+    createMany?: ProductBarcodeCreateManyVariantInputEnvelope
+    connect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+  }
+
+  export type VoucherCodeCreateNestedManyWithoutVariantInput = {
+    create?: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput> | VoucherCodeCreateWithoutVariantInput[] | VoucherCodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVariantInput | VoucherCodeCreateOrConnectWithoutVariantInput[]
+    createMany?: VoucherCodeCreateManyVariantInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherBatchCreateNestedManyWithoutVariantInput = {
+    create?: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput> | VoucherBatchCreateWithoutVariantInput[] | VoucherBatchUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVariantInput | VoucherBatchCreateOrConnectWithoutVariantInput[]
+    createMany?: VoucherBatchCreateManyVariantInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+  }
+
   export type SKUVariantValueUncheckedCreateNestedManyWithoutVariantInput = {
     create?: XOR<SKUVariantValueCreateWithoutVariantInput, SKUVariantValueUncheckedCreateWithoutVariantInput> | SKUVariantValueCreateWithoutVariantInput[] | SKUVariantValueUncheckedCreateWithoutVariantInput[]
     connectOrCreate?: SKUVariantValueCreateOrConnectWithoutVariantInput | SKUVariantValueCreateOrConnectWithoutVariantInput[]
@@ -63463,6 +73249,27 @@ export namespace Prisma {
     connectOrCreate?: ProductImageCreateOrConnectWithoutVariantInput | ProductImageCreateOrConnectWithoutVariantInput[]
     createMany?: ProductImageCreateManyVariantInputEnvelope
     connect?: ProductImageWhereUniqueInput | ProductImageWhereUniqueInput[]
+  }
+
+  export type ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput = {
+    create?: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput> | ProductBarcodeCreateWithoutVariantInput[] | ProductBarcodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: ProductBarcodeCreateOrConnectWithoutVariantInput | ProductBarcodeCreateOrConnectWithoutVariantInput[]
+    createMany?: ProductBarcodeCreateManyVariantInputEnvelope
+    connect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+  }
+
+  export type VoucherCodeUncheckedCreateNestedManyWithoutVariantInput = {
+    create?: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput> | VoucherCodeCreateWithoutVariantInput[] | VoucherCodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVariantInput | VoucherCodeCreateOrConnectWithoutVariantInput[]
+    createMany?: VoucherCodeCreateManyVariantInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherBatchUncheckedCreateNestedManyWithoutVariantInput = {
+    create?: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput> | VoucherBatchCreateWithoutVariantInput[] | VoucherBatchUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVariantInput | VoucherBatchCreateOrConnectWithoutVariantInput[]
+    createMany?: VoucherBatchCreateManyVariantInputEnvelope
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
   }
 
   export type SKUUpdateOneRequiredWithoutVariantsNestedInput = {
@@ -63571,6 +73378,48 @@ export namespace Prisma {
     deleteMany?: ProductImageScalarWhereInput | ProductImageScalarWhereInput[]
   }
 
+  export type ProductBarcodeUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput> | ProductBarcodeCreateWithoutVariantInput[] | ProductBarcodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: ProductBarcodeCreateOrConnectWithoutVariantInput | ProductBarcodeCreateOrConnectWithoutVariantInput[]
+    upsert?: ProductBarcodeUpsertWithWhereUniqueWithoutVariantInput | ProductBarcodeUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: ProductBarcodeCreateManyVariantInputEnvelope
+    set?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    disconnect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    delete?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    connect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    update?: ProductBarcodeUpdateWithWhereUniqueWithoutVariantInput | ProductBarcodeUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: ProductBarcodeUpdateManyWithWhereWithoutVariantInput | ProductBarcodeUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: ProductBarcodeScalarWhereInput | ProductBarcodeScalarWhereInput[]
+  }
+
+  export type VoucherCodeUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput> | VoucherCodeCreateWithoutVariantInput[] | VoucherCodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVariantInput | VoucherCodeCreateOrConnectWithoutVariantInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutVariantInput | VoucherCodeUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: VoucherCodeCreateManyVariantInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutVariantInput | VoucherCodeUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutVariantInput | VoucherCodeUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherBatchUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput> | VoucherBatchCreateWithoutVariantInput[] | VoucherBatchUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVariantInput | VoucherBatchCreateOrConnectWithoutVariantInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutVariantInput | VoucherBatchUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: VoucherBatchCreateManyVariantInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutVariantInput | VoucherBatchUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutVariantInput | VoucherBatchUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+  }
+
   export type SKUVariantValueUncheckedUpdateManyWithoutVariantNestedInput = {
     create?: XOR<SKUVariantValueCreateWithoutVariantInput, SKUVariantValueUncheckedCreateWithoutVariantInput> | SKUVariantValueCreateWithoutVariantInput[] | SKUVariantValueUncheckedCreateWithoutVariantInput[]
     connectOrCreate?: SKUVariantValueCreateOrConnectWithoutVariantInput | SKUVariantValueCreateOrConnectWithoutVariantInput[]
@@ -63669,6 +73518,48 @@ export namespace Prisma {
     deleteMany?: ProductImageScalarWhereInput | ProductImageScalarWhereInput[]
   }
 
+  export type ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput> | ProductBarcodeCreateWithoutVariantInput[] | ProductBarcodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: ProductBarcodeCreateOrConnectWithoutVariantInput | ProductBarcodeCreateOrConnectWithoutVariantInput[]
+    upsert?: ProductBarcodeUpsertWithWhereUniqueWithoutVariantInput | ProductBarcodeUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: ProductBarcodeCreateManyVariantInputEnvelope
+    set?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    disconnect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    delete?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    connect?: ProductBarcodeWhereUniqueInput | ProductBarcodeWhereUniqueInput[]
+    update?: ProductBarcodeUpdateWithWhereUniqueWithoutVariantInput | ProductBarcodeUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: ProductBarcodeUpdateManyWithWhereWithoutVariantInput | ProductBarcodeUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: ProductBarcodeScalarWhereInput | ProductBarcodeScalarWhereInput[]
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput> | VoucherCodeCreateWithoutVariantInput[] | VoucherCodeUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVariantInput | VoucherCodeCreateOrConnectWithoutVariantInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutVariantInput | VoucherCodeUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: VoucherCodeCreateManyVariantInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutVariantInput | VoucherCodeUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutVariantInput | VoucherCodeUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput> | VoucherBatchCreateWithoutVariantInput[] | VoucherBatchUncheckedCreateWithoutVariantInput[]
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVariantInput | VoucherBatchCreateOrConnectWithoutVariantInput[]
+    upsert?: VoucherBatchUpsertWithWhereUniqueWithoutVariantInput | VoucherBatchUpsertWithWhereUniqueWithoutVariantInput[]
+    createMany?: VoucherBatchCreateManyVariantInputEnvelope
+    set?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    disconnect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    delete?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    connect?: VoucherBatchWhereUniqueInput | VoucherBatchWhereUniqueInput[]
+    update?: VoucherBatchUpdateWithWhereUniqueWithoutVariantInput | VoucherBatchUpdateWithWhereUniqueWithoutVariantInput[]
+    updateMany?: VoucherBatchUpdateManyWithWhereWithoutVariantInput | VoucherBatchUpdateManyWithWhereWithoutVariantInput[]
+    deleteMany?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+  }
+
   export type SKUVariantCreateNestedOneWithoutAttributeValuesInput = {
     create?: XOR<SKUVariantCreateWithoutAttributeValuesInput, SKUVariantUncheckedCreateWithoutAttributeValuesInput>
     connectOrCreate?: SKUVariantCreateOrConnectWithoutAttributeValuesInput
@@ -63747,12 +73638,28 @@ export namespace Prisma {
     connect?: SKUWhereUniqueInput
   }
 
+  export type SKUVariantCreateNestedOneWithoutBarcodesInput = {
+    create?: XOR<SKUVariantCreateWithoutBarcodesInput, SKUVariantUncheckedCreateWithoutBarcodesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutBarcodesInput
+    connect?: SKUVariantWhereUniqueInput
+  }
+
   export type SKUUpdateOneRequiredWithoutBarcodesNestedInput = {
     create?: XOR<SKUCreateWithoutBarcodesInput, SKUUncheckedCreateWithoutBarcodesInput>
     connectOrCreate?: SKUCreateOrConnectWithoutBarcodesInput
     upsert?: SKUUpsertWithoutBarcodesInput
     connect?: SKUWhereUniqueInput
     update?: XOR<XOR<SKUUpdateToOneWithWhereWithoutBarcodesInput, SKUUpdateWithoutBarcodesInput>, SKUUncheckedUpdateWithoutBarcodesInput>
+  }
+
+  export type SKUVariantUpdateOneWithoutBarcodesNestedInput = {
+    create?: XOR<SKUVariantCreateWithoutBarcodesInput, SKUVariantUncheckedCreateWithoutBarcodesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutBarcodesInput
+    upsert?: SKUVariantUpsertWithoutBarcodesInput
+    disconnect?: SKUVariantWhereInput | boolean
+    delete?: SKUVariantWhereInput | boolean
+    connect?: SKUVariantWhereUniqueInput
+    update?: XOR<XOR<SKUVariantUpdateToOneWithWhereWithoutBarcodesInput, SKUVariantUpdateWithoutBarcodesInput>, SKUVariantUncheckedUpdateWithoutBarcodesInput>
   }
 
   export type BranchCreateNestedOneWithoutFloorsInput = {
@@ -65025,6 +74932,13 @@ export namespace Prisma {
     connect?: StockTransferLineWhereUniqueInput | StockTransferLineWhereUniqueInput[]
   }
 
+  export type VoucherCodeCreateNestedManyWithoutBatchInput = {
+    create?: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput> | VoucherCodeCreateWithoutBatchInput[] | VoucherCodeUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutBatchInput | VoucherCodeCreateOrConnectWithoutBatchInput[]
+    createMany?: VoucherCodeCreateManyBatchInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
   export type GRNLineUncheckedCreateNestedManyWithoutBatchInput = {
     create?: XOR<GRNLineCreateWithoutBatchInput, GRNLineUncheckedCreateWithoutBatchInput> | GRNLineCreateWithoutBatchInput[] | GRNLineUncheckedCreateWithoutBatchInput[]
     connectOrCreate?: GRNLineCreateOrConnectWithoutBatchInput | GRNLineCreateOrConnectWithoutBatchInput[]
@@ -65051,6 +74965,13 @@ export namespace Prisma {
     connectOrCreate?: StockTransferLineCreateOrConnectWithoutBatchInput | StockTransferLineCreateOrConnectWithoutBatchInput[]
     createMany?: StockTransferLineCreateManyBatchInputEnvelope
     connect?: StockTransferLineWhereUniqueInput | StockTransferLineWhereUniqueInput[]
+  }
+
+  export type VoucherCodeUncheckedCreateNestedManyWithoutBatchInput = {
+    create?: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput> | VoucherCodeCreateWithoutBatchInput[] | VoucherCodeUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutBatchInput | VoucherCodeCreateOrConnectWithoutBatchInput[]
+    createMany?: VoucherCodeCreateManyBatchInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
   }
 
   export type SKUUpdateOneRequiredWithoutBatchesNestedInput = {
@@ -65137,6 +75058,20 @@ export namespace Prisma {
     deleteMany?: StockTransferLineScalarWhereInput | StockTransferLineScalarWhereInput[]
   }
 
+  export type VoucherCodeUpdateManyWithoutBatchNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput> | VoucherCodeCreateWithoutBatchInput[] | VoucherCodeUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutBatchInput | VoucherCodeCreateOrConnectWithoutBatchInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutBatchInput | VoucherCodeUpsertWithWhereUniqueWithoutBatchInput[]
+    createMany?: VoucherCodeCreateManyBatchInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutBatchInput | VoucherCodeUpdateWithWhereUniqueWithoutBatchInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutBatchInput | VoucherCodeUpdateManyWithWhereWithoutBatchInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
   export type GRNLineUncheckedUpdateManyWithoutBatchNestedInput = {
     create?: XOR<GRNLineCreateWithoutBatchInput, GRNLineUncheckedCreateWithoutBatchInput> | GRNLineCreateWithoutBatchInput[] | GRNLineUncheckedCreateWithoutBatchInput[]
     connectOrCreate?: GRNLineCreateOrConnectWithoutBatchInput | GRNLineCreateOrConnectWithoutBatchInput[]
@@ -65191,6 +75126,20 @@ export namespace Prisma {
     update?: StockTransferLineUpdateWithWhereUniqueWithoutBatchInput | StockTransferLineUpdateWithWhereUniqueWithoutBatchInput[]
     updateMany?: StockTransferLineUpdateManyWithWhereWithoutBatchInput | StockTransferLineUpdateManyWithWhereWithoutBatchInput[]
     deleteMany?: StockTransferLineScalarWhereInput | StockTransferLineScalarWhereInput[]
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput> | VoucherCodeCreateWithoutBatchInput[] | VoucherCodeUncheckedCreateWithoutBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutBatchInput | VoucherCodeCreateOrConnectWithoutBatchInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutBatchInput | VoucherCodeUpsertWithWhereUniqueWithoutBatchInput[]
+    createMany?: VoucherCodeCreateManyBatchInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutBatchInput | VoucherCodeUpdateWithWhereUniqueWithoutBatchInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutBatchInput | VoucherCodeUpdateManyWithWhereWithoutBatchInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
   }
 
   export type GRNCreateNestedOneWithoutLinesInput = {
@@ -65627,6 +75576,274 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutAuditLogsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAuditLogsInput, UserUpdateWithoutAuditLogsInput>, UserUncheckedUpdateWithoutAuditLogsInput>
+  }
+
+  export type SKUCreateNestedOneWithoutVoucherBatchesInput = {
+    create?: XOR<SKUCreateWithoutVoucherBatchesInput, SKUUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherBatchesInput
+    connect?: SKUWhereUniqueInput
+  }
+
+  export type SKUVariantCreateNestedOneWithoutVoucherBatchesInput = {
+    create?: XOR<SKUVariantCreateWithoutVoucherBatchesInput, SKUVariantUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutVoucherBatchesInput
+    connect?: SKUVariantWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutVoucherBatchesInput = {
+    create?: XOR<UserCreateWithoutVoucherBatchesInput, UserUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherBatchesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VoucherCodeCreateNestedManyWithoutVoucherBatchInput = {
+    create?: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput> | VoucherCodeCreateWithoutVoucherBatchInput[] | VoucherCodeUncheckedCreateWithoutVoucherBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVoucherBatchInput | VoucherCodeCreateOrConnectWithoutVoucherBatchInput[]
+    createMany?: VoucherCodeCreateManyVoucherBatchInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type VoucherCodeUncheckedCreateNestedManyWithoutVoucherBatchInput = {
+    create?: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput> | VoucherCodeCreateWithoutVoucherBatchInput[] | VoucherCodeUncheckedCreateWithoutVoucherBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVoucherBatchInput | VoucherCodeCreateOrConnectWithoutVoucherBatchInput[]
+    createMany?: VoucherCodeCreateManyVoucherBatchInputEnvelope
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+  }
+
+  export type SKUUpdateOneRequiredWithoutVoucherBatchesNestedInput = {
+    create?: XOR<SKUCreateWithoutVoucherBatchesInput, SKUUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherBatchesInput
+    upsert?: SKUUpsertWithoutVoucherBatchesInput
+    connect?: SKUWhereUniqueInput
+    update?: XOR<XOR<SKUUpdateToOneWithWhereWithoutVoucherBatchesInput, SKUUpdateWithoutVoucherBatchesInput>, SKUUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type SKUVariantUpdateOneWithoutVoucherBatchesNestedInput = {
+    create?: XOR<SKUVariantCreateWithoutVoucherBatchesInput, SKUVariantUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutVoucherBatchesInput
+    upsert?: SKUVariantUpsertWithoutVoucherBatchesInput
+    disconnect?: SKUVariantWhereInput | boolean
+    delete?: SKUVariantWhereInput | boolean
+    connect?: SKUVariantWhereUniqueInput
+    update?: XOR<XOR<SKUVariantUpdateToOneWithWhereWithoutVoucherBatchesInput, SKUVariantUpdateWithoutVoucherBatchesInput>, SKUVariantUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type UserUpdateOneWithoutVoucherBatchesNestedInput = {
+    create?: XOR<UserCreateWithoutVoucherBatchesInput, UserUncheckedCreateWithoutVoucherBatchesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherBatchesInput
+    upsert?: UserUpsertWithoutVoucherBatchesInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVoucherBatchesInput, UserUpdateWithoutVoucherBatchesInput>, UserUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type VoucherCodeUpdateManyWithoutVoucherBatchNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput> | VoucherCodeCreateWithoutVoucherBatchInput[] | VoucherCodeUncheckedCreateWithoutVoucherBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVoucherBatchInput | VoucherCodeCreateOrConnectWithoutVoucherBatchInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutVoucherBatchInput | VoucherCodeUpsertWithWhereUniqueWithoutVoucherBatchInput[]
+    createMany?: VoucherCodeCreateManyVoucherBatchInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutVoucherBatchInput | VoucherCodeUpdateWithWhereUniqueWithoutVoucherBatchInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutVoucherBatchInput | VoucherCodeUpdateManyWithWhereWithoutVoucherBatchInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutVoucherBatchNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput> | VoucherCodeCreateWithoutVoucherBatchInput[] | VoucherCodeUncheckedCreateWithoutVoucherBatchInput[]
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutVoucherBatchInput | VoucherCodeCreateOrConnectWithoutVoucherBatchInput[]
+    upsert?: VoucherCodeUpsertWithWhereUniqueWithoutVoucherBatchInput | VoucherCodeUpsertWithWhereUniqueWithoutVoucherBatchInput[]
+    createMany?: VoucherCodeCreateManyVoucherBatchInputEnvelope
+    set?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    disconnect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    delete?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    connect?: VoucherCodeWhereUniqueInput | VoucherCodeWhereUniqueInput[]
+    update?: VoucherCodeUpdateWithWhereUniqueWithoutVoucherBatchInput | VoucherCodeUpdateWithWhereUniqueWithoutVoucherBatchInput[]
+    updateMany?: VoucherCodeUpdateManyWithWhereWithoutVoucherBatchInput | VoucherCodeUpdateManyWithWhereWithoutVoucherBatchInput[]
+    deleteMany?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+  }
+
+  export type SKUCreateNestedOneWithoutVoucherCodesInput = {
+    create?: XOR<SKUCreateWithoutVoucherCodesInput, SKUUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherCodesInput
+    connect?: SKUWhereUniqueInput
+  }
+
+  export type SKUVariantCreateNestedOneWithoutVoucherCodesInput = {
+    create?: XOR<SKUVariantCreateWithoutVoucherCodesInput, SKUVariantUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutVoucherCodesInput
+    connect?: SKUVariantWhereUniqueInput
+  }
+
+  export type BatchCreateNestedOneWithoutVoucherCodesInput = {
+    create?: XOR<BatchCreateWithoutVoucherCodesInput, BatchUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: BatchCreateOrConnectWithoutVoucherCodesInput
+    connect?: BatchWhereUniqueInput
+  }
+
+  export type VoucherBatchCreateNestedOneWithoutVoucherCodesInput = {
+    create?: XOR<VoucherBatchCreateWithoutVoucherCodesInput, VoucherBatchUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVoucherCodesInput
+    connect?: VoucherBatchWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutVoucherCodesInput = {
+    create?: XOR<UserCreateWithoutVoucherCodesInput, UserUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherCodesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput> | VoucherRedemptionCreateWithoutVoucherCodeInput[] | VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput | VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput[]
+    createMany?: VoucherRedemptionCreateManyVoucherCodeInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+  }
+
+  export type VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput> | VoucherRedemptionCreateWithoutVoucherCodeInput[] | VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput | VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput[]
+    createMany?: VoucherRedemptionCreateManyVoucherCodeInputEnvelope
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+  }
+
+  export type SKUUpdateOneRequiredWithoutVoucherCodesNestedInput = {
+    create?: XOR<SKUCreateWithoutVoucherCodesInput, SKUUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherCodesInput
+    upsert?: SKUUpsertWithoutVoucherCodesInput
+    connect?: SKUWhereUniqueInput
+    update?: XOR<XOR<SKUUpdateToOneWithWhereWithoutVoucherCodesInput, SKUUpdateWithoutVoucherCodesInput>, SKUUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type SKUVariantUpdateOneWithoutVoucherCodesNestedInput = {
+    create?: XOR<SKUVariantCreateWithoutVoucherCodesInput, SKUVariantUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: SKUVariantCreateOrConnectWithoutVoucherCodesInput
+    upsert?: SKUVariantUpsertWithoutVoucherCodesInput
+    disconnect?: SKUVariantWhereInput | boolean
+    delete?: SKUVariantWhereInput | boolean
+    connect?: SKUVariantWhereUniqueInput
+    update?: XOR<XOR<SKUVariantUpdateToOneWithWhereWithoutVoucherCodesInput, SKUVariantUpdateWithoutVoucherCodesInput>, SKUVariantUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type BatchUpdateOneWithoutVoucherCodesNestedInput = {
+    create?: XOR<BatchCreateWithoutVoucherCodesInput, BatchUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: BatchCreateOrConnectWithoutVoucherCodesInput
+    upsert?: BatchUpsertWithoutVoucherCodesInput
+    disconnect?: BatchWhereInput | boolean
+    delete?: BatchWhereInput | boolean
+    connect?: BatchWhereUniqueInput
+    update?: XOR<XOR<BatchUpdateToOneWithWhereWithoutVoucherCodesInput, BatchUpdateWithoutVoucherCodesInput>, BatchUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type VoucherBatchUpdateOneWithoutVoucherCodesNestedInput = {
+    create?: XOR<VoucherBatchCreateWithoutVoucherCodesInput, VoucherBatchUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: VoucherBatchCreateOrConnectWithoutVoucherCodesInput
+    upsert?: VoucherBatchUpsertWithoutVoucherCodesInput
+    disconnect?: VoucherBatchWhereInput | boolean
+    delete?: VoucherBatchWhereInput | boolean
+    connect?: VoucherBatchWhereUniqueInput
+    update?: XOR<XOR<VoucherBatchUpdateToOneWithWhereWithoutVoucherCodesInput, VoucherBatchUpdateWithoutVoucherCodesInput>, VoucherBatchUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type UserUpdateOneWithoutVoucherCodesNestedInput = {
+    create?: XOR<UserCreateWithoutVoucherCodesInput, UserUncheckedCreateWithoutVoucherCodesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherCodesInput
+    upsert?: UserUpsertWithoutVoucherCodesInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVoucherCodesInput, UserUpdateWithoutVoucherCodesInput>, UserUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput> | VoucherRedemptionCreateWithoutVoucherCodeInput[] | VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput | VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutVoucherCodeInput | VoucherRedemptionUpsertWithWhereUniqueWithoutVoucherCodeInput[]
+    createMany?: VoucherRedemptionCreateManyVoucherCodeInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutVoucherCodeInput | VoucherRedemptionUpdateWithWhereUniqueWithoutVoucherCodeInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutVoucherCodeInput | VoucherRedemptionUpdateManyWithWhereWithoutVoucherCodeInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput = {
+    create?: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput> | VoucherRedemptionCreateWithoutVoucherCodeInput[] | VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput[]
+    connectOrCreate?: VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput | VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput[]
+    upsert?: VoucherRedemptionUpsertWithWhereUniqueWithoutVoucherCodeInput | VoucherRedemptionUpsertWithWhereUniqueWithoutVoucherCodeInput[]
+    createMany?: VoucherRedemptionCreateManyVoucherCodeInputEnvelope
+    set?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    disconnect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    delete?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    connect?: VoucherRedemptionWhereUniqueInput | VoucherRedemptionWhereUniqueInput[]
+    update?: VoucherRedemptionUpdateWithWhereUniqueWithoutVoucherCodeInput | VoucherRedemptionUpdateWithWhereUniqueWithoutVoucherCodeInput[]
+    updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutVoucherCodeInput | VoucherRedemptionUpdateManyWithWhereWithoutVoucherCodeInput[]
+    deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+  }
+
+  export type VoucherCodeCreateNestedOneWithoutRedemptionsInput = {
+    create?: XOR<VoucherCodeCreateWithoutRedemptionsInput, VoucherCodeUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutRedemptionsInput
+    connect?: VoucherCodeWhereUniqueInput
+  }
+
+  export type BranchCreateNestedOneWithoutVoucherRedemptionsInput = {
+    create?: XOR<BranchCreateWithoutVoucherRedemptionsInput, BranchUncheckedCreateWithoutVoucherRedemptionsInput>
+    connectOrCreate?: BranchCreateOrConnectWithoutVoucherRedemptionsInput
+    connect?: BranchWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutVoucherRedemptionsInput = {
+    create?: XOR<UserCreateWithoutVoucherRedemptionsInput, UserUncheckedCreateWithoutVoucherRedemptionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherRedemptionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VoucherCodeUpdateOneRequiredWithoutRedemptionsNestedInput = {
+    create?: XOR<VoucherCodeCreateWithoutRedemptionsInput, VoucherCodeUncheckedCreateWithoutRedemptionsInput>
+    connectOrCreate?: VoucherCodeCreateOrConnectWithoutRedemptionsInput
+    upsert?: VoucherCodeUpsertWithoutRedemptionsInput
+    connect?: VoucherCodeWhereUniqueInput
+    update?: XOR<XOR<VoucherCodeUpdateToOneWithWhereWithoutRedemptionsInput, VoucherCodeUpdateWithoutRedemptionsInput>, VoucherCodeUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type BranchUpdateOneWithoutVoucherRedemptionsNestedInput = {
+    create?: XOR<BranchCreateWithoutVoucherRedemptionsInput, BranchUncheckedCreateWithoutVoucherRedemptionsInput>
+    connectOrCreate?: BranchCreateOrConnectWithoutVoucherRedemptionsInput
+    upsert?: BranchUpsertWithoutVoucherRedemptionsInput
+    disconnect?: BranchWhereInput | boolean
+    delete?: BranchWhereInput | boolean
+    connect?: BranchWhereUniqueInput
+    update?: XOR<XOR<BranchUpdateToOneWithWhereWithoutVoucherRedemptionsInput, BranchUpdateWithoutVoucherRedemptionsInput>, BranchUncheckedUpdateWithoutVoucherRedemptionsInput>
+  }
+
+  export type UserUpdateOneWithoutVoucherRedemptionsNestedInput = {
+    create?: XOR<UserCreateWithoutVoucherRedemptionsInput, UserUncheckedCreateWithoutVoucherRedemptionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVoucherRedemptionsInput
+    upsert?: UserUpsertWithoutVoucherRedemptionsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVoucherRedemptionsInput, UserUpdateWithoutVoucherRedemptionsInput>, UserUncheckedUpdateWithoutVoucherRedemptionsInput>
+  }
+
+  export type SKUCreateNestedOneWithoutVoucherRestrictionsInput = {
+    create?: XOR<SKUCreateWithoutVoucherRestrictionsInput, SKUUncheckedCreateWithoutVoucherRestrictionsInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherRestrictionsInput
+    connect?: SKUWhereUniqueInput
+  }
+
+  export type SKUUpdateOneRequiredWithoutVoucherRestrictionsNestedInput = {
+    create?: XOR<SKUCreateWithoutVoucherRestrictionsInput, SKUUncheckedCreateWithoutVoucherRestrictionsInput>
+    connectOrCreate?: SKUCreateOrConnectWithoutVoucherRestrictionsInput
+    upsert?: SKUUpsertWithoutVoucherRestrictionsInput
+    connect?: SKUWhereUniqueInput
+    update?: XOR<XOR<SKUUpdateToOneWithWhereWithoutVoucherRestrictionsInput, SKUUpdateWithoutVoucherRestrictionsInput>, SKUUncheckedUpdateWithoutVoucherRestrictionsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -66262,6 +76479,145 @@ export namespace Prisma {
     data: StockTransferCreateManyApproverInput | StockTransferCreateManyApproverInput[]
   }
 
+  export type VoucherBatchCreateWithoutCreatorInput = {
+    id?: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    sku: SKUCreateNestedOneWithoutVoucherBatchesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherBatchesInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    skuId: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchCreateOrConnectWithoutCreatorInput = {
+    where: VoucherBatchWhereUniqueInput
+    create: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type VoucherBatchCreateManyCreatorInputEnvelope = {
+    data: VoucherBatchCreateManyCreatorInput | VoucherBatchCreateManyCreatorInput[]
+  }
+
+  export type VoucherCodeCreateWithoutCreatorInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutCreatorInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type VoucherCodeCreateManyCreatorInputEnvelope = {
+    data: VoucherCodeCreateManyCreatorInput | VoucherCodeCreateManyCreatorInput[]
+  }
+
+  export type VoucherRedemptionCreateWithoutRedeemerInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+    voucherCode: VoucherCodeCreateNestedOneWithoutRedemptionsInput
+    branch?: BranchCreateNestedOneWithoutVoucherRedemptionsInput
+  }
+
+  export type VoucherRedemptionUncheckedCreateWithoutRedeemerInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionCreateOrConnectWithoutRedeemerInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    create: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput>
+  }
+
+  export type VoucherRedemptionCreateManyRedeemerInputEnvelope = {
+    data: VoucherRedemptionCreateManyRedeemerInput | VoucherRedemptionCreateManyRedeemerInput[]
+  }
+
   export type VendorUpsertWithoutUsersInput = {
     update: XOR<VendorUpdateWithoutUsersInput, VendorUncheckedUpdateWithoutUsersInput>
     create: XOR<VendorCreateWithoutUsersInput, VendorUncheckedCreateWithoutUsersInput>
@@ -66605,6 +76961,120 @@ export namespace Prisma {
     data: XOR<StockTransferUpdateManyMutationInput, StockTransferUncheckedUpdateManyWithoutApproverInput>
   }
 
+  export type VoucherBatchUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: VoucherBatchWhereUniqueInput
+    update: XOR<VoucherBatchUpdateWithoutCreatorInput, VoucherBatchUncheckedUpdateWithoutCreatorInput>
+    create: XOR<VoucherBatchCreateWithoutCreatorInput, VoucherBatchUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type VoucherBatchUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: VoucherBatchWhereUniqueInput
+    data: XOR<VoucherBatchUpdateWithoutCreatorInput, VoucherBatchUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type VoucherBatchUpdateManyWithWhereWithoutCreatorInput = {
+    where: VoucherBatchScalarWhereInput
+    data: XOR<VoucherBatchUpdateManyMutationInput, VoucherBatchUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type VoucherBatchScalarWhereInput = {
+    AND?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+    OR?: VoucherBatchScalarWhereInput[]
+    NOT?: VoucherBatchScalarWhereInput | VoucherBatchScalarWhereInput[]
+    id?: StringFilter<"VoucherBatch"> | string
+    skuId?: StringFilter<"VoucherBatch"> | string
+    variantId?: StringNullableFilter<"VoucherBatch"> | string | null
+    batchName?: StringFilter<"VoucherBatch"> | string
+    prefix?: StringNullableFilter<"VoucherBatch"> | string | null
+    quantity?: IntFilter<"VoucherBatch"> | number
+    generatedCount?: IntFilter<"VoucherBatch"> | number
+    defaultValue?: FloatFilter<"VoucherBatch"> | number
+    expiryDays?: IntNullableFilter<"VoucherBatch"> | number | null
+    defaultExpiresAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+    status?: StringFilter<"VoucherBatch"> | string
+    createdBy?: StringNullableFilter<"VoucherBatch"> | string | null
+    createdAt?: DateTimeFilter<"VoucherBatch"> | Date | string
+    completedAt?: DateTimeNullableFilter<"VoucherBatch"> | Date | string | null
+  }
+
+  export type VoucherCodeUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: VoucherCodeWhereUniqueInput
+    update: XOR<VoucherCodeUpdateWithoutCreatorInput, VoucherCodeUncheckedUpdateWithoutCreatorInput>
+    create: XOR<VoucherCodeCreateWithoutCreatorInput, VoucherCodeUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type VoucherCodeUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: VoucherCodeWhereUniqueInput
+    data: XOR<VoucherCodeUpdateWithoutCreatorInput, VoucherCodeUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type VoucherCodeUpdateManyWithWhereWithoutCreatorInput = {
+    where: VoucherCodeScalarWhereInput
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type VoucherCodeScalarWhereInput = {
+    AND?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+    OR?: VoucherCodeScalarWhereInput[]
+    NOT?: VoucherCodeScalarWhereInput | VoucherCodeScalarWhereInput[]
+    id?: StringFilter<"VoucherCode"> | string
+    code?: StringFilter<"VoucherCode"> | string
+    skuId?: StringFilter<"VoucherCode"> | string
+    variantId?: StringNullableFilter<"VoucherCode"> | string | null
+    batchId?: StringNullableFilter<"VoucherCode"> | string | null
+    voucherBatchId?: StringNullableFilter<"VoucherCode"> | string | null
+    initialValue?: FloatFilter<"VoucherCode"> | number
+    currentBalance?: FloatFilter<"VoucherCode"> | number
+    currency?: StringFilter<"VoucherCode"> | string
+    status?: StringFilter<"VoucherCode"> | string
+    issuedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    expiresAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    activatedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    fullyRedeemedAt?: DateTimeNullableFilter<"VoucherCode"> | Date | string | null
+    customerId?: StringNullableFilter<"VoucherCode"> | string | null
+    orderId?: StringNullableFilter<"VoucherCode"> | string | null
+    purchaseReference?: StringNullableFilter<"VoucherCode"> | string | null
+    notes?: StringNullableFilter<"VoucherCode"> | string | null
+    createdBy?: StringNullableFilter<"VoucherCode"> | string | null
+    createdAt?: DateTimeFilter<"VoucherCode"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherCode"> | Date | string
+  }
+
+  export type VoucherRedemptionUpsertWithWhereUniqueWithoutRedeemerInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    update: XOR<VoucherRedemptionUpdateWithoutRedeemerInput, VoucherRedemptionUncheckedUpdateWithoutRedeemerInput>
+    create: XOR<VoucherRedemptionCreateWithoutRedeemerInput, VoucherRedemptionUncheckedCreateWithoutRedeemerInput>
+  }
+
+  export type VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    data: XOR<VoucherRedemptionUpdateWithoutRedeemerInput, VoucherRedemptionUncheckedUpdateWithoutRedeemerInput>
+  }
+
+  export type VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput = {
+    where: VoucherRedemptionScalarWhereInput
+    data: XOR<VoucherRedemptionUpdateManyMutationInput, VoucherRedemptionUncheckedUpdateManyWithoutRedeemerInput>
+  }
+
+  export type VoucherRedemptionScalarWhereInput = {
+    AND?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+    OR?: VoucherRedemptionScalarWhereInput[]
+    NOT?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
+    id?: StringFilter<"VoucherRedemption"> | string
+    voucherCodeId?: StringFilter<"VoucherRedemption"> | string
+    code?: StringFilter<"VoucherRedemption"> | string
+    redeemedAmount?: FloatFilter<"VoucherRedemption"> | number
+    balanceBefore?: FloatFilter<"VoucherRedemption"> | number
+    balanceAfter?: FloatFilter<"VoucherRedemption"> | number
+    orderId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    invoiceNumber?: StringNullableFilter<"VoucherRedemption"> | string | null
+    branchId?: StringNullableFilter<"VoucherRedemption"> | string | null
+    appliedToItems?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedBy?: StringNullableFilter<"VoucherRedemption"> | string | null
+    redeemedAt?: DateTimeFilter<"VoucherRedemption"> | Date | string
+    notes?: StringNullableFilter<"VoucherRedemption"> | string | null
+  }
+
   export type UserCreateWithoutVendorInput = {
     id?: string
     email: string
@@ -66621,6 +77091,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutVendorInput = {
@@ -66639,6 +77112,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutVendorInput = {
@@ -66674,6 +77150,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -66690,6 +77170,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutVendorInput = {
@@ -66718,6 +77201,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -66732,6 +77219,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutVendorInput = {
@@ -66865,6 +77355,7 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutVendorInput = {
@@ -66890,6 +77381,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutVendorInput = {
@@ -66976,6 +77468,10 @@ export namespace Prisma {
     batchPricing?: StringNullableFilter<"SKU"> | string | null
     batchReferencePricing?: StringNullableFilter<"SKU"> | string | null
     lowStockThreshold?: IntNullableFilter<"SKU"> | number | null
+    isVoucher?: BoolFilter<"SKU"> | boolean
+    voucherValueType?: StringNullableFilter<"SKU"> | string | null
+    voucherMinValue?: FloatNullableFilter<"SKU"> | number | null
+    voucherMaxValue?: FloatNullableFilter<"SKU"> | number | null
     isActive?: BoolFilter<"SKU"> | boolean
     createdAt?: DateTimeFilter<"SKU"> | Date | string
     updatedAt?: DateTimeFilter<"SKU"> | Date | string
@@ -67164,6 +77660,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67180,6 +77680,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutCategoryInput = {
@@ -67208,6 +77711,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67222,6 +77729,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutCategoryInput = {
@@ -67379,6 +77889,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67395,6 +77909,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutUnitModelInput = {
@@ -67423,6 +77940,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -67437,6 +77958,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutUnitModelInput = {
@@ -67595,6 +78119,45 @@ export namespace Prisma {
     data: StockTransferCreateManyToBranchInput | StockTransferCreateManyToBranchInput[]
   }
 
+  export type VoucherRedemptionCreateWithoutBranchInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+    voucherCode: VoucherCodeCreateNestedOneWithoutRedemptionsInput
+    redeemer?: UserCreateNestedOneWithoutVoucherRedemptionsInput
+  }
+
+  export type VoucherRedemptionUncheckedCreateWithoutBranchInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionCreateOrConnectWithoutBranchInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    create: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput>
+  }
+
+  export type VoucherRedemptionCreateManyBranchInputEnvelope = {
+    data: VoucherRedemptionCreateManyBranchInput | VoucherRedemptionCreateManyBranchInput[]
+  }
+
   export type FloorUpsertWithWhereUniqueWithoutBranchInput = {
     where: FloorWhereUniqueInput
     update: XOR<FloorUpdateWithoutBranchInput, FloorUncheckedUpdateWithoutBranchInput>
@@ -67657,6 +78220,22 @@ export namespace Prisma {
   export type StockTransferUpdateManyWithWhereWithoutToBranchInput = {
     where: StockTransferScalarWhereInput
     data: XOR<StockTransferUpdateManyMutationInput, StockTransferUncheckedUpdateManyWithoutToBranchInput>
+  }
+
+  export type VoucherRedemptionUpsertWithWhereUniqueWithoutBranchInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    update: XOR<VoucherRedemptionUpdateWithoutBranchInput, VoucherRedemptionUncheckedUpdateWithoutBranchInput>
+    create: XOR<VoucherRedemptionCreateWithoutBranchInput, VoucherRedemptionUncheckedCreateWithoutBranchInput>
+  }
+
+  export type VoucherRedemptionUpdateWithWhereUniqueWithoutBranchInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    data: XOR<VoucherRedemptionUpdateWithoutBranchInput, VoucherRedemptionUncheckedUpdateWithoutBranchInput>
+  }
+
+  export type VoucherRedemptionUpdateManyWithWhereWithoutBranchInput = {
+    where: VoucherRedemptionScalarWhereInput
+    data: XOR<VoucherRedemptionUpdateManyMutationInput, VoucherRedemptionUncheckedUpdateManyWithoutBranchInput>
   }
 
   export type VendorCreateWithoutSkusInput = {
@@ -67909,10 +78488,12 @@ export namespace Prisma {
     isDefault?: boolean
     label?: string | null
     createdAt?: Date | string
+    variant?: SKUVariantCreateNestedOneWithoutBarcodesInput
   }
 
   export type ProductBarcodeUncheckedCreateWithoutSkuInput = {
     id?: string
+    variantId?: string | null
     barcode: string
     barcodeType?: string
     isDefault?: boolean
@@ -67981,6 +78562,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutSkuInput = {
@@ -67997,6 +78581,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutSkuInput = {
@@ -68031,6 +78618,7 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutSkuInput = {
@@ -68056,6 +78644,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutSkuInput = {
@@ -68111,6 +78700,145 @@ export namespace Prisma {
 
   export type SKUVendorCreateManySkuInputEnvelope = {
     data: SKUVendorCreateManySkuInput | SKUVendorCreateManySkuInput[]
+  }
+
+  export type VoucherCodeCreateWithoutSkuInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutSkuInput = {
+    id?: string
+    code: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutSkuInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherCodeCreateManySkuInputEnvelope = {
+    data: VoucherCodeCreateManySkuInput | VoucherCodeCreateManySkuInput[]
+  }
+
+  export type VoucherRestrictionCreateWithoutSkuInput = {
+    id?: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRestrictionUncheckedCreateWithoutSkuInput = {
+    id?: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRestrictionCreateOrConnectWithoutSkuInput = {
+    where: VoucherRestrictionWhereUniqueInput
+    create: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherRestrictionCreateManySkuInputEnvelope = {
+    data: VoucherRestrictionCreateManySkuInput | VoucherRestrictionCreateManySkuInput[]
+  }
+
+  export type VoucherBatchCreateWithoutSkuInput = {
+    id?: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    variant?: SKUVariantCreateNestedOneWithoutVoucherBatchesInput
+    creator?: UserCreateNestedOneWithoutVoucherBatchesInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchUncheckedCreateWithoutSkuInput = {
+    id?: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchCreateOrConnectWithoutSkuInput = {
+    where: VoucherBatchWhereUniqueInput
+    create: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherBatchCreateManySkuInputEnvelope = {
+    data: VoucherBatchCreateManySkuInput | VoucherBatchCreateManySkuInput[]
   }
 
   export type VendorUpsertWithoutSkusInput = {
@@ -68366,6 +79094,7 @@ export namespace Prisma {
     NOT?: ProductBarcodeScalarWhereInput | ProductBarcodeScalarWhereInput[]
     id?: StringFilter<"ProductBarcode"> | string
     skuId?: StringFilter<"ProductBarcode"> | string
+    variantId?: StringNullableFilter<"ProductBarcode"> | string | null
     barcode?: StringFilter<"ProductBarcode"> | string
     barcodeType?: StringFilter<"ProductBarcode"> | string
     isDefault?: BoolFilter<"ProductBarcode"> | boolean
@@ -68505,6 +79234,73 @@ export namespace Prisma {
     data: XOR<SKUVendorUpdateManyMutationInput, SKUVendorUncheckedUpdateManyWithoutSkuInput>
   }
 
+  export type VoucherCodeUpsertWithWhereUniqueWithoutSkuInput = {
+    where: VoucherCodeWhereUniqueInput
+    update: XOR<VoucherCodeUpdateWithoutSkuInput, VoucherCodeUncheckedUpdateWithoutSkuInput>
+    create: XOR<VoucherCodeCreateWithoutSkuInput, VoucherCodeUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherCodeUpdateWithWhereUniqueWithoutSkuInput = {
+    where: VoucherCodeWhereUniqueInput
+    data: XOR<VoucherCodeUpdateWithoutSkuInput, VoucherCodeUncheckedUpdateWithoutSkuInput>
+  }
+
+  export type VoucherCodeUpdateManyWithWhereWithoutSkuInput = {
+    where: VoucherCodeScalarWhereInput
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyWithoutSkuInput>
+  }
+
+  export type VoucherRestrictionUpsertWithWhereUniqueWithoutSkuInput = {
+    where: VoucherRestrictionWhereUniqueInput
+    update: XOR<VoucherRestrictionUpdateWithoutSkuInput, VoucherRestrictionUncheckedUpdateWithoutSkuInput>
+    create: XOR<VoucherRestrictionCreateWithoutSkuInput, VoucherRestrictionUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherRestrictionUpdateWithWhereUniqueWithoutSkuInput = {
+    where: VoucherRestrictionWhereUniqueInput
+    data: XOR<VoucherRestrictionUpdateWithoutSkuInput, VoucherRestrictionUncheckedUpdateWithoutSkuInput>
+  }
+
+  export type VoucherRestrictionUpdateManyWithWhereWithoutSkuInput = {
+    where: VoucherRestrictionScalarWhereInput
+    data: XOR<VoucherRestrictionUpdateManyMutationInput, VoucherRestrictionUncheckedUpdateManyWithoutSkuInput>
+  }
+
+  export type VoucherRestrictionScalarWhereInput = {
+    AND?: VoucherRestrictionScalarWhereInput | VoucherRestrictionScalarWhereInput[]
+    OR?: VoucherRestrictionScalarWhereInput[]
+    NOT?: VoucherRestrictionScalarWhereInput | VoucherRestrictionScalarWhereInput[]
+    id?: StringFilter<"VoucherRestriction"> | string
+    skuId?: StringFilter<"VoucherRestriction"> | string
+    restrictionType?: StringFilter<"VoucherRestriction"> | string
+    targetCategoryIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetSkuIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    targetVariantIds?: StringNullableFilter<"VoucherRestriction"> | string | null
+    cannotCombineWithDiscounts?: BoolFilter<"VoucherRestriction"> | boolean
+    cannotCombineWithOtherVouchers?: BoolFilter<"VoucherRestriction"> | boolean
+    minPurchaseAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    maxDiscountAmount?: FloatNullableFilter<"VoucherRestriction"> | number | null
+    priority?: IntFilter<"VoucherRestriction"> | number
+    createdAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+    updatedAt?: DateTimeFilter<"VoucherRestriction"> | Date | string
+  }
+
+  export type VoucherBatchUpsertWithWhereUniqueWithoutSkuInput = {
+    where: VoucherBatchWhereUniqueInput
+    update: XOR<VoucherBatchUpdateWithoutSkuInput, VoucherBatchUncheckedUpdateWithoutSkuInput>
+    create: XOR<VoucherBatchCreateWithoutSkuInput, VoucherBatchUncheckedCreateWithoutSkuInput>
+  }
+
+  export type VoucherBatchUpdateWithWhereUniqueWithoutSkuInput = {
+    where: VoucherBatchWhereUniqueInput
+    data: XOR<VoucherBatchUpdateWithoutSkuInput, VoucherBatchUncheckedUpdateWithoutSkuInput>
+  }
+
+  export type VoucherBatchUpdateManyWithWhereWithoutSkuInput = {
+    where: VoucherBatchScalarWhereInput
+    data: XOR<VoucherBatchUpdateManyMutationInput, VoucherBatchUncheckedUpdateManyWithoutSkuInput>
+  }
+
   export type SKUCreateWithoutSkuVendorsInput = {
     id?: string
     skuCode: string
@@ -68529,6 +79325,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -68545,6 +79345,9 @@ export namespace Prisma {
     variants?: SKUVariantCreateNestedManyWithoutSkuInput
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutSkuVendorsInput = {
@@ -68574,6 +79377,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -68587,6 +79394,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutSkuVendorsInput = {
@@ -68674,6 +79484,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -68690,6 +79504,9 @@ export namespace Prisma {
     variants?: SKUVariantUpdateManyWithoutSkuNestedInput
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutSkuVendorsInput = {
@@ -68719,6 +79536,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -68732,6 +79553,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type VendorUpsertWithoutSkuVendorsInput = {
@@ -68809,6 +79633,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -68825,6 +79653,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutTagsInput = {
@@ -68854,6 +79685,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -68867,6 +79702,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutTagsInput = {
@@ -68928,6 +79766,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -68944,6 +79786,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutTagsInput = {
@@ -68973,6 +79818,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -68986,6 +79835,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type TagUpsertWithoutSkusInput = {
@@ -69314,6 +80166,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69330,6 +80186,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutSkuAttributesInput = {
@@ -69359,6 +80218,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69372,6 +80235,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutSkuAttributesInput = {
@@ -69458,6 +80324,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69474,6 +80344,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutSkuAttributesInput = {
@@ -69503,6 +80376,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69516,6 +80393,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type AttributeUpsertWithoutSkuAttributesInput = {
@@ -69691,6 +80571,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69707,6 +80591,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutVariantsInput = {
@@ -69736,6 +80623,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -69749,6 +80640,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutVariantsInput = {
@@ -69909,6 +80803,7 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutVariantInput = {
@@ -69934,6 +80829,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutVariantInput = {
@@ -70003,6 +80899,135 @@ export namespace Prisma {
     data: ProductImageCreateManyVariantInput | ProductImageCreateManyVariantInput[]
   }
 
+  export type ProductBarcodeCreateWithoutVariantInput = {
+    id?: string
+    barcode: string
+    barcodeType?: string
+    isDefault?: boolean
+    label?: string | null
+    createdAt?: Date | string
+    sku: SKUCreateNestedOneWithoutBarcodesInput
+  }
+
+  export type ProductBarcodeUncheckedCreateWithoutVariantInput = {
+    id?: string
+    skuId: string
+    barcode: string
+    barcodeType?: string
+    isDefault?: boolean
+    label?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ProductBarcodeCreateOrConnectWithoutVariantInput = {
+    where: ProductBarcodeWhereUniqueInput
+    create: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput>
+  }
+
+  export type ProductBarcodeCreateManyVariantInputEnvelope = {
+    data: ProductBarcodeCreateManyVariantInput | ProductBarcodeCreateManyVariantInput[]
+  }
+
+  export type VoucherCodeCreateWithoutVariantInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutVariantInput = {
+    id?: string
+    code: string
+    skuId: string
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutVariantInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput>
+  }
+
+  export type VoucherCodeCreateManyVariantInputEnvelope = {
+    data: VoucherCodeCreateManyVariantInput | VoucherCodeCreateManyVariantInput[]
+  }
+
+  export type VoucherBatchCreateWithoutVariantInput = {
+    id?: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    sku: SKUCreateNestedOneWithoutVoucherBatchesInput
+    creator?: UserCreateNestedOneWithoutVoucherBatchesInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchUncheckedCreateWithoutVariantInput = {
+    id?: string
+    skuId: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVoucherBatchInput
+  }
+
+  export type VoucherBatchCreateOrConnectWithoutVariantInput = {
+    where: VoucherBatchWhereUniqueInput
+    create: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput>
+  }
+
+  export type VoucherBatchCreateManyVariantInputEnvelope = {
+    data: VoucherBatchCreateManyVariantInput | VoucherBatchCreateManyVariantInput[]
+  }
+
   export type SKUUpsertWithoutVariantsInput = {
     update: XOR<SKUUpdateWithoutVariantsInput, SKUUncheckedUpdateWithoutVariantsInput>
     create: XOR<SKUCreateWithoutVariantsInput, SKUUncheckedCreateWithoutVariantsInput>
@@ -70038,6 +81063,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70054,6 +81083,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutVariantsInput = {
@@ -70083,6 +81115,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70096,6 +81132,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantValueUpsertWithWhereUniqueWithoutVariantInput = {
@@ -70210,6 +81249,54 @@ export namespace Prisma {
     data: XOR<ProductImageUpdateManyMutationInput, ProductImageUncheckedUpdateManyWithoutVariantInput>
   }
 
+  export type ProductBarcodeUpsertWithWhereUniqueWithoutVariantInput = {
+    where: ProductBarcodeWhereUniqueInput
+    update: XOR<ProductBarcodeUpdateWithoutVariantInput, ProductBarcodeUncheckedUpdateWithoutVariantInput>
+    create: XOR<ProductBarcodeCreateWithoutVariantInput, ProductBarcodeUncheckedCreateWithoutVariantInput>
+  }
+
+  export type ProductBarcodeUpdateWithWhereUniqueWithoutVariantInput = {
+    where: ProductBarcodeWhereUniqueInput
+    data: XOR<ProductBarcodeUpdateWithoutVariantInput, ProductBarcodeUncheckedUpdateWithoutVariantInput>
+  }
+
+  export type ProductBarcodeUpdateManyWithWhereWithoutVariantInput = {
+    where: ProductBarcodeScalarWhereInput
+    data: XOR<ProductBarcodeUpdateManyMutationInput, ProductBarcodeUncheckedUpdateManyWithoutVariantInput>
+  }
+
+  export type VoucherCodeUpsertWithWhereUniqueWithoutVariantInput = {
+    where: VoucherCodeWhereUniqueInput
+    update: XOR<VoucherCodeUpdateWithoutVariantInput, VoucherCodeUncheckedUpdateWithoutVariantInput>
+    create: XOR<VoucherCodeCreateWithoutVariantInput, VoucherCodeUncheckedCreateWithoutVariantInput>
+  }
+
+  export type VoucherCodeUpdateWithWhereUniqueWithoutVariantInput = {
+    where: VoucherCodeWhereUniqueInput
+    data: XOR<VoucherCodeUpdateWithoutVariantInput, VoucherCodeUncheckedUpdateWithoutVariantInput>
+  }
+
+  export type VoucherCodeUpdateManyWithWhereWithoutVariantInput = {
+    where: VoucherCodeScalarWhereInput
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyWithoutVariantInput>
+  }
+
+  export type VoucherBatchUpsertWithWhereUniqueWithoutVariantInput = {
+    where: VoucherBatchWhereUniqueInput
+    update: XOR<VoucherBatchUpdateWithoutVariantInput, VoucherBatchUncheckedUpdateWithoutVariantInput>
+    create: XOR<VoucherBatchCreateWithoutVariantInput, VoucherBatchUncheckedCreateWithoutVariantInput>
+  }
+
+  export type VoucherBatchUpdateWithWhereUniqueWithoutVariantInput = {
+    where: VoucherBatchWhereUniqueInput
+    data: XOR<VoucherBatchUpdateWithoutVariantInput, VoucherBatchUncheckedUpdateWithoutVariantInput>
+  }
+
+  export type VoucherBatchUpdateManyWithWhereWithoutVariantInput = {
+    where: VoucherBatchScalarWhereInput
+    data: XOR<VoucherBatchUpdateManyMutationInput, VoucherBatchUncheckedUpdateManyWithoutVariantInput>
+  }
+
   export type SKUVariantCreateWithoutAttributeValuesInput = {
     id?: string
     variantCode: string
@@ -70224,6 +81311,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutAttributeValuesInput = {
@@ -70240,6 +81330,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutAttributeValuesInput = {
@@ -70326,6 +81419,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutAttributeValuesInput = {
@@ -70342,6 +81438,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type AttributeUpsertWithoutVariantValuesInput = {
@@ -70434,6 +81533,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70450,6 +81553,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutImagesInput = {
@@ -70479,6 +81585,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70492,6 +81602,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutImagesInput = {
@@ -70513,6 +81626,9 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutVariantInput
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutImagesInput = {
@@ -70529,6 +81645,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutImagesInput = {
@@ -70571,6 +81690,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70587,6 +81710,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutImagesInput = {
@@ -70616,6 +81742,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70629,6 +81759,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutImagesInput = {
@@ -70656,6 +81789,9 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutImagesInput = {
@@ -70672,6 +81808,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUCreateWithoutBarcodesInput = {
@@ -70698,6 +81837,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70714,6 +81857,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutBarcodesInput = {
@@ -70743,6 +81889,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -70756,11 +81906,57 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutBarcodesInput = {
     where: SKUWhereUniqueInput
     create: XOR<SKUCreateWithoutBarcodesInput, SKUUncheckedCreateWithoutBarcodesInput>
+  }
+
+  export type SKUVariantCreateWithoutBarcodesInput = {
+    id?: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVariantsInput
+    attributeValues?: SKUVariantValueCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineCreateNestedManyWithoutVariantInput
+    batches?: BatchCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
+    images?: ProductImageCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantUncheckedCreateWithoutBarcodesInput = {
+    id?: string
+    skuId: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    attributeValues?: SKUVariantValueUncheckedCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
+    batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantCreateOrConnectWithoutBarcodesInput = {
+    where: SKUVariantWhereUniqueInput
+    create: XOR<SKUVariantCreateWithoutBarcodesInput, SKUVariantUncheckedCreateWithoutBarcodesInput>
   }
 
   export type SKUUpsertWithoutBarcodesInput = {
@@ -70798,6 +81994,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70814,6 +82014,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutBarcodesInput = {
@@ -70843,6 +82046,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -70856,6 +82063,58 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUVariantUpsertWithoutBarcodesInput = {
+    update: XOR<SKUVariantUpdateWithoutBarcodesInput, SKUVariantUncheckedUpdateWithoutBarcodesInput>
+    create: XOR<SKUVariantCreateWithoutBarcodesInput, SKUVariantUncheckedCreateWithoutBarcodesInput>
+    where?: SKUVariantWhereInput
+  }
+
+  export type SKUVariantUpdateToOneWithWhereWithoutBarcodesInput = {
+    where?: SKUVariantWhereInput
+    data: XOR<SKUVariantUpdateWithoutBarcodesInput, SKUVariantUncheckedUpdateWithoutBarcodesInput>
+  }
+
+  export type SKUVariantUpdateWithoutBarcodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVariantsNestedInput
+    attributeValues?: SKUVariantValueUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
+    batches?: BatchUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
+  }
+
+  export type SKUVariantUncheckedUpdateWithoutBarcodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attributeValues?: SKUVariantValueUncheckedUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type BranchCreateWithoutFloorsInput = {
@@ -70870,6 +82129,7 @@ export namespace Prisma {
     createdAt?: Date | string
     stockTransfersFrom?: StockTransferCreateNestedManyWithoutFromBranchInput
     stockTransfersTo?: StockTransferCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutBranchInput
   }
 
   export type BranchUncheckedCreateWithoutFloorsInput = {
@@ -70884,6 +82144,7 @@ export namespace Prisma {
     createdAt?: Date | string
     stockTransfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromBranchInput
     stockTransfersTo?: StockTransferUncheckedCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutBranchInput
   }
 
   export type BranchCreateOrConnectWithoutFloorsInput = {
@@ -71260,6 +82521,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     stockTransfersFrom?: StockTransferUpdateManyWithoutFromBranchNestedInput
     stockTransfersTo?: StockTransferUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchUncheckedUpdateWithoutFloorsInput = {
@@ -71274,6 +82536,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     stockTransfersFrom?: StockTransferUncheckedUpdateManyWithoutFromBranchNestedInput
     stockTransfersTo?: StockTransferUncheckedUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutBranchNestedInput
   }
 
   export type RackUpsertWithWhereUniqueWithoutFloorInput = {
@@ -72621,6 +83884,7 @@ export namespace Prisma {
     createdAt?: Date | string
     floors?: FloorCreateNestedManyWithoutBranchInput
     stockTransfersTo?: StockTransferCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutBranchInput
   }
 
   export type BranchUncheckedCreateWithoutStockTransfersFromInput = {
@@ -72635,6 +83899,7 @@ export namespace Prisma {
     createdAt?: Date | string
     floors?: FloorUncheckedCreateNestedManyWithoutBranchInput
     stockTransfersTo?: StockTransferUncheckedCreateNestedManyWithoutToBranchInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutBranchInput
   }
 
   export type BranchCreateOrConnectWithoutStockTransfersFromInput = {
@@ -72654,6 +83919,7 @@ export namespace Prisma {
     createdAt?: Date | string
     floors?: FloorCreateNestedManyWithoutBranchInput
     stockTransfersFrom?: StockTransferCreateNestedManyWithoutFromBranchInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutBranchInput
   }
 
   export type BranchUncheckedCreateWithoutStockTransfersToInput = {
@@ -72668,6 +83934,7 @@ export namespace Prisma {
     createdAt?: Date | string
     floors?: FloorUncheckedCreateNestedManyWithoutBranchInput
     stockTransfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromBranchInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutBranchInput
   }
 
   export type BranchCreateOrConnectWithoutStockTransfersToInput = {
@@ -72781,6 +84048,9 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutStockTransfersCreatedInput = {
@@ -72799,6 +84069,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutStockTransfersCreatedInput = {
@@ -72822,6 +84095,9 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutStockTransfersApprovedInput = {
@@ -72840,6 +84116,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutStockTransfersApprovedInput = {
@@ -72899,6 +84178,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     floors?: FloorUpdateManyWithoutBranchNestedInput
     stockTransfersTo?: StockTransferUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchUncheckedUpdateWithoutStockTransfersFromInput = {
@@ -72913,6 +84193,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     floors?: FloorUncheckedUpdateManyWithoutBranchNestedInput
     stockTransfersTo?: StockTransferUncheckedUpdateManyWithoutToBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchUpsertWithoutStockTransfersToInput = {
@@ -72938,6 +84219,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     floors?: FloorUpdateManyWithoutBranchNestedInput
     stockTransfersFrom?: StockTransferUpdateManyWithoutFromBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutBranchNestedInput
   }
 
   export type BranchUncheckedUpdateWithoutStockTransfersToInput = {
@@ -72952,6 +84234,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     floors?: FloorUncheckedUpdateManyWithoutBranchNestedInput
     stockTransfersFrom?: StockTransferUncheckedUpdateManyWithoutFromBranchNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutBranchNestedInput
   }
 
   export type FloorUpsertWithoutTransfersFromInput = {
@@ -73083,6 +84366,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStockTransfersCreatedInput = {
@@ -73101,6 +84387,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUpsertWithoutStockTransfersApprovedInput = {
@@ -73130,6 +84419,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStockTransfersApprovedInput = {
@@ -73148,6 +84440,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type StockTransferLineUpsertWithWhereUniqueWithoutTransferInput = {
@@ -73227,6 +84522,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73243,6 +84542,9 @@ export namespace Prisma {
     variants?: SKUVariantCreateNestedManyWithoutSkuInput
     batches?: BatchCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutStockTransferLinesInput = {
@@ -73272,6 +84574,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73285,6 +84591,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutStockTransferLinesInput = {
@@ -73306,6 +84615,9 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutVariantInput
     batches?: BatchCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutStockTransferLinesInput = {
@@ -73322,6 +84634,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutStockTransferLinesInput = {
@@ -73352,6 +84667,7 @@ export namespace Prisma {
     grnLines?: GRNLineCreateNestedManyWithoutBatchInput
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutStockTransferLinesInput = {
@@ -73377,6 +84693,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedCreateNestedManyWithoutBatchInput
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutStockTransferLinesInput = {
@@ -73462,6 +84779,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73478,6 +84799,9 @@ export namespace Prisma {
     variants?: SKUVariantUpdateManyWithoutSkuNestedInput
     batches?: BatchUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutStockTransferLinesInput = {
@@ -73507,6 +84831,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -73520,6 +84848,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutStockTransferLinesInput = {
@@ -73547,6 +84878,9 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
     batches?: BatchUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutStockTransferLinesInput = {
@@ -73563,6 +84897,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type BatchUpsertWithoutStockTransferLinesInput = {
@@ -73599,6 +84936,7 @@ export namespace Prisma {
     grnLines?: GRNLineUpdateManyWithoutBatchNestedInput
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutStockTransferLinesInput = {
@@ -73624,6 +84962,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedUpdateManyWithoutBatchNestedInput
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type SKUCreateWithoutInventoryRecordsInput = {
@@ -73650,6 +84989,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73666,6 +85009,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutInventoryRecordsInput = {
@@ -73695,6 +85041,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -73708,6 +85058,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutInventoryRecordsInput = {
@@ -73729,6 +85082,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutInventoryRecordsInput = {
@@ -73745,6 +85101,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutInventoryRecordsInput = {
@@ -73775,6 +85134,7 @@ export namespace Prisma {
     grnLines?: GRNLineCreateNestedManyWithoutBatchInput
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutInventoryRecordsInput = {
@@ -73800,6 +85160,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedCreateNestedManyWithoutBatchInput
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutInventoryRecordsInput = {
@@ -73958,6 +85319,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutInventoryRecordsInput = {
@@ -73976,6 +85340,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutInventoryRecordsInput = {
@@ -74018,6 +85385,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74034,6 +85405,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutInventoryRecordsInput = {
@@ -74063,6 +85437,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -74076,6 +85454,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutInventoryRecordsInput = {
@@ -74103,6 +85484,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutInventoryRecordsInput = {
@@ -74119,6 +85503,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type BatchUpsertWithoutInventoryRecordsInput = {
@@ -74155,6 +85542,7 @@ export namespace Prisma {
     grnLines?: GRNLineUpdateManyWithoutBatchNestedInput
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutInventoryRecordsInput = {
@@ -74180,6 +85568,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedUpdateManyWithoutBatchNestedInput
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type FloorUpsertWithoutInventoryRecordsInput = {
@@ -74362,6 +85751,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInventoryRecordsInput = {
@@ -74380,6 +85772,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserCreateWithoutInventoryEventsInput = {
@@ -74398,6 +85793,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutInventoryEventsInput = {
@@ -74416,6 +85814,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutInventoryEventsInput = {
@@ -74450,6 +85851,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInventoryEventsInput = {
@@ -74468,6 +85872,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type VendorCreateWithoutGrnsInput = {
@@ -74619,6 +86026,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutGrnsInput = {
@@ -74637,6 +86047,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutGrnsInput = {
@@ -74861,6 +86274,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutGrnsInput = {
@@ -74879,6 +86295,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type GRNLineUpsertWithWhereUniqueWithoutGrnInput = {
@@ -74921,6 +86340,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74937,6 +86360,9 @@ export namespace Prisma {
     variants?: SKUVariantCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutBatchesInput = {
@@ -74966,6 +86392,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -74979,6 +86409,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutBatchesInput = {
@@ -75000,6 +86433,9 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutBatchesInput = {
@@ -75016,6 +86452,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutBatchesInput = {
@@ -75208,6 +86647,63 @@ export namespace Prisma {
     data: StockTransferLineCreateManyBatchInput | StockTransferLineCreateManyBatchInput[]
   }
 
+  export type VoucherCodeCreateWithoutBatchInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutBatchInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput>
+  }
+
+  export type VoucherCodeCreateManyBatchInputEnvelope = {
+    data: VoucherCodeCreateManyBatchInput | VoucherCodeCreateManyBatchInput[]
+  }
+
   export type SKUUpsertWithoutBatchesInput = {
     update: XOR<SKUUpdateWithoutBatchesInput, SKUUncheckedUpdateWithoutBatchesInput>
     create: XOR<SKUCreateWithoutBatchesInput, SKUUncheckedCreateWithoutBatchesInput>
@@ -75243,6 +86739,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75259,6 +86759,9 @@ export namespace Prisma {
     variants?: SKUVariantUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutBatchesInput = {
@@ -75288,6 +86791,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75301,6 +86808,9 @@ export namespace Prisma {
     variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutBatchesInput = {
@@ -75328,6 +86838,9 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutBatchesInput = {
@@ -75344,6 +86857,9 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type VendorUpsertWithoutBatchesInput = {
@@ -75461,6 +86977,22 @@ export namespace Prisma {
     data: XOR<StockTransferLineUpdateManyMutationInput, StockTransferLineUncheckedUpdateManyWithoutBatchInput>
   }
 
+  export type VoucherCodeUpsertWithWhereUniqueWithoutBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    update: XOR<VoucherCodeUpdateWithoutBatchInput, VoucherCodeUncheckedUpdateWithoutBatchInput>
+    create: XOR<VoucherCodeCreateWithoutBatchInput, VoucherCodeUncheckedCreateWithoutBatchInput>
+  }
+
+  export type VoucherCodeUpdateWithWhereUniqueWithoutBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    data: XOR<VoucherCodeUpdateWithoutBatchInput, VoucherCodeUncheckedUpdateWithoutBatchInput>
+  }
+
+  export type VoucherCodeUpdateManyWithWhereWithoutBatchInput = {
+    where: VoucherCodeScalarWhereInput
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyWithoutBatchInput>
+  }
+
   export type GRNCreateWithoutLinesInput = {
     id?: string
     invoiceReference?: string | null
@@ -75522,6 +87054,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75538,6 +87074,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutGrnLinesInput = {
@@ -75567,6 +87106,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -75580,6 +87123,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutGrnLinesInput = {
@@ -75601,6 +87147,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutGrnLinesInput = {
@@ -75617,6 +87166,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutGrnLinesInput = {
@@ -75647,6 +87199,7 @@ export namespace Prisma {
     prnLines?: PRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutGrnLinesInput = {
@@ -75672,6 +87225,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutGrnLinesInput = {
@@ -75788,6 +87342,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75804,6 +87362,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutGrnLinesInput = {
@@ -75833,6 +87394,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -75846,6 +87411,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutGrnLinesInput = {
@@ -75873,6 +87441,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutGrnLinesInput = {
@@ -75889,6 +87460,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type BatchUpsertWithoutGrnLinesInput = {
@@ -75925,6 +87499,7 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutGrnLinesInput = {
@@ -75950,6 +87525,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type InspectionRecordUpsertWithWhereUniqueWithoutGrnLineInput = {
@@ -76019,6 +87595,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutInspectionRecordsInput = {
@@ -76037,6 +87616,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutInspectionRecordsInput = {
@@ -76153,6 +87735,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInspectionRecordsInput = {
@@ -76171,6 +87756,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type PRNUpsertWithWhereUniqueWithoutInspectionRecordInput = {
@@ -76365,6 +87953,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutPrnsInput = {
@@ -76383,6 +87974,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutPrnsInput = {
@@ -76630,6 +88224,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPrnsInput = {
@@ -76648,6 +88245,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type PRNLineUpsertWithWhereUniqueWithoutPrnInput = {
@@ -76727,6 +88327,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -76743,6 +88347,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
   }
 
   export type SKUUncheckedCreateWithoutPrnLinesInput = {
@@ -76772,6 +88379,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -76785,6 +88396,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
     skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
   }
 
   export type SKUCreateOrConnectWithoutPrnLinesInput = {
@@ -76806,6 +88420,9 @@ export namespace Prisma {
     batches?: BatchCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
     images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantUncheckedCreateWithoutPrnLinesInput = {
@@ -76822,6 +88439,9 @@ export namespace Prisma {
     batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
     images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
   }
 
   export type SKUVariantCreateOrConnectWithoutPrnLinesInput = {
@@ -76852,6 +88472,7 @@ export namespace Prisma {
     grnLines?: GRNLineCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutBatchInput
   }
 
   export type BatchUncheckedCreateWithoutPrnLinesInput = {
@@ -76877,6 +88498,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedCreateNestedManyWithoutBatchInput
     inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
     stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutBatchInput
   }
 
   export type BatchCreateOrConnectWithoutPrnLinesInput = {
@@ -76962,6 +88584,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -76978,6 +88604,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutPrnLinesInput = {
@@ -77007,6 +88636,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -77020,6 +88653,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUVariantUpsertWithoutPrnLinesInput = {
@@ -77047,6 +88683,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutPrnLinesInput = {
@@ -77063,6 +88702,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type BatchUpsertWithoutPrnLinesInput = {
@@ -77099,6 +88741,7 @@ export namespace Prisma {
     grnLines?: GRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutPrnLinesInput = {
@@ -77124,6 +88767,7 @@ export namespace Prisma {
     grnLines?: GRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type UserCreateWithoutImportJobsInput = {
@@ -77142,6 +88786,9 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutImportJobsInput = {
@@ -77160,6 +88807,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutImportJobsInput = {
@@ -77241,6 +88891,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutImportJobsInput = {
@@ -77259,6 +88912,9 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type ImportRecordUpsertWithWhereUniqueWithoutJobInput = {
@@ -77416,6 +89072,9 @@ export namespace Prisma {
     importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -77434,6 +89093,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
     stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
     stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
   }
 
   export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -77468,6 +89130,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -77486,6 +89151,1649 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
+  }
+
+  export type SKUCreateWithoutVoucherBatchesInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    vendor: VendorCreateNestedOneWithoutSkusInput
+    category?: CategoryCreateNestedOneWithoutSkusInput
+    unitModel?: UnitOfMeasureCreateNestedOneWithoutSkusInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineCreateNestedManyWithoutSkuInput
+    images?: ProductImageCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutSkuInput
+    tags?: SKUTagCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantCreateNestedManyWithoutSkuInput
+    batches?: BatchCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUUncheckedCreateWithoutVoucherBatchesInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    categoryId?: string | null
+    vendorId: string
+    unitOfMeasureId?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutSkuInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutSkuInput
+    tags?: SKUTagUncheckedCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeUncheckedCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
+    batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUCreateOrConnectWithoutVoucherBatchesInput = {
+    where: SKUWhereUniqueInput
+    create: XOR<SKUCreateWithoutVoucherBatchesInput, SKUUncheckedCreateWithoutVoucherBatchesInput>
+  }
+
+  export type SKUVariantCreateWithoutVoucherBatchesInput = {
+    id?: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVariantsInput
+    attributeValues?: SKUVariantValueCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineCreateNestedManyWithoutVariantInput
+    batches?: BatchCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
+    images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantUncheckedCreateWithoutVoucherBatchesInput = {
+    id?: string
+    skuId: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    attributeValues?: SKUVariantValueUncheckedCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
+    batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantCreateOrConnectWithoutVoucherBatchesInput = {
+    where: SKUVariantWhereUniqueInput
+    create: XOR<SKUVariantCreateWithoutVoucherBatchesInput, SKUVariantUncheckedCreateWithoutVoucherBatchesInput>
+  }
+
+  export type UserCreateWithoutVoucherBatchesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    createdAt?: Date | string
+    isActive?: boolean
+    vendor?: VendorCreateNestedOneWithoutUsersInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventCreateNestedManyWithoutUserInput
+    grns?: GRNCreateNestedManyWithoutCreatorInput
+    prns?: PRNCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
+  }
+
+  export type UserUncheckedCreateWithoutVoucherBatchesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    vendorId?: string | null
+    createdAt?: Date | string
+    isActive?: boolean
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventUncheckedCreateNestedManyWithoutUserInput
+    grns?: GRNUncheckedCreateNestedManyWithoutCreatorInput
+    prns?: PRNUncheckedCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordUncheckedCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
+  }
+
+  export type UserCreateOrConnectWithoutVoucherBatchesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVoucherBatchesInput, UserUncheckedCreateWithoutVoucherBatchesInput>
+  }
+
+  export type VoucherCodeCreateWithoutVoucherBatchInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+    redemptions?: VoucherRedemptionCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutVoucherBatchInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    redemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutVoucherCodeInput
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutVoucherBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput>
+  }
+
+  export type VoucherCodeCreateManyVoucherBatchInputEnvelope = {
+    data: VoucherCodeCreateManyVoucherBatchInput | VoucherCodeCreateManyVoucherBatchInput[]
+  }
+
+  export type SKUUpsertWithoutVoucherBatchesInput = {
+    update: XOR<SKUUpdateWithoutVoucherBatchesInput, SKUUncheckedUpdateWithoutVoucherBatchesInput>
+    create: XOR<SKUCreateWithoutVoucherBatchesInput, SKUUncheckedCreateWithoutVoucherBatchesInput>
+    where?: SKUWhereInput
+  }
+
+  export type SKUUpdateToOneWithWhereWithoutVoucherBatchesInput = {
+    where?: SKUWhereInput
+    data: XOR<SKUUpdateWithoutVoucherBatchesInput, SKUUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type SKUUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendor?: VendorUpdateOneRequiredWithoutSkusNestedInput
+    category?: CategoryUpdateOneWithoutSkusNestedInput
+    unitModel?: UnitOfMeasureUpdateOneWithoutSkusNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUpdateManyWithoutSkuNestedInput
+    batches?: BatchUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUUncheckedUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    vendorId?: StringFieldUpdateOperationsInput | string
+    unitOfMeasureId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUncheckedUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUncheckedUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUVariantUpsertWithoutVoucherBatchesInput = {
+    update: XOR<SKUVariantUpdateWithoutVoucherBatchesInput, SKUVariantUncheckedUpdateWithoutVoucherBatchesInput>
+    create: XOR<SKUVariantCreateWithoutVoucherBatchesInput, SKUVariantUncheckedCreateWithoutVoucherBatchesInput>
+    where?: SKUVariantWhereInput
+  }
+
+  export type SKUVariantUpdateToOneWithWhereWithoutVoucherBatchesInput = {
+    where?: SKUVariantWhereInput
+    data: XOR<SKUVariantUpdateWithoutVoucherBatchesInput, SKUVariantUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type SKUVariantUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVariantsNestedInput
+    attributeValues?: SKUVariantValueUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
+    batches?: BatchUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+  }
+
+  export type SKUVariantUncheckedUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attributeValues?: SKUVariantValueUncheckedUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+  }
+
+  export type UserUpsertWithoutVoucherBatchesInput = {
+    update: XOR<UserUpdateWithoutVoucherBatchesInput, UserUncheckedUpdateWithoutVoucherBatchesInput>
+    create: XOR<UserCreateWithoutVoucherBatchesInput, UserUncheckedCreateWithoutVoucherBatchesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVoucherBatchesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVoucherBatchesInput, UserUncheckedUpdateWithoutVoucherBatchesInput>
+  }
+
+  export type UserUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    vendor?: VendorUpdateOneWithoutUsersNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUpdateManyWithoutUserNestedInput
+    grns?: GRNUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVoucherBatchesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    vendorId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUncheckedUpdateManyWithoutUserNestedInput
+    grns?: GRNUncheckedUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUncheckedUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUncheckedUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
+  }
+
+  export type VoucherCodeUpsertWithWhereUniqueWithoutVoucherBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    update: XOR<VoucherCodeUpdateWithoutVoucherBatchInput, VoucherCodeUncheckedUpdateWithoutVoucherBatchInput>
+    create: XOR<VoucherCodeCreateWithoutVoucherBatchInput, VoucherCodeUncheckedCreateWithoutVoucherBatchInput>
+  }
+
+  export type VoucherCodeUpdateWithWhereUniqueWithoutVoucherBatchInput = {
+    where: VoucherCodeWhereUniqueInput
+    data: XOR<VoucherCodeUpdateWithoutVoucherBatchInput, VoucherCodeUncheckedUpdateWithoutVoucherBatchInput>
+  }
+
+  export type VoucherCodeUpdateManyWithWhereWithoutVoucherBatchInput = {
+    where: VoucherCodeScalarWhereInput
+    data: XOR<VoucherCodeUpdateManyMutationInput, VoucherCodeUncheckedUpdateManyWithoutVoucherBatchInput>
+  }
+
+  export type SKUCreateWithoutVoucherCodesInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    vendor: VendorCreateNestedOneWithoutSkusInput
+    category?: CategoryCreateNestedOneWithoutSkusInput
+    unitModel?: UnitOfMeasureCreateNestedOneWithoutSkusInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineCreateNestedManyWithoutSkuInput
+    images?: ProductImageCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutSkuInput
+    tags?: SKUTagCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantCreateNestedManyWithoutSkuInput
+    batches?: BatchCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUUncheckedCreateWithoutVoucherCodesInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    categoryId?: string | null
+    vendorId: string
+    unitOfMeasureId?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutSkuInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutSkuInput
+    tags?: SKUTagUncheckedCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeUncheckedCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
+    batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherRestrictions?: VoucherRestrictionUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUCreateOrConnectWithoutVoucherCodesInput = {
+    where: SKUWhereUniqueInput
+    create: XOR<SKUCreateWithoutVoucherCodesInput, SKUUncheckedCreateWithoutVoucherCodesInput>
+  }
+
+  export type SKUVariantCreateWithoutVoucherCodesInput = {
+    id?: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVariantsInput
+    attributeValues?: SKUVariantValueCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineCreateNestedManyWithoutVariantInput
+    batches?: BatchCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutVariantInput
+    images?: ProductImageCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantUncheckedCreateWithoutVoucherCodesInput = {
+    id?: string
+    skuId: string
+    variantCode: string
+    name?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    attributeValues?: SKUVariantValueUncheckedCreateNestedManyWithoutVariantInput
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutVariantInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutVariantInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutVariantInput
+    batches?: BatchUncheckedCreateNestedManyWithoutVariantInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutVariantInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutVariantInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutVariantInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutVariantInput
+  }
+
+  export type SKUVariantCreateOrConnectWithoutVoucherCodesInput = {
+    where: SKUVariantWhereUniqueInput
+    create: XOR<SKUVariantCreateWithoutVoucherCodesInput, SKUVariantUncheckedCreateWithoutVoucherCodesInput>
+  }
+
+  export type BatchCreateWithoutVoucherCodesInput = {
+    id?: string
+    batchNumber: string
+    sequenceNumber: number
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    currency?: string
+    marginType?: string | null
+    marginValue?: number | null
+    expiryDate?: Date | string | null
+    manufacturingDate?: Date | string | null
+    notes?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutBatchesInput
+    variant?: SKUVariantCreateNestedOneWithoutBatchesInput
+    vendor?: VendorCreateNestedOneWithoutBatchesInput
+    grnLines?: GRNLineCreateNestedManyWithoutBatchInput
+    prnLines?: PRNLineCreateNestedManyWithoutBatchInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutBatchInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutBatchInput
+  }
+
+  export type BatchUncheckedCreateWithoutVoucherCodesInput = {
+    id?: string
+    batchNumber: string
+    skuId: string
+    variantId?: string | null
+    sequenceNumber: number
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    currency?: string
+    marginType?: string | null
+    marginValue?: number | null
+    vendorId?: string | null
+    expiryDate?: Date | string | null
+    manufacturingDate?: Date | string | null
+    notes?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutBatchInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutBatchInput
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutBatchInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutBatchInput
+  }
+
+  export type BatchCreateOrConnectWithoutVoucherCodesInput = {
+    where: BatchWhereUniqueInput
+    create: XOR<BatchCreateWithoutVoucherCodesInput, BatchUncheckedCreateWithoutVoucherCodesInput>
+  }
+
+  export type VoucherBatchCreateWithoutVoucherCodesInput = {
+    id?: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+    sku: SKUCreateNestedOneWithoutVoucherBatchesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherBatchesInput
+    creator?: UserCreateNestedOneWithoutVoucherBatchesInput
+  }
+
+  export type VoucherBatchUncheckedCreateWithoutVoucherCodesInput = {
+    id?: string
+    skuId: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type VoucherBatchCreateOrConnectWithoutVoucherCodesInput = {
+    where: VoucherBatchWhereUniqueInput
+    create: XOR<VoucherBatchCreateWithoutVoucherCodesInput, VoucherBatchUncheckedCreateWithoutVoucherCodesInput>
+  }
+
+  export type UserCreateWithoutVoucherCodesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    createdAt?: Date | string
+    isActive?: boolean
+    vendor?: VendorCreateNestedOneWithoutUsersInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventCreateNestedManyWithoutUserInput
+    grns?: GRNCreateNestedManyWithoutCreatorInput
+    prns?: PRNCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionCreateNestedManyWithoutRedeemerInput
+  }
+
+  export type UserUncheckedCreateWithoutVoucherCodesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    vendorId?: string | null
+    createdAt?: Date | string
+    isActive?: boolean
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventUncheckedCreateNestedManyWithoutUserInput
+    grns?: GRNUncheckedCreateNestedManyWithoutCreatorInput
+    prns?: PRNUncheckedCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordUncheckedCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherRedemptions?: VoucherRedemptionUncheckedCreateNestedManyWithoutRedeemerInput
+  }
+
+  export type UserCreateOrConnectWithoutVoucherCodesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVoucherCodesInput, UserUncheckedCreateWithoutVoucherCodesInput>
+  }
+
+  export type VoucherRedemptionCreateWithoutVoucherCodeInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+    branch?: BranchCreateNestedOneWithoutVoucherRedemptionsInput
+    redeemer?: UserCreateNestedOneWithoutVoucherRedemptionsInput
+  }
+
+  export type VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionCreateOrConnectWithoutVoucherCodeInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    create: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput>
+  }
+
+  export type VoucherRedemptionCreateManyVoucherCodeInputEnvelope = {
+    data: VoucherRedemptionCreateManyVoucherCodeInput | VoucherRedemptionCreateManyVoucherCodeInput[]
+  }
+
+  export type SKUUpsertWithoutVoucherCodesInput = {
+    update: XOR<SKUUpdateWithoutVoucherCodesInput, SKUUncheckedUpdateWithoutVoucherCodesInput>
+    create: XOR<SKUCreateWithoutVoucherCodesInput, SKUUncheckedCreateWithoutVoucherCodesInput>
+    where?: SKUWhereInput
+  }
+
+  export type SKUUpdateToOneWithWhereWithoutVoucherCodesInput = {
+    where?: SKUWhereInput
+    data: XOR<SKUUpdateWithoutVoucherCodesInput, SKUUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type SKUUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendor?: VendorUpdateOneRequiredWithoutSkusNestedInput
+    category?: CategoryUpdateOneWithoutSkusNestedInput
+    unitModel?: UnitOfMeasureUpdateOneWithoutSkusNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUpdateManyWithoutSkuNestedInput
+    batches?: BatchUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUUncheckedUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    vendorId?: StringFieldUpdateOperationsInput | string
+    unitOfMeasureId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUncheckedUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUncheckedUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUVariantUpsertWithoutVoucherCodesInput = {
+    update: XOR<SKUVariantUpdateWithoutVoucherCodesInput, SKUVariantUncheckedUpdateWithoutVoucherCodesInput>
+    create: XOR<SKUVariantCreateWithoutVoucherCodesInput, SKUVariantUncheckedCreateWithoutVoucherCodesInput>
+    where?: SKUVariantWhereInput
+  }
+
+  export type SKUVariantUpdateToOneWithWhereWithoutVoucherCodesInput = {
+    where?: SKUVariantWhereInput
+    data: XOR<SKUVariantUpdateWithoutVoucherCodesInput, SKUVariantUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type SKUVariantUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVariantsNestedInput
+    attributeValues?: SKUVariantValueUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUpdateManyWithoutVariantNestedInput
+    batches?: BatchUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
+  }
+
+  export type SKUVariantUncheckedUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantCode?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    attributeValues?: SKUVariantValueUncheckedUpdateManyWithoutVariantNestedInput
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutVariantNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutVariantNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
+  }
+
+  export type BatchUpsertWithoutVoucherCodesInput = {
+    update: XOR<BatchUpdateWithoutVoucherCodesInput, BatchUncheckedUpdateWithoutVoucherCodesInput>
+    create: XOR<BatchCreateWithoutVoucherCodesInput, BatchUncheckedCreateWithoutVoucherCodesInput>
+    where?: BatchWhereInput
+  }
+
+  export type BatchUpdateToOneWithWhereWithoutVoucherCodesInput = {
+    where?: BatchWhereInput
+    data: XOR<BatchUpdateWithoutVoucherCodesInput, BatchUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type BatchUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: StringFieldUpdateOperationsInput | string
+    sequenceNumber?: IntFieldUpdateOperationsInput | number
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    manufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutBatchesNestedInput
+    variant?: SKUVariantUpdateOneWithoutBatchesNestedInput
+    vendor?: VendorUpdateOneWithoutBatchesNestedInput
+    grnLines?: GRNLineUpdateManyWithoutBatchNestedInput
+    prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+  }
+
+  export type BatchUncheckedUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchNumber?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    sequenceNumber?: IntFieldUpdateOperationsInput | number
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendorId?: NullableStringFieldUpdateOperationsInput | string | null
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    manufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    grnLines?: GRNLineUncheckedUpdateManyWithoutBatchNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+  }
+
+  export type VoucherBatchUpsertWithoutVoucherCodesInput = {
+    update: XOR<VoucherBatchUpdateWithoutVoucherCodesInput, VoucherBatchUncheckedUpdateWithoutVoucherCodesInput>
+    create: XOR<VoucherBatchCreateWithoutVoucherCodesInput, VoucherBatchUncheckedCreateWithoutVoucherCodesInput>
+    where?: VoucherBatchWhereInput
+  }
+
+  export type VoucherBatchUpdateToOneWithWhereWithoutVoucherCodesInput = {
+    where?: VoucherBatchWhereInput
+    data: XOR<VoucherBatchUpdateWithoutVoucherCodesInput, VoucherBatchUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type VoucherBatchUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sku?: SKUUpdateOneRequiredWithoutVoucherBatchesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherBatchesNestedInput
+    creator?: UserUpdateOneWithoutVoucherBatchesNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserUpsertWithoutVoucherCodesInput = {
+    update: XOR<UserUpdateWithoutVoucherCodesInput, UserUncheckedUpdateWithoutVoucherCodesInput>
+    create: XOR<UserCreateWithoutVoucherCodesInput, UserUncheckedCreateWithoutVoucherCodesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVoucherCodesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVoucherCodesInput, UserUncheckedUpdateWithoutVoucherCodesInput>
+  }
+
+  export type UserUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    vendor?: VendorUpdateOneWithoutUsersNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUpdateManyWithoutUserNestedInput
+    grns?: GRNUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVoucherCodesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    vendorId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUncheckedUpdateManyWithoutUserNestedInput
+    grns?: GRNUncheckedUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUncheckedUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUncheckedUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
+  }
+
+  export type VoucherRedemptionUpsertWithWhereUniqueWithoutVoucherCodeInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    update: XOR<VoucherRedemptionUpdateWithoutVoucherCodeInput, VoucherRedemptionUncheckedUpdateWithoutVoucherCodeInput>
+    create: XOR<VoucherRedemptionCreateWithoutVoucherCodeInput, VoucherRedemptionUncheckedCreateWithoutVoucherCodeInput>
+  }
+
+  export type VoucherRedemptionUpdateWithWhereUniqueWithoutVoucherCodeInput = {
+    where: VoucherRedemptionWhereUniqueInput
+    data: XOR<VoucherRedemptionUpdateWithoutVoucherCodeInput, VoucherRedemptionUncheckedUpdateWithoutVoucherCodeInput>
+  }
+
+  export type VoucherRedemptionUpdateManyWithWhereWithoutVoucherCodeInput = {
+    where: VoucherRedemptionScalarWhereInput
+    data: XOR<VoucherRedemptionUpdateManyMutationInput, VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeInput>
+  }
+
+  export type VoucherCodeCreateWithoutRedemptionsInput = {
+    id?: string
+    code: string
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sku: SKUCreateNestedOneWithoutVoucherCodesInput
+    variant?: SKUVariantCreateNestedOneWithoutVoucherCodesInput
+    batch?: BatchCreateNestedOneWithoutVoucherCodesInput
+    voucherBatch?: VoucherBatchCreateNestedOneWithoutVoucherCodesInput
+    creator?: UserCreateNestedOneWithoutVoucherCodesInput
+  }
+
+  export type VoucherCodeUncheckedCreateWithoutRedemptionsInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherCodeCreateOrConnectWithoutRedemptionsInput = {
+    where: VoucherCodeWhereUniqueInput
+    create: XOR<VoucherCodeCreateWithoutRedemptionsInput, VoucherCodeUncheckedCreateWithoutRedemptionsInput>
+  }
+
+  export type BranchCreateWithoutVoucherRedemptionsInput = {
+    id?: string
+    name: string
+    code: string
+    address?: string | null
+    phone?: string | null
+    email?: string | null
+    isActive?: boolean
+    isDefault?: boolean
+    createdAt?: Date | string
+    floors?: FloorCreateNestedManyWithoutBranchInput
+    stockTransfersFrom?: StockTransferCreateNestedManyWithoutFromBranchInput
+    stockTransfersTo?: StockTransferCreateNestedManyWithoutToBranchInput
+  }
+
+  export type BranchUncheckedCreateWithoutVoucherRedemptionsInput = {
+    id?: string
+    name: string
+    code: string
+    address?: string | null
+    phone?: string | null
+    email?: string | null
+    isActive?: boolean
+    isDefault?: boolean
+    createdAt?: Date | string
+    floors?: FloorUncheckedCreateNestedManyWithoutBranchInput
+    stockTransfersFrom?: StockTransferUncheckedCreateNestedManyWithoutFromBranchInput
+    stockTransfersTo?: StockTransferUncheckedCreateNestedManyWithoutToBranchInput
+  }
+
+  export type BranchCreateOrConnectWithoutVoucherRedemptionsInput = {
+    where: BranchWhereUniqueInput
+    create: XOR<BranchCreateWithoutVoucherRedemptionsInput, BranchUncheckedCreateWithoutVoucherRedemptionsInput>
+  }
+
+  export type UserCreateWithoutVoucherRedemptionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    createdAt?: Date | string
+    isActive?: boolean
+    vendor?: VendorCreateNestedOneWithoutUsersInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventCreateNestedManyWithoutUserInput
+    grns?: GRNCreateNestedManyWithoutCreatorInput
+    prns?: PRNCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserUncheckedCreateWithoutVoucherRedemptionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role: string
+    vendorId?: string | null
+    createdAt?: Date | string
+    isActive?: boolean
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutUserInput
+    inventoryEvents?: InventoryEventUncheckedCreateNestedManyWithoutUserInput
+    grns?: GRNUncheckedCreateNestedManyWithoutCreatorInput
+    prns?: PRNUncheckedCreateNestedManyWithoutCreatorInput
+    inspectionRecords?: InspectionRecordUncheckedCreateNestedManyWithoutInspectorInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    importJobs?: ImportJobUncheckedCreateNestedManyWithoutCreatorInput
+    stockTransfersCreated?: StockTransferUncheckedCreateNestedManyWithoutRequesterInput
+    stockTransfersApproved?: StockTransferUncheckedCreateNestedManyWithoutApproverInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutCreatorInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutCreatorInput
+  }
+
+  export type UserCreateOrConnectWithoutVoucherRedemptionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVoucherRedemptionsInput, UserUncheckedCreateWithoutVoucherRedemptionsInput>
+  }
+
+  export type VoucherCodeUpsertWithoutRedemptionsInput = {
+    update: XOR<VoucherCodeUpdateWithoutRedemptionsInput, VoucherCodeUncheckedUpdateWithoutRedemptionsInput>
+    create: XOR<VoucherCodeCreateWithoutRedemptionsInput, VoucherCodeUncheckedCreateWithoutRedemptionsInput>
+    where?: VoucherCodeWhereInput
+  }
+
+  export type VoucherCodeUpdateToOneWithWhereWithoutRedemptionsInput = {
+    where?: VoucherCodeWhereInput
+    data: XOR<VoucherCodeUpdateWithoutRedemptionsInput, VoucherCodeUncheckedUpdateWithoutRedemptionsInput>
+  }
+
+  export type VoucherCodeUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BranchUpsertWithoutVoucherRedemptionsInput = {
+    update: XOR<BranchUpdateWithoutVoucherRedemptionsInput, BranchUncheckedUpdateWithoutVoucherRedemptionsInput>
+    create: XOR<BranchCreateWithoutVoucherRedemptionsInput, BranchUncheckedCreateWithoutVoucherRedemptionsInput>
+    where?: BranchWhereInput
+  }
+
+  export type BranchUpdateToOneWithWhereWithoutVoucherRedemptionsInput = {
+    where?: BranchWhereInput
+    data: XOR<BranchUpdateWithoutVoucherRedemptionsInput, BranchUncheckedUpdateWithoutVoucherRedemptionsInput>
+  }
+
+  export type BranchUpdateWithoutVoucherRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    floors?: FloorUpdateManyWithoutBranchNestedInput
+    stockTransfersFrom?: StockTransferUpdateManyWithoutFromBranchNestedInput
+    stockTransfersTo?: StockTransferUpdateManyWithoutToBranchNestedInput
+  }
+
+  export type BranchUncheckedUpdateWithoutVoucherRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    floors?: FloorUncheckedUpdateManyWithoutBranchNestedInput
+    stockTransfersFrom?: StockTransferUncheckedUpdateManyWithoutFromBranchNestedInput
+    stockTransfersTo?: StockTransferUncheckedUpdateManyWithoutToBranchNestedInput
+  }
+
+  export type UserUpsertWithoutVoucherRedemptionsInput = {
+    update: XOR<UserUpdateWithoutVoucherRedemptionsInput, UserUncheckedUpdateWithoutVoucherRedemptionsInput>
+    create: XOR<UserCreateWithoutVoucherRedemptionsInput, UserUncheckedCreateWithoutVoucherRedemptionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVoucherRedemptionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVoucherRedemptionsInput, UserUncheckedUpdateWithoutVoucherRedemptionsInput>
+  }
+
+  export type UserUpdateWithoutVoucherRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    vendor?: VendorUpdateOneWithoutUsersNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUpdateManyWithoutUserNestedInput
+    grns?: GRNUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVoucherRedemptionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    vendorId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutUserNestedInput
+    inventoryEvents?: InventoryEventUncheckedUpdateManyWithoutUserNestedInput
+    grns?: GRNUncheckedUpdateManyWithoutCreatorNestedInput
+    prns?: PRNUncheckedUpdateManyWithoutCreatorNestedInput
+    inspectionRecords?: InspectionRecordUncheckedUpdateManyWithoutInspectorNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
+    stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
+    stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+  }
+
+  export type SKUCreateWithoutVoucherRestrictionsInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    vendor: VendorCreateNestedOneWithoutSkusInput
+    category?: CategoryCreateNestedOneWithoutSkusInput
+    unitModel?: UnitOfMeasureCreateNestedOneWithoutSkusInput
+    inventoryRecords?: InventoryRecordCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineCreateNestedManyWithoutSkuInput
+    images?: ProductImageCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeCreateNestedManyWithoutSkuInput
+    tags?: SKUTagCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantCreateNestedManyWithoutSkuInput
+    batches?: BatchCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUUncheckedCreateWithoutVoucherRestrictionsInput = {
+    id?: string
+    skuCode: string
+    name: string
+    description?: string | null
+    categoryId?: string | null
+    vendorId: string
+    unitOfMeasureId?: string | null
+    unitOfMeasure: string
+    conversionRules?: string | null
+    dimensions?: string | null
+    videoUrl?: string | null
+    isFragile?: boolean
+    maxStackHeight?: number | null
+    costPrice?: number | null
+    sellingPrice?: number | null
+    wholesalePrice?: number | null
+    bulkPrice?: number | null
+    marginType?: string | null
+    marginValue?: number | null
+    currency?: string
+    defaultManufacturingDate?: Date | string | null
+    defaultExpiryDate?: Date | string | null
+    shelfLifeDays?: number | null
+    batchPricing?: string | null
+    batchReferencePricing?: string | null
+    lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    inventoryRecords?: InventoryRecordUncheckedCreateNestedManyWithoutSkuInput
+    grnLines?: GRNLineUncheckedCreateNestedManyWithoutSkuInput
+    prnLines?: PRNLineUncheckedCreateNestedManyWithoutSkuInput
+    images?: ProductImageUncheckedCreateNestedManyWithoutSkuInput
+    barcodes?: ProductBarcodeUncheckedCreateNestedManyWithoutSkuInput
+    tags?: SKUTagUncheckedCreateNestedManyWithoutSkuInput
+    skuAttributes?: SKUAttributeUncheckedCreateNestedManyWithoutSkuInput
+    variants?: SKUVariantUncheckedCreateNestedManyWithoutSkuInput
+    batches?: BatchUncheckedCreateNestedManyWithoutSkuInput
+    stockTransferLines?: StockTransferLineUncheckedCreateNestedManyWithoutSkuInput
+    skuVendors?: SKUVendorUncheckedCreateNestedManyWithoutSkuInput
+    voucherCodes?: VoucherCodeUncheckedCreateNestedManyWithoutSkuInput
+    voucherBatches?: VoucherBatchUncheckedCreateNestedManyWithoutSkuInput
+  }
+
+  export type SKUCreateOrConnectWithoutVoucherRestrictionsInput = {
+    where: SKUWhereUniqueInput
+    create: XOR<SKUCreateWithoutVoucherRestrictionsInput, SKUUncheckedCreateWithoutVoucherRestrictionsInput>
+  }
+
+  export type SKUUpsertWithoutVoucherRestrictionsInput = {
+    update: XOR<SKUUpdateWithoutVoucherRestrictionsInput, SKUUncheckedUpdateWithoutVoucherRestrictionsInput>
+    create: XOR<SKUCreateWithoutVoucherRestrictionsInput, SKUUncheckedCreateWithoutVoucherRestrictionsInput>
+    where?: SKUWhereInput
+  }
+
+  export type SKUUpdateToOneWithWhereWithoutVoucherRestrictionsInput = {
+    where?: SKUWhereInput
+    data: XOR<SKUUpdateWithoutVoucherRestrictionsInput, SKUUncheckedUpdateWithoutVoucherRestrictionsInput>
+  }
+
+  export type SKUUpdateWithoutVoucherRestrictionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendor?: VendorUpdateOneRequiredWithoutSkusNestedInput
+    category?: CategoryUpdateOneWithoutSkusNestedInput
+    unitModel?: UnitOfMeasureUpdateOneWithoutSkusNestedInput
+    inventoryRecords?: InventoryRecordUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUpdateManyWithoutSkuNestedInput
+    batches?: BatchUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
+  }
+
+  export type SKUUncheckedUpdateWithoutVoucherRestrictionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuCode?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    categoryId?: NullableStringFieldUpdateOperationsInput | string | null
+    vendorId?: StringFieldUpdateOperationsInput | string
+    unitOfMeasureId?: NullableStringFieldUpdateOperationsInput | string | null
+    unitOfMeasure?: StringFieldUpdateOperationsInput | string
+    conversionRules?: NullableStringFieldUpdateOperationsInput | string | null
+    dimensions?: NullableStringFieldUpdateOperationsInput | string | null
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isFragile?: BoolFieldUpdateOperationsInput | boolean
+    maxStackHeight?: NullableFloatFieldUpdateOperationsInput | number | null
+    costPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    sellingPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    wholesalePrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    bulkPrice?: NullableFloatFieldUpdateOperationsInput | number | null
+    marginType?: NullableStringFieldUpdateOperationsInput | string | null
+    marginValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    currency?: StringFieldUpdateOperationsInput | string
+    defaultManufacturingDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    defaultExpiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    shelfLifeDays?: NullableIntFieldUpdateOperationsInput | number | null
+    batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
+    batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
+    lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutSkuNestedInput
+    grnLines?: GRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    prnLines?: PRNLineUncheckedUpdateManyWithoutSkuNestedInput
+    images?: ProductImageUncheckedUpdateManyWithoutSkuNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutSkuNestedInput
+    tags?: SKUTagUncheckedUpdateManyWithoutSkuNestedInput
+    skuAttributes?: SKUAttributeUncheckedUpdateManyWithoutSkuNestedInput
+    variants?: SKUVariantUncheckedUpdateManyWithoutSkuNestedInput
+    batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
+    stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
+    skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type InventoryRecordCreateManyUserInput = {
@@ -77617,6 +90925,60 @@ export namespace Prisma {
     requestedAt?: Date | string
     approvedAt?: Date | string | null
     completedAt?: Date | string | null
+  }
+
+  export type VoucherBatchCreateManyCreatorInput = {
+    id?: string
+    skuId: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type VoucherCodeCreateManyCreatorInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRedemptionCreateManyRedeemerInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
   }
 
   export type InventoryRecordUpdateWithoutUserInput = {
@@ -78024,6 +91386,172 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type VoucherBatchUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sku?: SKUUpdateOneRequiredWithoutVoucherBatchesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherBatchesNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type VoucherCodeUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutCreatorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRedemptionUpdateWithoutRedeemerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherCode?: VoucherCodeUpdateOneRequiredWithoutRedemptionsNestedInput
+    branch?: BranchUpdateOneWithoutVoucherRedemptionsNestedInput
+  }
+
+  export type VoucherRedemptionUncheckedUpdateWithoutRedeemerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutRedeemerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type UserCreateManyVendorInput = {
     id?: string
     email: string
@@ -78059,6 +91587,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -78135,6 +91667,9 @@ export namespace Prisma {
     importJobs?: ImportJobUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVendorInput = {
@@ -78153,6 +91688,9 @@ export namespace Prisma {
     importJobs?: ImportJobUncheckedUpdateManyWithoutCreatorNestedInput
     stockTransfersCreated?: StockTransferUncheckedUpdateManyWithoutRequesterNestedInput
     stockTransfersApproved?: StockTransferUncheckedUpdateManyWithoutApproverNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutCreatorNestedInput
+    voucherRedemptions?: VoucherRedemptionUncheckedUpdateManyWithoutRedeemerNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutVendorInput = {
@@ -78188,6 +91726,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78204,6 +91746,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutVendorInput = {
@@ -78232,6 +91777,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78246,6 +91795,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateManyWithoutVendorInput = {
@@ -78274,6 +91826,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78408,6 +91964,7 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutVendorInput = {
@@ -78433,6 +91990,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateManyWithoutVendorInput = {
@@ -78492,6 +92050,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -78555,6 +92117,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78571,6 +92137,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutCategoryInput = {
@@ -78599,6 +92168,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78613,6 +92186,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateManyWithoutCategoryInput = {
@@ -78641,6 +92217,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78688,6 +92268,10 @@ export namespace Prisma {
     batchPricing?: string | null
     batchReferencePricing?: string | null
     lowStockThreshold?: number | null
+    isVoucher?: boolean
+    voucherValueType?: string | null
+    voucherMinValue?: number | null
+    voucherMaxValue?: number | null
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -78717,6 +92301,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78733,6 +92321,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateWithoutUnitModelInput = {
@@ -78761,6 +92352,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78775,6 +92370,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutSkuNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutSkuNestedInput
     skuVendors?: SKUVendorUncheckedUpdateManyWithoutSkuNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutSkuNestedInput
+    voucherRestrictions?: VoucherRestrictionUncheckedUpdateManyWithoutSkuNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutSkuNestedInput
   }
 
   export type SKUUncheckedUpdateManyWithoutUnitModelInput = {
@@ -78803,6 +92401,10 @@ export namespace Prisma {
     batchPricing?: NullableStringFieldUpdateOperationsInput | string | null
     batchReferencePricing?: NullableStringFieldUpdateOperationsInput | string | null
     lowStockThreshold?: NullableIntFieldUpdateOperationsInput | number | null
+    isVoucher?: BoolFieldUpdateOperationsInput | boolean
+    voucherValueType?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherMinValue?: NullableFloatFieldUpdateOperationsInput | number | null
+    voucherMaxValue?: NullableFloatFieldUpdateOperationsInput | number | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -78848,6 +92450,21 @@ export namespace Prisma {
     requestedAt?: Date | string
     approvedAt?: Date | string | null
     completedAt?: Date | string | null
+  }
+
+  export type VoucherRedemptionCreateManyBranchInput = {
+    id?: string
+    voucherCodeId: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
   }
 
   export type FloorUpdateWithoutBranchInput = {
@@ -78996,6 +92613,51 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type VoucherRedemptionUpdateWithoutBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherCode?: VoucherCodeUpdateOneRequiredWithoutRedemptionsNestedInput
+    redeemer?: UserUpdateOneWithoutVoucherRedemptionsNestedInput
+  }
+
+  export type VoucherRedemptionUncheckedUpdateWithoutBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutBranchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    voucherCodeId?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type InventoryRecordCreateManySkuInput = {
     id?: string
     variantId?: string | null
@@ -79049,6 +92711,7 @@ export namespace Prisma {
 
   export type ProductBarcodeCreateManySkuInput = {
     id?: string
+    variantId?: string | null
     barcode: string
     barcodeType?: string
     isDefault?: boolean
@@ -79107,6 +92770,60 @@ export namespace Prisma {
 
   export type SKUVendorCreateManySkuInput = {
     vendorId: string
+  }
+
+  export type VoucherCodeCreateManySkuInput = {
+    id?: string
+    code: string
+    variantId?: string | null
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherRestrictionCreateManySkuInput = {
+    id?: string
+    restrictionType: string
+    targetCategoryIds?: string | null
+    targetSkuIds?: string | null
+    targetVariantIds?: string | null
+    cannotCombineWithDiscounts?: boolean
+    cannotCombineWithOtherVouchers?: boolean
+    minPurchaseAmount?: number | null
+    maxDiscountAmount?: number | null
+    priority?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherBatchCreateManySkuInput = {
+    id?: string
+    variantId?: string | null
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
   }
 
   export type InventoryRecordUpdateWithoutSkuInput = {
@@ -79271,10 +92988,12 @@ export namespace Prisma {
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     label?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    variant?: SKUVariantUpdateOneWithoutBarcodesNestedInput
   }
 
   export type ProductBarcodeUncheckedUpdateWithoutSkuInput = {
     id?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
     barcode?: StringFieldUpdateOperationsInput | string
     barcodeType?: StringFieldUpdateOperationsInput | string
     isDefault?: BoolFieldUpdateOperationsInput | boolean
@@ -79284,6 +93003,7 @@ export namespace Prisma {
 
   export type ProductBarcodeUncheckedUpdateManyWithoutSkuInput = {
     id?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
     barcode?: StringFieldUpdateOperationsInput | string
     barcodeType?: StringFieldUpdateOperationsInput | string
     isDefault?: BoolFieldUpdateOperationsInput | boolean
@@ -79334,6 +93054,9 @@ export namespace Prisma {
     batches?: BatchUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutVariantNestedInput
     images?: ProductImageUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateWithoutSkuInput = {
@@ -79350,6 +93073,9 @@ export namespace Prisma {
     batches?: BatchUncheckedUpdateManyWithoutVariantNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutVariantNestedInput
     images?: ProductImageUncheckedUpdateManyWithoutVariantNestedInput
+    barcodes?: ProductBarcodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVariantNestedInput
+    voucherBatches?: VoucherBatchUncheckedUpdateManyWithoutVariantNestedInput
   }
 
   export type SKUVariantUncheckedUpdateManyWithoutSkuInput = {
@@ -79384,6 +93110,7 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutSkuInput = {
@@ -79409,6 +93136,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateManyWithoutSkuInput = {
@@ -79472,6 +93200,172 @@ export namespace Prisma {
 
   export type SKUVendorUncheckedUpdateManyWithoutSkuInput = {
     vendorId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VoucherCodeUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRestrictionUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRestrictionUncheckedUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRestrictionUncheckedUpdateManyWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    restrictionType?: StringFieldUpdateOperationsInput | string
+    targetCategoryIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetSkuIds?: NullableStringFieldUpdateOperationsInput | string | null
+    targetVariantIds?: NullableStringFieldUpdateOperationsInput | string | null
+    cannotCombineWithDiscounts?: BoolFieldUpdateOperationsInput | boolean
+    cannotCombineWithOtherVouchers?: BoolFieldUpdateOperationsInput | boolean
+    minPurchaseAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    maxDiscountAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    priority?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherBatchUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    variant?: SKUVariantUpdateOneWithoutVoucherBatchesNestedInput
+    creator?: UserUpdateOneWithoutVoucherBatchesNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutSkuInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AttributeValueCreateManyAttributeInput = {
@@ -79695,6 +93589,55 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type ProductBarcodeCreateManyVariantInput = {
+    id?: string
+    skuId: string
+    barcode: string
+    barcodeType?: string
+    isDefault?: boolean
+    label?: string | null
+    createdAt?: Date | string
+  }
+
+  export type VoucherCodeCreateManyVariantInput = {
+    id?: string
+    code: string
+    skuId: string
+    batchId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherBatchCreateManyVariantInput = {
+    id?: string
+    skuId: string
+    batchName: string
+    prefix?: string | null
+    quantity: number
+    generatedCount?: number
+    defaultValue: number
+    expiryDays?: number | null
+    defaultExpiresAt?: Date | string | null
+    status?: string
+    createdBy?: string | null
+    createdAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
   export type SKUVariantValueUpdateWithoutVariantInput = {
     attribute?: AttributeUpdateOneRequiredWithoutVariantValuesNestedInput
     attributeValue?: AttributeValueUpdateOneRequiredWithoutVariantValuesNestedInput
@@ -79858,6 +93801,7 @@ export namespace Prisma {
     prnLines?: PRNLineUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateWithoutVariantInput = {
@@ -79883,6 +93827,7 @@ export namespace Prisma {
     prnLines?: PRNLineUncheckedUpdateManyWithoutBatchNestedInput
     inventoryRecords?: InventoryRecordUncheckedUpdateManyWithoutBatchNestedInput
     stockTransferLines?: StockTransferLineUncheckedUpdateManyWithoutBatchNestedInput
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutBatchNestedInput
   }
 
   export type BatchUncheckedUpdateManyWithoutVariantInput = {
@@ -79964,6 +93909,157 @@ export namespace Prisma {
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProductBarcodeUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    barcode?: StringFieldUpdateOperationsInput | string
+    barcodeType?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutBarcodesNestedInput
+  }
+
+  export type ProductBarcodeUncheckedUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    barcode?: StringFieldUpdateOperationsInput | string
+    barcodeType?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProductBarcodeUncheckedUpdateManyWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    barcode?: StringFieldUpdateOperationsInput | string
+    barcodeType?: StringFieldUpdateOperationsInput | string
+    isDefault?: BoolFieldUpdateOperationsInput | boolean
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherCodeUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherBatchUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sku?: SKUUpdateOneRequiredWithoutVoucherBatchesNestedInput
+    creator?: UserUpdateOneWithoutVoucherBatchesNestedInput
+    voucherCodes?: VoucherCodeUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    voucherCodes?: VoucherCodeUncheckedUpdateManyWithoutVoucherBatchNestedInput
+  }
+
+  export type VoucherBatchUncheckedUpdateManyWithoutVariantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    batchName?: StringFieldUpdateOperationsInput | string
+    prefix?: NullableStringFieldUpdateOperationsInput | string | null
+    quantity?: IntFieldUpdateOperationsInput | number
+    generatedCount?: IntFieldUpdateOperationsInput | number
+    defaultValue?: FloatFieldUpdateOperationsInput | number
+    expiryDays?: NullableIntFieldUpdateOperationsInput | number | null
+    defaultExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type RackCreateManyFloorInput = {
@@ -81159,6 +95255,29 @@ export namespace Prisma {
     notes?: string | null
   }
 
+  export type VoucherCodeCreateManyBatchInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    voucherBatchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type GRNLineUpdateWithoutBatchInput = {
     id?: StringFieldUpdateOperationsInput | string
     expectedQuantity?: IntFieldUpdateOperationsInput | number
@@ -81312,6 +95431,77 @@ export namespace Prisma {
     requestedQty?: IntFieldUpdateOperationsInput | number
     transferredQty?: IntFieldUpdateOperationsInput | number
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherCodeUpdateWithoutBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    voucherBatch?: VoucherBatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    voucherBatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type InspectionRecordCreateManyGrnLineInput = {
@@ -81534,6 +95724,160 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type VoucherCodeCreateManyVoucherBatchInput = {
+    id?: string
+    code: string
+    skuId: string
+    variantId?: string | null
+    batchId?: string | null
+    initialValue: number
+    currentBalance: number
+    currency?: string
+    status?: string
+    issuedAt?: Date | string
+    expiresAt?: Date | string | null
+    activatedAt?: Date | string | null
+    fullyRedeemedAt?: Date | string | null
+    customerId?: string | null
+    orderId?: string | null
+    purchaseReference?: string | null
+    notes?: string | null
+    createdBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type VoucherCodeUpdateWithoutVoucherBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sku?: SKUUpdateOneRequiredWithoutVoucherCodesNestedInput
+    variant?: SKUVariantUpdateOneWithoutVoucherCodesNestedInput
+    batch?: BatchUpdateOneWithoutVoucherCodesNestedInput
+    creator?: UserUpdateOneWithoutVoucherCodesNestedInput
+    redemptions?: VoucherRedemptionUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateWithoutVoucherBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    redemptions?: VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeNestedInput
+  }
+
+  export type VoucherCodeUncheckedUpdateManyWithoutVoucherBatchInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    skuId?: StringFieldUpdateOperationsInput | string
+    variantId?: NullableStringFieldUpdateOperationsInput | string | null
+    batchId?: NullableStringFieldUpdateOperationsInput | string | null
+    initialValue?: FloatFieldUpdateOperationsInput | number
+    currentBalance?: FloatFieldUpdateOperationsInput | number
+    currency?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    issuedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    activatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    fullyRedeemedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    customerId?: NullableStringFieldUpdateOperationsInput | string | null
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    purchaseReference?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    createdBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VoucherRedemptionCreateManyVoucherCodeInput = {
+    id?: string
+    code: string
+    redeemedAmount: number
+    balanceBefore: number
+    balanceAfter: number
+    orderId?: string | null
+    invoiceNumber?: string | null
+    branchId?: string | null
+    appliedToItems?: string | null
+    redeemedBy?: string | null
+    redeemedAt?: Date | string
+    notes?: string | null
+  }
+
+  export type VoucherRedemptionUpdateWithoutVoucherCodeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    branch?: BranchUpdateOneWithoutVoucherRedemptionsNestedInput
+    redeemer?: UserUpdateOneWithoutVoucherRedemptionsNestedInput
+  }
+
+  export type VoucherRedemptionUncheckedUpdateWithoutVoucherCodeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VoucherRedemptionUncheckedUpdateManyWithoutVoucherCodeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    redeemedAmount?: FloatFieldUpdateOperationsInput | number
+    balanceBefore?: FloatFieldUpdateOperationsInput | number
+    balanceAfter?: FloatFieldUpdateOperationsInput | number
+    orderId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedToItems?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    redeemedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
 
 
   /**
@@ -81627,6 +95971,14 @@ export namespace Prisma {
      * @deprecated Use ImportJobCountOutputTypeDefaultArgs instead
      */
     export type ImportJobCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ImportJobCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherBatchCountOutputTypeDefaultArgs instead
+     */
+    export type VoucherBatchCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherBatchCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherCodeCountOutputTypeDefaultArgs instead
+     */
+    export type VoucherCodeCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherCodeCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -81795,6 +96147,30 @@ export namespace Prisma {
      * @deprecated Use DashboardStatsDefaultArgs instead
      */
     export type DashboardStatsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DashboardStatsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherBatchDefaultArgs instead
+     */
+    export type VoucherBatchArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherBatchDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherCodeDefaultArgs instead
+     */
+    export type VoucherCodeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherCodeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherRedemptionDefaultArgs instead
+     */
+    export type VoucherRedemptionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherRedemptionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use LegacyEntityLinkDefaultArgs instead
+     */
+    export type LegacyEntityLinkArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = LegacyEntityLinkDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use LegacySyncRunDefaultArgs instead
+     */
+    export type LegacySyncRunArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = LegacySyncRunDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use VoucherRestrictionDefaultArgs instead
+     */
+    export type VoucherRestrictionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = VoucherRestrictionDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

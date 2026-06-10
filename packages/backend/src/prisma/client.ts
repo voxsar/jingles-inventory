@@ -17,6 +17,8 @@ const JSON_FIELD_MAP: Record<string, Set<string>> = {
   SyncOperationLog: new Set(['payload', 'conflictData']),
   SyncConflict: new Set(['localPayload', 'serverPayload', 'resolutionPayload']),
   DashboardStats: new Set(['inventoryByState']),
+  LegacyEntityLink: new Set(['lastApplied']),
+  LegacySyncRun: new Set(['stats']),
 };
 
 const GLOBAL_JSON_FIELD_NAMES = new Set(

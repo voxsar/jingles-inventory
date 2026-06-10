@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { floorsApi, racksApi, shelvesApi, boxesApi } from '../api/client';
+import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
+import { floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import type { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 import SearchableSelect from '../components/SearchableSelect';
 
@@ -7,30 +7,71 @@ import SearchableSelect from '../components/SearchableSelect';
 const GRID = 0.5; // scene units per grid cell
 
 /**
- * Scene unit system: 1 scene unit ≈ 1 foot (0.3048 m).
- * Floors are stored in metres and rendered as `metres × M2S` scene units.
- * Physical dimensions (cm fields on racks/boxes) are converted via CM2S.
+ * Scene unit system: 1 scene unit = 1 metre.
+ * Floor length/width are stored in metres and map 1:1 to scene units.
+ * Rack dimensions (widthCm/heightCm/depthCm) are stored in centimetres.
+ * Shelf and box dimensions exist in BOTH units in the database — older rows
+ * hold metres (0.3, 1.2, …) while the create form labels the fields cm — so
+ * `dimToMetres` treats values above 5 as centimetres.
  */
-const M2S = 3.048;            // metres → scene units
-const CM2S = M2S / 100;       // centimetres → scene units  (≈ 0.03048)
+const CM2M = 0.01;
+function dimToMetres(value: number | null | undefined, fallbackM: number): number {
+	if (!value || value <= 0) return fallbackM;
+	return value > 5 ? value * CM2M : value;
+}
+
+const DEFAULT_FLOOR_LENGTH = 30; // metres, used when a zone has no recorded size
+const DEFAULT_FLOOR_WIDTH = 20;
+const STOREY_HEIGHT = 4;         // metres between stacked floors in the overview
+const OVERVIEW_GAP = 8;          // metres between branch columns in the overview
 
 function snap(v: number): number {
 	return Math.round(v / GRID) * GRID;
+}
+
+function floorSceneDims(floor: IFloor | null | undefined): { w: number; d: number } {
+	return {
+		w: floor?.length && floor.length > 0 ? floor.length : DEFAULT_FLOOR_LENGTH,
+		d: floor?.width && floor.width > 0 ? floor.width : DEFAULT_FLOOR_WIDTH,
+	};
+}
+
+/** Default grid layout for racks that have no saved position. */
+function defaultRackPos(index: number, floorW: number, floorD: number): { x: number; z: number } {
+	const cols = Math.max(1, Math.floor((floorW - 4) / 3));
+	return {
+		x: snap(-floorW / 2 + 2 + (index % cols) * 3),
+		z: snap(-floorD / 2 + 2 + Math.floor(index / cols) * 3),
+	};
 }
 
 // ── Colour helpers ──────────────────────────────────────────────────────────
 const BOX_COLOURS = ['#E8A838', '#D4943F', '#F0C060', '#C68A2A', '#DCA030'];
 const FLOOR_COLOUR = '#B8D4A8';
 const GRID_COLOUR = '#8EBE7E';
+const WALL_COLOUR = '#7E997B';
+const PRODUCT_COLOUR = '#2AA9A0';
+const SELECTED_COLOUR = '#FFD700';
 
 type WarehouseShelf = IShelf & { boxes?: IStorageBox[] };
 type WarehouseRack = IRack & { shelves?: WarehouseShelf[] };
+
+interface ProductRecord {
+	id: string;
+	quantity: number;
+	state: string;
+	floorId?: string | null;
+	shelfId?: string | null;
+	boxId?: string | null;
+	sku?: { id: string; name: string; skuCode?: string | null } | null;
+}
 
 interface FloorSceneData {
 	racks: WarehouseRack[];
 	rackShelves: Record<string, IShelf[]>;
 	shelfBoxes: Record<string, IStorageBox[]>;
 	floorBoxes: IStorageBox[];
+	products: ProductRecord[];
 	warnings: string[];
 }
 
@@ -102,9 +143,10 @@ function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 
 	const request = (async () => {
 		const warnings: string[] = [];
-		const [racksResult, boxesResult] = await Promise.allSettled([
+		const [racksResult, boxesResult, inventoryResult] = await Promise.allSettled([
 			racksApi.list({ floorId }),
 			boxesApi.list({ floorId }),
+			inventoryApi.list({ floorId, pageSize: '500' }),
 		]);
 
 		if (racksResult.status === 'rejected' && boxesResult.status === 'rejected') {
@@ -113,9 +155,11 @@ function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 
 		if (racksResult.status === 'rejected') warnings.push('Racks could not be loaded for this zone.');
 		if (boxesResult.status === 'rejected') warnings.push('Boxes could not be loaded from the zone box index.');
+		if (inventoryResult.status === 'rejected') warnings.push('Product placements could not be loaded for this zone.');
 
 		const racks: WarehouseRack[] = racksResult.status === 'fulfilled' ? extractList<WarehouseRack>(racksResult.value.data) : [];
 		const floorBoxIndex: IStorageBox[] = boxesResult.status === 'fulfilled' ? extractList<IStorageBox>(boxesResult.value.data) : [];
+		const products: ProductRecord[] = inventoryResult.status === 'fulfilled' ? extractList<ProductRecord>(inventoryResult.value.data) : [];
 		let { rackShelves, shelfBoxes } = groupRackShelves(racks);
 
 		const racksIncludeShelves = racks.some(rack => Array.isArray(rack.shelves));
@@ -135,6 +179,7 @@ function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 			rackShelves,
 			shelfBoxes: groupedBoxes.shelfBoxes,
 			floorBoxes: groupedBoxes.floorBoxes,
+			products,
 			warnings,
 		};
 	})();
@@ -159,12 +204,14 @@ function ensureAframe(): Promise<void> {
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
+const BOARD_T = 0.025; // shelf board thickness (m)
+
 function ShelfBoard({ w, d, y, shelfId }: { w: number; d: number; y: number; shelfId?: string }) {
 	return (
 		<a-box
 			position={`0 ${y} 0`}
 			width={String(w)}
-			height="0.03"
+			height={String(BOARD_T)}
 			depth={String(d)}
 			color="#8B7355"
 			roughness="0.9"
@@ -185,12 +232,15 @@ function Post({ cx, cz, h }: { cx: number; cz: number; h: number }) {
 	);
 }
 
-/** Render a Rack with its shelves and boxes */
-function RackEntity({
+/** Render a Rack with its shelves, boxes and loose products */
+const RackEntity = memo(function RackEntity({
 	rack,
 	shelves,
 	shelfBoxes,
+	productsByBox,
+	productsByShelf,
 	isSelected,
+	selectedBoxId,
 	posX,
 	posZ,
 	rotY,
@@ -198,34 +248,26 @@ function RackEntity({
 	rack: IRack;
 	shelves: IShelf[];
 	shelfBoxes: Record<string, IStorageBox[]>;
+	productsByBox: Record<string, ProductRecord[]>;
+	productsByShelf: Record<string, ProductRecord[]>;
 	isSelected: boolean;
+	selectedBoxId: string | null;
 	posX: number;
 	posZ: number;
 	rotY: number;
 }) {
-	// Convert rack physical dimensions (cm) to scene units (1 unit ≈ 1 ft) - scaled to 37.5%
-	const w = Math.max((rack.widthCm || 100) * CM2S, 40 * CM2S) * 0.375;
-	const h = Math.max((rack.heightCm || 200) * CM2S, 50 * CM2S) * 0.375;
-	const d = Math.max((rack.depthCm || 60) * CM2S, 30 * CM2S) * 0.375;
+	// Rack physical dimensions (cm in DB) → metres
+	const w = Math.max(dimToMetres(rack.widthCm, 1.0), 0.4);
+	const h = Math.max(dimToMetres(rack.heightCm, 2.0), 0.5);
+	const d = Math.max(dimToMetres(rack.depthCm, 0.6), 0.3);
 	const hw = w / 2 - 0.02;
 	const hd = d / 2 - 0.02;
 
-	// One shelf level every ~60 cm (increased spacing to prevent overlap)
-	// Calculate on the scaled height
-	const levels = shelves.length > 0 ? shelves.length + 1 : Math.max(2, Math.floor(h / (60 * CM2S * 0.375)));
+	// One board per shelf record, evenly spaced bottom-to-top inside the frame.
+	// Racks with no shelf records get a board roughly every 45 cm.
+	const levels = shelves.length > 0 ? shelves.length : Math.max(2, Math.floor(h / 0.45));
 	const levelH = h / levels;
-	// Add extra spacing between shelves - multiply by 1.15 to create gaps
-	const shelfBoardYs = Array.from({ length: levels + 1 }, (_, i) => i * levelH * 1.15);
-
-	const highlightColour = isSelected ? '#FFD700' : 'transparent';
-
-	// Collect all boxes across shelves
-	const allBoxes: Array<{ box: IStorageBox; shelfIdx: number; boxIdx: number }> = [];
-	shelves.forEach((shelf, si) => {
-		(shelfBoxes[shelf.id] ?? []).forEach((box, bi) => {
-			allBoxes.push({ box, shelfIdx: si, boxIdx: bi });
-		});
-	});
+	const boardTop = (i: number) => i * levelH + BOARD_T / 2;
 
 	return (
 		<a-entity
@@ -239,9 +281,9 @@ function RackEntity({
 			<Post cx={-hw} cz={hd} h={h} />
 			<Post cx={hw} cz={hd} h={h} />
 
-			{/* Shelf boards */}
-			{shelfBoardYs.map((y, i) => (
-				<ShelfBoard key={i} w={w} d={d} y={y} shelfId={shelves[i - 1]?.id} />
+			{/* Shelf boards — board i carries shelf i (bottom-up) */}
+			{Array.from({ length: levels }, (_, i) => (
+				<ShelfBoard key={i} w={w} d={d} y={i * levelH} shelfId={shelves[i]?.id} />
 			))}
 
 			{/* Back brace */}
@@ -254,137 +296,215 @@ function RackEntity({
 			/>
 
 			{/* Selection highlight */}
-			<a-box
-				position={`0 ${h / 2} 0`}
-				width={String(w + 0.06)}
-				height={String(h + 0.06)}
-				depth={String(d + 0.06)}
-				color={highlightColour}
-				opacity={isSelected ? '0.25' : '0.0'}
-				transparent="true"
-				side="double"
-			/>
+			{isSelected && (
+				<a-box
+					position={`0 ${h / 2} 0`}
+					width={String(w + 0.06)}
+					height={String(h + 0.06)}
+					depth={String(d + 0.06)}
+					color={SELECTED_COLOUR}
+					opacity="0.25"
+					transparent="true"
+					side="double"
+				/>
+			)}
 
-			{/* Shelf indicators */}
+			{/* Freezer indicators */}
 			{shelves.map((shelf, si) => shelf.hasFreezer ? (
-				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.05} ${(si + 1) * levelH * 1.15 + 0.1} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
+				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.06} ${si * levelH + 0.15} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
 			) : null)}
 
 			{/* Name label */}
 			<a-text
 				value={rack.name}
-				position={`0 ${h + 0.5} 0`}
+				position={`0 ${h + 0.3} 0`}
 				align="center"
 				color="#FFFFFF"
-				scale="0.4 0.4 0.4"
+				scale="0.5 0.5 0.5"
 				width="3"
 			/>
 
 			{/* Boxes on shelves */}
-			{allBoxes.map(({ box, shelfIdx, boxIdx }) => {
-				const bw = Math.max((box.width || 30) * CM2S, 8 * CM2S) * 0.375;
-				const bh = Math.max((box.height || 30) * CM2S, 8 * CM2S) * 0.375;
-				const bd = Math.max((box.length || 30) * CM2S, 8 * CM2S) * 0.375;
-				const boxesInShelf = (shelfBoxes[shelves[shelfIdx]?.id ?? ''] ?? []).length;
-				const offsetX = (boxIdx - boxesInShelf / 2 + 0.5) * (bw + 0.02);
-				// Match the 1.15 spacing multiplier for shelf boards
-				const baseY = (shelfIdx * levelH * 1.15) + 0.03 + bh / 2;
-				const stackY = baseY + (box.stackOrder ?? 0) * bh;
-				const colour = BOX_COLOURS[boxIdx % BOX_COLOURS.length];
-				return (
+			{shelves.map((shelf, si) => {
+				const boxes = shelfBoxes[shelf.id] ?? [];
+				return boxes.map((box, bi) => {
+					const bw = Math.max(dimToMetres(box.width, 0.35), 0.12);
+					const bh = Math.max(dimToMetres(box.height, 0.3), 0.12);
+					const bd = Math.max(dimToMetres(box.length, 0.35), 0.12);
+					const offsetX = (bi - boxes.length / 2 + 0.5) * (bw + 0.04);
+					const baseY = boardTop(si) + bh / 2 + (box.stackOrder ?? 0) * bh;
+					const qty = (productsByBox[box.id] ?? []).reduce((sum, r) => sum + r.quantity, 0);
+					const colour = selectedBoxId === box.id ? SELECTED_COLOUR : BOX_COLOURS[bi % BOX_COLOURS.length];
+					return (
+						<a-box
+							key={box.id}
+							data-box-id={box.id}
+							position={`${box.posX ?? offsetX} ${box.posY ?? baseY} ${box.posZ ?? 0}`}
+							rotation={`0 ${box.rotationAngle ?? 0} 0`}
+							width={String(bw)}
+							height={String(bh)}
+							depth={String(bd)}
+							color={colour}
+							roughness="0.7"
+						>
+							<a-text value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 0 ${bd / 2 + 0.01}`} align="center" color="#333" scale="0.15 0.15 0.15" width="4" />
+						</a-box>
+					);
+				});
+			})}
+
+			{/* Products sitting directly on shelves (no box) */}
+			{shelves.map((shelf, si) => {
+				const prods = productsByShelf[shelf.id] ?? [];
+				return prods.map((rec, ri) => (
 					<a-box
-						key={box.id}
-						position={`${box.posX ?? offsetX} ${box.posY ?? stackY} ${box.posZ ?? 0}`}
-						rotation={`0 ${box.rotationAngle ?? 0} 0`}
-						width={String(bw)}
-						height={String(bh)}
-						depth={String(bd)}
-						color={colour}
-						roughness="0.7"
+						key={rec.id}
+						position={`${-w / 2 + 0.15 + ri * 0.28} ${boardTop(si) + 0.09} ${d / 4}`}
+						width="0.18"
+						height="0.18"
+						depth="0.18"
+						color={PRODUCT_COLOUR}
+						roughness="0.6"
 					>
-						<a-text value={box.name.slice(0, 6)} position="0 0 0.08" align="center" color="#333" scale="0.15 0.15 0.15" width="4" />
+						<a-text value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.16 0" align="center" color="#0E5953" scale="0.2 0.2 0.2" width="4" />
 					</a-box>
-				);
+				));
 			})}
 		</a-entity>
 	);
-}
+});
 
 /** Floor-level box (sitting directly on floor) */
-function FloorBox({ box, index }: { box: IStorageBox; index: number }) {
-	const bw = Math.max((box.width || 40) * CM2S, 10 * CM2S) * 0.375;
-	const bh = Math.max((box.height || 40) * CM2S, 10 * CM2S) * 0.375;
-	const bd = Math.max((box.length || 40) * CM2S, 10 * CM2S) * 0.375;
-	const posX = box.posX ?? snap(index * (bw + 0.1));
+const FloorBox = memo(function FloorBox({
+	box,
+	index,
+	floorW,
+	floorD,
+	productsByBox,
+	selectedBoxId,
+}: {
+	box: IStorageBox;
+	index: number;
+	floorW: number;
+	floorD: number;
+	productsByBox: Record<string, ProductRecord[]>;
+	selectedBoxId: string | null;
+}) {
+	const bw = Math.max(dimToMetres(box.width, 0.4), 0.15);
+	const bh = Math.max(dimToMetres(box.height, 0.4), 0.15);
+	const bd = Math.max(dimToMetres(box.length, 0.4), 0.15);
+	// Default layout: rows along the front edge of the floor
+	const perRow = Math.max(1, Math.floor((floorW - 2) / (bw + 0.15)));
+	const col = index % perRow;
+	const row = Math.floor(index / perRow);
+	const posX = box.posX ?? (-floorW / 2 + 1 + bw / 2 + col * (bw + 0.15));
 	const posY = box.posY ?? (bh / 2 + (box.stackOrder ?? 0) * bh);
-	const posZ = box.posZ ?? 0;
+	const posZ = box.posZ ?? (floorD / 2 - 1 - bd / 2 - row * (bd + 0.2));
+	const qty = (productsByBox[box.id] ?? []).reduce((sum, r) => sum + r.quantity, 0);
 	return (
 		<a-box
+			data-box-id={box.id}
 			position={`${posX} ${posY} ${posZ}`}
 			rotation={`0 ${box.rotationAngle ?? 0} 0`}
 			width={String(bw)}
 			height={String(bh)}
 			depth={String(bd)}
-			color="#C47A3A"
+			color={selectedBoxId === box.id ? SELECTED_COLOUR : '#C47A3A'}
 			roughness="0.8"
 		>
-			<a-text value={box.name.slice(0, 8)} position="0 0 0.06" align="center" color="#222" scale="0.2 0.2 0.2" width="3" />
+			<a-text value={`${box.name.slice(0, 8)}${qty > 0 ? ` x${qty}` : ''}`} position={`0 0 ${bd / 2 + 0.01}`} align="center" color="#222" scale="0.2 0.2 0.2" width="3" />
 		</a-box>
 	);
-}
+});
 
-/** Grid overlay */
-function GridPlane({ size, gridSize }: { size: number; gridSize: number }) {
-	const half = size / 2;
-	const count = Math.floor(size / gridSize);
+/** Grid overlay sized to the actual floor rectangle */
+const GridPlane = memo(function GridPlane({ w, d, gridSize }: { w: number; d: number; gridSize: number }) {
 	const lines: JSX.Element[] = [];
-	for (let i = -count / 2; i <= count / 2; i++) {
-		const pos = i * gridSize;
-		lines.push(
-			<a-box key={`x${i}`} position={`0 0.002 ${pos}`} width={String(size)} height="0.003" depth="0.01" color={GRID_COLOUR} opacity="0.5" transparent="true" />,
-			<a-box key={`z${i}`} position={`${pos} 0.002 0`} width="0.01" height="0.003" depth={String(size)} color={GRID_COLOUR} opacity="0.5" transparent="true" />
-		);
+	const nx = Math.floor(w / gridSize);
+	const nz = Math.floor(d / gridSize);
+	for (let i = 0; i <= nz; i++) {
+		const z = -d / 2 + i * gridSize;
+		lines.push(<a-box key={`x${i}`} position={`0 0.002 ${z}`} width={String(w)} height="0.003" depth="0.012" color={GRID_COLOUR} opacity="0.45" transparent="true" />);
+	}
+	for (let i = 0; i <= nx; i++) {
+		const x = -w / 2 + i * gridSize;
+		lines.push(<a-box key={`z${i}`} position={`${x} 0.002 0`} width="0.012" height="0.003" depth={String(d)} color={GRID_COLOUR} opacity="0.45" transparent="true" />);
 	}
 	return <a-entity>{lines}</a-entity>;
+});
+
+/** Floor slab with a low perimeter kerb so the zone edges read clearly */
+const FloorSlab = memo(function FloorSlab({ w, d }: { w: number; d: number }) {
+	return (
+		<a-entity>
+			<a-box position="0 -0.05 0" width={String(w)} height="0.1" depth={String(d)} color={FLOOR_COLOUR} roughness="0.9" />
+			<a-box position={`0 0.15 ${-d / 2}`} width={String(w)} height="0.3" depth="0.06" color={WALL_COLOUR} opacity="0.85" transparent="true" />
+			<a-box position={`0 0.15 ${d / 2}`} width={String(w)} height="0.3" depth="0.06" color={WALL_COLOUR} opacity="0.85" transparent="true" />
+			<a-box position={`${-w / 2} 0.15 0`} width="0.06" height="0.3" depth={String(d)} color={WALL_COLOUR} opacity="0.85" transparent="true" />
+			<a-box position={`${w / 2} 0.15 0`} width="0.06" height="0.3" depth={String(d)} color={WALL_COLOUR} opacity="0.85" transparent="true" />
+		</a-entity>
+	);
+});
+
+interface OverviewFloorData {
+	floor: IFloor;
+	racks: WarehouseRack[];
+	rackShelves: Record<string, IShelf[]>;
+	shelfBoxes: Record<string, IStorageBox[]>;
+	rackPos: Record<string, { x: number; z: number; rotY: number }>;
 }
 
 // ── Main page ───────────────────────────────────────────────────────────────
 export default function WarehouseVisualizerPage() {
 	const [floors, setFloors] = useState<IFloor[]>([]);
+	const [floorRackCounts, setFloorRackCounts] = useState<Record<string, number>>({});
 	const [selectedFloor, setSelectedFloor] = useState<string>('');
 	const [racks, setRacks] = useState<IRack[]>([]);
 	const [rackShelves, setRackShelves] = useState<Record<string, IShelf[]>>({});
 	const [shelfBoxes, setShelfBoxes] = useState<Record<string, IStorageBox[]>>({});
 	const [floorBoxes, setFloorBoxes] = useState<IStorageBox[]>([]); // boxes directly on floor
+	const [products, setProducts] = useState<ProductRecord[]>([]);
 
 	// rackPos mirrors the server's posX/posZ/rotY but is kept locally for instant response
 	const [rackPos, setRackPos] = useState<Record<string, { x: number; z: number; rotY: number }>>({});
 	const [selectedRack, setSelectedRack] = useState<string | null>(null);
+	const [selectedBox, setSelectedBox] = useState<IStorageBox | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [floorLoading, setFloorLoading] = useState(false);
 	const [sceneError, setSceneError] = useState<string | null>(null);
 
 	// Camera state: free-fly position + look direction
-	const [camPos, setCamPos] = useState<{ x: number; y: number; z: number }>({ x: 4, y: 8, z: 7 });
-	const [camYaw, setCamYaw] = useState(30);    // horizontal rotation, degrees (0 = -Z, 90 = +X)
-	const [camPitch, setCamPitch] = useState(-45);   // vertical tilt, degrees (negative = look down)
-	const [camZoom, setCamZoom] = useState(1);    // orthographic zoom (higher = more zoomed in)
+	const [camPos, setCamPos] = useState<{ x: number; y: number; z: number }>({ x: 0, y: 12, z: 18 });
+	const [camYaw, setCamYaw] = useState(0);      // horizontal rotation, degrees (0 = -Z, 90 = +X)
+	const [camPitch, setCamPitch] = useState(-40); // vertical tilt, degrees (negative = look down)
 
 	const [aframeReady, setAframeReady] = useState(false);
 
 	// ── WASD movement state ───────────────────────────────────────────────────
 	const keysPressed = useRef<Set<string>>(new Set());
-	const moveSpeedRef = useRef(0.02); // start slow
+	const moveSpeedRef = useRef(0.03); // start slow
 	const lastMoveTime = useRef(Date.now());
 
 	// ── Overview mode ─────────────────────────────────────────────────────────
 	const [viewMode, setViewMode] = useState<'single' | 'overview'>('single');
-	const [overviewData, setOverviewData] = useState<Array<{
-		floor: IFloor;
-		racks: IRack[];
-		rackPos: Record<string, { x: number; z: number; rotY: number }>;
-	}>>([]);
+	const [overviewData, setOverviewData] = useState<OverviewFloorData[]>([]);
 	const [overviewLoading, setOverviewLoading] = useState(false);
+
+	// ── Product groupings ─────────────────────────────────────────────────────
+	const productsByBox = useMemo(() => {
+		const map: Record<string, ProductRecord[]> = {};
+		products.forEach(r => { if (r.boxId) (map[r.boxId] ??= []).push(r); });
+		return map;
+	}, [products]);
+	const productsByShelf = useMemo(() => {
+		const map: Record<string, ProductRecord[]> = {};
+		products.forEach(r => { if (!r.boxId && r.shelfId) (map[r.shelfId] ??= []).push(r); });
+		return map;
+	}, [products]);
+	const floorProducts = useMemo(
+		() => products.filter(r => !r.boxId && !r.shelfId),
+		[products],
+	);
 
 	// ── Stable refs so event handlers always see latest state ───────────────
 	const rackPosRef = useRef(rackPos);
@@ -393,28 +513,14 @@ export default function WarehouseVisualizerPage() {
 	const camRef = useRef({ camPos, camYaw, camPitch });
 	useEffect(() => { camRef.current = { camPos, camYaw, camPitch }; }, [camPos, camYaw, camPitch]);
 
-	const viewModeRef = useRef(viewMode);
-	useEffect(() => { viewModeRef.current = viewMode; }, [viewMode]);
-
-	const floorsCountRef = useRef(floors.length);
-	useEffect(() => { floorsCountRef.current = floors.length; }, [floors.length]);
-
-	// ── Bounding-box clamp (20 % beyond furthest floor edge in x/y/z) ─────────
+	// ── Camera bounding box, recomputed per floor / overview layout ──────────
+	const boundsRef = useRef({ minX: -25, maxX: 25, minZ: -25, maxZ: 25, maxY: 30 });
 	const clampCamPos = useCallback((pos: { x: number; y: number; z: number }): { x: number; y: number; z: number } => {
-		const FS = 30; // FLOOR_SIZE
-		const GAP = 8;
-		const n = viewModeRef.current === 'overview' ? Math.max(1, floorsCountRef.current) : 1;
-		const floorMinX = -(FS / 2);
-		const floorMaxX = (n - 1) * (FS + GAP) + FS / 2;
-		const floorMinZ = -(FS / 2);
-		const floorMaxZ = FS / 2;
-		const padX = (floorMaxX - floorMinX) * 0.2;
-		const padZ = (floorMaxZ - floorMinZ) * 0.2;
-		const maxH = Math.max(floorMaxX - floorMinX, FS) * 1.2;
+		const b = boundsRef.current;
 		return {
-			x: Math.max(floorMinX - padX, Math.min(floorMaxX + padX, pos.x)),
-			y: Math.max(0.5, Math.min(maxH, pos.y)),
-			z: Math.max(floorMinZ - padZ, Math.min(floorMaxZ + padZ, pos.z)),
+			x: Math.max(b.minX, Math.min(b.maxX, pos.x)),
+			y: Math.max(0.5, Math.min(b.maxY, pos.y)),
+			z: Math.max(b.minZ, Math.min(b.maxZ, pos.z)),
 		};
 	}, []); // reads only from refs – stable forever
 
@@ -425,23 +531,65 @@ export default function WarehouseVisualizerPage() {
 	const camPosStr = `${camPos.x.toFixed(2)} ${camPos.y.toFixed(2)} ${camPos.z.toFixed(2)}`;
 	const camRotStr = `${camPitch.toFixed(1)} ${camYaw.toFixed(1)} 0`;
 
-	// ── Load floors ───────────────────────────────────────────────────────────
+	// ── Load floors + rack counts, default to a populated zone ───────────────
 	useEffect(() => {
 		setLoading(true);
-		floorsApi.list()
-			.then(res => {
-				const list = extractList<IFloor>(res.data);
+		Promise.allSettled([floorsApi.list(), racksApi.list()])
+			.then(([floorsResult, racksResult]) => {
+				if (floorsResult.status === 'rejected') {
+					setFloors([]);
+					setSceneError('Storage zones could not be loaded.');
+					return;
+				}
+				const list = extractList<IFloor>(floorsResult.value.data);
 				setFloors(list);
-				if (list.length > 0) setSelectedFloor(list[0].id);
-			})
-			.catch(() => {
-				setFloors([]);
-				setSceneError('Storage zones could not be loaded.');
+				const counts: Record<string, number> = {};
+				if (racksResult.status === 'fulfilled') {
+					extractList<WarehouseRack>(racksResult.value.data).forEach(r => {
+						counts[r.floorId] = (counts[r.floorId] ?? 0) + 1;
+					});
+				}
+				setFloorRackCounts(counts);
+				if (list.length > 0) {
+					const mostPopulated = [...list].sort((a, b) => (counts[b.id] ?? 0) - (counts[a.id] ?? 0))[0];
+					setSelectedFloor((counts[mostPopulated.id] ?? 0) > 0 ? mostPopulated.id : list[0].id);
+				}
 			})
 			.finally(() => setLoading(false));
 	}, []);
 
-	// ── Load racks + floor boxes when floor changes ───────────────────────────
+	// ── Current floor dimensions (metres = scene units) ──────────────────────
+	const currentFloor = floors.find(f => f.id === selectedFloor);
+	const { w: floorW, d: floorD } = floorSceneDims(currentFloor);
+
+	// ── Fit camera to the current floor ───────────────────────────────────────
+	const fitCameraToFloor = useCallback((w: number, d: number) => {
+		const y = Math.max(8, Math.max(w, d) * 0.5);
+		setCamPos({ x: 0, y, z: d / 2 + y * 0.7 });
+		setCamYaw(0);
+		setCamPitch(-42);
+	}, []);
+
+	// Keep camera bounds in sync with the floor being viewed
+	useEffect(() => {
+		if (viewMode !== 'single') return;
+		const padX = floorW * 0.4 + 5;
+		const padZ = floorD * 0.4 + 5;
+		boundsRef.current = {
+			minX: -floorW / 2 - padX,
+			maxX: floorW / 2 + padX,
+			minZ: -floorD / 2 - padZ,
+			maxZ: floorD / 2 + padZ,
+			maxY: Math.max(25, Math.max(floorW, floorD) * 1.2),
+		};
+	}, [viewMode, floorW, floorD]);
+
+	// Refit the camera whenever the visible floor changes
+	useEffect(() => {
+		if (viewMode === 'single' && selectedFloor) fitCameraToFloor(floorW, floorD);
+	}, [viewMode, selectedFloor, floorW, floorD, fitCameraToFloor]);
+
+	// ── Load racks + floor boxes + products when floor changes ────────────────
 	useEffect(() => {
 		if (!selectedFloor) return;
 		let cancelled = false;
@@ -449,10 +597,13 @@ export default function WarehouseVisualizerPage() {
 		setRackShelves({});
 		setShelfBoxes({});
 		setFloorBoxes([]);
+		setProducts([]);
 		setSelectedRack(null);
+		setSelectedBox(null);
 		setFloorLoading(true);
 		setSceneError(null);
 
+		const dims = floorSceneDims(floors.find(f => f.id === selectedFloor));
 		fetchFloorSceneData(selectedFloor)
 			.then((data) => {
 				if (cancelled) return;
@@ -460,12 +611,14 @@ export default function WarehouseVisualizerPage() {
 				setRackShelves(data.rackShelves);
 				setShelfBoxes(data.shelfBoxes);
 				setFloorBoxes(data.floorBoxes);
+				setProducts(data.products);
 				setSceneError(data.warnings[0] ?? null);
 				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
 				data.racks.forEach((r, i) => {
+					const def = defaultRackPos(i, dims.w, dims.d);
 					pos[r.id] = {
-						x: r.posX ?? snap((i % 5) * 3),
-						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						x: r.posX ?? def.x,
+						z: r.posZ ?? def.z,
 						rotY: r.rotY ?? 0,
 					};
 				});
@@ -480,7 +633,7 @@ export default function WarehouseVisualizerPage() {
 			});
 
 		return () => { cancelled = true; };
-	}, [selectedFloor]);
+	}, [selectedFloor, floors]);
 
 	// ── Keyboard handler ──────────────────────────────────────────────────────
 	useEffect(() => {
@@ -498,11 +651,14 @@ export default function WarehouseVisualizerPage() {
 					if (e.code === 'ArrowRight') x = snap(x + GRID);
 					if (e.code === 'KeyQ') rotY = (rotY - 45 + 360) % 360;
 					if (e.code === 'KeyE') rotY = (rotY + 45) % 360;
-					if (e.code === 'Escape') { setSelectedRack(null); return prev; }
+					if (e.code === 'Escape') { setSelectedRack(null); setSelectedBox(null); return prev; }
 					const next = { ...prev, [selectedRack]: { x, z, rotY } };
 					racksApi.savePosition(selectedRack, { posX: x, posZ: z, rotY }).catch((err) => { console.error('Failed to save rack position', err); });
 					return next;
 				});
+			}
+			if (e.code === 'Escape' && !selectedRack) {
+				setSelectedBox(null);
 			}
 			// Track WASD + QE keys for smooth movement
 			if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'].includes(e.code) && !selectedRack && !e.ctrlKey && !e.metaKey) {
@@ -518,7 +674,7 @@ export default function WarehouseVisualizerPage() {
 			if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'].includes(e.code)) {
 				keysPressed.current.delete(e.code);
 				// Reset speed when key released
-				moveSpeedRef.current = 0.02;
+				moveSpeedRef.current = 0.03;
 			}
 		}
 
@@ -528,7 +684,7 @@ export default function WarehouseVisualizerPage() {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
 		};
-	}, [selectedRack, clampCamPos]);
+	}, [selectedRack]);
 
 	// ── Smooth WASD movement loop ─────────────────────────────────────────────
 	useEffect(() => {
@@ -539,12 +695,12 @@ export default function WarehouseVisualizerPage() {
 				const now = Date.now();
 				const holdDuration = now - lastMoveTime.current;
 
-				// Accelerate: start at 0.02, after 2 seconds reach 0.15
+				// Accelerate: start at 0.03, after 2 seconds head towards 0.3
 				if (holdDuration > 2000) {
-					moveSpeedRef.current = Math.min(0.15, moveSpeedRef.current + 0.001);
+					moveSpeedRef.current = Math.min(0.3, moveSpeedRef.current + 0.002);
 				} else {
 					// Gradual acceleration for first 2 seconds
-					moveSpeedRef.current = Math.min(0.08, 0.02 + (holdDuration / 2000) * 0.06);
+					moveSpeedRef.current = Math.min(0.12, 0.03 + (holdDuration / 2000) * 0.09);
 				}
 
 				const moveStep = moveSpeedRef.current;
@@ -562,7 +718,7 @@ export default function WarehouseVisualizerPage() {
 				const rightZ = -Math.sin(yawRad);
 
 				setCamPos(v => {
-					let newPos = { ...v };
+					const newPos = { ...v };
 					if (keysPressed.current.has('KeyW')) {
 						newPos.x += forwardX * moveStep;
 						newPos.y += forwardY * moveStep;
@@ -617,16 +773,12 @@ export default function WarehouseVisualizerPage() {
 			if (!container) {
 				if (mounted && attempts < maxAttempts) {
 					attempts++;
-					console.log(`Container not found, retry ${attempts}/${maxAttempts}`);
 					setTimeout(attachListeners, 100);
 				}
 				return;
 			}
 
-			console.log('Container found! Attaching mouse listeners');
-
 			function onMouseDown(e: MouseEvent) {
-				console.log('Mouse down detected', e.button);
 				const mode: 'look' | 'pan' = (e.button === 2 || (e.button === 0 && e.altKey)) ? 'pan' : 'look';
 				dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY, mode };
 				e.preventDefault();
@@ -639,7 +791,7 @@ export default function WarehouseVisualizerPage() {
 				dragRef.current.lastX = e.clientX;
 				dragRef.current.lastY = e.clientY;
 				if (dragRef.current.mode === 'look') {
-					// Fixed: drag right = look right (positive yaw change)
+					// drag right = look right (positive yaw change)
 					setCamYaw(v => (v - dx * 0.4 + 360) % 360);
 					setCamPitch(v => Math.max(-85, Math.min(85, v - dy * 0.3)));
 				} else {
@@ -662,9 +814,16 @@ export default function WarehouseVisualizerPage() {
 
 			function onWheel(e: WheelEvent) {
 				e.preventDefault();
-				// Zoom orthographic camera
-				const delta = e.deltaY * 0.001;
-				setCamZoom(v => Math.max(0.3, Math.min(3, v - delta)));
+				// Dolly the camera along its look direction
+				const { camYaw: yaw, camPitch: pitch } = camRef.current;
+				const yawRad = (yaw * Math.PI) / 180;
+				const pitchRad = (pitch * Math.PI) / 180;
+				const step = -e.deltaY * 0.02;
+				setCamPos(v => clampCamPos({
+					x: v.x + (-Math.sin(yawRad) * Math.cos(pitchRad)) * step,
+					y: v.y + Math.sin(pitchRad) * step,
+					z: v.z + (-Math.cos(yawRad) * Math.cos(pitchRad)) * step,
+				}));
 			}
 
 			function onContextMenu(e: Event) { e.preventDefault(); }
@@ -680,7 +839,6 @@ export default function WarehouseVisualizerPage() {
 			container.addEventListener('auxclick', onAuxClick);
 
 			cleanup = () => {
-				console.log('Cleaning up mouse listeners');
 				container.removeEventListener('mousedown', onMouseDown);
 				window.removeEventListener('mousemove', onMouseMove);
 				window.removeEventListener('mouseup', onMouseUp);
@@ -698,7 +856,7 @@ export default function WarehouseVisualizerPage() {
 		};
 	}, [clampCamPos, aframeReady]);
 
-	// ── Click → select rack (single) / double-click → center view on rack/shelf ──
+	// ── Click → select box/rack · double-click → centre view on rack ─────────
 	const sceneRef = useRef<HTMLElement & EventTarget>(null);
 	useEffect(() => {
 		const scene = sceneRef.current;
@@ -708,17 +866,32 @@ export default function WarehouseVisualizerPage() {
 			const el = ce.detail?.intersection?.object?.el as HTMLElement | undefined;
 			let rackId: string | null = null;
 			let shelfId: string | null = null;
+			let boxId: string | null = null;
 			if (el) {
 				let node: HTMLElement | null = el;
 				while (node) {
-					// Check for shelf first (more specific)
+					const bid = node.getAttribute('data-box-id');
+					if (bid && !boxId) boxId = bid;
 					const sid = node.getAttribute('data-shelf-id');
-					if (sid && sid !== '') { shelfId = sid; }
-					// Then check for rack
+					if (sid && sid !== '') shelfId = sid;
 					const rid = node.getAttribute('data-rack-id');
 					if (rid) { rackId = rid; break; }
 					node = node.parentElement;
 				}
+			}
+
+			// Box click: show its contents, and select the parent rack when present
+			if (boxId) {
+				let found: IStorageBox | null = null;
+				for (const list of Object.values(shelfBoxes)) {
+					const match = list.find(b => b.id === boxId);
+					if (match) { found = match; break; }
+				}
+				if (!found) found = floorBoxes.find(b => b.id === boxId) ?? null;
+				setSelectedBox(found);
+				if (rackId) setSelectedRack(rackId);
+				lastClickRef.current = { rackId: boxId, time: Date.now() };
+				return;
 			}
 
 			const now = Date.now();
@@ -740,7 +913,7 @@ export default function WarehouseVisualizerPage() {
 			}
 
 			if (isDoubleClick && rackId) {
-				// Center view on rack: look at it and move closer – no orbit anchor
+				// Centre view on rack: look at it and move closer
 				const p = rackPosRef.current[rackId];
 				if (p) {
 					const cam = camRef.current;
@@ -750,7 +923,8 @@ export default function WarehouseVisualizerPage() {
 					const dz = p.z - cam.camPos.z;
 					const hDist = Math.sqrt(dx * dx + dz * dz);
 					const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-					const newYaw = ((Math.atan2(dx, dz) * 180) / Math.PI + 360) % 360;
+					// A-Frame yaw 0 faces −Z, so aim with the negated direction vector
+					const newYaw = ((Math.atan2(-dx, -dz) * 180) / Math.PI + 360) % 360;
 					const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
 					// Move camera to 5 m away from the rack
 					const moveDist = Math.max(0, totalDist - 5);
@@ -768,11 +942,12 @@ export default function WarehouseVisualizerPage() {
 			}
 
 			// Just select rack, don't change view
+			setSelectedBox(null);
 			if (rackId) { setSelectedRack(rackId); } else { setSelectedRack(null); }
 		}
 		scene.addEventListener('click', handler);
 		return () => scene.removeEventListener('click', handler);
-	}, [aframeReady, clampCamPos, rackShelves]);
+	}, [aframeReady, clampCamPos, rackShelves, shelfBoxes, floorBoxes]);
 
 	// ── Move rack helper (saves to DB) ────────────────────────────────────────
 	const moveRack = useCallback((dx: number, dz: number) => {
@@ -810,7 +985,8 @@ export default function WarehouseVisualizerPage() {
 		const dz = p.z - cam.camPos.z;
 		const hDist = Math.sqrt(dx * dx + dz * dz);
 		const totalDist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-		const newYaw = ((Math.atan2(dx, dz) * 180) / Math.PI + 360) % 360;
+		// A-Frame yaw 0 faces −Z, so aim with the negated direction vector
+		const newYaw = ((Math.atan2(-dx, -dz) * 180) / Math.PI + 360) % 360;
 		const newPitch = (Math.atan2(dy, hDist) * 180) / Math.PI;
 		const moveDist = Math.max(0, totalDist - 4);
 		const newPos = {
@@ -831,63 +1007,153 @@ export default function WarehouseVisualizerPage() {
 		try {
 			const racksRes = await racksApi.list();
 			const allRacks = extractList<WarehouseRack>(racksRes.data);
+			const counts: Record<string, number> = {};
+			allRacks.forEach(r => { counts[r.floorId] = (counts[r.floorId] ?? 0) + 1; });
+			setFloorRackCounts(counts);
 			const results = floors.map((floor) => {
 				const rackList = allRacks.filter(rack => rack.floorId === floor.id);
+				const dims = floorSceneDims(floor);
+				const { rackShelves: rs, shelfBoxes: sb } = groupRackShelves(rackList);
 				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
 				rackList.forEach((r, i) => {
+					const def = defaultRackPos(i, dims.w, dims.d);
 					pos[r.id] = {
-						x: r.posX ?? snap((i % 5) * 3),
-						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						x: r.posX ?? def.x,
+						z: r.posZ ?? def.z,
 						rotY: r.rotY ?? 0,
 					};
 				});
-				return { floor, racks: rackList, rackPos: pos };
+				return { floor, racks: rackList, rackShelves: rs, shelfBoxes: sb, rackPos: pos };
 			});
 			setOverviewData(results);
 		} catch {
 			setSceneError('All-floor overview could not be loaded.');
 			const fallback = floors.map((floor) => {
-				const rackList = floor.id === selectedFloor ? racks : [];
+				const rackList = floor.id === selectedFloor ? (racks as WarehouseRack[]) : [];
+				const dims = floorSceneDims(floor);
 				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
 				rackList.forEach((r, i) => {
+					const def = defaultRackPos(i, dims.w, dims.d);
 					pos[r.id] = {
-						x: r.posX ?? snap((i % 5) * 3),
-						z: r.posZ ?? snap(Math.floor(i / 5) * 3),
+						x: r.posX ?? def.x,
+						z: r.posZ ?? def.z,
 						rotY: r.rotY ?? 0,
 					};
 				});
-				return { floor, racks: rackList, rackPos: pos };
+				return { floor, racks: rackList, rackShelves: floor.id === selectedFloor ? rackShelves : {}, shelfBoxes: floor.id === selectedFloor ? shelfBoxes : {}, rackPos: pos };
 			});
 			setOverviewData(fallback);
 		} finally {
 			setOverviewLoading(false);
 		}
-	}, [floors, racks, selectedFloor]);
+	}, [floors, racks, selectedFloor, rackShelves, shelfBoxes]);
+
+	// ── Overview layout: branches as columns, floors stacked by number ───────
+	const overviewLayout = useMemo(() => {
+		const byBranch = new Map<string, { name: string; items: OverviewFloorData[] }>();
+		overviewData.forEach(fd => {
+			const key = fd.floor.branchId ?? 'unknown';
+			if (!byBranch.has(key)) byBranch.set(key, { name: fd.floor.branch?.name ?? 'Branch', items: [] });
+			byBranch.get(key)!.items.push(fd);
+		});
+
+		let cursorX = 0;
+		let maxD = DEFAULT_FLOOR_WIDTH;
+		let maxY = 0;
+		const placed: Array<OverviewFloorData & { x: number; y: number; w: number; d: number }> = [];
+		const branchLabels: Array<{ key: string; name: string; x: number; y: number }> = [];
+
+		byBranch.forEach(({ name, items }, key) => {
+			const colW = Math.max(...items.map(fd => floorSceneDims(fd.floor).w));
+			const cx = cursorX + colW / 2;
+			let topY = 0;
+			[...items].sort((a, b) => (a.floor.floorNumber ?? 1) - (b.floor.floorNumber ?? 1)).forEach(fd => {
+				const dims = floorSceneDims(fd.floor);
+				const y = Math.max(0, ((fd.floor.floorNumber ?? 1) - 1)) * STOREY_HEIGHT;
+				placed.push({ ...fd, x: cx, y, w: dims.w, d: dims.d });
+				topY = Math.max(topY, y);
+				maxD = Math.max(maxD, dims.d);
+				maxY = Math.max(maxY, y);
+			});
+			branchLabels.push({ key, name, x: cx, y: topY + STOREY_HEIGHT * 0.9 });
+			cursorX += colW + OVERVIEW_GAP;
+		});
+
+		return { placed, branchLabels, totalW: Math.max(0, cursorX - OVERVIEW_GAP), maxD, maxY };
+	}, [overviewData]);
+
+	// ── Fit camera + bounds to the overview layout ───────────────────────────
+	const fitOverviewCamera = useCallback(() => {
+		const { totalW, maxD, maxY } = overviewLayout;
+		if (totalW <= 0) return;
+		const span = Math.max(totalW, maxD);
+		const camY = Math.max(12, maxY + span * 0.4);
+		boundsRef.current = {
+			minX: -span * 0.5,
+			maxX: totalW + span * 0.5,
+			minZ: -maxD / 2 - span,
+			maxZ: maxD / 2 + span,
+			maxY: camY + 30,
+		};
+		setCamPos({ x: totalW / 2, y: camY, z: maxD / 2 + camY * 0.8 });
+		setCamYaw(0);
+		setCamPitch(-40);
+	}, [overviewLayout]);
+
+	useEffect(() => {
+		if (viewMode === 'overview' && overviewData.length > 0) fitOverviewCamera();
+	}, [viewMode, overviewData.length, fitOverviewCamera]);
 
 	// ── Switch to overview mode ───────────────────────────────────────────────
 	const enterOverview = useCallback(() => {
 		setViewMode('overview');
 		setSelectedRack(null);
+		setSelectedBox(null);
 		loadOverview();
-		// Position camera above centre of all floors, looking down
-		const FS = 30; // FLOOR_SIZE
-		const spread = Math.max(1, floors.length);
-		const centerX = (spread - 1) * (FS + 8) / 2;
-		const height = Math.min(60, 10 + spread * 8);
-		setCamPos({ x: centerX, y: height, z: height * 0.6 });
-		setCamYaw(0);     // face north (−Z)
-		setCamPitch(-55); // look steeply down
-		setCamZoom(0.6);  // zoom out for overview
-	}, [floors.length, loadOverview]);
+	}, [loadOverview]);
 
-	// ── Floor size ────────────────────────────────────────────────────────────
-	const FLOOR_SIZE = 30;
-	const currentFloor = floors.find(f => f.id === selectedFloor);
+	// ── Box detail helpers ────────────────────────────────────────────────────
+	const describeBoxLocation = useCallback((box: IStorageBox): string => {
+		if (box.shelfId) {
+			for (const [rid, list] of Object.entries(rackShelves)) {
+				const shelf = list.find(s => s.id === box.shelfId);
+				if (shelf) {
+					const rack = racks.find(r => r.id === rid);
+					return `${shelf.name}${rack ? ` · ${rack.name}` : ''}`;
+				}
+			}
+			return box.shelf?.name ?? 'Shelf';
+		}
+		return 'Floor level';
+	}, [rackShelves, racks]);
 
 	// ── A-Frame ready ─────────────────────────────────────────────────────────
 	useEffect(() => {
 		ensureAframe().then(() => { setTimeout(() => setAframeReady(true), 50); });
 	}, []);
+
+	// ── Keep the embedded canvas sized to its container ──────────────────────
+	// A-Frame only recalculates the canvas on window resize, so layout-driven
+	// changes (bottom rack panel appearing, sidebar collapse, or the container
+	// measuring 0px at scene init) leave a stale or blank canvas until the
+	// window is resized — the "white screen until fullscreen" symptom.
+	useEffect(() => {
+		if (!aframeReady) return;
+		const container = containerRef.current;
+		const scene = sceneRef.current as any;
+		if (!container || !scene) return;
+		const doResize = () => {
+			if (typeof scene.resize === 'function') scene.resize();
+			else window.dispatchEvent(new Event('resize'));
+		};
+		if (scene.hasLoaded) doResize();
+		else scene.addEventListener('loaded', doResize, { once: true });
+		const observer = new ResizeObserver(doResize);
+		observer.observe(container);
+		const t1 = setTimeout(doResize, 200);
+		const t2 = setTimeout(doResize, 1000);
+		return () => { observer.disconnect(); clearTimeout(t1); clearTimeout(t2); };
+	}, [aframeReady]);
 
 	if (loading) {
 		return <div className="flex items-center justify-center h-full text-gray-500">Loading warehouse data…</div>;
@@ -900,6 +1166,17 @@ export default function WarehouseVisualizerPage() {
 			</div>
 		);
 	}
+
+	const floorOptions = floors.map(f => {
+		const count = floorRackCounts[f.id] ?? 0;
+		const branchName = f.branch?.name ? `${f.branch.name} — ` : '';
+		return {
+			value: f.id,
+			label: `${branchName}${f.name}${count > 0 ? ` (${count} rack${count !== 1 ? 's' : ''})` : ''}`,
+		};
+	});
+
+	const selectedBoxProducts = selectedBox ? (productsByBox[selectedBox.id] ?? []) : [];
 
 	return (
 		<div className="flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
@@ -926,9 +1203,9 @@ export default function WarehouseVisualizerPage() {
 				{viewMode === 'single' && (
 					<>
 						<label className="font-semibold text-gray-300">Zone:</label>
-						<div style={{ width: '180px' }}>
+						<div style={{ width: '280px' }}>
 							<SearchableSelect
-								options={floors.map(f => ({ value: f.id, label: f.name }))}
+								options={floorOptions}
 								value={selectedFloor}
 								onChange={(val) => { if (val) { setSelectedFloor(val); setViewMode('single'); } }}
 								isClearable={false}
@@ -942,7 +1219,7 @@ export default function WarehouseVisualizerPage() {
 
 				{/* Camera height quick-adjust */}
 				<label className="font-semibold text-gray-300 text-xs">Height:</label>
-				<input type="range" min={0.5} max={40} step={0.5} value={camPos.y} onChange={e => setCamPos(v => clampCamPos({ ...v, y: Number(e.target.value) }))} className="w-20" />
+				<input type="range" min={0.5} max={60} step={0.5} value={Math.min(camPos.y, 60)} onChange={e => setCamPos(v => clampCamPos({ ...v, y: Number(e.target.value) }))} className="w-20" />
 				<span className="text-gray-400 text-xs">{camPos.y.toFixed(1)}m</span>
 
 				<span className="text-gray-500">|</span>
@@ -969,7 +1246,7 @@ export default function WarehouseVisualizerPage() {
 					<span className="text-gray-400 text-xs italic">
 						{viewMode === 'overview'
 							? 'WASD=move · Q/E=down/up · Drag to look · Right/Alt-drag to pan · Scroll zoom'
-							: 'WASD=move · Q/E=down/up · Drag to look · Right/Alt-drag to pan · Scroll zoom · Double-click rack to centre'}
+							: 'WASD=move · Q/E=down/up · Drag to look · Scroll zoom · Click a box for contents · Double-click rack to centre'}
 					</span>
 				)}
 
@@ -977,9 +1254,9 @@ export default function WarehouseVisualizerPage() {
 				<button
 					onClick={() => {
 						if (viewMode === 'overview') {
-							enterOverview();
+							fitOverviewCamera();
 						} else {
-							setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45); setCamZoom(1);
+							fitCameraToFloor(floorW, floorD);
 						}
 					}}
 					className="ml-auto px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs"
@@ -995,8 +1272,9 @@ export default function WarehouseVisualizerPage() {
 				<span><span style={{ color: '#8B7355' }}>■</span> Shelf level</span>
 				<span><span style={{ color: '#E8A838' }}>■</span> Box (on shelf)</span>
 				<span><span style={{ color: '#C47A3A' }}>■</span> Box (on floor)</span>
-				<span><span style={{ color: '#FFD700' }}>■</span> Selected rack</span>
-				<span className="text-gray-500">Grid: {GRID * 100} cm | All dims metric</span>
+				<span><span style={{ color: PRODUCT_COLOUR }}>■</span> Product (loose)</span>
+				<span><span style={{ color: SELECTED_COLOUR }}>■</span> Selected</span>
+				<span className="text-gray-500">Grid: {GRID} m · 1 unit = 1 m</span>
 				<span className="text-gray-500">Positions saved to DB</span>
 			</div>
 
@@ -1009,6 +1287,34 @@ export default function WarehouseVisualizerPage() {
 				{(floorLoading || sceneError) && (
 					<div className="absolute left-3 top-3 z-10 rounded bg-gray-950/85 px-3 py-2 text-xs text-gray-100 shadow">
 						{floorLoading ? 'Loading zone layout…' : sceneError}
+					</div>
+				)}
+
+				{/* Box contents panel */}
+				{selectedBox && (
+					<div className="absolute right-3 top-3 z-10 w-72 rounded bg-gray-950/90 px-3 py-2 text-xs text-gray-100 shadow-lg">
+						<div className="flex items-center justify-between mb-1">
+							<span className="font-semibold text-amber-300">📦 {selectedBox.name}</span>
+							<button onClick={() => setSelectedBox(null)} className="text-gray-400 hover:text-white px-1">✕</button>
+						</div>
+						<div className="text-gray-400">Code: {selectedBox.code}</div>
+						<div className="text-gray-400">
+							Size: {Math.round(dimToMetres(selectedBox.width, 0.4) * 100)} × {Math.round(dimToMetres(selectedBox.height, 0.4) * 100)} × {Math.round(dimToMetres(selectedBox.length, 0.4) * 100)} cm
+						</div>
+						<div className="text-gray-400 mb-1">Location: {describeBoxLocation(selectedBox)}</div>
+						<div className="border-t border-gray-700 pt-1 font-semibold text-gray-300">Products</div>
+						{selectedBoxProducts.length === 0 ? (
+							<div className="text-gray-500 italic">No products recorded in this box.</div>
+						) : (
+							<ul className="max-h-40 overflow-y-auto">
+								{selectedBoxProducts.map(rec => (
+									<li key={rec.id} className="flex justify-between gap-2 py-0.5 border-b border-gray-800 last:border-0">
+										<span className="truncate">{rec.sku?.name ?? rec.sku?.skuCode ?? 'Unknown SKU'}</span>
+										<span className="text-gray-400 whitespace-nowrap">×{rec.quantity} · {rec.state}</span>
+									</li>
+								))}
+							</ul>
+						)}
 					</div>
 				)}
 
@@ -1025,8 +1331,7 @@ export default function WarehouseVisualizerPage() {
 						<a-light type="directional" color="#ffffff" intensity="0.8" position="5 10 5" />
 						<a-light type="hemisphere" color="#87CEEB" ground-color="#B8D4A8" intensity="0.3" />
 
-						{/* Orthographic camera – position and rotation fully driven by React state */}
-						{/* Note: orthographic component applied dynamically via useEffect to avoid initialization race */}
+						{/* Camera – position and rotation fully driven by React state */}
 						<a-camera
 							position={camPosStr}
 							rotation={camRotStr}
@@ -1037,7 +1342,7 @@ export default function WarehouseVisualizerPage() {
 								color="#FFD700"
 								opacity="0.8"
 								scale="0.5 0.5 0.5"
-								raycaster="objects: [data-rack-id]"
+								raycaster="objects: [data-rack-id], [data-box-id]"
 							/>
 						</a-camera>
 
@@ -1045,40 +1350,30 @@ export default function WarehouseVisualizerPage() {
 
 						{viewMode === 'single' ? (
 							<>
-								{/* Floor */}
-								{currentFloor && (
-									<a-plane
-										position={`0 0 0`}
-										rotation="-90 0 0"
-										width={String((currentFloor.length || FLOOR_SIZE / 3.048) * 3.048)}
-										height={String((currentFloor.width || FLOOR_SIZE / 3.048) * 3.048)}
-										color={FLOOR_COLOUR}
-										roughness="0.9"
-									/>
-								)}
-								{!currentFloor && (
-									<a-plane
-										position={`0 0 0`}
-										rotation="-90 0 0"
-										width={String(FLOOR_SIZE)}
-										height={String(FLOOR_SIZE)}
-										color={FLOOR_COLOUR}
-										roughness="0.9"
-									/>
-								)}
-
-								{/* Grid */}
-								<GridPlane size={FLOOR_SIZE} gridSize={GRID} />
+								{/* Floor slab + grid (real recorded dimensions, metres) */}
+								<FloorSlab w={floorW} d={floorD} />
+								<GridPlane w={floorW} d={floorD} gridSize={Math.max(floorW, floorD) > 40 ? 1 : GRID} />
 
 								{/* Floor label */}
 								{currentFloor && (
 									<a-text
-										value={`Zone: ${currentFloor.name}`}
-										position={`${-FLOOR_SIZE / 2 + 1} 0.05 ${-FLOOR_SIZE / 2 + 1}`}
+										value={`Zone: ${currentFloor.branch?.name ? `${currentFloor.branch.name} — ` : ''}${currentFloor.name} (${floorW}m × ${floorD}m)`}
+										position={`${-floorW / 2 + 0.5} 0.02 ${-floorD / 2 + 1.2}`}
 										rotation="-90 0 0"
 										color="#333"
-										scale="0.6 0.6 0.6"
+										scale="1.2 1.2 1.2"
 										align="left"
+									/>
+								)}
+
+								{/* Empty-floor hint */}
+								{!floorLoading && racks.length === 0 && floorBoxes.length === 0 && (
+									<a-text
+										value="No racks or boxes in this zone yet"
+										position="0 1.5 0"
+										align="center"
+										color="#FFFFFF"
+										scale="1.5 1.5 1.5"
 									/>
 								)}
 
@@ -1091,7 +1386,10 @@ export default function WarehouseVisualizerPage() {
 											rack={rack}
 											shelves={rackShelves[rack.id] ?? []}
 											shelfBoxes={shelfBoxes}
+											productsByBox={productsByBox}
+											productsByShelf={productsByShelf}
 											isSelected={selectedRack === rack.id}
+											selectedBoxId={selectedBox?.id ?? null}
 											posX={pos.x}
 											posZ={pos.z}
 											rotY={pos.rotY}
@@ -1101,67 +1399,82 @@ export default function WarehouseVisualizerPage() {
 
 								{/* Floor-level boxes */}
 								{floorBoxes.map((box, i) => (
-									<FloorBox key={box.id} box={box} index={i} />
+									<FloorBox
+										key={box.id}
+										box={box}
+										index={i}
+										floorW={floorW}
+										floorD={floorD}
+										productsByBox={productsByBox}
+										selectedBoxId={selectedBox?.id ?? null}
+									/>
+								))}
+
+								{/* Products placed on the floor without a box or shelf */}
+								{floorProducts.map((rec, i) => (
+									<a-box
+										key={rec.id}
+										position={`${-floorW / 2 + 1 + (i % 20) * 0.6} 0.125 ${floorD / 2 - 2.4 - Math.floor(i / 20) * 0.6}`}
+										width="0.25"
+										height="0.25"
+										depth="0.25"
+										color={PRODUCT_COLOUR}
+										roughness="0.6"
+									>
+										<a-text value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.25 0" align="center" color="#0E5953" scale="0.25 0.25 0.25" width="4" />
+									</a-box>
 								))}
 							</>
 						) : (
-							/* ── All-floors overview ──────────────────────────────── */
+							/* ── All-floors overview: branch columns, stacked storeys ── */
 							<>
-								{overviewData.map((fd, fi) => {
-									const offsetX = fi * (FLOOR_SIZE + 8);
-									const offsetY = (fd.floor.floorNumber - 1) * 5; // 5 meters per floor level
-									return (
-										<a-entity key={fd.floor.id} position={`${offsetX} ${offsetY} 0`}>
-											{/* Floor slab */}
-											<a-plane
-												position="0 0 0"
-												rotation="-90 0 0"
-												width={String((fd.floor.length || FLOOR_SIZE / 3.048) * 3.048)}
-												height={String((fd.floor.width || FLOOR_SIZE / 3.048) * 3.048)}
-												color={FLOOR_COLOUR}
-												roughness="0.9"
-											/>
-											{/* Floor grid */}
-											<GridPlane size={(fd.floor.length || FLOOR_SIZE / 3.048) * 3.048} gridSize={GRID} />
-											{/* Floor name label (horizontal, on the slab) */}
-											<a-text
-												value={fd.floor.name}
-												position={`${-FLOOR_SIZE / 2 + 1} 0.08 ${-FLOOR_SIZE / 2 + 1}`}
-												rotation="-90 0 0"
-												color="#333"
-												scale="0.7 0.7 0.7"
-												align="left"
-											/>
-											{/* Floor name label (vertical, floating above) */}
-											<a-text
-												value={`Floor ${fi + 1}: ${fd.floor.name}`}
-												position={`0 4 ${-FLOOR_SIZE / 2 - 1}`}
-												align="center"
-												color="#AADDFF"
-												scale="0.6 0.6 0.6"
-												width="10"
-											/>
-											{/* Racks on this floor */}
-											{fd.racks.map(rack => {
-												const pos = fd.rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
-												return (
-													<RackEntity
-														key={rack.id}
-														rack={rack}
-														shelves={[]}
-														shelfBoxes={{}}
-														isSelected={false}
-														posX={pos.x}
-														posZ={pos.z}
-														rotY={pos.rotY}
-													/>
-												);
-											})}
-										</a-entity>
-									);
-								})}
+								{overviewLayout.placed.map((fd) => (
+									<a-entity key={fd.floor.id} position={`${fd.x} ${fd.y} 0`}>
+										<FloorSlab w={fd.w} d={fd.d} />
+										{/* Floor name label (on the slab) */}
+										<a-text
+											value={`${fd.floor.name}`}
+											position={`${-fd.w / 2 + 0.5} 0.02 ${-fd.d / 2 + 1.2}`}
+											rotation="-90 0 0"
+											color="#333"
+											scale="1.2 1.2 1.2"
+											align="left"
+										/>
+										{/* Racks on this floor */}
+										{fd.racks.map(rack => {
+											const pos = fd.rackPos[rack.id] ?? { x: 0, z: 0, rotY: 0 };
+											return (
+												<RackEntity
+													key={rack.id}
+													rack={rack}
+													shelves={fd.rackShelves[rack.id] ?? []}
+													shelfBoxes={fd.shelfBoxes}
+													productsByBox={{}}
+													productsByShelf={{}}
+													isSelected={false}
+													selectedBoxId={null}
+													posX={pos.x}
+													posZ={pos.z}
+													rotY={pos.rotY}
+												/>
+											);
+										})}
+									</a-entity>
+								))}
+								{/* Branch labels above each column */}
+								{overviewLayout.branchLabels.map(label => (
+									<a-text
+										key={label.key}
+										value={label.name}
+										position={`${label.x} ${label.y + STOREY_HEIGHT} 0`}
+										align="center"
+										color="#AADDFF"
+										scale="2 2 2"
+										width="10"
+									/>
+								))}
 								{overviewLoading && (
-									<a-text value="Loading all floors…" position="0 2 0" align="center" color="#FFFFFF" scale="0.5 0.5 0.5" />
+									<a-text value="Loading all floors…" position="0 2 0" align="center" color="#FFFFFF" scale="1 1 1" />
 								)}
 							</>
 						)}
@@ -1213,18 +1526,17 @@ export default function WarehouseVisualizerPage() {
 						<div className="flex gap-2 px-4 py-2 items-center">
 							<span className="text-gray-400 text-xs font-semibold mr-2">Floors:</span>
 							{overviewLoading && <span className="text-gray-500 text-xs italic">Loading…</span>}
-							{overviewData.map((fd, fi) => (
+							{overviewData.map((fd) => (
 								<button
 									key={fd.floor.id}
 									onClick={() => {
 										// Switch to single-floor view for this floor
 										setViewMode('single');
 										setSelectedFloor(fd.floor.id);
-										setCamPos({ x: 4, y: 8, z: 7 }); setCamYaw(30); setCamPitch(-45);
 									}}
 									className="flex items-center gap-1 px-3 py-1 rounded text-xs border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 flex-shrink-0"
 								>
-									<span className="text-blue-400 font-bold">{fi + 1}.</span>
+									<span className="text-blue-400 font-bold">{fd.floor.branch?.name ?? ''}</span>
 									<span>{fd.floor.name}</span>
 									<span className="text-gray-500">({fd.racks.length} rack{fd.racks.length !== 1 ? 's' : ''})</span>
 								</button>

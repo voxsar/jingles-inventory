@@ -17,7 +17,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")
 
-  vendor                 Vendor?            @relation(fields: [vendorId], references: [id])
+  vendor                 Vendor?             @relation(fields: [vendorId], references: [id])
   inventoryRecords       InventoryRecord[]
   inventoryEvents        InventoryEvent[]
   grns                   GRN[]
@@ -25,8 +25,11 @@ model User {
   inspectionRecords      InspectionRecord[]
   auditLogs              AuditLog[]
   importJobs             ImportJob[]
-  stockTransfersCreated  StockTransfer[]    @relation("StockTransferCreator")
-  stockTransfersApproved StockTransfer[]    @relation("StockTransferApprover")
+  stockTransfersCreated  StockTransfer[]     @relation("StockTransferCreator")
+  stockTransfersApproved StockTransfer[]     @relation("StockTransferApprover")
+  voucherBatches         VoucherBatch[]
+  voucherCodes           VoucherCode[]
+  voucherRedemptions     VoucherRedemption[]
 
   @@map("users")
 }
@@ -111,8 +114,9 @@ model Branch {
   createdAt DateTime @default(now()) @map("created_at")
 
   floors             Floor[]
-  stockTransfersFrom StockTransfer[] @relation("StockTransferFrom")
-  stockTransfersTo   StockTransfer[] @relation("StockTransferTo")
+  stockTransfersFrom StockTransfer[]     @relation("StockTransferFrom")
+  stockTransfersTo   StockTransfer[]     @relation("StockTransferTo")
+  voucherRedemptions VoucherRedemption[]
 
   @@map("branches")
 }
@@ -146,27 +150,37 @@ model SKU {
   defaultExpiryDate        DateTime? @map("default_expiry_date") // Default expiry date
   shelfLifeDays            Int?      @map("shelf_life_days") // Days between manufacture and expiry
 
-  batchPricing          String?  @map("batch_pricing")
-  batchReferencePricing String?  @map("batch_reference_pricing")
-  lowStockThreshold     Int?     @map("low_stock_threshold")
-  isActive              Boolean  @default(true) @map("is_active")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  batchPricing          String? @map("batch_pricing")
+  batchReferencePricing String? @map("batch_reference_pricing")
+  lowStockThreshold     Int?    @map("low_stock_threshold")
 
-  vendor             Vendor              @relation(fields: [vendorId], references: [id])
-  category           Category?           @relation(fields: [categoryId], references: [id])
-  unitModel          UnitOfMeasure?      @relation(fields: [unitOfMeasureId], references: [id])
-  inventoryRecords   InventoryRecord[]
-  grnLines           GRNLine[]
-  prnLines           PRNLine[]
-  images             ProductImage[]
-  barcodes           ProductBarcode[]
-  tags               SKUTag[]
-  skuAttributes      SKUAttribute[]
-  variants           SKUVariant[]
-  batches            Batch[]
-  stockTransferLines StockTransferLine[]
-  skuVendors         SKUVendor[]
+  // Voucher-specific fields
+  isVoucher        Boolean @default(false) @map("is_voucher")
+  voucherValueType String? @map("voucher_value_type") // 'fixed' or 'range'
+  voucherMinValue  Float?  @map("voucher_min_value")
+  voucherMaxValue  Float?  @map("voucher_max_value")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  vendor              Vendor               @relation(fields: [vendorId], references: [id])
+  category            Category?            @relation(fields: [categoryId], references: [id])
+  unitModel           UnitOfMeasure?       @relation(fields: [unitOfMeasureId], references: [id])
+  inventoryRecords    InventoryRecord[]
+  grnLines            GRNLine[]
+  prnLines            PRNLine[]
+  images              ProductImage[]
+  barcodes            ProductBarcode[]
+  tags                SKUTag[]
+  skuAttributes       SKUAttribute[]
+  variants            SKUVariant[]
+  batches             Batch[]
+  stockTransferLines  StockTransferLine[]
+  skuVendors          SKUVendor[]
+  voucherCodes        VoucherCode[]
+  voucherRestrictions VoucherRestriction[]
+  voucherBatches      VoucherBatch[]
 
   @@map("skus")
 }
@@ -271,6 +285,9 @@ model SKUVariant {
   batches            Batch[]
   stockTransferLines StockTransferLine[]
   images             ProductImage[]
+  barcodes           ProductBarcode[]
+  voucherCodes       VoucherCode[]
+  voucherBatches     VoucherBatch[]
 
   @@map("sku_variants")
 }
@@ -309,14 +326,17 @@ model ProductImage {
 model ProductBarcode {
   id          String   @id @default(uuid())
   skuId       String   @map("sku_id")
+  variantId   String?  @map("variant_id")
   barcode     String   @unique
   barcodeType String   @default("EAN13") @map("barcode_type")
   isDefault   Boolean  @default(false) @map("is_default")
   label       String?
   createdAt   DateTime @default(now()) @map("created_at")
 
-  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  sku     SKU         @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  variant SKUVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
+  @@index([skuId, variantId, isDefault])
   @@map("product_barcodes")
 }
 
@@ -595,6 +615,7 @@ model Batch {
   prnLines           PRNLine[]
   inventoryRecords   InventoryRecord[]
   stockTransferLines StockTransferLine[]
+  voucherCodes       VoucherCode[]
 
   @@unique([skuId, variantId, sequenceNumber])
   @@map("batches")
@@ -882,4 +903,157 @@ model DashboardStats {
   lastUpdated      DateTime @default(now()) @map("last_updated")
 
   @@map("dashboard_stats")
+}
+
+// ── Voucher System ────────────────────────────────────────────
+
+model VoucherBatch {
+  id               String    @id @default(uuid())
+  skuId            String    @map("sku_id")
+  variantId        String?   @map("variant_id")
+  batchName        String    @map("batch_name")
+  prefix           String?
+  quantity         Int
+  generatedCount   Int       @default(0) @map("generated_count")
+  defaultValue     Float     @map("default_value")
+  expiryDays       Int?      @map("expiry_days")
+  defaultExpiresAt DateTime? @map("default_expires_at")
+  status           String    @default("pending") // 'pending', 'generating', 'completed', 'failed'
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  completedAt      DateTime? @map("completed_at")
+
+  sku          SKU           @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  variant      SKUVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  creator      User?         @relation(fields: [createdBy], references: [id])
+  voucherCodes VoucherCode[]
+
+  @@index([skuId, variantId])
+  @@index([status])
+  @@map("voucher_batches")
+}
+
+model VoucherCode {
+  id                String    @id @default(uuid())
+  code              String    @unique
+  skuId             String    @map("sku_id")
+  variantId         String?   @map("variant_id")
+  batchId           String?   @map("batch_id")
+  voucherBatchId    String?   @map("voucher_batch_id")
+  initialValue      Float     @map("initial_value")
+  currentBalance    Float     @map("current_balance")
+  currency          String    @default("LKR")
+  status            String    @default("active") // 'active', 'redeemed', 'expired', 'cancelled', 'suspended'
+  issuedAt          DateTime  @default(now()) @map("issued_at")
+  expiresAt         DateTime? @map("expires_at")
+  activatedAt       DateTime? @map("activated_at")
+  fullyRedeemedAt   DateTime? @map("fully_redeemed_at")
+  customerId        String?   @map("customer_id")
+  orderId           String?   @map("order_id")
+  purchaseReference String?   @map("purchase_reference")
+  notes             String?
+  createdBy         String?   @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  sku          SKU                 @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  variant      SKUVariant?         @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  batch        Batch?              @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  voucherBatch VoucherBatch?       @relation(fields: [voucherBatchId], references: [id], onDelete: SetNull)
+  creator      User?               @relation(fields: [createdBy], references: [id])
+  redemptions  VoucherRedemption[]
+
+  @@index([code])
+  @@index([skuId, variantId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([voucherBatchId])
+  @@map("voucher_codes")
+}
+
+model VoucherRedemption {
+  id             String   @id @default(uuid())
+  voucherCodeId  String   @map("voucher_code_id")
+  code           String
+  redeemedAmount Float    @map("redeemed_amount")
+  balanceBefore  Float    @map("balance_before")
+  balanceAfter   Float    @map("balance_after")
+  orderId        String?  @map("order_id")
+  invoiceNumber  String?  @map("invoice_number")
+  branchId       String?  @map("branch_id")
+  appliedToItems String?  @map("applied_to_items") // Array of {skuId, variantId, quantity, originalPrice, discountedPrice}
+  redeemedBy     String?  @map("redeemed_by")
+  redeemedAt     DateTime @default(now()) @map("redeemed_at")
+  notes          String?
+
+  voucherCode VoucherCode @relation(fields: [voucherCodeId], references: [id], onDelete: Cascade)
+  branch      Branch?     @relation(fields: [branchId], references: [id])
+  redeemer    User?       @relation(fields: [redeemedBy], references: [id])
+
+  @@index([voucherCodeId])
+  @@index([code])
+  @@index([redeemedAt])
+  @@index([branchId])
+  @@map("voucher_redemptions")
+}
+
+// ── Legacy Desktop Sync ───────────────────────────────────────
+// Persistent mapping between rows in the legacy POS database and entities in
+// this system. Once a legacy product is linked to a SKU variant (because it
+// was merged into a variant family), every future sync keeps writing to that
+// variant — the link is the source of truth, not the legacy schema shape.
+
+model LegacyEntityLink {
+  id          String    @id @default(uuid())
+  sourceType  String    @map("source_type") // 'product' | 'productcolorsize' | 'supplier' | 'location' | 'unit'
+  sourceId    String    @map("source_id") // legacy primary key, as string
+  sourceCode  String?   @map("source_code") // ProductCode / SupplierCode / LocationCode ...
+  targetType  String    @map("target_type") // 'sku' | 'variant' | 'vendor' | 'branch' | 'unit'
+  targetId    String    @map("target_id")
+  resolution  String    @default("auto") // 'sku-code' | 'variant-code' | 'barcode' | 'name' | 'created' | 'manual'
+  isLocked    Boolean   @default(false) @map("is_locked") // manual links are never re-resolved
+  lastApplied String?   @map("last_applied") // last legacy values applied (3-way merge base)
+  lastSeenAt  DateTime? @map("last_seen_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([sourceType, sourceId])
+  @@index([targetType, targetId])
+  @@map("legacy_entity_links")
+}
+
+model LegacySyncRun {
+  id           String    @id @default(uuid())
+  agentId      String?   @map("agent_id")
+  status       String    @default("Running") // Running | Completed | CompletedWithWarnings | Failed
+  startedAt    DateTime  @default(now()) @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+  stats        String?
+  errorMessage String?   @map("error_message")
+
+  @@index([startedAt])
+  @@map("legacy_sync_runs")
+}
+
+model VoucherRestriction {
+  id                             String   @id @default(uuid())
+  skuId                          String   @map("sku_id")
+  restrictionType                String   @map("restriction_type") // 'category_exclude', 'category_include', 'sku_exclude', 'sku_include', 'variant_exclude', 'variant_include'
+  targetCategoryIds              String?  @map("target_category_ids") // Array of category IDs
+  targetSkuIds                   String?  @map("target_sku_ids") // Array of SKU IDs
+  targetVariantIds               String?  @map("target_variant_ids") // Array of variant IDs
+  cannotCombineWithDiscounts     Boolean  @default(true) @map("cannot_combine_with_discounts")
+  cannotCombineWithOtherVouchers Boolean  @default(true) @map("cannot_combine_with_other_vouchers")
+  minPurchaseAmount              Float?   @map("min_purchase_amount")
+  maxDiscountAmount              Float?   @map("max_discount_amount")
+  priority                       Int      @default(0)
+  createdAt                      DateTime @default(now()) @map("created_at")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
+
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@unique([skuId, restrictionType])
+  @@index([skuId])
+  @@index([restrictionType])
+  @@map("voucher_restrictions")
 }

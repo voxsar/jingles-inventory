@@ -213,6 +213,10 @@ exports.Prisma.SKUScalarFieldEnum = {
   batchPricing: 'batchPricing',
   batchReferencePricing: 'batchReferencePricing',
   lowStockThreshold: 'lowStockThreshold',
+  isVoucher: 'isVoucher',
+  voucherValueType: 'voucherValueType',
+  voucherMinValue: 'voucherMinValue',
+  voucherMaxValue: 'voucherMaxValue',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -288,6 +292,7 @@ exports.Prisma.ProductImageScalarFieldEnum = {
 exports.Prisma.ProductBarcodeScalarFieldEnum = {
   id: 'id',
   skuId: 'skuId',
+  variantId: 'variantId',
   barcode: 'barcode',
   barcodeType: 'barcodeType',
   isDefault: 'isDefault',
@@ -665,6 +670,104 @@ exports.Prisma.DashboardStatsScalarFieldEnum = {
   lastUpdated: 'lastUpdated'
 };
 
+exports.Prisma.VoucherBatchScalarFieldEnum = {
+  id: 'id',
+  skuId: 'skuId',
+  variantId: 'variantId',
+  batchName: 'batchName',
+  prefix: 'prefix',
+  quantity: 'quantity',
+  generatedCount: 'generatedCount',
+  defaultValue: 'defaultValue',
+  expiryDays: 'expiryDays',
+  defaultExpiresAt: 'defaultExpiresAt',
+  status: 'status',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  completedAt: 'completedAt'
+};
+
+exports.Prisma.VoucherCodeScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  skuId: 'skuId',
+  variantId: 'variantId',
+  batchId: 'batchId',
+  voucherBatchId: 'voucherBatchId',
+  initialValue: 'initialValue',
+  currentBalance: 'currentBalance',
+  currency: 'currency',
+  status: 'status',
+  issuedAt: 'issuedAt',
+  expiresAt: 'expiresAt',
+  activatedAt: 'activatedAt',
+  fullyRedeemedAt: 'fullyRedeemedAt',
+  customerId: 'customerId',
+  orderId: 'orderId',
+  purchaseReference: 'purchaseReference',
+  notes: 'notes',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.VoucherRedemptionScalarFieldEnum = {
+  id: 'id',
+  voucherCodeId: 'voucherCodeId',
+  code: 'code',
+  redeemedAmount: 'redeemedAmount',
+  balanceBefore: 'balanceBefore',
+  balanceAfter: 'balanceAfter',
+  orderId: 'orderId',
+  invoiceNumber: 'invoiceNumber',
+  branchId: 'branchId',
+  appliedToItems: 'appliedToItems',
+  redeemedBy: 'redeemedBy',
+  redeemedAt: 'redeemedAt',
+  notes: 'notes'
+};
+
+exports.Prisma.LegacyEntityLinkScalarFieldEnum = {
+  id: 'id',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  sourceCode: 'sourceCode',
+  targetType: 'targetType',
+  targetId: 'targetId',
+  resolution: 'resolution',
+  isLocked: 'isLocked',
+  lastApplied: 'lastApplied',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.LegacySyncRunScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  status: 'status',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  stats: 'stats',
+  errorMessage: 'errorMessage'
+};
+
+exports.Prisma.VoucherRestrictionScalarFieldEnum = {
+  id: 'id',
+  skuId: 'skuId',
+  restrictionType: 'restrictionType',
+  targetCategoryIds: 'targetCategoryIds',
+  targetSkuIds: 'targetSkuIds',
+  targetVariantIds: 'targetVariantIds',
+  cannotCombineWithDiscounts: 'cannotCombineWithDiscounts',
+  cannotCombineWithOtherVouchers: 'cannotCombineWithOtherVouchers',
+  minPurchaseAmount: 'minPurchaseAmount',
+  maxDiscountAmount: 'maxDiscountAmount',
+  priority: 'priority',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -718,7 +821,13 @@ exports.Prisma.ModelName = {
   SyncServerSequence: 'SyncServerSequence',
   SyncServerChange: 'SyncServerChange',
   StatusOption: 'StatusOption',
-  DashboardStats: 'DashboardStats'
+  DashboardStats: 'DashboardStats',
+  VoucherBatch: 'VoucherBatch',
+  VoucherCode: 'VoucherCode',
+  VoucherRedemption: 'VoucherRedemption',
+  LegacyEntityLink: 'LegacyEntityLink',
+  LegacySyncRun: 'LegacySyncRun',
+  VoucherRestriction: 'VoucherRestriction'
 };
 
 /**

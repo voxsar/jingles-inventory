@@ -996,6 +996,44 @@ model VoucherRedemption {
   @@map("voucher_redemptions")
 }
 
+// ── Legacy Desktop Sync ───────────────────────────────────────
+// Persistent mapping between rows in the legacy POS database and entities in
+// this system. Once a legacy product is linked to a SKU variant (because it
+// was merged into a variant family), every future sync keeps writing to that
+// variant — the link is the source of truth, not the legacy schema shape.
+
+model LegacyEntityLink {
+  id          String    @id @default(uuid())
+  sourceType  String    @map("source_type") // 'product' | 'productcolorsize' | 'supplier' | 'location' | 'unit'
+  sourceId    String    @map("source_id")   // legacy primary key, as string
+  sourceCode  String?   @map("source_code") // ProductCode / SupplierCode / LocationCode ...
+  targetType  String    @map("target_type") // 'sku' | 'variant' | 'vendor' | 'branch' | 'unit'
+  targetId    String    @map("target_id")
+  resolution  String    @default("auto")    // 'sku-code' | 'variant-code' | 'barcode' | 'name' | 'created' | 'manual'
+  isLocked    Boolean   @default(false) @map("is_locked") // manual links are never re-resolved
+  lastApplied Json?     @map("last_applied") // last legacy values applied (3-way merge base)
+  lastSeenAt  DateTime? @map("last_seen_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([sourceType, sourceId])
+  @@index([targetType, targetId])
+  @@map("legacy_entity_links")
+}
+
+model LegacySyncRun {
+  id           String    @id @default(uuid())
+  agentId      String?   @map("agent_id")
+  status       String    @default("Running") // Running | Completed | CompletedWithWarnings | Failed
+  startedAt    DateTime  @default(now()) @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+  stats        Json?
+  errorMessage String?   @map("error_message")
+
+  @@index([startedAt])
+  @@map("legacy_sync_runs")
+}
+
 model VoucherRestriction {
   id                              String   @id @default(uuid())
   skuId                           String   @map("sku_id")

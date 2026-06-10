@@ -40,6 +40,7 @@ import userRoutes from './routes/users';
 import importRoutes from './routes/imports';
 import posRoutes from './routes/pos';
 import voucherRoutes from './routes/vouchers';
+import legacySyncRoutes from './routes/legacySync';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 import { startReplicaRealtime } from './sync/realtime';
 import { getStorageRoot } from './utils/runtimePaths';
@@ -68,6 +69,10 @@ export function createApp() {
 			credentials: true,
 		})
 	);
+	// Mounted before the global JSON parser so the route can accept larger
+	// sync payloads with its own body limit.
+	app.use('/api/legacy-sync', legacySyncRoutes);
+
 	app.use(express.json());
 	app.use(localReplicaSyncMiddleware);
 

@@ -20,5 +20,6 @@ export {
 	VoucherBatchStatus,
 } from './enums';
 export * from './interfaces';
+export * from './legacySync';
 export * from './replica';
 export * from './transitions';

@@ -28,10 +28,48 @@ export const prismaMock = {
 	},
 	floor: {
 		findUnique: vi.fn(),
+		findFirst: vi.fn(),
 		findMany: vi.fn(),
 		create: vi.fn(),
 		update: vi.fn(),
 		count: vi.fn(),
+	},
+	branch: {
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		count: vi.fn(),
+	},
+	category: {
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		count: vi.fn(),
+	},
+	sKUVendor: {
+		findUnique: vi.fn(),
+		create: vi.fn(),
+		upsert: vi.fn(),
+		deleteMany: vi.fn(),
+	},
+	legacyEntityLink: {
+		findUnique: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		upsert: vi.fn(),
+		count: vi.fn(),
+		groupBy: vi.fn(),
+	},
+	legacySyncRun: {
+		findUnique: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
 	},
 	rack: {
 		findUnique: vi.fn(),
@@ -80,6 +118,7 @@ export const prismaMock = {
 		update: vi.fn(),
 		updateMany: vi.fn(),
 		count: vi.fn(),
+		aggregate: vi.fn(),
 	},
 	inventoryEvent: {
 		findUnique: vi.fn(),
@@ -164,6 +203,7 @@ export const prismaMock = {
 		create: vi.fn(),
 		createMany: vi.fn(),
 		deleteMany: vi.fn(),
+		upsert: vi.fn(),
 	},
 	sKUVariant: {
 		findUnique: vi.fn(),
@@ -176,6 +216,7 @@ export const prismaMock = {
 		count: vi.fn(),
 	},
 	sKUVariantValue: {
+		findUnique: vi.fn(),
 		findMany: vi.fn(),
 		create: vi.fn(),
 		createMany: vi.fn(),
