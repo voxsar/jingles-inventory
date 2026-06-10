@@ -35,6 +35,7 @@ import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
 import TagsPage from './pages/TagsPage';
 import UsersPage from './pages/UsersPage';
 import DesktopSyncPage from './pages/DesktopSyncPage';
+import HelpPage from './pages/HelpPage';
 import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
@@ -67,6 +68,7 @@ function AppRoutes() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="help" element={<HelpPage />} />
         <Route path="branches" element={<BranchesPage />} />
         <Route path="stock-transfers" element={<StockTransferPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />

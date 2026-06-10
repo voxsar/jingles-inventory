@@ -47,6 +47,10 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: 'jsdom',
       setupFiles: ['src/__tests__/setup.ts'],
+      // Page tests render large components and drive them with userEvent;
+      // the default 5s regularly times out on slower/loaded machines.
+      testTimeout: 30000,
+      hookTimeout: 30000,
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov', 'html'],

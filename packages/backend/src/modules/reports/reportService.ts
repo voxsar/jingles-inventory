@@ -958,6 +958,7 @@ export async function getPriceChangeReport(filters: CommonReportFilters) {
 	const items = lines.map((line) => ({
 		id: line.id,
 		date: line.grn.createdAt,
+		grnId: line.grnId,
 		grnReference: line.grn.invoiceReference ?? line.grn.id,
 		supplier: line.grn.supplier.name,
 		skuId: line.skuId,

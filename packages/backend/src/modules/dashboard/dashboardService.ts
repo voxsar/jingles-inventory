@@ -17,16 +17,14 @@ interface InventoryByState {
  */
 export async function refreshDashboardStats(): Promise<void> {
 	try {
-		// Calculate inventory stats by state
-		const inventoryRecords = await prisma.inventoryRecord.findMany({
+		// Aggregate in the database instead of loading every record into memory
+		const groupedStates = await prisma.inventoryRecord.groupBy({
+			by: ['state'],
 			where: { quantity: { gt: 0 } },
-			select: {
-				state: true,
-				quantity: true,
-			},
+			_count: { _all: true },
+			_sum: { quantity: true },
 		});
 
-		// Calculate totals and state breakdown
 		let totalItems = 0;
 		let shelfReadyItems = 0;
 		let damagedItems = 0;
@@ -37,22 +35,20 @@ export async function refreshDashboardStats(): Promise<void> {
 			inventoryByState[state] = { count: 0, quantity: 0 };
 		});
 
-		// Calculate sums
-		for (const record of inventoryRecords) {
-			const quantity = record.quantity;
+		for (const group of groupedStates) {
+			const quantity = group._sum.quantity ?? 0;
 			totalItems += quantity;
 
-			if (record.state === InventoryState.ShelfReady) {
+			if (group.state === InventoryState.ShelfReady) {
 				shelfReadyItems += quantity;
-			} else if (record.state === InventoryState.Damaged) {
+			} else if (group.state === InventoryState.Damaged) {
 				damagedItems += quantity;
 			}
 
-			if (!inventoryByState[record.state]) {
-				inventoryByState[record.state] = { count: 0, quantity: 0 };
-			}
-			inventoryByState[record.state].count += 1;
-			inventoryByState[record.state].quantity += quantity;
+			inventoryByState[group.state] = {
+				count: group._count._all,
+				quantity,
+			};
 		}
 
 		// Calculate open GRNs (Draft, Submitted, PartiallyInspected)
@@ -122,15 +118,44 @@ export async function getDashboardStats() {
 	}
 }
 
+const REFRESH_COALESCE_MS = 2000;
+
+let refreshTimer: NodeJS.Timeout | null = null;
+let refreshRunning = false;
+let refreshRequestedWhileRunning = false;
+
+async function runCoalescedRefresh(): Promise<void> {
+	refreshTimer = null;
+	refreshRunning = true;
+	try {
+		await refreshDashboardStats();
+	} catch (error) {
+		logger.error('Background dashboard stats refresh failed', error);
+	} finally {
+		refreshRunning = false;
+		if (refreshRequestedWhileRunning) {
+			refreshRequestedWhileRunning = false;
+			queueDashboardStatsRefresh();
+		}
+	}
+}
+
 /**
  * Queue a background refresh (non-blocking)
- * Use this in write operations to avoid blocking the response
+ * Use this in write operations to avoid blocking the response.
+ * Calls are coalesced: a burst of writes (e.g. a bulk import) results in a
+ * single recalculation shortly after, instead of one full refresh per write.
  */
 export function queueDashboardStatsRefresh(): void {
-	// Use setImmediate to run outside the current execution cycle
-	setImmediate(() => {
-		refreshDashboardStats().catch((error) => {
-			logger.error('Background dashboard stats refresh failed', error);
-		});
-	});
+	if (refreshRunning) {
+		refreshRequestedWhileRunning = true;
+		return;
+	}
+	if (refreshTimer) {
+		return;
+	}
+	refreshTimer = setTimeout(() => {
+		void runCoalescedRefresh();
+	}, REFRESH_COALESCE_MS);
+	refreshTimer.unref?.();
 }

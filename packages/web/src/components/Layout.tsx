@@ -80,6 +80,7 @@ const baseNavItems: NavItem[] = [
   { type: 'route', to: '/reports', label: 'Reports', icon: ChartIcon },
   { type: 'route', to: '/users', label: 'Users', icon: UsersIcon, roles: ['Admin', 'Manager'] },
   { type: 'route', to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { type: 'route', to: '/help', label: 'Help & Docs', icon: HelpIcon },
   { type: 'section', id: 'desktop', label: 'Desktop' },
   { type: 'route', to: '/desktop-sync', label: 'Desktop Sync', icon: CloudIcon, desktopOnly: true },
 ];
@@ -361,7 +362,7 @@ export default function Layout() {
               <button type="button" className="shell-icon-button has-dot" title="Notifications">
                 <BellIcon size={17} />
               </button>
-              <button type="button" className="shell-icon-button" title="Help">
+              <button type="button" className="shell-icon-button" title="Help" onClick={() => navigate('/help')}>
                 <HelpIcon size={17} />
               </button>
             </div>

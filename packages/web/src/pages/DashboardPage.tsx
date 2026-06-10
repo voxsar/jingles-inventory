@@ -30,19 +30,32 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
 
+  const loadStats = () =>
+    dashboardApi.getStats().then((res) => {
+      const data = res.data?.data;
+      if (data) {
+        setStats(data);
+      }
+    });
+
   useEffect(() => {
-    dashboardApi.getStats()
-      .then((res) => {
-        const data = res.data?.data;
-        if (data) {
-          setStats(data);
-        }
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
+    loadStats().finally(() => setIsLoading(false));
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await dashboardApi.refreshStats();
+      await loadStats();
+    } catch {
+      // keep showing the last known stats
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const cards = useMemo(
     () =>
@@ -132,9 +145,12 @@ export default function DashboardPage() {
           <p className="page-subtitle">Live inventory posture across warehouse operations.</p>
         </div>
         <div className="dashboard-header-actions">
-          <button type="button" className="btn-secondary">
+          <button type="button" className="btn-secondary" onClick={handleRefresh} disabled={isRefreshing}>
             <RefreshIcon size={14} />
-            Refresh
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <button type="button" className="btn-secondary" onClick={() => navigate('/reports')}>
+            View Reports
           </button>
           <button type="button" className="btn-primary" onClick={() => navigate('/inventory')}>
             Open Inventory

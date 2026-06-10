@@ -474,24 +474,22 @@ export async function processImportJob(jobId: string) {
 		await prisma.$transaction(async (tx) => {
 			await tx.importRecord.deleteMany({ where: { jobId } });
 
-			for (let index = 0; index < prepared.preparedRecords.length; index += 1) {
-				const record = prepared.preparedRecords[index];
-				await tx.importRecord.create({
-					data: {
-						jobId,
-						sourceIndex: index,
-						recordType: record.recordType,
-						recordStatus: IMPORT_RECORD_STATUS.Pending,
-						isSelected: record.isSelected,
-						confidence: record.confidence ?? undefined,
-						summary: record.summary,
-						payload: record.payload as unknown as Prisma.InputJsonValue,
-						relatedRecords: record.relatedRecords as unknown as Prisma.InputJsonValue,
-						warnings: record.warnings as unknown as Prisma.InputJsonValue,
-						errors: record.errors as unknown as Prisma.InputJsonValue,
-					},
-				});
-			}
+			// Single batched insert instead of one INSERT per record
+			await tx.importRecord.createMany({
+				data: prepared.preparedRecords.map((record, index) => ({
+					jobId,
+					sourceIndex: index,
+					recordType: record.recordType,
+					recordStatus: IMPORT_RECORD_STATUS.Pending,
+					isSelected: record.isSelected,
+					confidence: record.confidence ?? undefined,
+					summary: record.summary,
+					payload: record.payload as unknown as Prisma.InputJsonValue,
+					relatedRecords: record.relatedRecords as unknown as Prisma.InputJsonValue,
+					warnings: record.warnings as unknown as Prisma.InputJsonValue,
+					errors: record.errors as unknown as Prisma.InputJsonValue,
+				})),
+			});
 
 			await tx.importJob.update({
 				where: { id: jobId },
@@ -534,29 +532,43 @@ export async function approveImportJob(jobId: string, userId: string) {
 	let approvedCount = 0;
 	let failedCount = 0;
 
-	for (const record of pendingRecords) {
-		try {
-			const result = await applyPreparedPayload(record.payload, userId);
-			await prisma.importRecord.update({
-				where: { id: record.id },
-				data: {
-					recordStatus: IMPORT_RECORD_STATUS.Approved,
-					resultEntityType: result.entityType,
-					resultEntityId: result.entityId,
-					appliedAt: new Date(),
-				},
-			});
-			approvedCount += 1;
-		} catch (error: any) {
-			const currentErrors = Array.isArray(record.errors) ? record.errors.map(String) : [];
-			await prisma.importRecord.update({
-				where: { id: record.id },
-				data: {
-					recordStatus: IMPORT_RECORD_STATUS.Failed,
-					errors: [...currentErrors, error.message ?? 'Import approval failed.'] as unknown as Prisma.InputJsonValue,
-				},
-			});
-			failedCount += 1;
+	// Records are applied in small chunks: job stats are refreshed between
+	// chunks (so progress is visible) and the event loop gets breathing room
+	// so a large approval never starves other requests.
+	const APPROVAL_CHUNK_SIZE = 20;
+
+	for (let offset = 0; offset < pendingRecords.length; offset += APPROVAL_CHUNK_SIZE) {
+		const chunk = pendingRecords.slice(offset, offset + APPROVAL_CHUNK_SIZE);
+
+		for (const record of chunk) {
+			try {
+				const result = await applyPreparedPayload(record.payload, userId);
+				await prisma.importRecord.update({
+					where: { id: record.id },
+					data: {
+						recordStatus: IMPORT_RECORD_STATUS.Approved,
+						resultEntityType: result.entityType,
+						resultEntityId: result.entityId,
+						appliedAt: new Date(),
+					},
+				});
+				approvedCount += 1;
+			} catch (error: any) {
+				const currentErrors = Array.isArray(record.errors) ? record.errors.map(String) : [];
+				await prisma.importRecord.update({
+					where: { id: record.id },
+					data: {
+						recordStatus: IMPORT_RECORD_STATUS.Failed,
+						errors: [...currentErrors, error.message ?? 'Import approval failed.'] as unknown as Prisma.InputJsonValue,
+					},
+				});
+				failedCount += 1;
+			}
+		}
+
+		if (offset + APPROVAL_CHUNK_SIZE < pendingRecords.length) {
+			await refreshImportJobStats(jobId);
+			await new Promise<void>((resolve) => setImmediate(resolve));
 		}
 	}
 

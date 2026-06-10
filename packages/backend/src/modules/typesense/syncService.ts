@@ -85,42 +85,55 @@ export async function initializeCollections(recreate: boolean = false) {
 	}
 }
 
+type SyncProgress = (message: string) => void;
+
+// Let other work run between chunks so a long sync never starves the event loop
+const yieldToEventLoop = () => new Promise<void>((resolve) => setImmediate(resolve));
+
 /**
- * Sync all SKUs to Typesense with batching
+ * Sync all SKUs to Typesense.
+ * Reads the database in chunks (cursor pagination) so only one chunk is ever
+ * held in memory, instead of loading the whole table up front.
  */
-export async function syncSKUs(batchSize: number = 500) {
-	const skus = await prisma.sKU.findMany({
-		include: {
-			vendor: { select: { id: true, name: true } },
-			category: { select: { id: true, name: true } },
-		},
-	});
-
-	const documents = skus.map((sku) => ({
-		id: sku.id,
-		skuCode: sku.skuCode,
-		name: sku.name,
-		description: sku.description || '',
-		vendorId: sku.vendorId,
-		vendorName: sku.vendor.name,
-		categoryId: sku.categoryId || '',
-		categoryName: sku.category?.name || '',
-		isActive: sku.isActive,
-		createdAt: Math.floor(sku.createdAt.getTime() / 1000),
-		updatedAt: Math.floor(sku.updatedAt.getTime() / 1000),
-	}));
-
-	if (documents.length === 0) {
-		return { synced: 0 };
-	}
-
-	// Process in batches to avoid memory issues and timeouts
+export async function syncSKUs(batchSize: number = 200, onProgress?: SyncProgress) {
 	let synced = 0;
-	for (let i = 0; i < documents.length; i += batchSize) {
-		const batch = documents.slice(i, i + batchSize);
-		await typesenseClient.collections('skus').documents().import(batch, { action: 'upsert' });
-		synced += batch.length;
-		logger.info(`Synced SKUs batch: ${synced}/${documents.length}`);
+	let cursorId: string | undefined;
+
+	for (;;) {
+		const skus = await prisma.sKU.findMany({
+			take: batchSize,
+			...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
+			orderBy: { id: 'asc' },
+			include: {
+				vendor: { select: { id: true, name: true } },
+				category: { select: { id: true, name: true } },
+			},
+		});
+
+		if (skus.length === 0) break;
+
+		const documents = skus.map((sku) => ({
+			id: sku.id,
+			skuCode: sku.skuCode,
+			name: sku.name,
+			description: sku.description || '',
+			vendorId: sku.vendorId,
+			vendorName: sku.vendor.name,
+			categoryId: sku.categoryId || '',
+			categoryName: sku.category?.name || '',
+			isActive: sku.isActive,
+			createdAt: Math.floor(sku.createdAt.getTime() / 1000),
+			updatedAt: Math.floor(sku.updatedAt.getTime() / 1000),
+		}));
+
+		await typesenseClient.collections('skus').documents().import(documents, { action: 'upsert' });
+		synced += documents.length;
+		cursorId = skus[skus.length - 1].id;
+		onProgress?.(`Synced ${synced} SKUs...`);
+		logger.info(`Synced SKUs batch: ${synced}`);
+
+		if (skus.length < batchSize) break;
+		await yieldToEventLoop();
 	}
 
 	logger.info(`Completed syncing ${synced} SKUs to Typesense`);
@@ -128,44 +141,50 @@ export async function syncSKUs(batchSize: number = 500) {
 }
 
 /**
- * Sync all inventory records to Typesense with batching
+ * Sync all inventory records to Typesense in database-side chunks.
  */
-export async function syncInventory(batchSize: number = 500) {
-	const inventory = await prisma.inventoryRecord.findMany({
-		include: {
-			sku: { select: { id: true, name: true, skuCode: true } },
-			floor: { include: { branch: { select: { id: true, name: true } } } },
-			shelf: { select: { id: true, name: true } },
-		},
-	});
-
-	const documents = inventory.map((record) => ({
-		id: record.id,
-		skuId: record.skuId,
-		skuName: record.sku.name,
-		skuCode: record.sku.skuCode,
-		state: record.state,
-		quantity: record.quantity,
-		branchId: record.floor?.branch?.id || '',
-		branchName: record.floor?.branch?.name || '',
-		floorId: record.floorId || '',
-		floorName: record.floor?.name || '',
-		shelfId: record.shelfId || '',
-		shelfName: record.shelf?.name || '',
-		updatedAt: Math.floor(record.updatedAt.getTime() / 1000),
-	}));
-
-	if (documents.length === 0) {
-		return { synced: 0 };
-	}
-
-	// Process in batches
+export async function syncInventory(batchSize: number = 200, onProgress?: SyncProgress) {
 	let synced = 0;
-	for (let i = 0; i < documents.length; i += batchSize) {
-		const batch = documents.slice(i, i + batchSize);
-		await typesenseClient.collections('inventory').documents().import(batch, { action: 'upsert' });
-		synced += batch.length;
-		logger.info(`Synced inventory batch: ${synced}/${documents.length}`);
+	let cursorId: string | undefined;
+
+	for (;;) {
+		const inventory = await prisma.inventoryRecord.findMany({
+			take: batchSize,
+			...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
+			orderBy: { id: 'asc' },
+			include: {
+				sku: { select: { id: true, name: true, skuCode: true } },
+				floor: { include: { branch: { select: { id: true, name: true } } } },
+				shelf: { select: { id: true, name: true } },
+			},
+		});
+
+		if (inventory.length === 0) break;
+
+		const documents = inventory.map((record) => ({
+			id: record.id,
+			skuId: record.skuId,
+			skuName: record.sku.name,
+			skuCode: record.sku.skuCode,
+			state: record.state,
+			quantity: record.quantity,
+			branchId: record.floor?.branch?.id || '',
+			branchName: record.floor?.branch?.name || '',
+			floorId: record.floorId || '',
+			floorName: record.floor?.name || '',
+			shelfId: record.shelfId || '',
+			shelfName: record.shelf?.name || '',
+			updatedAt: Math.floor(record.updatedAt.getTime() / 1000),
+		}));
+
+		await typesenseClient.collections('inventory').documents().import(documents, { action: 'upsert' });
+		synced += documents.length;
+		cursorId = inventory[inventory.length - 1].id;
+		onProgress?.(`Synced ${synced} inventory records...`);
+		logger.info(`Synced inventory batch: ${synced}`);
+
+		if (inventory.length < batchSize) break;
+		await yieldToEventLoop();
 	}
 
 	logger.info(`Completed syncing ${synced} inventory records to Typesense`);
@@ -173,40 +192,54 @@ export async function syncInventory(batchSize: number = 500) {
 }
 
 /**
- * Sync all vendors to Typesense
+ * Sync all vendors to Typesense in database-side chunks.
  */
-export async function syncVendors() {
-	const vendors = await prisma.vendor.findMany();
+export async function syncVendors(batchSize: number = 200, onProgress?: SyncProgress) {
+	let synced = 0;
+	let cursorId: string | undefined;
 
-	const documents = vendors.map((vendor) => ({
-		id: vendor.id,
-		name: vendor.name,
-		contactEmail: vendor.contactEmail || '',
-		contactPhone: vendor.contactPhone || '',
-		isActive: vendor.isActive,
-		createdAt: Math.floor(vendor.createdAt.getTime() / 1000),
-	}));
+	for (;;) {
+		const vendors = await prisma.vendor.findMany({
+			take: batchSize,
+			...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
+			orderBy: { id: 'asc' },
+		});
 
-	if (documents.length > 0) {
-		const result = await typesenseClient.collections('vendors').documents().import(documents, { action: 'upsert' });
-		logger.info(`Synced ${documents.length} vendors to Typesense`);
-		return { synced: documents.length, result };
+		if (vendors.length === 0) break;
+
+		const documents = vendors.map((vendor) => ({
+			id: vendor.id,
+			name: vendor.name,
+			contactEmail: vendor.contactEmail || '',
+			contactPhone: vendor.contactPhone || '',
+			isActive: vendor.isActive,
+			createdAt: Math.floor(vendor.createdAt.getTime() / 1000),
+		}));
+
+		await typesenseClient.collections('vendors').documents().import(documents, { action: 'upsert' });
+		synced += documents.length;
+		cursorId = vendors[vendors.length - 1].id;
+		onProgress?.(`Synced ${synced} vendors...`);
+
+		if (vendors.length < batchSize) break;
+		await yieldToEventLoop();
 	}
 
-	return { synced: 0 };
+	logger.info(`Synced ${synced} vendors to Typesense`);
+	return { synced };
 }
 
 /**
- * Sync all data to Typesense
+ * Sync all data to Typesense.
+ * Entities are synced sequentially (not in parallel) to keep peak memory and
+ * database load low — this runs in the background while the app serves traffic.
  */
-export async function syncAll(recreate: boolean = false) {
+export async function syncAll(recreate: boolean = false, onProgress?: SyncProgress) {
 	await initializeCollections(recreate);
 
-	const [skuResult, inventoryResult, vendorResult] = await Promise.all([
-		syncSKUs(),
-		syncInventory(),
-		syncVendors(),
-	]);
+	const skuResult = await syncSKUs(undefined, onProgress);
+	const inventoryResult = await syncInventory(undefined, onProgress);
+	const vendorResult = await syncVendors(undefined, onProgress);
 
 	return {
 		skus: skuResult.synced,
@@ -225,20 +258,21 @@ export function startSyncJob(entity?: string, recreate?: boolean): string {
 	(async () => {
 		try {
 			updateJob(jobId, { status: 'running', progress: 'Starting sync...' });
+			const reportProgress = (message: string) => updateJob(jobId, { progress: message });
 
 			let result;
 			if (entity === 'skus') {
 				updateJob(jobId, { progress: 'Syncing SKUs...' });
-				result = await syncSKUs();
+				result = await syncSKUs(undefined, reportProgress);
 			} else if (entity === 'inventory') {
 				updateJob(jobId, { progress: 'Syncing inventory...' });
-				result = await syncInventory();
+				result = await syncInventory(undefined, reportProgress);
 			} else if (entity === 'vendors') {
 				updateJob(jobId, { progress: 'Syncing vendors...' });
-				result = await syncVendors();
+				result = await syncVendors(undefined, reportProgress);
 			} else {
 				updateJob(jobId, { progress: 'Syncing all data...' });
-				result = await syncAll(recreate);
+				result = await syncAll(recreate, reportProgress);
 			}
 
 			updateJob(jobId, { 

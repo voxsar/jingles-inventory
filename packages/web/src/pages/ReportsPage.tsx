@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { branchesApi, floorsApi, reportsApi, skusApi, vendorsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -464,8 +465,33 @@ const downloadBlob = (content: string, fileName: string, type: string) => {
 	URL.revokeObjectURL(url);
 };
 
+const isReportId = (value: string | null): value is ReportId =>
+	value !== null && REPORTS.some((report) => report.id === value);
+
+// Where a row in a report can take the user. Reports without a target stay non-clickable.
+const getRowLink = (reportId: ReportId, row: any): string | null => {
+	switch (reportId) {
+		case 'grn':
+			return row.id ? `/grns/${row.id}` : null;
+		case 'prn':
+			return row.id ? `/prns/${row.id}` : null;
+		case 'price-change':
+			return row.grnId ? `/grns/${row.grnId}` : null;
+		case 'tog':
+		case 'tog-product-wise':
+			return '/stock-transfers';
+		default:
+			return null;
+	}
+};
+
+const LINKED_REPORTS: ReportId[] = ['grn', 'prn', 'price-change', 'tog', 'tog-product-wise'];
+
 export default function ReportsPage() {
-	const [activeReportId, setActiveReportId] = useState<ReportId>('grn');
+	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const reportParam = searchParams.get('report');
+	const activeReportId: ReportId = isReportId(reportParam) ? reportParam : 'grn';
 	const [filters, setFilters] = useState<FilterState>(initialFilters);
 	const [data, setData] = useState<any[]>([]);
 	const [summary, setSummary] = useState<Record<string, any> | null>(null);
@@ -497,6 +523,22 @@ export default function ReportsPage() {
 	const updateFilter = (key: keyof FilterState, value: string) => {
 		setFilters((current) => ({ ...current, [key]: value }));
 	};
+
+	const selectReport = (reportId: ReportId) => {
+		setSearchParams((params) => {
+			params.set('report', reportId);
+			return params;
+		});
+		setPage(1);
+	};
+
+	const handleRowClick = useMemo(() => {
+		if (!LINKED_REPORTS.includes(activeReportId)) return undefined;
+		return (row: any) => {
+			const link = getRowLink(activeReportId, row);
+			if (link) navigate(link);
+		};
+	}, [activeReportId, navigate]);
 
 	const buildParams = (reportPage = page, pageSizeOverride = filters.pageSize) => {
 		const params: Record<string, string> = { page: String(reportPage), pageSize: pageSizeOverride || '50' };
@@ -669,7 +711,7 @@ export default function ReportsPage() {
 										<button
 											type="button"
 											key={report.id}
-											onClick={() => { setActiveReportId(report.id); setPage(1); }}
+											onClick={() => selectReport(report.id)}
 											className={`rounded-lg px-3 py-2 text-left text-sm transition-colors ${activeReportId === report.id ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
 										>
 											<span className="block font-medium">{report.label}</span>
@@ -790,7 +832,7 @@ export default function ReportsPage() {
 					)}
 
 					<div className="content-section mb-0 overflow-hidden">
-						<DataTable columns={tableColumns as any} data={data} isLoading={isLoading} emptyMessage="No rows found for this report and filter set" />
+						<DataTable columns={tableColumns as any} data={data} isLoading={isLoading} emptyMessage="No rows found for this report and filter set" onRowClick={handleRowClick} />
 						{!isLoading && data.length > 0 && (
 							<Pagination
 								page={page}
