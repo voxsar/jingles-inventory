@@ -199,6 +199,7 @@ type PosCatalogSnapshot = {
       name?: string;
       stockOnHand: number;
       stockByBranch: Record<string, number>;
+      priceTiers?: Array<{ id: string; label: string; price: number; priority: number; minQty?: number; isDefault?: boolean }>;
       attributes: Array<{
         attributeId: string;
         attributeName: string;
@@ -1564,6 +1565,31 @@ async function redeemSaleVouchers(client: PoolClient, event: SyncEvent, payload:
   }
 }
 
+async function refundSaleVouchers(client: PoolClient, saleId: string, refundId: string, requestedAmount?: number) {
+  const balances = await client.query<any>(`
+    SELECT voucher_code_id, code, SUM(redeemed_amount) AS net_redeemed
+    FROM voucher_redemptions WHERE order_id = $1 GROUP BY voucher_code_id, code HAVING SUM(redeemed_amount) > 0
+    ORDER BY code
+  `, [saleId]);
+  let remaining = requestedAmount == null ? Number.POSITIVE_INFINITY : Math.max(0, requestedAmount);
+  for (const row of balances.rows) {
+    if (remaining <= 0) break;
+    const voucher = (await client.query<any>(`SELECT id, current_balance, initial_value FROM voucher_codes WHERE id=$1 FOR UPDATE`, [row.voucher_code_id])).rows[0];
+    if (!voucher) continue;
+    const amount = Math.min(normalizeNumber(row.net_redeemed), remaining);
+    const before = normalizeNumber(voucher.current_balance);
+    const after = Math.min(normalizeNumber(voucher.initial_value), Math.round((before + amount) * 100) / 100);
+    const restored = after - before;
+    if (restored <= 0) continue;
+    await client.query(`UPDATE voucher_codes SET current_balance=$1,status='active',fully_redeemed_at=NULL,updated_at=NOW() WHERE id=$2`, [after, voucher.id]);
+    await client.query(`
+      INSERT INTO voucher_redemptions (id,voucher_code_id,code,redeemed_amount,balance_before,balance_after,order_id,applied_to_items,redeemed_at,notes)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9)
+    `, [randomUUID(), voucher.id, row.code, -restored, before, after, saleId, [], `Voucher refund ${refundId}`]);
+    remaining -= restored;
+  }
+}
+
 async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
   const payload = parseSaleCompletedPayload(event.payload);
   const existing = (await client.query(`SELECT id FROM pos_sales WHERE id = $1 LIMIT 1`, [event.aggregateId])).rows[0];
@@ -1699,6 +1725,8 @@ async function applySaleVoidedEvent(client: PoolClient, event: SyncEvent) {
     [event.vectorClock, event.payload.saleId],
   );
 
+  await refundSaleVouchers(client, String(event.payload.saleId), event.aggregateId);
+
   await applySharedInventoryVoid({
     aggregateId: String(event.payload.saleId),
     terminalId: sale.terminal_id,
@@ -1754,6 +1782,8 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
       event.vectorClock,
     ],
   );
+
+  await refundSaleVouchers(client, String(payload.saleId), event.aggregateId, totalRefund);
 
   const returnRows = (await client.query<{ lines: ReturnLinePayload[] }>(
     `SELECT lines FROM pos_returns WHERE sale_id = $1`,
