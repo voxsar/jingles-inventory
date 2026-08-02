@@ -25,7 +25,11 @@
 		"test:ci": "npm run test --workspaces --if-present"
 	},
 	"devDependencies": {
-		"electron": "^38.8.6",
+		"electron": "^43.2.0",
+		"prisma": "^7.9.1",
 		"typescript": "^5.3.3"
+	},
+	"dependencies": {
+		"@prisma/client": "^7.9.1"
 	}
 }
