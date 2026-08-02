@@ -97,6 +97,9 @@ type SharedVariantRow = {
   variant_name: string | null;
   variant_stock_on_hand: number | string | null;
   stock_by_branch: Record<string, number> | null;
+  selling_price: number | null;
+  wholesale_price: number | null;
+  bulk_price: number | null;
   attribute_id: string | null;
   attribute_name: string | null;
   attribute_type: string | null;
@@ -546,6 +549,13 @@ function buildProductVariants(rows: SharedVariantRow[]) {
       name: row.variant_name ?? undefined,
       stockOnHand: normalizeNumber(row.variant_stock_on_hand),
       stockByBranch: row.stock_by_branch ?? {},
+      priceTiers: buildPriceTiers({
+        id: row.variant_id,
+        selling_price: row.selling_price,
+        wholesale_price: row.wholesale_price,
+        bulk_price: row.bulk_price,
+        batch_pricing: [],
+      } as SharedSkuRow),
       attributes: [],
     };
     if (row.attribute_id && row.value_id && !variant.attributes.some((item) => item.attributeId === row.attribute_id)) {
@@ -824,6 +834,9 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
         SELECT v.sku_id, v.id AS variant_id, v.variant_code, v.name AS variant_name,
           COALESCE(vs.stock_on_hand, 0) AS variant_stock_on_hand,
           COALESCE(vs.stock_by_branch, '{}'::jsonb) AS stock_by_branch,
+          COALESCE(bp.selling_price, s.selling_price) AS selling_price,
+          COALESCE(bp.wholesale_price, s.wholesale_price) AS wholesale_price,
+          COALESCE(bp.bulk_price, s.bulk_price) AS bulk_price,
           a.id AS attribute_id, a.name AS attribute_name, a.type AS attribute_type,
           a.sort_order AS attribute_sort_order, av.id AS value_id,
           av.display_name AS value_display_name, av.represented_value AS value_represented_value,
@@ -831,6 +844,11 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
         FROM sku_variants v
         INNER JOIN skus s ON s.id = v.sku_id
         LEFT JOIN variant_stock vs ON vs.variant_id = v.id
+        LEFT JOIN LATERAL (
+          SELECT selling_price, wholesale_price, bulk_price FROM batches
+          WHERE sku_id = v.sku_id AND variant_id = v.id AND is_active = TRUE
+          ORDER BY created_at DESC LIMIT 1
+        ) bp ON TRUE
         LEFT JOIN sku_variant_values svv ON svv.variant_id = v.id
         LEFT JOIN attributes a ON a.id = svv.attribute_id
         LEFT JOIN attribute_values av ON av.id = svv.attribute_value_id
@@ -885,8 +903,9 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       pricingRules: overlaysResult.rows
         .filter((overlay) => {
           const target = overlay.applies_to ?? {};
-          return (!target.skuIds?.length && !target.categoryIds?.length)
+          return (!target.skuIds?.length && !target.categoryIds?.length && !target.variantIds?.length)
             || target.skuIds?.includes(row.id)
+            || (target.variantIds?.some((id) => (variantsByProduct.get(row.id) ?? []).some((variant) => variant.id === id)) ?? false)
             || (row.category_id != null && target.categoryIds?.includes(row.category_id));
         })
         .map((overlay) => ({
@@ -928,7 +947,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     branches: branchesResult.rows,
     users: usersResult.rows.map((user) => {
       const name = user.email.split('@')[0]!.replace(/[._-]+/g, ' ');
-      return { id: user.id, code: user.email.split('@')[0]!.toUpperCase(), email: user.email,
+      return { id: user.id, code: `INV-${user.id.slice(0, 8).toUpperCase()}`, email: user.email,
         name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
         role: user.role === 'Staff' ? 'CASHIER' as const : 'MANAGER' as const };
     }),
@@ -1508,12 +1527,51 @@ async function applyHeldSaleRecalledEvent(client: PoolClient, event: SyncEvent) 
   );
 }
 
+async function redeemSaleVouchers(client: PoolClient, event: SyncEvent, payload: SaleCompletedPayload) {
+  const grouped = new Map<string, number>();
+  for (const rawPayment of payload.payments) {
+    const payment = asObject(rawPayment);
+    if (asOptionalString(payment.method) !== 'GIFT') continue;
+    const code = asOptionalString(payment.reference)?.trim();
+    const amount = normalizeNumber(payment.amount);
+    if (!code || amount <= 0) throw new Error('Gift-voucher payments require a code and a positive amount');
+    grouped.set(code, (grouped.get(code) ?? 0) + amount);
+  }
+
+  for (const [code, amount] of grouped) {
+    const voucher = (await client.query<any>(`
+      SELECT id, current_balance, status, expires_at, activated_at
+      FROM voucher_codes WHERE code = $1 FOR UPDATE
+    `, [code])).rows[0];
+    if (!voucher) throw new Error(`Voucher ${code} was not found`);
+    if (String(voucher.status).toLowerCase() !== 'active') throw new Error(`Voucher ${code} is ${voucher.status}`);
+    if (voucher.expires_at && new Date(voucher.expires_at) < new Date()) throw new Error(`Voucher ${code} has expired`);
+    const before = normalizeNumber(voucher.current_balance);
+    if (amount > before) throw new Error(`Voucher ${code} has insufficient balance`);
+    const after = Math.round((before - amount) * 100) / 100;
+    await client.query(`
+      UPDATE voucher_codes SET current_balance = $1, status = $2,
+        activated_at = COALESCE(activated_at, NOW()), fully_redeemed_at = CASE WHEN $1 <= 0 THEN NOW() ELSE NULL END,
+        updated_at = NOW() WHERE id = $3
+    `, [after, after <= 0 ? 'redeemed' : 'active', voucher.id]);
+    await client.query(`
+      INSERT INTO voucher_redemptions (
+        id, voucher_code_id, code, redeemed_amount, balance_before, balance_after,
+        order_id, invoice_number, branch_id, applied_to_items, redeemed_by, redeemed_at, notes
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),$12)
+    `, [randomUUID(), voucher.id, code, amount, before, after, event.aggregateId, payload.receiptNumber,
+      payload.branchId ?? null, payload.lines, payload.cashierId ?? null, `POS ${payload.terminalId}`]);
+  }
+}
+
 async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
   const payload = parseSaleCompletedPayload(event.payload);
   const existing = (await client.query(`SELECT id FROM pos_sales WHERE id = $1 LIMIT 1`, [event.aggregateId])).rows[0];
   if (existing) {
     return;
   }
+
+  await redeemSaleVouchers(client, event, payload);
 
   await client.query(
     `

@@ -1,5 +1,6 @@
 import prisma from '../../prisma/client';
 import { InventoryEventType } from '@jingles/shared';
+import { ensurePosCloudSchema } from '../../services/posCloud';
 
 /**
  * GRN Report - Good Received Note Report
@@ -708,6 +709,76 @@ const getInventoryEventRows = async (
 	return { rows, total, page, pageSize };
 };
 
+const getPosTransactionRows = async (
+	filters: CommonReportFilters,
+	options: { cardOnly?: boolean; returnsOnly?: boolean } = {},
+) => {
+	await ensurePosCloudSchema();
+	const params: unknown[] = [];
+	const clauses: string[] = [];
+	if (filters.fromDate) { params.push(filters.fromDate); clauses.push(`created_at >= $${params.length}`); }
+	if (filters.toDate) { params.push(filters.toDate); clauses.push(`created_at <= $${params.length}`); }
+	if (filters.branchId && !options.returnsOnly) { params.push(filters.branchId); clauses.push(`branch_id = $${params.length}`); }
+	const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+	const sales = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_sales ${where} ORDER BY created_at DESC`, ...params);
+	const branchRows = await prisma.branch.findMany({ select: { id: true, name: true } });
+	const branchMap = new Map(branchRows.map((branch) => [branch.id, branch.name]));
+	const skuIds = Array.from(new Set(sales.flatMap((sale) => (Array.isArray(sale.lines) ? sale.lines : []).map((line: any) => line.productId)).filter(Boolean))) as string[];
+	const skus = skuIds.length ? await prisma.sKU.findMany({ where: { id: { in: skuIds } }, include: { category: true } }) : [];
+	const skuMap = new Map(skus.map((sku) => [sku.id, sku]));
+	const saleMap = new Map(sales.map((sale) => [sale.id, sale]));
+	let source: Array<{ sale: any; returnRow?: any }> = sales.map((sale) => ({ sale }));
+	if (options.returnsOnly) {
+		const returnClauses: string[] = [];
+		const returnParams: unknown[] = [];
+		if (filters.fromDate) { returnParams.push(filters.fromDate); returnClauses.push(`created_at >= $${returnParams.length}`); }
+		if (filters.toDate) { returnParams.push(filters.toDate); returnClauses.push(`created_at <= $${returnParams.length}`); }
+		const returns = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_returns ${returnClauses.length ? `WHERE ${returnClauses.join(' AND ')}` : ''} ORDER BY created_at DESC`, ...returnParams);
+		for (const row of returns) if (!saleMap.has(row.sale_id)) {
+			const linked = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_sales WHERE id=$1`, row.sale_id);
+			if (linked[0]) saleMap.set(linked[0].id, linked[0]);
+		}
+		source = returns.map((returnRow) => ({ sale: saleMap.get(returnRow.sale_id), returnRow })).filter((entry) => entry.sale);
+	}
+	const rows: any[] = [];
+	for (const entry of source) {
+		const sale = entry.sale;
+		const payments = Array.isArray(sale.payments) ? sale.payments : [];
+		if (options.cardOnly && !payments.some((payment: any) => ['VISA', 'MASTER', 'AMEX'].includes(payment.method))) continue;
+		const saleLines = Array.isArray(sale.lines) ? sale.lines : [];
+		const lines = entry.returnRow && Array.isArray(entry.returnRow.lines) ? entry.returnRow.lines : saleLines;
+		for (const line of lines) {
+			const original = entry.returnRow
+				? saleLines.find((candidate: any) => candidate.id === line.saleLineId || (candidate.productId === line.productId && candidate.variantId === line.variantId))
+				: line;
+			const skuId = line.productId ?? original?.productId ?? '';
+			if (filters.skuId && skuId !== filters.skuId) continue;
+			const sku = skuMap.get(skuId);
+			const quantity = numberFrom(line.quantity);
+			const unitPrice = numberFrom(original?.unitPrice);
+			const unitCost = numberFrom(original?.costBasis);
+			const revenue = entry.returnRow ? -(unitPrice * quantity) : numberFrom(original?.lineTotal, unitPrice * quantity);
+			const cost = (entry.returnRow ? -1 : 1) * unitCost * quantity;
+			rows.push({
+				id: `${entry.returnRow?.id ?? sale.id}-${line.id ?? skuId}`,
+				date: entry.returnRow?.created_at ?? sale.created_at,
+				eventType: entry.returnRow ? 'RETURNED' : 'SALE_DEDUCTED', reference: sale.receipt_number,
+				receiptNumber: sale.receipt_number, terminalId: sale.terminal_id, unit: sale.terminal_id,
+				skuId, skuCode: original?.sku ?? sku?.skuCode ?? '', productName: original?.name ?? sku?.name ?? '',
+				category: sku?.category?.name ?? '', department: sku?.category?.name ?? '', branch: branchMap.get(sale.branch_id) ?? '',
+				branchId: sale.branch_id ?? '', floorId: '', salesman: original?.salespersonName ?? sale.user_id,
+				paymentMethod: payments.map((payment: any) => payment.method).join(', '), cardType: payments.find((payment: any) => ['VISA','MASTER','AMEX'].includes(payment.method))?.method ?? '',
+				quantity, unitCost, unitPrice, cost, revenue, grossProfit: revenue - cost,
+				marginPercent: revenue ? ((revenue - cost) / revenue) * 100 : 0,
+				reasonCode: entry.returnRow?.reason ?? '', user: { id: sale.user_id },
+			});
+		}
+	}
+	const needle = normalizeSearch(filters.search)?.toLowerCase();
+	const filtered = rows.filter((row) => (!filters.branchId || row.branchId === filters.branchId) && (!needle || [row.receiptNumber,row.skuCode,row.productName,row.salesman].join(' ').toLowerCase().includes(needle)));
+	return { rows: filtered, ...paginateRows(filtered, filters) };
+};
+
 export async function getTOGProductWiseReport(filters: CommonReportFilters) {
 	const { page = 1, pageSize = 50, fromDate, toDate, branchId, skuId, status, search } = filters;
 	const skip = (page - 1) * pageSize;
@@ -985,8 +1056,9 @@ export async function getPriceChangeReport(filters: CommonReportFilters) {
 }
 
 export async function getProfitLossReport(filters: CommonReportFilters) {
-	const eventData = await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], filters);
-	const items = eventData.rows;
+	const posData = await getPosTransactionRows(filters);
+	const eventData = posData.total > 0 ? posData : await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], filters);
+	const items = 'items' in eventData ? eventData.items : eventData.rows;
 	const summary = items.reduce((acc, row) => {
 		acc.totalQuantity += row.quantity;
 		acc.totalRevenue += row.revenue;
@@ -1006,8 +1078,9 @@ export async function getProfitLossReport(filters: CommonReportFilters) {
 
 export async function getSalesEventReport(filters: CommonReportFilters, options: { cardOnly?: boolean; receiptsOnly?: boolean; exchangeOnly?: boolean; returnsOnly?: boolean } = {}) {
 	const eventTypes = options.returnsOnly ? [InventoryEventType.RETURN_RECEIVED] : [InventoryEventType.SALE_DEDUCTED];
-	const eventData = await getInventoryEventRows(eventTypes, filters, options);
-	const items = eventData.rows;
+	const posData = await getPosTransactionRows(filters, options);
+	const eventData = posData.total > 0 ? posData : await getInventoryEventRows(eventTypes, filters, options);
+	const items = 'items' in eventData ? eventData.items : eventData.rows;
 	const summary = items.reduce((acc, row) => {
 		acc.totalRows += 1;
 		acc.totalQuantity += row.quantity;
@@ -1025,7 +1098,9 @@ export async function getSalesEventReport(filters: CommonReportFilters, options:
 }
 
 export async function getSalesAggregateReport(filters: CommonReportFilters, sort: 'top' | 'slow' | 'summary' = 'summary') {
-	const eventData = await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], { ...filters, page: 1, pageSize: 10000 });
+	const aggregateFilters = { ...filters, page: 1, pageSize: 10000 };
+	const posData = await getPosTransactionRows(aggregateFilters);
+	const eventData = posData.total > 0 ? { rows: posData.rows } : await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], aggregateFilters);
 	const groupBy = filters.groupBy ?? 'product';
 	const groups = new Map<string, any>();
 

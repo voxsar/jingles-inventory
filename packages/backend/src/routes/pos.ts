@@ -7,6 +7,7 @@ import {
   posSyncHandshake,
   posSyncPlayback,
 } from '../services/posCloud';
+import { validateVoucher } from '../services/voucherService';
 
 const router = Router();
 
@@ -36,6 +37,16 @@ router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Failed to load the POS catalog snapshot' });
+  }
+});
+
+router.post('/vouchers/validate', async (req: Request, res: Response) => {
+  try {
+    const result = await validateVoucher(req.body);
+    return res.status(result.isValid ? 200 : 422).json(result);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Voucher validation failed' });
   }
 });
 
