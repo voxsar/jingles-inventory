@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execFileSync } from 'child_process';
+import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,12 +12,12 @@ const sourceSchemaPath = path.join(prismaDir, 'schema.prisma');
 const localSchemaPath = path.join(prismaDir, 'schema.local.prisma');
 const localSqlPath = path.join(prismaDir, 'schema.local.sql');
 const localClientDir = path.join(backendRoot, 'generated', 'local-prisma');
-const prismaPackagePath = path.resolve(backendRoot, '..', '..', 'node_modules', 'prisma', 'package.json');
+const require = createRequire(import.meta.url);
+const prismaPackagePath = require.resolve('prisma/package.json');
 const localClientPackagePath = path.join(localClientDir, 'package.json');
 
 function getPrismaBinaryPath() {
-  const binaryName = process.platform === 'win32' ? 'prisma.cmd' : 'prisma';
-  return path.resolve(backendRoot, '..', '..', 'node_modules', '.bin', binaryName);
+  return require.resolve('prisma/build/index.js');
 }
 
 function toIdempotentSql(sqlScript) {
@@ -41,16 +42,7 @@ function buildLocalSchema(sourceSchema) {
 }
 
 function runPrismaCommand(args, options = {}) {
-  if (process.platform === 'win32') {
-    return execFileSync('cmd.exe', ['/c', getPrismaBinaryPath(), ...args], {
-      cwd: backendRoot,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      encoding: 'utf8',
-      ...options,
-    });
-  }
-
-  return execFileSync(getPrismaBinaryPath(), args, {
+  return execFileSync(process.execPath, [getPrismaBinaryPath(), ...args], {
     cwd: backendRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
     encoding: 'utf8',
