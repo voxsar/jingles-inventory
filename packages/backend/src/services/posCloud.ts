@@ -89,6 +89,22 @@ type SharedSkuRow = {
   stock_on_hand: number | string | null;
 };
 
+type SharedVariantRow = {
+  sku_id: string;
+  variant_id: string;
+  variant_code: string;
+  variant_name: string | null;
+  variant_stock_on_hand: number | string | null;
+  attribute_id: string | null;
+  attribute_name: string | null;
+  attribute_type: string | null;
+  attribute_sort_order: number | null;
+  value_id: string | null;
+  value_display_name: string | null;
+  value_represented_value: string | null;
+  value_sort_order: number | null;
+};
+
 type SharedSaleLine = {
   id?: string;
   uid?: string;
@@ -96,6 +112,9 @@ type SharedSaleLine = {
   sku: string;
   quantity: number;
   name?: string;
+  variantId?: string | null;
+  variantCode?: string | null;
+  variantName?: string | null;
 };
 
 type SaleCompletedPayload = {
@@ -163,6 +182,22 @@ type PosCatalogSnapshot = {
       priority: number;
       minQty?: number;
       isDefault?: boolean;
+    }>;
+    variants?: Array<{
+      id: string;
+      productId: string;
+      variantCode: string;
+      name?: string;
+      stockOnHand: number;
+      attributes: Array<{
+        attributeId: string;
+        attributeName: string;
+        attributeType?: string;
+        valueId: string;
+        value: string;
+        representedValue?: string;
+        sortOrder?: number;
+      }>;
     }>;
   }>;
 };
@@ -479,7 +514,40 @@ function normalizeSharedSaleLine(value: unknown): SharedSaleLine | null {
     sku,
     quantity,
     name: asOptionalString(record.name),
+    variantId: asOptionalString(record.variantId) ?? null,
+    variantCode: asOptionalString(record.variantCode) ?? null,
+    variantName: asOptionalString(record.variantName) ?? null,
   };
+}
+
+function buildProductVariants(rows: SharedVariantRow[]) {
+  type CatalogVariant = NonNullable<PosCatalogSnapshot['products'][number]['variants']>[number];
+  const bySku = new Map<string, Map<string, CatalogVariant>>();
+  for (const row of rows) {
+    const variants = bySku.get(row.sku_id) ?? new Map<string, CatalogVariant>();
+    const variant: CatalogVariant = variants.get(row.variant_id) ?? {
+      id: row.variant_id,
+      productId: row.sku_id,
+      variantCode: row.variant_code,
+      name: row.variant_name ?? undefined,
+      stockOnHand: normalizeNumber(row.variant_stock_on_hand),
+      attributes: [],
+    };
+    if (row.attribute_id && row.value_id && !variant.attributes.some((item) => item.attributeId === row.attribute_id)) {
+      variant.attributes.push({
+        attributeId: row.attribute_id,
+        attributeName: row.attribute_name ?? row.attribute_id,
+        attributeType: row.attribute_type ?? undefined,
+        valueId: row.value_id,
+        value: row.value_display_name ?? row.value_represented_value ?? row.value_id,
+        representedValue: row.value_represented_value ?? undefined,
+        sortOrder: row.attribute_sort_order ?? row.value_sort_order ?? 0,
+      });
+    }
+    variants.set(row.variant_id, variant);
+    bySku.set(row.sku_id, variants);
+  }
+  return new Map(Array.from(bySku, ([skuId, variants]) => [skuId, Array.from(variants.values())]));
 }
 
 function parseSaleCompletedPayload(value: unknown): SaleCompletedPayload {
@@ -673,7 +741,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
   await ensurePosCloudSchema();
   const inventory = getPool();
 
-  const [categoriesResult, skuResult] = await Promise.all([
+  const [categoriesResult, skuResult, variantResult] = await Promise.all([
     inventory.query<SharedCategoryRow>(
       `
         SELECT id, name, parent_id, sort_order
@@ -716,6 +784,31 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       `,
       [SHELF_READY_STATE],
     ),
+    inventory.query<SharedVariantRow>(
+      `
+        WITH variant_stock AS (
+          SELECT variant_id, COALESCE(SUM(quantity), 0) AS stock_on_hand
+          FROM inventory_records
+          WHERE state = $1 AND variant_id IS NOT NULL
+          GROUP BY variant_id
+        )
+        SELECT v.sku_id, v.id AS variant_id, v.variant_code, v.name AS variant_name,
+          COALESCE(vs.stock_on_hand, 0) AS variant_stock_on_hand,
+          a.id AS attribute_id, a.name AS attribute_name, a.type AS attribute_type,
+          a.sort_order AS attribute_sort_order, av.id AS value_id,
+          av.display_name AS value_display_name, av.represented_value AS value_represented_value,
+          av.sort_order AS value_sort_order
+        FROM sku_variants v
+        INNER JOIN skus s ON s.id = v.sku_id
+        LEFT JOIN variant_stock vs ON vs.variant_id = v.id
+        LEFT JOIN sku_variant_values svv ON svv.variant_id = v.id
+        LEFT JOIN attributes a ON a.id = svv.attribute_id
+        LEFT JOIN attribute_values av ON av.id = svv.attribute_value_id
+        WHERE s.is_active = TRUE AND v.is_active = TRUE
+        ORDER BY v.variant_code, COALESCE(a.sort_order, 0), COALESCE(av.sort_order, 0)
+      `,
+      [SHELF_READY_STATE],
+    ),
   ]);
 
   const categoriesById = new Map(categoriesResult.rows.map((category) => [category.id, category]));
@@ -730,6 +823,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       },
     ]),
   );
+  const variantsByProduct = buildProductVariants(variantResult.rows);
 
   const products = skuResult.rows.map((row) => {
     const categoryMeta = resolveRootCategory(row.category_id, categoriesById);
@@ -745,6 +839,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       stockOnHand: normalizeNumber(row.stock_on_hand),
       description: row.description ?? undefined,
       priceTiers: buildPriceTiers(row),
+      variants: variantsByProduct.get(row.id) ?? [],
     };
   });
 
@@ -849,11 +944,12 @@ async function applySharedInventorySale(
           FROM inventory_records
           WHERE sku_id = $1
             AND state = $2
+            AND (($3::text IS NULL AND variant_id IS NULL) OR variant_id = $3)
             AND quantity > 0
           ORDER BY updated_at ASC, created_at ASC
           FOR UPDATE
         `,
-        [line.productId, SHELF_READY_STATE],
+        [line.productId, SHELF_READY_STATE, line.variantId ?? null],
       );
 
       const totalBefore = recordResult.rows.reduce(
@@ -893,7 +989,8 @@ async function applySharedInventorySale(
         remaining -= delta;
       }
 
-      const eventId = `${input.aggregateId}-${line.productId}-sale`;
+      const lineScope = line.variantId ?? 'base';
+      const eventId = `${input.aggregateId}-${line.productId}-${lineScope}-sale`;
       await client.query(
         `
           INSERT INTO inventory_events (
@@ -952,12 +1049,14 @@ async function applySharedInventoryIncrease(
         continue;
       }
 
-      const recordId = `${input.aggregateId}-${line.productId}-restock`;
+      const lineScope = line.variantId ?? 'base';
+      const recordId = `${input.aggregateId}-${line.productId}-${lineScope}-restock`;
       await client.query(
         `
           INSERT INTO inventory_records (
             id,
             sku_id,
+            variant_id,
             quantity,
             state,
             terminal_id,
@@ -965,17 +1064,17 @@ async function applySharedInventoryIncrease(
             created_at,
             updated_at
           )
-          VALUES ($1, $2, $3, $4, $5, 1, NOW(), NOW())
+          VALUES ($1, $2, $3, $4, $5, $6, 1, NOW(), NOW())
           ON CONFLICT (id) DO UPDATE
           SET quantity = inventory_records.quantity + EXCLUDED.quantity,
               terminal_id = EXCLUDED.terminal_id,
               version = inventory_records.version + 1,
               updated_at = NOW()
         `,
-        [recordId, line.productId, quantity, SHELF_READY_STATE, input.terminalId ?? null],
+        [recordId, line.productId, line.variantId ?? null, quantity, SHELF_READY_STATE, input.terminalId ?? null],
       );
 
-      const eventId = `${input.aggregateId}-${line.productId}-restock-event`;
+      const eventId = `${input.aggregateId}-${line.productId}-${lineScope}-restock-event`;
       await client.query(
         `
           INSERT INTO inventory_events (
@@ -1415,6 +1514,9 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
       sku: line.sku,
       quantity: line.quantity,
       name: line.name,
+      variantId: line.variantId ?? null,
+      variantCode: line.variantCode ?? null,
+      variantName: line.variantName ?? null,
     })),
   });
 }
@@ -1441,6 +1543,13 @@ async function applySaleVoidedEvent(client: PoolClient, event: SyncEvent) {
   const sale = await getSaleRow(client, String(event.payload.saleId));
   if (!sale || sale.status === 'VOIDED') {
     return;
+  }
+  const priorReturn = (await client.query(
+    `SELECT id FROM pos_returns WHERE sale_id = $1 LIMIT 1`,
+    [event.payload.saleId],
+  )).rows[0];
+  if (sale.status !== 'COMPLETED' || priorReturn) {
+    throw new Error('Only a completed sale with no returns can be voided');
   }
 
   await client.query(
@@ -1471,6 +1580,9 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
   }
 
   const sale = await getSaleRow(client, String(payload.saleId));
+  if (!sale || sale.status !== 'COMPLETED') {
+    throw new Error('Only a completed sale can be returned');
+  }
   const lines = payload.lines;
   const totalRefund = lines.reduce(
     (sum, line) => sum + normalizeNumber(line.refundAmount),
@@ -1507,19 +1619,31 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
     ],
   );
 
-  if (sale) {
-    await client.query(
-      `
-        UPDATE pos_sales
-        SET status = 'REFUNDED',
-            synced = TRUE,
-            last_vector_clock = $1,
-            updated_at = NOW()
-        WHERE id = $2
-      `,
-      [event.vectorClock, payload.saleId],
-    );
+  const returnRows = (await client.query<{ lines: ReturnLinePayload[] }>(
+    `SELECT lines FROM pos_returns WHERE sale_id = $1`,
+    [payload.saleId],
+  )).rows;
+  const returnedByLine = new Map<string, number>();
+  for (const row of returnRows) {
+    for (const line of row.lines ?? []) {
+      returnedByLine.set(line.saleLineId, (returnedByLine.get(line.saleLineId) ?? 0) + line.quantity);
+    }
   }
+  const fullyRefunded = sale.lines.every((line) => {
+    const lineId = line.id ?? line.uid ?? '';
+    return lineId !== '' && (returnedByLine.get(lineId) ?? 0) >= line.quantity;
+  });
+  await client.query(
+    `
+      UPDATE pos_sales
+      SET status = $1,
+          synced = TRUE,
+          last_vector_clock = $2,
+          updated_at = NOW()
+      WHERE id = $3
+    `,
+    [fullyRefunded ? 'REFUNDED' : 'COMPLETED', event.vectorClock, payload.saleId],
+  );
 
   await applySharedInventoryReturn({
     aggregateId: event.aggregateId,
@@ -1534,6 +1658,9 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
         sku: matchedSaleLine?.sku ?? line.productId,
         quantity: line.quantity,
         name: matchedSaleLine?.name,
+        variantId: matchedSaleLine?.variantId ?? null,
+        variantCode: matchedSaleLine?.variantCode ?? null,
+        variantName: matchedSaleLine?.variantName ?? null,
       };
     }),
   });
