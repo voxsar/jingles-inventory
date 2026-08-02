@@ -135,7 +135,7 @@ describe('validateStacking', () => {
     const base = [
       { isFragile: false, maxStackHeight: 200, dimensions: { height: 60, width: 50, length: 40, weight: 10 } as IDimensions },
     ];
-    const restrictedItem = { isFragile: false, maxStackHeight: 60, dimensions: { height: 10, width: 50, length: 40, weight: 5 } as IDimensions };
+    const restrictedItem = { isFragile: false, maxStackHeight: 60, dimensions: { height: 70, width: 50, length: 40, weight: 5 } as IDimensions };
     const result = validateStacking(base, restrictedItem);
     expect(result.canStack).toBe(false);
   });

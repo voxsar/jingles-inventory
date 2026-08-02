@@ -45,8 +45,9 @@ export function validateStacking(
 		}
 	}
 
-	if (newItem.maxStackHeight !== null && newItem.maxStackHeight !== undefined && totalHeight > newItem.maxStackHeight) {
-		return { canStack: false, reason: `Stack height ${totalHeight}cm exceeds item max ${newItem.maxStackHeight}cm` };
+	const newItemHeight = (newItem.dimensions?.height ?? 0) * Math.max(1, newItem.quantity ?? 1);
+	if (newItem.maxStackHeight !== null && newItem.maxStackHeight !== undefined && newItemHeight > newItem.maxStackHeight) {
+		return { canStack: false, reason: `Item height ${newItemHeight}cm exceeds its max ${newItem.maxStackHeight}cm` };
 	}
 
 	return { canStack: true };

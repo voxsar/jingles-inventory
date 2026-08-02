@@ -192,6 +192,10 @@ describe('POST /api/boxes', () => {
 
 	it('creates a box on a shelf', async () => {
 		const newBox = { id: 'box-002', shelfId: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', name: 'Box B', code: 'BB', height: 30, width: 20, length: 15, isActive: true, createdAt: new Date(), barcodes: [] };
+		(prismaMock.shelf.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+			id: 'aad8f10c-3b0a-4bce-b4c0-8e5400f20001', floorId: 'floor-001', width: 80, length: 40,
+			floor: { id: 'floor-001', length: null, width: null },
+		});
 		(prismaMock.storageBox.create as ReturnType<typeof vi.fn>).mockResolvedValue(newBox);
 
 		const res = await request(app)

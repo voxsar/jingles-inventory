@@ -12,9 +12,8 @@ const GRID = 0.5; // scene units per grid cell
  * Scene unit system: 1 scene unit = 1 metre.
  * Floor length/width are stored in metres and map 1:1 to scene units.
  * Rack dimensions (widthCm/heightCm/depthCm) are stored in centimetres.
- * Shelf and box dimensions exist in BOTH units in the database — older rows
- * hold metres (0.3, 1.2, …) while the create form labels the fields cm — so
- * `dimToMetres` treats values above 5 as centimetres.
+ * Shelf and box dimensions are stored in centimetres and converted once at
+ * the rendering boundary. The normalization migration upgrades legacy rows.
  */
 const DEFAULT_FLOOR_LENGTH = 16; // metres, used when a zone has no recorded size
 const DEFAULT_FLOOR_WIDTH = 12;

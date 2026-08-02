@@ -1160,7 +1160,7 @@ async function applyKeepLocalResolution(
       return applyKeepLocalInventoryTransition(serverUrl, token, localPayload);
     default:
       throw new Error(
-        `Sync conflict resolution is not implemented for operation type ${conflict.operation_type ?? 'unknown'}.`
+        `Unsupported or corrupt sync operation type: ${conflict.operation_type ?? 'unknown'}.`
       );
   }
 }

@@ -6,7 +6,6 @@ import type { Server } from 'http';
 import rateLimit from 'express-rate-limit';
 import logger from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
-import { localReplicaSyncMiddleware } from './middleware/localReplicaSync';
 import authRoutes from './routes/auth';
 import vendorRoutes from './routes/vendors';
 import skuRoutes from './routes/skus';
@@ -74,7 +73,6 @@ export function createApp() {
 	app.use('/api/legacy-sync', legacySyncRoutes);
 
 	app.use(express.json());
-	app.use(localReplicaSyncMiddleware);
 
 	// Serve uploaded files statically
 	app.use('/uploads', express.static(path.join(getStorageRoot(), 'uploads')));
