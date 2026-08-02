@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { branchesApi, floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
+import { branchesApi, floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi, spaceApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
 import { formatQuantity } from '../utils/quantity';
 
@@ -8,7 +8,7 @@ const defaultBranchForm = { name: '', code: '', address: '', phone: '', email: '
 const defaultFloorForm = { name: '', code: '', notes: '', length: '', width: '', floorNumber: '' };
 const defaultRackForm = { name: '', code: '', widthCm: '', heightCm: '', depthCm: '', notes: '' };
 const defaultShelfForm = { name: '', code: '', height: '', width: '', length: '', levelIndex: '', elevationCm: '', hasFreezer: false, hasLock: false, notes: '' };
-const defaultBoxForm = { name: '', code: '', height: '', width: '', length: '' };
+const defaultBoxForm = { name: '', code: '', height: '', width: '', length: '', posX: '', posY: '', posZ: '', rotationAngle: '', stackOrder: '', parentBoxId: '' };
 
 type View = 'branches' | 'floors' | 'floor-detail' | 'rack-detail' | 'shelf-detail';
 
@@ -28,6 +28,7 @@ export default function BranchesPage() {
 	const [floorBoxes, setFloorBoxes] = useState<any[]>([]); // boxes directly on floor
 	const [boxes, setBoxes] = useState<any[]>([]);
 	const [shelfInventory, setShelfInventory] = useState<any[]>([]);
+	const [shelfUsage, setShelfUsage] = useState<{ totalCapacity: number; usedVolume: number; usagePercentage: number } | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
 	// ── Modal state ─────────────────────────────────────────────────────────────
@@ -98,14 +99,16 @@ export default function BranchesPage() {
 	const loadBoxes = async (shelfId: string) => {
 		setIsLoading(true);
 		try {
-			const [boxRes, invRes] = await Promise.all([
+			const [boxRes, invRes, usageRes] = await Promise.all([
 				boxesApi.list({ shelfId }),
 				inventoryApi.list({ shelfId, pageSize: '200' }),
+				spaceApi.calculate(shelfId),
 			]);
 			const bData = boxRes.data?.data?.items ?? boxRes.data?.data ?? boxRes.data ?? [];
 			const iData = invRes.data?.data?.items ?? invRes.data?.data ?? invRes.data ?? [];
 			setBoxes(Array.isArray(bData) ? bData : []);
 			setShelfInventory(Array.isArray(iData) ? iData : []);
+			setShelfUsage(usageRes.data?.data ?? null);
 		} finally { setIsLoading(false); }
 	};
 
@@ -261,7 +264,7 @@ export default function BranchesPage() {
 	};
 	const openEditBox = (b: any) => {
 		setEditingBox(b);
-		setBoxForm({ name: b.name, code: b.code, height: b.height, width: b.width, length: b.length });
+		setBoxForm({ name: b.name, code: b.code, height: b.height, width: b.width, length: b.length, posX: b.posX ?? '', posY: b.posY ?? '', posZ: b.posZ ?? '', rotationAngle: b.rotationAngle ?? '', stackOrder: b.stackOrder ?? '', parentBoxId: b.parentBoxId ?? '' });
 		setShowBoxModal(true);
 	};
 	const handleSaveBox = async (e: React.FormEvent) => {
@@ -269,6 +272,12 @@ export default function BranchesPage() {
 		const payload = {
 			name: boxForm.name, code: boxForm.code.toUpperCase(),
 			height: parseFloat(boxForm.height), width: parseFloat(boxForm.width), length: parseFloat(boxForm.length),
+			posX: boxForm.posX === '' ? null : parseFloat(String(boxForm.posX)),
+			posY: boxForm.posY === '' ? null : parseFloat(String(boxForm.posY)),
+			posZ: boxForm.posZ === '' ? null : parseFloat(String(boxForm.posZ)),
+			rotationAngle: boxForm.rotationAngle === '' ? 0 : parseFloat(String(boxForm.rotationAngle)),
+			stackOrder: boxForm.stackOrder === '' ? 0 : parseInt(String(boxForm.stackOrder), 10),
+			parentBoxId: boxForm.parentBoxId || null,
 		};
 		try {
 			if (editingBox) await boxesApi.update(editingBox.id, payload);
@@ -566,9 +575,16 @@ export default function BranchesPage() {
 
 				{view === 'shelf-detail' && (
 					<div className="flex flex-col gap-6">
+						{shelfUsage && (
+							<div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+								<div className="flex justify-between"><strong>Capacity usage</strong><span>{shelfUsage.usagePercentage.toFixed(1)}%</span></div>
+								<div className="mt-2 h-2 overflow-hidden rounded bg-gray-200"><div className="h-full bg-primary-600" style={{ width: `${Math.min(100, shelfUsage.usagePercentage)}%` }} /></div>
+								<div className="mt-1 text-xs text-gray-500">{shelfUsage.usedVolume.toLocaleString()} of {shelfUsage.totalCapacity.toLocaleString()} cmÂ³</div>
+							</div>
+						)}
 						<div>
 							<h2 className="text-base font-semibold text-gray-700 mb-2">📦 Boxes on this shelf</h2>
-							<p className="text-xs text-gray-500 mb-2">Boxes can be stacked. Dimensions in cm. Position in the 3D view is saved to the database when you move them.</p>
+							<p className="text-xs text-gray-500 mb-2">Boxes can be stacked. Dimensions are cm; edit a box to set its metre-based 3D coordinates.</p>
 							<PaginatedDataTable columns={boxColumns} data={boxes} isLoading={isLoading} emptyMessage="No boxes yet." />
 						</div>
 						{shelfInventory.length > 0 && (
@@ -848,6 +864,31 @@ export default function BranchesPage() {
 								<div className="form-group">
 									<label className="form-label">Length/Depth (cm) *</label>
 									<input className="input-field" type="number" step="0.1" min="0.1" value={boxForm.length} required placeholder="e.g. 50" onChange={e => setBoxForm(f => ({ ...f, length: e.target.value }))} />
+								</div>
+								<div className="form-grid-2">
+									{(['posX', 'posY', 'posZ'] as const).map((axis) => (
+										<div className="form-group" key={axis}>
+											<label className="form-label">{axis.toUpperCase()} (metres)</label>
+											<input className="input-field" type="number" step="0.01" value={boxForm[axis]} placeholder="Auto" onChange={e => setBoxForm(f => ({ ...f, [axis]: e.target.value }))} />
+										</div>
+									))}
+									<div className="form-group">
+										<label className="form-label">Rotation (degrees)</label>
+										<input className="input-field" type="number" step="1" value={boxForm.rotationAngle} placeholder="0" onChange={e => setBoxForm(f => ({ ...f, rotationAngle: e.target.value }))} />
+									</div>
+								</div>
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Parent box</label>
+										<select className="input-field" value={boxForm.parentBoxId} onChange={e => setBoxForm(f => ({ ...f, parentBoxId: e.target.value }))}>
+											<option value="">None</option>
+											{[...boxes, ...floorBoxes].filter((candidate: any) => candidate.id !== editingBox?.id).map((candidate: any) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
+										</select>
+									</div>
+									<div className="form-group">
+										<label className="form-label">Stack order</label>
+										<input className="input-field" type="number" min="0" step="1" value={boxForm.stackOrder} placeholder="0" onChange={e => setBoxForm(f => ({ ...f, stackOrder: e.target.value }))} />
+									</div>
 								</div>
 							</div>
 							<div className="modal-footer">

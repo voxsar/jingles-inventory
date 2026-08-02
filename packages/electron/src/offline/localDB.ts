@@ -225,6 +225,12 @@ function runMigrations(): void {
   ensureColumnExists(database, 'inventory_records', 'location_id', 'TEXT');
   ensureColumnExists(database, 'inventory_records', 'synced_at', 'TEXT');
   ensureColumnExists(database, 'inventory_records', 'dirty', 'INTEGER DEFAULT 0');
+  ensureColumnExists(database, 'inventory_records', 'pos_x', 'REAL');
+  ensureColumnExists(database, 'inventory_records', 'pos_y', 'REAL');
+  ensureColumnExists(database, 'inventory_records', 'pos_z', 'REAL');
+  ensureColumnExists(database, 'inventory_records', 'rot_y', 'REAL DEFAULT 0');
+  ensureColumnExists(database, 'shelves', 'level_index', 'INTEGER');
+  ensureColumnExists(database, 'shelves', 'elevation_cm', 'REAL');
 
   ensureColumnExists(database, 'grns', 'synced_at', 'TEXT');
   ensureColumnExists(database, 'grns', 'dirty', 'INTEGER DEFAULT 0');

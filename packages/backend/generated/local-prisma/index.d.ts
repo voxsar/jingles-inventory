@@ -26595,12 +26595,16 @@ export namespace Prisma {
     height: number | null
     width: number | null
     length: number | null
+    levelIndex: number | null
+    elevationCm: number | null
   }
 
   export type ShelfSumAggregateOutputType = {
     height: number | null
     width: number | null
     length: number | null
+    levelIndex: number | null
+    elevationCm: number | null
   }
 
   export type ShelfMinAggregateOutputType = {
@@ -26612,6 +26616,8 @@ export namespace Prisma {
     height: number | null
     width: number | null
     length: number | null
+    levelIndex: number | null
+    elevationCm: number | null
     hasFreezer: boolean | null
     hasLock: boolean | null
     notes: string | null
@@ -26628,6 +26634,8 @@ export namespace Prisma {
     height: number | null
     width: number | null
     length: number | null
+    levelIndex: number | null
+    elevationCm: number | null
     hasFreezer: boolean | null
     hasLock: boolean | null
     notes: string | null
@@ -26644,6 +26652,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex: number
+    elevationCm: number
     hasFreezer: number
     hasLock: number
     notes: number
@@ -26657,12 +26667,16 @@ export namespace Prisma {
     height?: true
     width?: true
     length?: true
+    levelIndex?: true
+    elevationCm?: true
   }
 
   export type ShelfSumAggregateInputType = {
     height?: true
     width?: true
     length?: true
+    levelIndex?: true
+    elevationCm?: true
   }
 
   export type ShelfMinAggregateInputType = {
@@ -26674,6 +26688,8 @@ export namespace Prisma {
     height?: true
     width?: true
     length?: true
+    levelIndex?: true
+    elevationCm?: true
     hasFreezer?: true
     hasLock?: true
     notes?: true
@@ -26690,6 +26706,8 @@ export namespace Prisma {
     height?: true
     width?: true
     length?: true
+    levelIndex?: true
+    elevationCm?: true
     hasFreezer?: true
     hasLock?: true
     notes?: true
@@ -26706,6 +26724,8 @@ export namespace Prisma {
     height?: true
     width?: true
     length?: true
+    levelIndex?: true
+    elevationCm?: true
     hasFreezer?: true
     hasLock?: true
     notes?: true
@@ -26809,6 +26829,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex: number | null
+    elevationCm: number | null
     hasFreezer: boolean
     hasLock: boolean
     notes: string | null
@@ -26844,6 +26866,8 @@ export namespace Prisma {
     height?: boolean
     width?: boolean
     length?: boolean
+    levelIndex?: boolean
+    elevationCm?: boolean
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: boolean
@@ -26867,6 +26891,8 @@ export namespace Prisma {
     height?: boolean
     width?: boolean
     length?: boolean
+    levelIndex?: boolean
+    elevationCm?: boolean
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: boolean
@@ -26885,6 +26911,8 @@ export namespace Prisma {
     height?: boolean
     width?: boolean
     length?: boolean
+    levelIndex?: boolean
+    elevationCm?: boolean
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: boolean
@@ -26925,6 +26953,8 @@ export namespace Prisma {
       height: number
       width: number
       length: number
+      levelIndex: number | null
+      elevationCm: number | null
       hasFreezer: boolean
       hasLock: boolean
       notes: string | null
@@ -27337,6 +27367,8 @@ export namespace Prisma {
     readonly height: FieldRef<"Shelf", 'Float'>
     readonly width: FieldRef<"Shelf", 'Float'>
     readonly length: FieldRef<"Shelf", 'Float'>
+    readonly levelIndex: FieldRef<"Shelf", 'Int'>
+    readonly elevationCm: FieldRef<"Shelf", 'Float'>
     readonly hasFreezer: FieldRef<"Shelf", 'Boolean'>
     readonly hasLock: FieldRef<"Shelf", 'Boolean'>
     readonly notes: FieldRef<"Shelf", 'String'>
@@ -32203,11 +32235,19 @@ export namespace Prisma {
 
   export type InventoryRecordAvgAggregateOutputType = {
     quantity: number | null
+    posX: number | null
+    posY: number | null
+    posZ: number | null
+    rotY: number | null
     version: number | null
   }
 
   export type InventoryRecordSumAggregateOutputType = {
     quantity: number | null
+    posX: number | null
+    posY: number | null
+    posZ: number | null
+    rotY: number | null
     version: number | null
   }
 
@@ -32221,6 +32261,10 @@ export namespace Prisma {
     boxId: string | null
     quantity: number | null
     state: string | null
+    posX: number | null
+    posY: number | null
+    posZ: number | null
+    rotY: number | null
     sourceEventId: string | null
     terminalId: string | null
     userId: string | null
@@ -32239,6 +32283,10 @@ export namespace Prisma {
     boxId: string | null
     quantity: number | null
     state: string | null
+    posX: number | null
+    posY: number | null
+    posZ: number | null
+    rotY: number | null
     sourceEventId: string | null
     terminalId: string | null
     userId: string | null
@@ -32257,6 +32305,10 @@ export namespace Prisma {
     boxId: number
     quantity: number
     state: number
+    posX: number
+    posY: number
+    posZ: number
+    rotY: number
     sourceEventId: number
     terminalId: number
     userId: number
@@ -32269,11 +32321,19 @@ export namespace Prisma {
 
   export type InventoryRecordAvgAggregateInputType = {
     quantity?: true
+    posX?: true
+    posY?: true
+    posZ?: true
+    rotY?: true
     version?: true
   }
 
   export type InventoryRecordSumAggregateInputType = {
     quantity?: true
+    posX?: true
+    posY?: true
+    posZ?: true
+    rotY?: true
     version?: true
   }
 
@@ -32287,6 +32347,10 @@ export namespace Prisma {
     boxId?: true
     quantity?: true
     state?: true
+    posX?: true
+    posY?: true
+    posZ?: true
+    rotY?: true
     sourceEventId?: true
     terminalId?: true
     userId?: true
@@ -32305,6 +32369,10 @@ export namespace Prisma {
     boxId?: true
     quantity?: true
     state?: true
+    posX?: true
+    posY?: true
+    posZ?: true
+    rotY?: true
     sourceEventId?: true
     terminalId?: true
     userId?: true
@@ -32323,6 +32391,10 @@ export namespace Prisma {
     boxId?: true
     quantity?: true
     state?: true
+    posX?: true
+    posY?: true
+    posZ?: true
+    rotY?: true
     sourceEventId?: true
     terminalId?: true
     userId?: true
@@ -32428,6 +32500,10 @@ export namespace Prisma {
     boxId: string | null
     quantity: number
     state: string
+    posX: number | null
+    posY: number | null
+    posZ: number | null
+    rotY: number | null
     sourceEventId: string | null
     terminalId: string | null
     userId: string | null
@@ -32465,6 +32541,10 @@ export namespace Prisma {
     boxId?: boolean
     quantity?: boolean
     state?: boolean
+    posX?: boolean
+    posY?: boolean
+    posZ?: boolean
+    rotY?: boolean
     sourceEventId?: boolean
     terminalId?: boolean
     userId?: boolean
@@ -32490,6 +32570,10 @@ export namespace Prisma {
     boxId?: boolean
     quantity?: boolean
     state?: boolean
+    posX?: boolean
+    posY?: boolean
+    posZ?: boolean
+    rotY?: boolean
     sourceEventId?: boolean
     terminalId?: boolean
     userId?: boolean
@@ -32515,6 +32599,10 @@ export namespace Prisma {
     boxId?: boolean
     quantity?: boolean
     state?: boolean
+    posX?: boolean
+    posY?: boolean
+    posZ?: boolean
+    rotY?: boolean
     sourceEventId?: boolean
     terminalId?: boolean
     userId?: boolean
@@ -32563,6 +32651,10 @@ export namespace Prisma {
       boxId: string | null
       quantity: number
       state: string
+      posX: number | null
+      posY: number | null
+      posZ: number | null
+      rotY: number | null
       sourceEventId: string | null
       terminalId: string | null
       userId: string | null
@@ -32978,6 +33070,10 @@ export namespace Prisma {
     readonly boxId: FieldRef<"InventoryRecord", 'String'>
     readonly quantity: FieldRef<"InventoryRecord", 'Float'>
     readonly state: FieldRef<"InventoryRecord", 'String'>
+    readonly posX: FieldRef<"InventoryRecord", 'Float'>
+    readonly posY: FieldRef<"InventoryRecord", 'Float'>
+    readonly posZ: FieldRef<"InventoryRecord", 'Float'>
+    readonly rotY: FieldRef<"InventoryRecord", 'Float'>
     readonly sourceEventId: FieldRef<"InventoryRecord", 'String'>
     readonly terminalId: FieldRef<"InventoryRecord", 'String'>
     readonly userId: FieldRef<"InventoryRecord", 'String'>
@@ -58062,6 +58158,8 @@ export namespace Prisma {
     height: 'height',
     width: 'width',
     length: 'length',
+    levelIndex: 'levelIndex',
+    elevationCm: 'elevationCm',
     hasFreezer: 'hasFreezer',
     hasLock: 'hasLock',
     notes: 'notes',
@@ -58150,6 +58248,10 @@ export namespace Prisma {
     boxId: 'boxId',
     quantity: 'quantity',
     state: 'state',
+    posX: 'posX',
+    posY: 'posY',
+    posZ: 'posZ',
+    rotY: 'rotY',
     sourceEventId: 'sourceEventId',
     terminalId: 'terminalId',
     userId: 'userId',
@@ -60219,6 +60321,8 @@ export namespace Prisma {
     height?: FloatFilter<"Shelf"> | number
     width?: FloatFilter<"Shelf"> | number
     length?: FloatFilter<"Shelf"> | number
+    levelIndex?: IntNullableFilter<"Shelf"> | number | null
+    elevationCm?: FloatNullableFilter<"Shelf"> | number | null
     hasFreezer?: BoolFilter<"Shelf"> | boolean
     hasLock?: BoolFilter<"Shelf"> | boolean
     notes?: StringNullableFilter<"Shelf"> | string | null
@@ -60241,6 +60345,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrderInput | SortOrder
+    elevationCm?: SortOrderInput | SortOrder
     hasFreezer?: SortOrder
     hasLock?: SortOrder
     notes?: SortOrderInput | SortOrder
@@ -60267,6 +60373,8 @@ export namespace Prisma {
     height?: FloatFilter<"Shelf"> | number
     width?: FloatFilter<"Shelf"> | number
     length?: FloatFilter<"Shelf"> | number
+    levelIndex?: IntNullableFilter<"Shelf"> | number | null
+    elevationCm?: FloatNullableFilter<"Shelf"> | number | null
     hasFreezer?: BoolFilter<"Shelf"> | boolean
     hasLock?: BoolFilter<"Shelf"> | boolean
     notes?: StringNullableFilter<"Shelf"> | string | null
@@ -60289,6 +60397,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrderInput | SortOrder
+    elevationCm?: SortOrderInput | SortOrder
     hasFreezer?: SortOrder
     hasLock?: SortOrder
     notes?: SortOrderInput | SortOrder
@@ -60313,6 +60423,8 @@ export namespace Prisma {
     height?: FloatWithAggregatesFilter<"Shelf"> | number
     width?: FloatWithAggregatesFilter<"Shelf"> | number
     length?: FloatWithAggregatesFilter<"Shelf"> | number
+    levelIndex?: IntNullableWithAggregatesFilter<"Shelf"> | number | null
+    elevationCm?: FloatNullableWithAggregatesFilter<"Shelf"> | number | null
     hasFreezer?: BoolWithAggregatesFilter<"Shelf"> | boolean
     hasLock?: BoolWithAggregatesFilter<"Shelf"> | boolean
     notes?: StringNullableWithAggregatesFilter<"Shelf"> | string | null
@@ -60720,6 +60832,10 @@ export namespace Prisma {
     boxId?: StringNullableFilter<"InventoryRecord"> | string | null
     quantity?: FloatFilter<"InventoryRecord"> | number
     state?: StringFilter<"InventoryRecord"> | string
+    posX?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posY?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posZ?: FloatNullableFilter<"InventoryRecord"> | number | null
+    rotY?: FloatNullableFilter<"InventoryRecord"> | number | null
     sourceEventId?: StringNullableFilter<"InventoryRecord"> | string | null
     terminalId?: StringNullableFilter<"InventoryRecord"> | string | null
     userId?: StringNullableFilter<"InventoryRecord"> | string | null
@@ -60745,6 +60861,10 @@ export namespace Prisma {
     boxId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     state?: SortOrder
+    posX?: SortOrderInput | SortOrder
+    posY?: SortOrderInput | SortOrder
+    posZ?: SortOrderInput | SortOrder
+    rotY?: SortOrderInput | SortOrder
     sourceEventId?: SortOrderInput | SortOrder
     terminalId?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
@@ -60773,6 +60893,10 @@ export namespace Prisma {
     boxId?: StringNullableFilter<"InventoryRecord"> | string | null
     quantity?: FloatFilter<"InventoryRecord"> | number
     state?: StringFilter<"InventoryRecord"> | string
+    posX?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posY?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posZ?: FloatNullableFilter<"InventoryRecord"> | number | null
+    rotY?: FloatNullableFilter<"InventoryRecord"> | number | null
     sourceEventId?: StringNullableFilter<"InventoryRecord"> | string | null
     terminalId?: StringNullableFilter<"InventoryRecord"> | string | null
     userId?: StringNullableFilter<"InventoryRecord"> | string | null
@@ -60798,6 +60922,10 @@ export namespace Prisma {
     boxId?: SortOrderInput | SortOrder
     quantity?: SortOrder
     state?: SortOrder
+    posX?: SortOrderInput | SortOrder
+    posY?: SortOrderInput | SortOrder
+    posZ?: SortOrderInput | SortOrder
+    rotY?: SortOrderInput | SortOrder
     sourceEventId?: SortOrderInput | SortOrder
     terminalId?: SortOrderInput | SortOrder
     userId?: SortOrderInput | SortOrder
@@ -60824,6 +60952,10 @@ export namespace Prisma {
     boxId?: StringNullableWithAggregatesFilter<"InventoryRecord"> | string | null
     quantity?: FloatWithAggregatesFilter<"InventoryRecord"> | number
     state?: StringWithAggregatesFilter<"InventoryRecord"> | string
+    posX?: FloatNullableWithAggregatesFilter<"InventoryRecord"> | number | null
+    posY?: FloatNullableWithAggregatesFilter<"InventoryRecord"> | number | null
+    posZ?: FloatNullableWithAggregatesFilter<"InventoryRecord"> | number | null
+    rotY?: FloatNullableWithAggregatesFilter<"InventoryRecord"> | number | null
     sourceEventId?: StringNullableWithAggregatesFilter<"InventoryRecord"> | string | null
     terminalId?: StringNullableWithAggregatesFilter<"InventoryRecord"> | string | null
     userId?: StringNullableWithAggregatesFilter<"InventoryRecord"> | string | null
@@ -64759,6 +64891,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -64781,6 +64915,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -64799,6 +64935,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64821,6 +64959,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64841,6 +64981,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -64855,6 +64997,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64871,6 +65015,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -65276,6 +65422,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -65300,6 +65450,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -65312,6 +65466,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -65336,6 +65494,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -65354,6 +65516,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -65366,6 +65532,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -65383,6 +65553,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -69233,6 +69407,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrder
+    elevationCm?: SortOrder
     hasFreezer?: SortOrder
     hasLock?: SortOrder
     notes?: SortOrder
@@ -69244,6 +69420,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrder
+    elevationCm?: SortOrder
   }
 
   export type ShelfMaxOrderByAggregateInput = {
@@ -69255,6 +69433,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrder
+    elevationCm?: SortOrder
     hasFreezer?: SortOrder
     hasLock?: SortOrder
     notes?: SortOrder
@@ -69271,6 +69451,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrder
+    elevationCm?: SortOrder
     hasFreezer?: SortOrder
     hasLock?: SortOrder
     notes?: SortOrder
@@ -69282,6 +69464,8 @@ export namespace Prisma {
     height?: SortOrder
     width?: SortOrder
     length?: SortOrder
+    levelIndex?: SortOrder
+    elevationCm?: SortOrder
   }
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -69572,6 +69756,10 @@ export namespace Prisma {
     boxId?: SortOrder
     quantity?: SortOrder
     state?: SortOrder
+    posX?: SortOrder
+    posY?: SortOrder
+    posZ?: SortOrder
+    rotY?: SortOrder
     sourceEventId?: SortOrder
     terminalId?: SortOrder
     userId?: SortOrder
@@ -69582,6 +69770,10 @@ export namespace Prisma {
 
   export type InventoryRecordAvgOrderByAggregateInput = {
     quantity?: SortOrder
+    posX?: SortOrder
+    posY?: SortOrder
+    posZ?: SortOrder
+    rotY?: SortOrder
     version?: SortOrder
   }
 
@@ -69595,6 +69787,10 @@ export namespace Prisma {
     boxId?: SortOrder
     quantity?: SortOrder
     state?: SortOrder
+    posX?: SortOrder
+    posY?: SortOrder
+    posZ?: SortOrder
+    rotY?: SortOrder
     sourceEventId?: SortOrder
     terminalId?: SortOrder
     userId?: SortOrder
@@ -69613,6 +69809,10 @@ export namespace Prisma {
     boxId?: SortOrder
     quantity?: SortOrder
     state?: SortOrder
+    posX?: SortOrder
+    posY?: SortOrder
+    posZ?: SortOrder
+    rotY?: SortOrder
     sourceEventId?: SortOrder
     terminalId?: SortOrder
     userId?: SortOrder
@@ -69623,6 +69823,10 @@ export namespace Prisma {
 
   export type InventoryRecordSumOrderByAggregateInput = {
     quantity?: SortOrder
+    posX?: SortOrder
+    posY?: SortOrder
+    posZ?: SortOrder
+    rotY?: SortOrder
     version?: SortOrder
   }
 
@@ -76128,6 +76332,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -76151,6 +76359,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -76698,6 +76910,10 @@ export namespace Prisma {
     boxId?: StringNullableFilter<"InventoryRecord"> | string | null
     quantity?: FloatFilter<"InventoryRecord"> | number
     state?: StringFilter<"InventoryRecord"> | string
+    posX?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posY?: FloatNullableFilter<"InventoryRecord"> | number | null
+    posZ?: FloatNullableFilter<"InventoryRecord"> | number | null
+    rotY?: FloatNullableFilter<"InventoryRecord"> | number | null
     sourceEventId?: StringNullableFilter<"InventoryRecord"> | string | null
     terminalId?: StringNullableFilter<"InventoryRecord"> | string | null
     userId?: StringNullableFilter<"InventoryRecord"> | string | null
@@ -78345,6 +78561,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -78367,6 +78587,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -80673,6 +80897,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -80695,6 +80923,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -82200,6 +82432,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -82220,6 +82454,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -82295,6 +82531,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -82317,6 +82557,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -82602,6 +82846,8 @@ export namespace Prisma {
     height?: FloatFilter<"Shelf"> | number
     width?: FloatFilter<"Shelf"> | number
     length?: FloatFilter<"Shelf"> | number
+    levelIndex?: IntNullableFilter<"Shelf"> | number | null
+    elevationCm?: FloatNullableFilter<"Shelf"> | number | null
     hasFreezer?: BoolFilter<"Shelf"> | boolean
     hasLock?: BoolFilter<"Shelf"> | boolean
     notes?: StringNullableFilter<"Shelf"> | string | null
@@ -82779,6 +83025,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -82799,6 +83047,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -83023,6 +83273,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -83045,6 +83299,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -83309,6 +83567,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -83330,6 +83590,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -83519,6 +83781,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -83541,6 +83807,10 @@ export namespace Prisma {
     shelfId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -83576,6 +83846,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83597,6 +83869,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85220,6 +85494,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -85241,6 +85517,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -85640,6 +85918,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85661,6 +85941,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85974,6 +86256,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -85995,6 +86279,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -86216,6 +86502,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86237,6 +86525,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86579,6 +86869,10 @@ export namespace Prisma {
     id?: string
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -86601,6 +86895,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -87901,6 +88199,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -87922,6 +88222,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -88166,6 +88468,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -88187,6 +88491,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -90806,6 +91112,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     version?: number
@@ -90985,6 +91295,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -91008,6 +91322,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -91025,6 +91343,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -92667,6 +92989,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -92830,6 +93156,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -92852,6 +93182,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92869,6 +93203,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -93516,6 +93854,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -93657,6 +93999,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -93679,6 +94025,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -93696,6 +94046,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94085,6 +94439,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -94119,6 +94475,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -94241,6 +94601,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94261,6 +94623,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94280,6 +94644,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94351,6 +94717,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -94373,6 +94743,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94390,6 +94764,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94594,6 +94972,8 @@ export namespace Prisma {
     height: number
     width: number
     length: number
+    levelIndex?: number | null
+    elevationCm?: number | null
     hasFreezer?: boolean
     hasLock?: boolean
     notes?: string | null
@@ -94608,6 +94988,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94628,6 +95010,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94647,6 +95031,8 @@ export namespace Prisma {
     height?: FloatFieldUpdateOperationsInput | number
     width?: FloatFieldUpdateOperationsInput | number
     length?: FloatFieldUpdateOperationsInput | number
+    levelIndex?: NullableIntFieldUpdateOperationsInput | number | null
+    elevationCm?: NullableFloatFieldUpdateOperationsInput | number | null
     hasFreezer?: BoolFieldUpdateOperationsInput | boolean
     hasLock?: BoolFieldUpdateOperationsInput | boolean
     notes?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94681,6 +95067,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -94783,6 +95173,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -94805,6 +95199,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94822,6 +95220,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -94960,6 +95362,10 @@ export namespace Prisma {
     shelfId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -95059,6 +95465,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -95081,6 +95491,10 @@ export namespace Prisma {
     shelfId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95098,6 +95512,10 @@ export namespace Prisma {
     shelfId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95237,6 +95655,10 @@ export namespace Prisma {
     boxId?: string | null
     quantity: number
     state: string
+    posX?: number | null
+    posY?: number | null
+    posZ?: number | null
+    rotY?: number | null
     sourceEventId?: string | null
     terminalId?: string | null
     userId?: string | null
@@ -95356,6 +95778,10 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     version?: IntFieldUpdateOperationsInput | number
@@ -95378,6 +95804,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -95395,6 +95825,10 @@ export namespace Prisma {
     boxId?: NullableStringFieldUpdateOperationsInput | string | null
     quantity?: FloatFieldUpdateOperationsInput | number
     state?: StringFieldUpdateOperationsInput | string
+    posX?: NullableFloatFieldUpdateOperationsInput | number | null
+    posY?: NullableFloatFieldUpdateOperationsInput | number | null
+    posZ?: NullableFloatFieldUpdateOperationsInput | number | null
+    rotY?: NullableFloatFieldUpdateOperationsInput | number | null
     sourceEventId?: NullableStringFieldUpdateOperationsInput | string | null
     terminalId?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: NullableStringFieldUpdateOperationsInput | string | null

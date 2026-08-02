@@ -122,6 +122,15 @@ function normalizeQuantityInput(value: unknown) {
   return undefined;
 }
 
+function readNullableNumberField(payload: Record<string, unknown>, camelCaseKey: string, snakeCaseKey: string) {
+  const value = payload[camelCaseKey] ?? payload[snakeCaseKey];
+  if (payload[camelCaseKey] === null || payload[snakeCaseKey] === null) return null;
+  if (value === undefined) return undefined;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) throw new Error(`${camelCaseKey} must be a finite number`);
+  return parsed;
+}
+
 function readStringField(
   payload: Record<string, unknown>,
   camelCaseKey: string,
@@ -203,6 +212,10 @@ async function applySyncV2Create(
   const boxId = readNullableStringField(payload, 'boxId', 'box_id');
   const batchId = readNullableStringField(payload, 'batchId', 'batch_id');
   const terminalId = readNullableStringField(payload, 'terminalId', 'terminal_id');
+  const posX = readNullableNumberField(payload, 'posX', 'pos_x');
+  const posY = readNullableNumberField(payload, 'posY', 'pos_y');
+  const posZ = readNullableNumberField(payload, 'posZ', 'pos_z');
+  const rotY = readNullableNumberField(payload, 'rotY', 'rot_y');
 
   if (!recordId || !skuId || !state || quantity === undefined) {
     throw new Error('inventory.create requires id, skuId, quantity, and state');
@@ -244,6 +257,10 @@ async function applySyncV2Create(
         state,
         batchId: batchId ?? null,
         terminalId: terminalId ?? null,
+        posX: posX ?? null,
+        posY: posY ?? null,
+        posZ: posZ ?? null,
+        rotY: rotY ?? 0,
         userId,
         version: 1,
       },
@@ -339,6 +356,11 @@ async function applySyncV2Update(
   }
   if (normalizedQuantity !== undefined) {
     updateData.quantity = normalizedQuantity;
+  }
+  for (const [camelCaseKey, snakeCaseKey] of [['posX', 'pos_x'], ['posY', 'pos_y'], ['posZ', 'pos_z'], ['rotY', 'rot_y']] as const) {
+    if (Object.prototype.hasOwnProperty.call(payload, camelCaseKey) || Object.prototype.hasOwnProperty.call(payload, snakeCaseKey)) {
+      updateData[camelCaseKey] = readNullableNumberField(payload, camelCaseKey, snakeCaseKey);
+    }
   }
 
   const serverSeq = await prisma.$transaction(async (tx: any) => {

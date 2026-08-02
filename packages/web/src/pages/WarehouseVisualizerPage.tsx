@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
 import { floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi } from '../api/client';
 import type { IFloor, IRack, IShelf, IStorageBox } from '@jingles/shared';
 import SearchableSelect from '../components/SearchableSelect';
+import { useAuthStore } from '../store/authStore';
+import { aggregateProductDimensions, centimetresToMetres, layoutFloorBoxes, orderedShelves, shelfBoardElevation } from '../utils/warehouseGeometry';
 
 // ── Grid helper ─────────────────────────────────────────────────────────────
 const GRID = 0.5; // scene units per grid cell
@@ -14,12 +16,6 @@ const GRID = 0.5; // scene units per grid cell
  * hold metres (0.3, 1.2, …) while the create form labels the fields cm — so
  * `dimToMetres` treats values above 5 as centimetres.
  */
-const CM2M = 0.01;
-function dimToMetres(value: number | null | undefined, fallbackM: number): number {
-	if (!value || value <= 0) return fallbackM;
-	return value > 5 ? value * CM2M : value;
-}
-
 const DEFAULT_FLOOR_LENGTH = 16; // metres, used when a zone has no recorded size
 const DEFAULT_FLOOR_WIDTH = 12;
 const STOREY_HEIGHT = 4;         // metres between stacked floors in the overview
@@ -63,7 +59,11 @@ interface ProductRecord {
 	floorId?: string | null;
 	shelfId?: string | null;
 	boxId?: string | null;
-	sku?: { id: string; name: string; skuCode?: string | null } | null;
+	posX?: number | null;
+	posY?: number | null;
+	posZ?: number | null;
+	rotY?: number | null;
+	sku?: { id: string; name: string; skuCode?: string | null; dimensions?: { width?: number; height?: number; length?: number } | null } | null;
 }
 
 interface FloorSceneData {
@@ -137,6 +137,31 @@ function mergeBoxesByLocation(
 
 const floorSceneRequests = new Map<string, Promise<FloorSceneData>>();
 
+async function fetchAllFloorInventory(floorId: string): Promise<ProductRecord[]> {
+	const pageSize = 500;
+	const first = await inventoryApi.list({ floorId, page: '1', pageSize: String(pageSize) });
+	const firstItems = extractList<ProductRecord>(first.data);
+	const payload = first.data?.data ?? first.data;
+	const totalPages = Math.max(1, Number(payload?.totalPages ?? 1));
+	if (totalPages === 1) return firstItems;
+	const remaining = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) =>
+		inventoryApi.list({ floorId, page: String(index + 2), pageSize: String(pageSize) })
+	));
+	return [...firstItems, ...remaining.flatMap((response) => extractList<ProductRecord>(response.data))];
+}
+
+function groupProducts(records: ProductRecord[]) {
+	const byBox: Record<string, ProductRecord[]> = {};
+	const byShelf: Record<string, ProductRecord[]> = {};
+	const onFloor: ProductRecord[] = [];
+	records.forEach((record) => {
+		if (record.boxId) (byBox[record.boxId] ??= []).push(record);
+		else if (record.shelfId) (byShelf[record.shelfId] ??= []).push(record);
+		else onFloor.push(record);
+	});
+	return { byBox, byShelf, onFloor };
+}
+
 function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 	const existing = floorSceneRequests.get(floorId);
 	if (existing) return existing;
@@ -146,7 +171,7 @@ function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 		const [racksResult, boxesResult, inventoryResult] = await Promise.allSettled([
 			racksApi.list({ floorId }),
 			boxesApi.list({ floorId }),
-			inventoryApi.list({ floorId, pageSize: '500' }),
+			fetchAllFloorInventory(floorId),
 		]);
 
 		if (racksResult.status === 'rejected' && boxesResult.status === 'rejected') {
@@ -159,7 +184,7 @@ function fetchFloorSceneData(floorId: string): Promise<FloorSceneData> {
 
 		const racks: WarehouseRack[] = racksResult.status === 'fulfilled' ? extractList<WarehouseRack>(racksResult.value.data) : [];
 		const floorBoxIndex: IStorageBox[] = boxesResult.status === 'fulfilled' ? extractList<IStorageBox>(boxesResult.value.data) : [];
-		const products: ProductRecord[] = inventoryResult.status === 'fulfilled' ? extractList<ProductRecord>(inventoryResult.value.data) : [];
+		const products: ProductRecord[] = inventoryResult.status === 'fulfilled' ? inventoryResult.value : [];
 		let { rackShelves, shelfBoxes } = groupRackShelves(racks);
 
 		const racksIncludeShelves = racks.some(rack => Array.isArray(rack.shelves));
@@ -274,17 +299,20 @@ const RackEntity = memo(function RackEntity({
 	rotY: number;
 }) {
 	// Rack physical dimensions (cm in DB) → metres
-	const w = Math.max(dimToMetres(rack.widthCm, 1.0), 0.4);
-	const h = Math.max(dimToMetres(rack.heightCm, 2.0), 0.5);
-	const d = Math.max(dimToMetres(rack.depthCm, 0.6), 0.3);
+	const w = Math.max(centimetresToMetres(rack.widthCm, 1.0), 0.4);
+	const h = Math.max(centimetresToMetres(rack.heightCm, 2.0), 0.5);
+	const d = Math.max(centimetresToMetres(rack.depthCm, 0.6), 0.3);
 	const hw = w / 2 - 0.02;
 	const hd = d / 2 - 0.02;
 
-	// One board per shelf record, evenly spaced bottom-to-top inside the frame.
-	// Racks with no shelf records get a board roughly every 45 cm.
-	const levels = shelves.length > 0 ? shelves.length : Math.max(2, Math.floor(h / 0.45));
+	const renderedShelves = orderedShelves(shelves);
+	// Explicit elevations win; legacy rows receive deterministic fallback spacing.
+	const levels = renderedShelves.length > 0 ? renderedShelves.length : Math.max(2, Math.floor(h / 0.45));
 	const levelH = h / levels;
-	const boardTop = (i: number) => i * levelH + BOARD_T / 2;
+	const boardY = (i: number) => renderedShelves[i]
+		? shelfBoardElevation(renderedShelves[i], i, h, levels)
+		: i * levelH;
+	const boardTop = (i: number) => boardY(i) + BOARD_T / 2;
 
 	return (
 		<a-entity
@@ -299,9 +327,16 @@ const RackEntity = memo(function RackEntity({
 			<Post cx={hw} cz={hd} h={h} />
 
 			{/* Shelf boards — board i carries shelf i (bottom-up) */}
-			{Array.from({ length: levels }, (_, i) => (
-				<ShelfBoard key={i} w={w} d={d} y={i * levelH} shelfId={shelves[i]?.id} />
-			))}
+			{Array.from({ length: levels }, (_, i) => {
+				const shelf = renderedShelves[i];
+				return <ShelfBoard
+					key={shelf?.id ?? i}
+					w={shelf ? Math.min(w, centimetresToMetres(shelf.width, w)) : w}
+					d={shelf ? Math.min(d, centimetresToMetres(shelf.length, d)) : d}
+					y={boardY(i)}
+					shelfId={shelf?.id}
+				/>;
+			})}
 
 			{/* Back brace */}
 			<a-box
@@ -328,8 +363,8 @@ const RackEntity = memo(function RackEntity({
 			)}
 
 			{/* Freezer indicators */}
-			{shelves.map((shelf, si) => shelf.hasFreezer ? (
-				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.06} ${si * levelH + 0.15} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
+			{renderedShelves.map((shelf, si) => shelf.hasFreezer ? (
+				<a-text key={`f${si}`} value="❄" position={`${-w / 2 + 0.06} ${boardY(si) + 0.15} 0`} color="#00BFFF" scale="0.4 0.4 0.4" align="left" />
 			) : null)}
 
 			{/* Name label — billboarded so it always faces the camera */}
@@ -344,21 +379,27 @@ const RackEntity = memo(function RackEntity({
 			/>
 
 			{/* Boxes on shelves */}
-			{shelves.map((shelf, si) => {
+			{renderedShelves.map((shelf, si) => {
 				const boxes = shelfBoxes[shelf.id] ?? [];
 				return boxes.map((box, bi) => {
-					const bw = Math.max(dimToMetres(box.width, 0.35), 0.12);
-					const bh = Math.max(dimToMetres(box.height, 0.3), 0.12);
-					const bd = Math.max(dimToMetres(box.length, 0.35), 0.12);
+					const bw = Math.max(centimetresToMetres(box.width, 0.35), 0.12);
+					const bh = Math.max(centimetresToMetres(box.height, 0.3), 0.12);
+					const bd = Math.max(centimetresToMetres(box.length, 0.35), 0.12);
 					const offsetX = (bi - boxes.length / 2 + 0.5) * (bw + 0.04);
 					const baseY = boardTop(si) + bh / 2 + (box.stackOrder ?? 0) * bh;
+					const parent = box.parentBoxId ? boxes.find((candidate) => candidate.id === box.parentBoxId) : null;
+					const parentHeight = parent ? Math.max(centimetresToMetres(parent.height, 0.3), 0.12) : 0;
+					const parentY = parent ? (parent.posY ?? (boardTop(si) + parentHeight / 2 + (parent.stackOrder ?? 0) * parentHeight)) : 0;
+					const resolvedX = box.posX ?? parent?.posX ?? offsetX;
+					const resolvedY = box.posY ?? (parent ? parentY + parentHeight / 2 + bh / 2 : baseY);
+					const resolvedZ = box.posZ ?? parent?.posZ ?? 0;
 					const qty = (productsByBox[box.id] ?? []).reduce((sum, r) => sum + r.quantity, 0);
 					const colour = selectedBoxId === box.id ? SELECTED_COLOUR : BOX_COLOURS[bi % BOX_COLOURS.length];
 					return (
 						<a-box
 							key={box.id}
 							data-box-id={box.id}
-							position={`${box.posX ?? offsetX} ${box.posY ?? baseY} ${box.posZ ?? 0}`}
+							position={`${resolvedX} ${resolvedY} ${resolvedZ}`}
 							rotation={`0 ${box.rotationAngle ?? 0} 0`}
 							width={String(bw)}
 							height={String(bh)}
@@ -373,22 +414,24 @@ const RackEntity = memo(function RackEntity({
 			})}
 
 			{/* Products sitting directly on shelves (no box) */}
-			{shelves.map((shelf, si) => {
+			{renderedShelves.map((shelf, si) => {
 				const prods = productsByShelf[shelf.id] ?? [];
-				return prods.map((rec, ri) => (
-					<a-box
+				return prods.map((rec, ri) => {
+					const geometry = aggregateProductDimensions(rec.sku?.dimensions, rec.quantity, w * 0.9, d * 0.9);
+					return <a-box
 						key={rec.id}
 						data-product-id={rec.id}
-						position={`${-w / 2 + 0.15 + ri * 0.28} ${boardTop(si) + 0.09} ${d / 4}`}
-						width="0.18"
-						height="0.18"
-						depth="0.18"
+						position={`${rec.posX ?? (-w / 2 + geometry.width / 2 + ri * (geometry.width + 0.04))} ${rec.posY ?? (boardTop(si) + geometry.height / 2)} ${rec.posZ ?? 0}`}
+						rotation={`0 ${rec.rotY ?? 0} 0`}
+						width={String(geometry.width)}
+						height={String(geometry.height)}
+						depth={String(geometry.depth)}
 						color={PRODUCT_COLOUR}
 						roughness="0.6"
 					>
-						<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.18 0" align="center" color="#BFFFF4" scale="0.2 0.2 0.2" width="4" />
+						<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position={`0 ${geometry.height / 2 + 0.09} 0`} align="center" color="#BFFFF4" scale="0.2 0.2 0.2" width="4" />
 					</a-box>
-				));
+				});
 			})}
 		</a-entity>
 	);
@@ -402,6 +445,7 @@ const FloorBox = memo(function FloorBox({
 	floorD,
 	productsByBox,
 	selectedBoxId,
+	placement,
 }: {
 	box: IStorageBox;
 	index: number;
@@ -409,17 +453,14 @@ const FloorBox = memo(function FloorBox({
 	floorD: number;
 	productsByBox: Record<string, ProductRecord[]>;
 	selectedBoxId: string | null;
+	placement: { x: number; y: number; z: number };
 }) {
-	const bw = Math.max(dimToMetres(box.width, 0.4), 0.15);
-	const bh = Math.max(dimToMetres(box.height, 0.4), 0.15);
-	const bd = Math.max(dimToMetres(box.length, 0.4), 0.15);
-	// Default layout: rows along the front edge of the floor
-	const perRow = Math.max(1, Math.floor((floorW - 2) / (bw + 0.15)));
-	const col = index % perRow;
-	const row = Math.floor(index / perRow);
-	const posX = box.posX ?? (-floorW / 2 + 1 + bw / 2 + col * (bw + 0.15));
-	const posY = box.posY ?? (bh / 2 + (box.stackOrder ?? 0) * bh);
-	const posZ = box.posZ ?? (floorD / 2 - 1 - bd / 2 - row * (bd + 0.2));
+	const bw = Math.max(centimetresToMetres(box.width, 0.4), 0.15);
+	const bh = Math.max(centimetresToMetres(box.height, 0.4), 0.15);
+	const bd = Math.max(centimetresToMetres(box.length, 0.4), 0.15);
+	const posX = placement.x;
+	const posY = placement.y;
+	const posZ = placement.z;
 	const qty = (productsByBox[box.id] ?? []).reduce((sum, r) => sum + r.quantity, 0);
 	return (
 		<a-box
@@ -471,11 +512,15 @@ interface OverviewFloorData {
 	racks: WarehouseRack[];
 	rackShelves: Record<string, IShelf[]>;
 	shelfBoxes: Record<string, IStorageBox[]>;
+	floorBoxes: IStorageBox[];
+	products: ProductRecord[];
 	rackPos: Record<string, { x: number; z: number; rotY: number }>;
 }
 
 // ── Main page ───────────────────────────────────────────────────────────────
 export default function WarehouseVisualizerPage() {
+	const user = useAuthStore((state) => state.user);
+	const canEditLayout = user?.role === 'Admin' || user?.role === 'Manager';
 	const [floors, setFloors] = useState<IFloor[]>([]);
 	const [floorRackCounts, setFloorRackCounts] = useState<Record<string, number>>({});
 	const [selectedFloor, setSelectedFloor] = useState<string>('');
@@ -512,23 +557,35 @@ export default function WarehouseVisualizerPage() {
 
 	// ── Product groupings ─────────────────────────────────────────────────────
 	const productsByBox = useMemo(() => {
-		const map: Record<string, ProductRecord[]> = {};
-		products.forEach(r => { if (r.boxId) (map[r.boxId] ??= []).push(r); });
-		return map;
+		return groupProducts(products).byBox;
 	}, [products]);
 	const productsByShelf = useMemo(() => {
-		const map: Record<string, ProductRecord[]> = {};
-		products.forEach(r => { if (!r.boxId && r.shelfId) (map[r.shelfId] ??= []).push(r); });
-		return map;
+		return groupProducts(products).byShelf;
 	}, [products]);
 	const floorProducts = useMemo(
-		() => products.filter(r => !r.boxId && !r.shelfId),
+		() => groupProducts(products).onFloor,
 		[products],
 	);
 
 	// ── Stable refs so event handlers always see latest state ───────────────
 	const rackPosRef = useRef(rackPos);
 	useEffect(() => { rackPosRef.current = rackPos; }, [rackPos]);
+	const rackSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+	const scheduleRackSave = useCallback((rackId: string, next: { x: number; z: number; rotY: number }, previous: { x: number; z: number; rotY: number }) => {
+		if (!canEditLayout) return;
+		clearTimeout(rackSaveTimers.current[rackId]);
+		rackSaveTimers.current[rackId] = setTimeout(async () => {
+			try {
+				await racksApi.savePosition(rackId, { posX: next.x, posZ: next.z, rotY: next.rotY });
+			} catch (error: any) {
+				setSceneError(error.response?.data?.error ?? 'Rack position could not be saved.');
+				setRackPos((current) => current[rackId] === next || (
+					current[rackId]?.x === next.x && current[rackId]?.z === next.z && current[rackId]?.rotY === next.rotY
+				) ? { ...current, [rackId]: previous } : current);
+			}
+		}, 250);
+	}, [canEditLayout]);
+	useEffect(() => () => Object.values(rackSaveTimers.current).forEach(clearTimeout), []);
 
 	const camRef = useRef({ camPos, camYaw, camPitch });
 	useEffect(() => { camRef.current = { camPos, camYaw, camPitch }; }, [camPos, camYaw, camPitch]);
@@ -602,6 +659,7 @@ export default function WarehouseVisualizerPage() {
 	// ── Current floor dimensions (metres = scene units) ──────────────────────
 	const currentFloor = floors.find(f => f.id === selectedFloor);
 	const { w: floorW, d: floorD } = floorSceneDims(currentFloor);
+	const floorBoxLayout = useMemo(() => layoutFloorBoxes(floorBoxes, floorW, floorD), [floorBoxes, floorW, floorD]);
 
 	// ── Fit camera to the current floor ───────────────────────────────────────
 	const fitCameraToFloor = useCallback((w: number, d: number) => {
@@ -680,7 +738,7 @@ export default function WarehouseVisualizerPage() {
 	useEffect(() => {
 		function onKeyDown(e: KeyboardEvent) {
 			// Rack movement
-			if (selectedRack && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyQ', 'KeyE', 'Escape'].includes(e.code)) {
+			if (selectedRack && canEditLayout && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyQ', 'KeyE', 'Escape'].includes(e.code)) {
 				e.preventDefault();
 				setRackPos(prev => {
 					const p = prev[selectedRack];
@@ -693,8 +751,9 @@ export default function WarehouseVisualizerPage() {
 					if (e.code === 'KeyQ') rotY = (rotY - 45 + 360) % 360;
 					if (e.code === 'KeyE') rotY = (rotY + 45) % 360;
 					if (e.code === 'Escape') { setSelectedRack(null); setSelectedBox(null); return prev; }
-					const next = { ...prev, [selectedRack]: { x, z, rotY } };
-					racksApi.savePosition(selectedRack, { posX: x, posZ: z, rotY }).catch((err) => { console.error('Failed to save rack position', err); });
+					const nextPosition = { x, z, rotY };
+					const next = { ...prev, [selectedRack]: nextPosition };
+					scheduleRackSave(selectedRack, nextPosition, p);
 					return next;
 				});
 			}
@@ -725,7 +784,7 @@ export default function WarehouseVisualizerPage() {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
 		};
-	}, [selectedRack]);
+	}, [selectedRack, canEditLayout, scheduleRackSave]);
 
 	// ── Smooth WASD movement loop ─────────────────────────────────────────────
 	useEffect(() => {
@@ -978,8 +1037,8 @@ export default function WarehouseVisualizerPage() {
 				const p = rackPosRef.current[rackId];
 				const rack = racks.find(r => r.id === rackId);
 				if (viewMode === 'single' && p && rack) {
-					const rw = Math.max(dimToMetres(rack.widthCm, 1.0), 0.4);
-					const rh = Math.max(dimToMetres(rack.heightCm, 2.0), 0.5);
+					const rw = Math.max(centimetresToMetres(rack.widthCm, 1.0), 0.4);
+					const rh = Math.max(centimetresToMetres(rack.heightCm, 2.0), 0.5);
 					focusCameraOn({ x: p.x, y: rh / 2, z: p.z }, Math.max(3, Math.max(rw, rh) * 1.6));
 				} else if (point) {
 					// Overview mode (or unknown position): aim at the clicked spot
@@ -998,36 +1057,38 @@ export default function WarehouseVisualizerPage() {
 
 	// ── Move rack helper (saves to DB) ────────────────────────────────────────
 	const moveRack = useCallback((dx: number, dz: number) => {
-		if (!selectedRack) return;
+		if (!selectedRack || !canEditLayout) return;
 		setRackPos(prev => {
 			const p = prev[selectedRack];
 			if (!p) return prev;
 			const nx = snap(p.x + dx), nz = snap(p.z + dz);
-			const next = { ...prev, [selectedRack]: { ...p, x: nx, z: nz } };
-			racksApi.savePosition(selectedRack, { posX: nx, posZ: nz, rotY: p.rotY }).catch((err) => { console.error('Failed to save rack position', err); });
+			const nextPosition = { ...p, x: nx, z: nz };
+			const next = { ...prev, [selectedRack]: nextPosition };
+			scheduleRackSave(selectedRack, nextPosition, p);
 			return next;
 		});
-	}, [selectedRack]);
+	}, [selectedRack, canEditLayout, scheduleRackSave]);
 
 	const rotateRack = useCallback((delta: number) => {
-		if (!selectedRack) return;
+		if (!selectedRack || !canEditLayout) return;
 		setRackPos(prev => {
 			const p = prev[selectedRack];
 			if (!p) return prev;
 			const rotY = (p.rotY + delta + 360) % 360;
-			const next = { ...prev, [selectedRack]: { ...p, rotY } };
-			racksApi.savePosition(selectedRack, { posX: p.x, posZ: p.z, rotY }).catch((err) => { console.error('Failed to save rack position', err); });
+			const nextPosition = { ...p, rotY };
+			const next = { ...prev, [selectedRack]: nextPosition };
+			scheduleRackSave(selectedRack, nextPosition, p);
 			return next;
 		});
-	}, [selectedRack]);
+	}, [selectedRack, canEditLayout, scheduleRackSave]);
 
 	// ── Focus on selected rack (position camera to look at it) ──────────────
 	const focusOnRack = useCallback((rackId: string) => {
 		const p = rackPos[rackId];
 		if (!p) return;
 		const rack = racks.find(r => r.id === rackId);
-		const rw = rack ? Math.max(dimToMetres(rack.widthCm, 1.0), 0.4) : 1.0;
-		const rh = rack ? Math.max(dimToMetres(rack.heightCm, 2.0), 0.5) : 2.0;
+		const rw = rack ? Math.max(centimetresToMetres(rack.widthCm, 1.0), 0.4) : 1.0;
+		const rh = rack ? Math.max(centimetresToMetres(rack.heightCm, 2.0), 0.5) : 2.0;
 		focusCameraOn({ x: p.x, y: rh / 2, z: p.z }, Math.max(3, Math.max(rw, rh) * 1.6));
 	}, [rackPos, racks, focusCameraOn]);
 
@@ -1037,15 +1098,13 @@ export default function WarehouseVisualizerPage() {
 		setOverviewLoading(true);
 		setSceneError(null);
 		try {
-			const racksRes = await racksApi.list();
-			const allRacks = extractList<WarehouseRack>(racksRes.data);
+			const sceneData = await Promise.all(floors.map((floor) => fetchFloorSceneData(floor.id)));
 			const counts: Record<string, number> = {};
-			allRacks.forEach(r => { counts[r.floorId] = (counts[r.floorId] ?? 0) + 1; });
-			setFloorRackCounts(counts);
-			const results = floors.map((floor) => {
-				const rackList = allRacks.filter(rack => rack.floorId === floor.id);
+			const results = floors.map((floor, floorIndex) => {
+				const data = sceneData[floorIndex];
+				const rackList = data.racks;
+				counts[floor.id] = rackList.length;
 				const dims = floorSceneDims(floor);
-				const { rackShelves: rs, shelfBoxes: sb } = groupRackShelves(rackList);
 				const pos: Record<string, { x: number; z: number; rotY: number }> = {};
 				rackList.forEach((r, i) => {
 					const def = defaultRackPos(i, dims.w, dims.d);
@@ -1055,8 +1114,9 @@ export default function WarehouseVisualizerPage() {
 						rotY: r.rotY ?? 0,
 					};
 				});
-				return { floor, racks: rackList, rackShelves: rs, shelfBoxes: sb, rackPos: pos };
+				return { floor, racks: rackList, rackShelves: data.rackShelves, shelfBoxes: data.shelfBoxes, floorBoxes: data.floorBoxes, products: data.products, rackPos: pos };
 			});
+			setFloorRackCounts(counts);
 			setOverviewData(results);
 		} catch {
 			setSceneError('All-floor overview could not be loaded.');
@@ -1072,13 +1132,13 @@ export default function WarehouseVisualizerPage() {
 						rotY: r.rotY ?? 0,
 					};
 				});
-				return { floor, racks: rackList, rackShelves: floor.id === selectedFloor ? rackShelves : {}, shelfBoxes: floor.id === selectedFloor ? shelfBoxes : {}, rackPos: pos };
+				return { floor, racks: rackList, rackShelves: floor.id === selectedFloor ? rackShelves : {}, shelfBoxes: floor.id === selectedFloor ? shelfBoxes : {}, floorBoxes: floor.id === selectedFloor ? floorBoxes : [], products: floor.id === selectedFloor ? products : [], rackPos: pos };
 			});
 			setOverviewData(fallback);
 		} finally {
 			setOverviewLoading(false);
 		}
-	}, [floors, racks, selectedFloor, rackShelves, shelfBoxes]);
+	}, [floors, racks, selectedFloor, rackShelves, shelfBoxes, floorBoxes, products]);
 
 	// ── Overview layout: branches as columns, floors stacked by number ───────
 	const overviewLayout = useMemo(() => {
@@ -1099,11 +1159,14 @@ export default function WarehouseVisualizerPage() {
 			const colW = Math.max(...items.map(fd => floorSceneDims(fd.floor).w));
 			const cx = cursorX + colW / 2;
 			let topY = 0;
+			let nextY = 0;
 			[...items].sort((a, b) => (a.floor.floorNumber ?? 1) - (b.floor.floorNumber ?? 1)).forEach(fd => {
 				const dims = floorSceneDims(fd.floor);
-				const y = Math.max(0, ((fd.floor.floorNumber ?? 1) - 1)) * STOREY_HEIGHT;
+				const y = nextY;
 				placed.push({ ...fd, x: cx, y, w: dims.w, d: dims.d });
 				topY = Math.max(topY, y);
+				const tallestRack = Math.max(0, ...fd.racks.map((rack) => centimetresToMetres(rack.heightCm, 2)));
+				nextY += Math.max(STOREY_HEIGHT, tallestRack + 1);
 				maxD = Math.max(maxD, dims.d);
 				maxY = Math.max(maxY, y);
 			});
@@ -1257,7 +1320,7 @@ export default function WarehouseVisualizerPage() {
 				<span className="text-gray-500">|</span>
 
 				{/* Rack controls – only in single-floor mode */}
-				{viewMode === 'single' && selectedRack ? (
+				{viewMode === 'single' && selectedRack && canEditLayout ? (
 					<>
 						<span className="text-yellow-400 font-semibold">
 							🗂 {racks.find(r => r.id === selectedRack)?.name ?? '—'}
@@ -1307,7 +1370,7 @@ export default function WarehouseVisualizerPage() {
 				<span><span style={{ color: PRODUCT_COLOUR }}>■</span> Product (loose)</span>
 				<span><span style={{ color: SELECTED_COLOUR }}>■</span> Selected</span>
 				<span className="text-gray-500">Grid: {GRID} m · 1 unit = 1 m</span>
-				<span className="text-gray-500">Positions saved to DB</span>
+				<span className="text-gray-500">{canEditLayout ? 'Validated positions save automatically' : 'Layout is read-only for your role'}</span>
 			</div>
 
 			{/* ── 3-D scene ─────────────────────────────────────────────────── */}
@@ -1331,7 +1394,7 @@ export default function WarehouseVisualizerPage() {
 						</div>
 						<div className="text-gray-400">Code: {selectedBox.code}</div>
 						<div className="text-gray-400">
-							Size: {Math.round(dimToMetres(selectedBox.width, 0.4) * 100)} × {Math.round(dimToMetres(selectedBox.height, 0.4) * 100)} × {Math.round(dimToMetres(selectedBox.length, 0.4) * 100)} cm
+							Size: {Math.round(centimetresToMetres(selectedBox.width, 0.4) * 100)} × {Math.round(centimetresToMetres(selectedBox.height, 0.4) * 100)} × {Math.round(centimetresToMetres(selectedBox.length, 0.4) * 100)} cm
 						</div>
 						<div className="text-gray-400 mb-1">Location: {describeBoxLocation(selectedBox)}</div>
 						<div className="border-t border-gray-700 pt-1 font-semibold text-gray-300">Products</div>
@@ -1436,30 +1499,35 @@ export default function WarehouseVisualizerPage() {
 										floorD={floorD}
 										productsByBox={productsByBox}
 										selectedBoxId={selectedBox?.id ?? null}
+										placement={floorBoxLayout[box.id]}
 									/>
 								))}
 
 								{/* Products placed on the floor without a box or shelf */}
-								{floorProducts.map((rec, i) => (
-									<a-box
+								{floorProducts.map((rec, i) => {
+									const geometry = aggregateProductDimensions(rec.sku?.dimensions, rec.quantity, 1.5, 1.5);
+									return <a-box
 										key={rec.id}
 										data-product-id={rec.id}
-										position={`${-floorW / 2 + 1 + (i % 20) * 0.6} 0.125 ${floorD / 2 - 2.4 - Math.floor(i / 20) * 0.6}`}
-										width="0.25"
-										height="0.25"
-										depth="0.25"
+										position={`${rec.posX ?? (-floorW / 2 + 1 + (i % 20) * 0.8)} ${rec.posY ?? geometry.height / 2} ${rec.posZ ?? (floorD / 2 - 2.4 - Math.floor(i / 20) * 0.8)}`}
+										rotation={`0 ${rec.rotY ?? 0} 0`}
+										width={String(geometry.width)}
+										height={String(geometry.height)}
+										depth={String(geometry.depth)}
 										color={PRODUCT_COLOUR}
 										roughness="0.6"
 									>
-										<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position="0 0.25 0" align="center" color="#BFFFF4" scale="0.25 0.25 0.25" width="4" />
+										<a-text billboard="" value={`${(rec.sku?.name ?? 'SKU').slice(0, 12)} x${rec.quantity}`} position={`0 ${geometry.height / 2 + 0.1} 0`} align="center" color="#BFFFF4" scale="0.25 0.25 0.25" width="4" />
 									</a-box>
-								))}
+								})}
 							</>
 						) : (
 							/* ── All-floors overview: branch columns, stacked storeys ── */
 							<>
-								{overviewLayout.placed.map((fd) => (
-									<a-entity key={fd.floor.id} position={`${fd.x} ${fd.y} 0`}>
+								{overviewLayout.placed.map((fd) => {
+									const grouped = groupProducts(fd.products);
+									const boxLayout = layoutFloorBoxes(fd.floorBoxes, fd.w, fd.d);
+									return <a-entity key={fd.floor.id} position={`${fd.x} ${fd.y} 0`}>
 										<FloorSlab w={fd.w} d={fd.d} />
 										{/* Floor name label (on the slab) */}
 										<a-text
@@ -1479,8 +1547,8 @@ export default function WarehouseVisualizerPage() {
 													rack={rack}
 													shelves={fd.rackShelves[rack.id] ?? []}
 													shelfBoxes={fd.shelfBoxes}
-													productsByBox={{}}
-													productsByShelf={{}}
+													productsByBox={grouped.byBox}
+													productsByShelf={grouped.byShelf}
 													isSelected={false}
 													selectedBoxId={null}
 													posX={pos.x}
@@ -1489,8 +1557,17 @@ export default function WarehouseVisualizerPage() {
 												/>
 											);
 										})}
+										{fd.floorBoxes.map((box, index) => (
+											<FloorBox key={box.id} box={box} index={index} floorW={fd.w} floorD={fd.d} productsByBox={grouped.byBox} selectedBoxId={null} placement={boxLayout[box.id]} />
+										))}
+										{grouped.onFloor.map((record, index) => {
+											const geometry = aggregateProductDimensions(record.sku?.dimensions, record.quantity, 1.5, 1.5);
+											return <a-box key={record.id} data-product-id={record.id}
+												position={`${record.posX ?? (-fd.w / 2 + 1 + (index % 20) * 0.8)} ${record.posY ?? geometry.height / 2} ${record.posZ ?? (fd.d / 2 - 2.4 - Math.floor(index / 20) * 0.8)}`}
+												rotation={`0 ${record.rotY ?? 0} 0`} width={String(geometry.width)} height={String(geometry.height)} depth={String(geometry.depth)} color={PRODUCT_COLOUR} roughness="0.6" />;
+										})}
 									</a-entity>
-								))}
+								})}
 								{/* Branch labels above each column */}
 								{overviewLayout.branchLabels.map(label => (
 									<a-text

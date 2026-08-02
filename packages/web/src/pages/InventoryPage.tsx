@@ -12,8 +12,8 @@ import { applyQuantityDelta, formatQuantity, parsePositiveQuantity, QUANTITY_INP
 
 const PAGE_SIZE = 20;
 
-const defaultNewForm = { skuId: '', variantId: '', floorId: '', shelfId: '', boxId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '' };
-const defaultEditForm = { floorId: '', shelfId: '', boxId: '', quantity: '1', batchId: '' };
+const defaultNewForm = { skuId: '', variantId: '', floorId: '', shelfId: '', boxId: '', quantity: '1', state: InventoryState.Uninspected as string, batchId: '', posX: '', posY: '', posZ: '', rotY: '' };
+const defaultEditForm = { floorId: '', shelfId: '', boxId: '', quantity: '1', batchId: '', posX: '', posY: '', posZ: '', rotY: '' };
 const defaultTransitionForm = { toState: '', reason: '' };
 
 const QTY_SHORTCUTS = [
@@ -179,6 +179,10 @@ export default function InventoryPage() {
         quantity: qty,
         state: newForm.state,
         batchId: newForm.batchId || undefined,
+				posX: newForm.posX === '' ? null : Number(newForm.posX),
+				posY: newForm.posY === '' ? null : Number(newForm.posY),
+				posZ: newForm.posZ === '' ? null : Number(newForm.posZ),
+				rotY: newForm.rotY === '' ? 0 : Number(newForm.rotY),
       });
       closeNewForm();
       await fetchInventory();
@@ -236,6 +240,10 @@ export default function InventoryPage() {
       boxId,
       quantity: String(record.quantity),
       batchId: record.batchId ?? '',
+			posX: record.posX ?? '',
+			posY: record.posY ?? '',
+			posZ: record.posZ ?? '',
+			rotY: record.rotY ?? '',
     });
     setEditingRecord(record);
     // Pre-load cascading dropdowns
@@ -267,6 +275,10 @@ export default function InventoryPage() {
         boxId: editForm.boxId || null,
         quantity: qty,
         batchId: editForm.batchId || null,
+				posX: editForm.posX === '' ? null : Number(editForm.posX),
+				posY: editForm.posY === '' ? null : Number(editForm.posY),
+				posZ: editForm.posZ === '' ? null : Number(editForm.posZ),
+				rotY: editForm.rotY === '' ? 0 : Number(editForm.rotY),
       });
       closeEditForm();
       await fetchInventory();
@@ -639,6 +651,14 @@ export default function InventoryPage() {
                     />
                   </div>
                 )}
+								<div className="form-grid-2">
+									{(['posX', 'posY', 'posZ', 'rotY'] as const).map((field) => (
+										<div className="form-group" key={field}>
+											<label className="form-label">{field === 'rotY' ? 'Rotation Y (degrees)' : `${field.toUpperCase()} (metres)`}</label>
+											<input className="input-field" type="number" step="0.01" value={newForm[field]} placeholder="Auto" onChange={(e) => setNewForm((form) => ({ ...form, [field]: e.target.value }))} />
+										</div>
+									))}
+								</div>
                 <div className="form-group">
                   <label className="form-label">Batch ID</label>
                   <SearchableSelect
@@ -737,6 +757,14 @@ export default function InventoryPage() {
                   />
                 </div>
               )}
+							<div className="form-grid-2">
+								{(['posX', 'posY', 'posZ', 'rotY'] as const).map((field) => (
+									<div className="form-group" key={field}>
+										<label className="form-label">{field === 'rotY' ? 'Rotation Y (degrees)' : `${field.toUpperCase()} (metres)`}</label>
+										<input className="input-field" type="number" step="0.01" value={editForm[field]} placeholder="Auto" onChange={(e) => setEditForm((form) => ({ ...form, [field]: e.target.value }))} />
+									</div>
+								))}
+							</div>
               <div className="form-group">
                 <label className="form-label">Quantity</label>
                 <input className="input-field" type="number" min={QUANTITY_INPUT_MIN} step={QUANTITY_INPUT_STEP} value={editForm.quantity} onChange={(e) => setEditForm(f => ({ ...f, quantity: e.target.value }))} />

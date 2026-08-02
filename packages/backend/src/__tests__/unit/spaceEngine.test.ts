@@ -90,11 +90,21 @@ describe('validateStacking', () => {
     expect(result.reason).toBeUndefined();
   });
 
-  it('prevents placing a fragile NEW item when existing items are already stacked', () => {
-    // Implementation: fragile new items cannot be placed when there are items below them
+  it('allows a fragile item on top of a non-fragile stack', () => {
     const result = validateStacking([nonFragileItem], fragileItem);
+	    expect(result.canStack).toBe(true);
+  });
+
+  it('prevents placing another item on top of a fragile item', () => {
+    const result = validateStacking([fragileItem], nonFragileItem);
     expect(result.canStack).toBe(false);
-    expect(result.reason).toContain('Fragile');
+    expect(result.reason).toContain('fragile');
+  });
+
+  it('enforces heavy items below lighter items', () => {
+    const lightBase = { ...nonFragileItem, dimensions: { ...nonFragileItem.dimensions, weight: 1 } };
+    const heavyTop = { ...nonFragileItem, dimensions: { ...nonFragileItem.dimensions, weight: 3 } };
+    expect(validateStacking([lightBase], heavyTop).reason).toContain('Heavier');
   });
 
   it('prevents placing a fragile item that would exceed max stack height', () => {
@@ -153,8 +163,9 @@ describe('validateStacking', () => {
       maxStackHeight: SKUS.widgetBox.maxStackHeight,
       dimensions: SKUS.widgetBox.dimensions,
     };
-    // fragile item on top of non-fragile stack — fragile item cannot be placed if items are below
-    expect(validateStacking([nonFragile], fragile).canStack).toBe(false);
+    // Fragile items may sit on top, but must not support another item.
+    expect(validateStacking([nonFragile], fragile).canStack).toBe(true);
+    expect(validateStacking([fragile], nonFragile).canStack).toBe(false);
     // non-fragile on top of non-fragile — should be allowed if height permits
     expect(validateStacking([nonFragile], nonFragile).canStack).toBe(true);
   });

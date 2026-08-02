@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from 'express-validator';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { getPagination, paginatedPayload } from '../utils/pagination';
+import { validateRackPlacement } from '../modules/space/layoutValidation';
 
 const router = Router();
 
@@ -148,6 +149,37 @@ router.put(
       return;
     }
     const { name, code, isActive, notes, widthCm, heightCm, depthCm, posX, posZ, rotY } = req.body;
+    const existingRack = await prisma.rack.findUnique({ where: { id: req.params!.id }, include: { floor: true } });
+    if (!existingRack) {
+      res.status(404).json({ error: 'Rack not found' });
+      return;
+    }
+    const nextX = posX ?? existingRack.posX;
+    const nextZ = posZ ?? existingRack.posZ;
+    if (nextX != null && nextZ != null) {
+      const otherRacks = await prisma.rack.findMany({
+        where: { floorId: existingRack.floorId, isActive: true, id: { not: existingRack.id }, posX: { not: null }, posZ: { not: null } },
+      });
+      const placementError = validateRackPlacement({
+        id: existingRack.id,
+        x: nextX,
+        z: nextZ,
+        widthM: (widthCm ?? existingRack.widthCm ?? 100) / 100,
+        depthM: (depthCm ?? existingRack.depthCm ?? 60) / 100,
+        rotationDeg: rotY ?? existingRack.rotY,
+      }, existingRack.floor, otherRacks.map((rack) => ({
+        id: rack.id,
+        x: rack.posX!,
+        z: rack.posZ!,
+        widthM: (rack.widthCm ?? 100) / 100,
+        depthM: (rack.depthCm ?? 60) / 100,
+        rotationDeg: rack.rotY,
+      })));
+      if (placementError) {
+        res.status(409).json({ error: placementError });
+        return;
+      }
+    }
     const rack = await prisma.rack.update({
       where: { id: req.params!.id },
       data: {

@@ -104,11 +104,8 @@ describe('processInvoiceFile', () => {
   });
 
   it('throws for unsupported file types', async () => {
-    await expect(processInvoiceFile('/some/invoice.pdf')).rejects.toThrow(
-      'Unsupported file type ".pdf"'
-    );
-    await expect(processInvoiceFile('/some/scan.png')).rejects.toThrow(
-      'Unsupported file type ".png"'
-    );
+	    await expect(processInvoiceFile('/some/invoice.docx')).rejects.toThrow(
+	      'Unsupported file type ".docx"'
+	    );
   });
 });

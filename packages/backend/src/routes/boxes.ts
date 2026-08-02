@@ -8,6 +8,50 @@ const router = Router();
 
 router.use(authenticate);
 
+async function validateBoxLocation(input: {
+  id?: string;
+  shelfId?: string | null;
+  floorId?: string | null;
+  parentBoxId?: string | null;
+  width?: number;
+  height?: number;
+  length?: number;
+  posX?: number | null;
+  posY?: number | null;
+  posZ?: number | null;
+  rotationAngle?: number | null;
+}) {
+  if (!input.shelfId && !input.floorId) return 'Either shelfId or floorId must be provided';
+  const shelf = input.shelfId ? await prisma.shelf.findUnique({ where: { id: input.shelfId }, include: { floor: true } }) : null;
+  const floor = shelf?.floor ?? (input.floorId ? await prisma.floor.findUnique({ where: { id: input.floorId } }) : null);
+  if (input.shelfId && !shelf) return 'Shelf not found';
+  if (!floor) return 'Floor not found';
+  if (shelf && input.floorId && shelf.floorId !== input.floorId) return 'Shelf and floor must belong to the same location';
+  if (input.parentBoxId) {
+    if (input.parentBoxId === input.id) return 'A box cannot be its own parent';
+    const parent = await prisma.storageBox.findUnique({ where: { id: input.parentBoxId } });
+    if (!parent || !parent.isActive) return 'Parent box not found';
+    if (input.shelfId
+      ? parent.shelfId !== input.shelfId
+      : parent.shelfId != null || parent.floorId !== input.floorId
+    ) return 'Parent box must be in the same location';
+    if (input.id && parent.parentBoxId === input.id) return 'Box stacking cannot contain a cycle';
+  }
+  if (input.posX != null || input.posZ != null) {
+    const radians = ((input.rotationAngle ?? 0) * Math.PI) / 180;
+    const widthM = (input.width ?? 40) / 100;
+    const depthM = (input.length ?? 40) / 100;
+    const halfX = Math.abs(Math.cos(radians)) * widthM / 2 + Math.abs(Math.sin(radians)) * depthM / 2;
+    const halfZ = Math.abs(Math.sin(radians)) * widthM / 2 + Math.abs(Math.cos(radians)) * depthM / 2;
+    const areaWidth = shelf ? shelf.width / 100 : floor.length ?? null;
+    const areaDepth = shelf ? shelf.length / 100 : floor.width ?? null;
+    if (areaWidth && Math.abs(input.posX ?? 0) + halfX > areaWidth / 2) return 'Box would extend beyond its parent width';
+    if (areaDepth && Math.abs(input.posZ ?? 0) + halfZ > areaDepth / 2) return 'Box would extend beyond its parent depth';
+  }
+  if (input.posY != null && input.posY < (input.height ?? 40) / 200) return 'Box position would place it below the supporting surface';
+  return null;
+}
+
 router.get(
   '/',
   [
@@ -84,9 +128,9 @@ router.post(
     body('height').isFloat({ gt: 0 }),
     body('width').isFloat({ gt: 0 }),
     body('length').isFloat({ gt: 0 }),
-    body('posX').optional().isFloat(),
-    body('posY').optional().isFloat(),
-    body('posZ').optional().isFloat(),
+    body('posX').optional({ nullable: true }).isFloat(),
+    body('posY').optional({ nullable: true }).isFloat(),
+    body('posZ').optional({ nullable: true }).isFloat(),
     body('rotationAngle').optional().isFloat(),
     body('stackOrder').optional().isInt({ min: 0 }),
     body('parentBoxId').optional({ nullable: true }).if(body('parentBoxId').notEmpty()).isUUID(),
@@ -102,10 +146,11 @@ router.post(
       posX, posY, posZ, rotationAngle, stackOrder, parentBoxId,
     } = req.body;
 
-    if (!shelfId && !floorId) {
-      res.status(400).json({ error: 'Either shelfId or floorId must be provided' });
-      return;
-    }
+    const placementError = await validateBoxLocation({ shelfId, floorId, parentBoxId, width, height, length, posX, posY, posZ, rotationAngle });
+    if (placementError) {
+	      res.status(400).json({ error: placementError });
+	      return;
+	    }
 
     const box = await prisma.storageBox.create({
       data: {
@@ -142,9 +187,9 @@ router.put(
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),
-    body('posX').optional().isFloat(),
-    body('posY').optional().isFloat(),
-    body('posZ').optional().isFloat(),
+    body('posX').optional({ nullable: true }).isFloat(),
+    body('posY').optional({ nullable: true }).isFloat(),
+    body('posZ').optional({ nullable: true }).isFloat(),
     body('rotationAngle').optional().isFloat(),
     body('stackOrder').optional().isInt({ min: 0 }),
     body('parentBoxId').optional({ nullable: true }).if(body('parentBoxId').notEmpty()).isUUID(),
@@ -159,6 +204,28 @@ router.put(
       name, code, height, width, length, shelfId, floorId, isActive,
       posX, posY, posZ, rotationAngle, stackOrder, parentBoxId,
     } = req.body;
+    const existing = await prisma.storageBox.findUnique({ where: { id: req.params!.id } });
+    if (!existing) {
+      res.status(404).json({ error: 'Box not found' });
+      return;
+    }
+    const placementError = await validateBoxLocation({
+      id: existing.id,
+      shelfId: shelfId !== undefined ? shelfId : existing.shelfId,
+      floorId: floorId !== undefined ? floorId : existing.floorId,
+      parentBoxId: parentBoxId !== undefined ? parentBoxId : existing.parentBoxId,
+      width: width ?? existing.width,
+      height: height ?? existing.height,
+      length: length ?? existing.length,
+      posX: posX !== undefined ? posX : existing.posX,
+      posY: posY !== undefined ? posY : existing.posY,
+      posZ: posZ !== undefined ? posZ : existing.posZ,
+      rotationAngle: rotationAngle ?? existing.rotationAngle,
+    });
+    if (placementError) {
+      res.status(400).json({ error: placementError });
+      return;
+    }
     const box = await prisma.storageBox.update({
       where: { id: req.params!.id },
       data: {
