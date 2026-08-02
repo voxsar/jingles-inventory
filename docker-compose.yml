@@ -52,5 +52,19 @@ services:
       && TS_NODE_TRANSPILE_ONLY=true npm run prisma:seed
       && npm run dev"
 
+  # Inventory management web UI, served from the same WSL/Docker test stack.
+  web:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile.dev
+    container_name: jingles-inventory-web
+    environment:
+      VITE_API_BASE_URL: http://backend:3001
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    command: npm run dev --workspace=packages/web -- --host 0.0.0.0
+
 volumes:
   postgres-data:
