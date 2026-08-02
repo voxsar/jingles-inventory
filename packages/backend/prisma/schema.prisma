@@ -397,9 +397,14 @@ model Shelf {
   rackId        String?  @map("rack_id")
   name          String
   code          String
+  // Physical dimensions in centimetres.
   height        Float
   width         Float
   length        Float
+  // Explicit vertical placement inside a rack. elevationCm is the board's top
+  // above the floor; levelIndex provides stable bottom-to-top ordering.
+  levelIndex    Int?     @map("level_index")
+  elevationCm   Float?   @map("elevation_cm")
   hasFreezer    Boolean  @default(false) @map("has_freezer")
   hasLock       Boolean  @default(false) @map("has_lock")
   notes         String?
@@ -423,6 +428,7 @@ model StorageBox {
   floorId        String?  @map("floor_id")
   name           String
   code           String   @unique
+  // Physical dimensions in centimetres.
   height         Float
   width          Float
   length         Float
@@ -518,6 +524,11 @@ model InventoryRecord {
   boxId         String?  @map("box_id")
   quantity      Float
   state         String
+  // Optional physical placement within the selected floor/shelf/box (metres).
+  posX          Float?   @map("pos_x")
+  posY          Float?   @map("pos_y")
+  posZ          Float?   @map("pos_z")
+  rotY          Float?   @default(0) @map("rot_y")
   sourceEventId String?  @map("source_event_id")
   terminalId    String?  @map("terminal_id")
   userId        String?  @map("user_id")

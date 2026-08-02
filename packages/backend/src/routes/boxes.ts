@@ -24,6 +24,7 @@ router.get(
     const where: Record<string, unknown> = { isActive: true };
     if (req.query?.shelfId) where.shelfId = req.query.shelfId as string;
     if (req.query?.floorId) where.floorId = req.query.floorId as string;
+    if (req.query?.rackId) where.shelf = { rackId: req.query.rackId as string };
     const pagination = getPagination(req.query);
     if (pagination.isPaginated) {
       const [items, total] = await Promise.all([
@@ -239,6 +240,31 @@ router.delete(
     }
     await prisma.boxBarcode.delete({ where: { id: req.params!.barcodeId } });
     res.status(204).send();
+  }
+);
+
+router.delete(
+  '/:id',
+  requireRole('Admin', 'Manager'),
+  [param('id').isUUID()],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+    const boxId = req.params!.id;
+    const box = await prisma.storageBox.findUnique({ where: { id: boxId } });
+    if (!box) {
+      res.status(404).json({ error: 'Box not found' });
+      return;
+    }
+    await prisma.$transaction([
+      prisma.inventoryRecord.updateMany({ where: { boxId }, data: { boxId: null } }),
+      prisma.storageBox.updateMany({ where: { parentBoxId: boxId }, data: { parentBoxId: null, stackOrder: 0 } }),
+      prisma.storageBox.update({ where: { id: boxId }, data: { isActive: false } }),
+    ]);
+    res.json({ success: true });
   }
 );
 

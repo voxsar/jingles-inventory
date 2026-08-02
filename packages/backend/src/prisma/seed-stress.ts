@@ -1333,9 +1333,11 @@ async function main() {
 						code,
 						// Standard industrial shelf level: 1.2 m wide × 0.5 m deep × 0.5 m clear height
 						// Fits nearly all consumer-goods packaging (up to 45 cm height/depth)
-						height: 0.5,
-						width: 1.2,
-						length: 0.5,
+						height: 50,
+						width: 120,
+						length: 50,
+						levelIndex: s - 1,
+						elevationCm: 5 + (s - 1) * 50,
 					},
 				});
 			}
@@ -1791,9 +1793,9 @@ async function main() {
 						floorId: floorIds[floorIdx],
 						name: `Storage Box ${code}`,
 						code,
-						height: 0.3,
-						width: 0.4,
-						length: 0.3,
+						height: 30,
+						width: 40,
+						length: 30,
 					},
 				});
 				boxesCreated++;

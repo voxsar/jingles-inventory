@@ -8,7 +8,13 @@ import logger from '../utils/logger';
 import { getOcrUploadRoot } from '../utils/runtimePaths';
 
 const upload = multer({
-  dest: getOcrUploadRoot(),
+  storage: multer.diskStorage({
+    destination: getOcrUploadRoot(),
+    filename: (_req, file, cb) => {
+      const safeExtension = path.extname(file.originalname).toLowerCase();
+      cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${safeExtension}`);
+    },
+  }),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ['.jpg', '.jpeg', '.png', '.pdf', '.txt'];

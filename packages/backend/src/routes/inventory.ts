@@ -35,6 +35,13 @@ function normalizeQuantityInput(value: unknown) {
 	return undefined;
 }
 
+function normalizeOptionalCoordinate(value: unknown): number | null | undefined {
+	if (value === undefined) return undefined;
+	if (value === null || value === '') return null;
+	const parsed = typeof value === 'number' ? value : Number(value);
+	return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 const inventoryRecordDetailInclude = {
 	sku: { include: { vendor: { select: { id: true, name: true } } } },
 	variant: {
@@ -78,21 +85,10 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		const where: Prisma.InventoryRecordWhereInput = {};
 		if (state) where.state = state as InventoryState;
 		if (skuId) where.skuId = skuId;
-		if (vendorId || categoryId || search) {
+		if (vendorId || categoryId) {
 			const skuWhere: Prisma.SKUWhereInput = {};
 			if (vendorId) skuWhere.vendorId = vendorId;
 			if (categoryId) skuWhere.categoryId = categoryId;
-			if (search) {
-				if (ftsSkuIds !== null) {
-					skuWhere.id = { in: ftsSkuIds };
-				} else {
-					skuWhere.OR = [
-						{ skuCode: { contains: search, mode: 'insensitive' } },
-						{ name: { contains: search, mode: 'insensitive' } },
-						{ description: { contains: search, mode: 'insensitive' } },
-					];
-				}
-			}
 			where.sku = skuWhere;
 		}
 		if (shelfId) {
@@ -110,6 +106,13 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 		// Applied in both FTS and non-FTS modes for consistent search behaviour.
 		if (search) {
 			where.OR = [
+				ftsSkuIds !== null
+					? { sku: { id: { in: ftsSkuIds } } }
+					: { sku: { OR: [
+						{ skuCode: { contains: search, mode: 'insensitive' } },
+						{ name: { contains: search, mode: 'insensitive' } },
+						{ description: { contains: search, mode: 'insensitive' } },
+					] } },
 				{ batch: { batchNumber: { contains: search, mode: 'insensitive' } } },
 				{ box: { code: { contains: search, mode: 'insensitive' } } },
 				{ shelf: { code: { contains: search, mode: 'insensitive' } } },
@@ -201,7 +204,7 @@ router.post(
 	requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
 	async (req: AuthRequest, res: Response): Promise<void> => {
 		try {
-			const { skuId, variantId, floorId, shelfId, boxId, quantity, state, batchId, terminalId } = req.body as {
+			const { skuId, variantId, floorId, shelfId, boxId, quantity, state, batchId, terminalId, posX, posY, posZ, rotY } = req.body as {
 				skuId: string;
 				variantId?: string;
 				floorId?: string;
@@ -211,9 +214,19 @@ router.post(
 				state?: string;
 				batchId?: string;
 				terminalId?: string;
+				posX?: number | string | null;
+				posY?: number | string | null;
+				posZ?: number | string | null;
+				rotY?: number | string | null;
 			};
 			const user = req.user!;
 			const normalizedQuantity = normalizeQuantityInput(quantity);
+			const placement = {
+				posX: normalizeOptionalCoordinate(posX),
+				posY: normalizeOptionalCoordinate(posY),
+				posZ: normalizeOptionalCoordinate(posZ),
+				rotY: normalizeOptionalCoordinate(rotY),
+			};
 
 			if (!skuId || normalizedQuantity === undefined) {
 				res.status(400).json({ success: false, error: 'skuId and quantity are required' });
@@ -221,6 +234,12 @@ router.post(
 			}
 			if (normalizedQuantity <= 0) {
 				res.status(400).json({ success: false, error: 'quantity must be greater than 0' });
+				return;
+			}
+			if ([
+				[posX, placement.posX], [posY, placement.posY], [posZ, placement.posZ], [rotY, placement.rotY],
+			].some(([raw, normalized]) => raw !== undefined && normalized === undefined)) {
+				res.status(400).json({ success: false, error: 'Placement coordinates must be finite numbers' });
 				return;
 			}
 
@@ -246,6 +265,7 @@ router.post(
 						state: state ?? defaultUninspectedState,
 						batchId,
 						terminalId,
+						...placement,
 						userId: user.id,
 						version: 1,
 					},
@@ -292,6 +312,7 @@ router.post(
 						state: state ?? defaultUninspectedState,
 						batchId: batchId ?? null,
 						terminalId: terminalId ?? null,
+						...placement,
 					},
 				});
 
@@ -461,12 +482,16 @@ router.put(
 	async (req: AuthRequest, res: Response): Promise<void> => {
 		try {
 			const { id } = req.params as { id: string };
-			const { floorId, shelfId, boxId, quantity, batchId } = req.body as {
+			const { floorId, shelfId, boxId, quantity, batchId, posX, posY, posZ, rotY } = req.body as {
 				floorId?: string | null;
 				shelfId?: string | null;
 				boxId?: string | null;
 				quantity?: number | string;
 				batchId?: string | null;
+				posX?: number | string | null;
+				posY?: number | string | null;
+				posZ?: number | string | null;
+				rotY?: number | string | null;
 			};
 			const user = req.user!;
 
@@ -493,6 +518,14 @@ router.put(
 				updateData.quantity = normalizedQuantity;
 			}
 			if (batchId !== undefined) updateData.batchId = batchId || null;
+			for (const [key, value] of Object.entries({ posX, posY, posZ, rotY })) {
+				const normalized = normalizeOptionalCoordinate(value);
+				if (value !== undefined && normalized === undefined) {
+					res.status(400).json({ success: false, error: `${key} must be a finite number` });
+					return;
+				}
+				if (normalized !== undefined) updateData[key] = normalized;
+			}
 
 			if (batchId) {
 				await assertVariantBatchReferences(prisma, {
@@ -533,6 +566,9 @@ router.put(
 				if (boxId !== undefined) payload.boxId = boxId || null;
 				if (normalizedQuantity !== undefined) payload.quantity = normalizedQuantity;
 				if (batchId !== undefined) payload.batchId = batchId || null;
+				for (const key of ['posX', 'posY', 'posZ', 'rotY'] as const) {
+					if (updateData[key] !== undefined) payload[key] = updateData[key];
+				}
 
 				await enqueueLocalSyncOperation(tx, {
 					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE,

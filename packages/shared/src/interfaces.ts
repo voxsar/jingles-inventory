@@ -300,9 +300,11 @@ export interface IShelf {
 	rackId?: string | null;
 	name: string;
 	code: string;
-	height: number;
-	width: number;
-	length: number;
+	height: number; // centimetres
+	width: number; // centimetres
+	length: number; // centimetres
+	levelIndex?: number | null;
+	elevationCm?: number | null;
 	hasFreezer: boolean;
 	hasLock: boolean;
 	notes?: string | null;
@@ -329,9 +331,9 @@ export interface IStorageBox {
 	floorId?: string | null;
 	name: string;
 	code: string;
-	height: number;
-	width: number;
-	length: number;
+	height: number; // centimetres
+	width: number; // centimetres
+	length: number; // centimetres
 	isActive: boolean;
 	createdAt: Date;
 	// 3D position/orientation
@@ -384,6 +386,10 @@ export interface IInventoryRecord {
 	boxId?: string | null;
 	quantity: number;
 	state: string; // Status value from StatusOption table
+	posX?: number | null;
+	posY?: number | null;
+	posZ?: number | null;
+	rotY?: number | null;
 	sourceEventId?: string | null;
 	terminalId?: string | null;
 	userId?: string | null;

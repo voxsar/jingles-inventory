@@ -1,5 +1,7 @@
 import path from 'path';
 import fs from 'fs';
+import { createWorker } from 'tesseract.js';
+import { PDFParse } from 'pdf-parse';
 
 export interface InvoiceFields {
   invoiceNumber?: string;
@@ -45,8 +47,6 @@ export function parseInvoiceText(text: string): InvoiceFields {
 }
 
 export async function processInvoiceFile(filePath: string): Promise<InvoiceFields> {
-  // Only plain-text invoices are supported. For image/PDF files, integrate a real
-  // OCR service (e.g. Tesseract.js or Google Cloud Vision) before calling this function.
   const ext = path.extname(filePath).toLowerCase();
 
   if (ext === '.txt') {
@@ -54,7 +54,41 @@ export async function processInvoiceFile(filePath: string): Promise<InvoiceField
     return parseInvoiceText(text);
   }
 
+  const recognize = async (input: string | Buffer | Uint8Array) => {
+    const worker = await createWorker('eng');
+    try {
+      const result = await worker.recognize(input);
+      return result.data.text;
+    } finally {
+      await worker.terminate();
+    }
+  };
+
+  if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+    return parseInvoiceText(await recognize(filePath));
+  }
+
+  if (ext === '.pdf') {
+    const parser = new PDFParse({ data: fs.readFileSync(filePath) });
+    try {
+      const extracted = await parser.getText();
+      let text = extracted.text?.trim() ?? '';
+      if (!text) {
+        const screenshots = await parser.getScreenshot({ imageBuffer: true, scale: 1.5, first: 5 });
+        const pages: string[] = [];
+        for (const screenshot of screenshots.pages) {
+          pages.push(await recognize(screenshot.data));
+        }
+        text = pages.join('\n');
+      }
+      if (!text.trim()) throw new Error('No readable text was found in the PDF');
+      return parseInvoiceText(text);
+    } finally {
+      await parser.destroy();
+    }
+  }
+
   throw new Error(
-    `Unsupported file type "${ext}". Only .txt invoices can be parsed without an external OCR service.`
+	    `Unsupported file type "${ext}". Supported types are .txt, .jpg, .jpeg, .png, and .pdf.`
   );
 }

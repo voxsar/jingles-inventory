@@ -7,7 +7,7 @@ import { formatQuantity } from '../utils/quantity';
 const defaultBranchForm = { name: '', code: '', address: '', phone: '', email: '', isDefault: false };
 const defaultFloorForm = { name: '', code: '', notes: '', length: '', width: '', floorNumber: '' };
 const defaultRackForm = { name: '', code: '', widthCm: '', heightCm: '', depthCm: '', notes: '' };
-const defaultShelfForm = { name: '', code: '', height: '', width: '', length: '', hasFreezer: false, hasLock: false, notes: '' };
+const defaultShelfForm = { name: '', code: '', height: '', width: '', length: '', levelIndex: '', elevationCm: '', hasFreezer: false, hasLock: false, notes: '' };
 const defaultBoxForm = { name: '', code: '', height: '', width: '', length: '' };
 
 type View = 'branches' | 'floors' | 'floor-detail' | 'rack-detail' | 'shelf-detail';
@@ -221,7 +221,7 @@ export default function BranchesPage() {
 	const openCreateShelf = (rackId?: string) => { setEditingShelf(null); setShelfForm({ ...defaultShelfForm, ...({} as any) }); setShowShelfModal(true); };
 	const openEditShelf = (s: any) => {
 		setEditingShelf(s);
-		setShelfForm({ name: s.name, code: s.code, height: s.height, width: s.width, length: s.length, hasFreezer: s.hasFreezer, hasLock: s.hasLock, notes: s.notes ?? '' });
+		setShelfForm({ name: s.name, code: s.code, height: s.height, width: s.width, length: s.length, levelIndex: s.levelIndex ?? '', elevationCm: s.elevationCm ?? '', hasFreezer: s.hasFreezer, hasLock: s.hasLock, notes: s.notes ?? '' });
 		setShowShelfModal(true);
 	};
 	const handleSaveShelf = async (e: React.FormEvent) => {
@@ -229,6 +229,8 @@ export default function BranchesPage() {
 		const payload = {
 			name: shelfForm.name, code: shelfForm.code.toUpperCase(),
 			height: parseFloat(shelfForm.height), width: parseFloat(shelfForm.width), length: parseFloat(shelfForm.length),
+			levelIndex: shelfForm.levelIndex === '' ? undefined : parseInt(String(shelfForm.levelIndex), 10),
+			elevationCm: shelfForm.elevationCm === '' ? undefined : parseFloat(String(shelfForm.elevationCm)),
 			hasFreezer: shelfForm.hasFreezer, hasLock: shelfForm.hasLock,
 			notes: shelfForm.notes || undefined,
 		};
@@ -239,10 +241,23 @@ export default function BranchesPage() {
 			if (selectedRack) await loadShelves(selectedRack.id);
 		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to save shelf'); }
 	};
+	const handleDeleteShelf = async (s: any) => {
+		if (!confirm(`Delete shelf "${s.name}" and deactivate its boxes?`)) return;
+		try { await shelvesApi.delete(s.id); await loadShelves(selectedRack.id); }
+		catch (err: any) { alert(err.response?.data?.error ?? 'Failed to delete shelf'); }
+	};
 
 	// ── Box CRUD ─────────────────────────────────────────────────────────────────
 	const openCreateBox = (ctx: { floorId?: string; shelfId?: string }) => {
 		setBoxContext(ctx); setEditingBox(null); setBoxForm(defaultBoxForm); setShowBoxModal(true);
+	};
+	const handleDeleteBox = async (b: any) => {
+		if (!confirm(`Delete box "${b.name}"? Inventory will be moved out of the box.`)) return;
+		try {
+			await boxesApi.delete(b.id);
+			if (selectedShelf) await loadBoxes(selectedShelf.id);
+			else if (selectedFloor) await loadRacks(selectedFloor.id);
+		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to delete box'); }
 	};
 	const openEditBox = (b: any) => {
 		setEditingBox(b);
@@ -414,6 +429,7 @@ export default function BranchesPage() {
 				<div className="flex gap-1">
 					<button className="btn-sm bg-primary-50 text-primary-700" onClick={(e: any) => { e.stopPropagation(); drillToShelf(r); }}>Boxes →</button>
 					<button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEditShelf(r); }}>Edit</button>
+					<button className="btn-sm text-red-600" onClick={(e: any) => { e.stopPropagation(); handleDeleteShelf(r); }}>Delete</button>
 				</div>
 			),
 		},
@@ -448,6 +464,7 @@ export default function BranchesPage() {
 			render: (b: any) => (
 				<div className="flex gap-1">
 					<button className="btn-sm" onClick={(e: any) => { e.stopPropagation(); openEditBox(b); }}>Edit</button>
+					<button className="btn-sm text-red-600" onClick={(e: any) => { e.stopPropagation(); handleDeleteBox(b); }}>Delete</button>
 				</div>
 			),
 		},
@@ -762,6 +779,16 @@ export default function BranchesPage() {
 								<div className="form-group">
 									<label className="form-label">Depth/Length (cm) *</label>
 									<input className="input-field" type="number" step="0.1" min="0.1" value={shelfForm.length} required placeholder="e.g. 60" onChange={e => setShelfForm(f => ({ ...f, length: e.target.value }))} />
+								</div>
+								<div className="form-grid-2">
+									<div className="form-group">
+										<label className="form-label">Level index (bottom = 0)</label>
+										<input className="input-field" type="number" step="1" min="0" value={shelfForm.levelIndex} placeholder="e.g. 0" onChange={e => setShelfForm(f => ({ ...f, levelIndex: e.target.value }))} />
+									</div>
+									<div className="form-group">
+										<label className="form-label">Board elevation (cm)</label>
+										<input className="input-field" type="number" step="0.1" min="0" value={shelfForm.elevationCm} placeholder="e.g. 5" onChange={e => setShelfForm(f => ({ ...f, elevationCm: e.target.value }))} />
+									</div>
 								</div>
 								<div className="flex gap-4">
 									<label className="flex items-center gap-2 text-sm cursor-pointer">

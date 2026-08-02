@@ -162,6 +162,7 @@ export const shelvesApi = {
   get: (id: string) => api.get(`/shelves/${id}`),
   create: (data: any) => api.post('/shelves', data),
   update: (id: string, data: any) => api.put(`/shelves/${id}`, data),
+  delete: (id: string) => api.delete(`/shelves/${id}`),
 };
 
 // Boxes
@@ -170,6 +171,7 @@ export const boxesApi = {
   get: (id: string) => api.get(`/boxes/${id}`),
   create: (data: any) => api.post('/boxes', data),
   update: (id: string, data: any) => api.put(`/boxes/${id}`, data),
+  delete: (id: string) => api.delete(`/boxes/${id}`),
   getBarcodes: (id: string) => api.get(`/boxes/${id}/barcodes`),
   addBarcode: (id: string, data: any) => api.post(`/boxes/${id}/barcodes`, data),
   deleteBarcode: (id: string, barcodeId: string) => api.delete(`/boxes/${id}/barcodes/${barcodeId}`),
@@ -298,7 +300,7 @@ export const barcodeApi = {
 
 // Space
 export const spaceApi = {
-  calculate: (floor: string) => api.get('/space/calculate', { params: { floor } }),
+  calculate: (shelfId: string) => api.get('/space/calculate', { params: { shelfId } }),
   stackingSuggestions: (skuId: string, floorId: string) =>
     api.get('/space/stacking-suggestions', { params: { skuId, floorId } }),
 };

@@ -164,13 +164,16 @@ router.delete(
 			res.status(404).json({ error: 'Floor not found' });
 			return;
 		}
-		await prisma.inventoryRecord.updateMany({
-			where: { floorId: req.params!.id },
-			data: { floorId: null },
-		});
-		const updated = await prisma.floor.update({
-			where: { id: req.params!.id },
-			data: { isActive: false },
+		const floorId = req.params!.id;
+		const updated = await prisma.$transaction(async (tx) => {
+			await tx.inventoryRecord.updateMany({
+				where: { OR: [{ floorId }, { shelf: { floorId } }, { box: { floorId } }] },
+				data: { floorId: null, shelfId: null, boxId: null },
+			});
+			await tx.storageBox.updateMany({ where: { OR: [{ floorId }, { shelf: { floorId } }] }, data: { isActive: false } });
+			await tx.shelf.updateMany({ where: { floorId }, data: { isActive: false } });
+			await tx.rack.updateMany({ where: { floorId }, data: { isActive: false } });
+			return tx.floor.update({ where: { id: floorId }, data: { isActive: false } });
 		});
 		res.json({ success: true, data: updated });
 	}

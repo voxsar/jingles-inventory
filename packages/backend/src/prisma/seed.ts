@@ -456,29 +456,29 @@ async function seedLocations() {
 				});
 
 				const shelves = [
-					{ name: `${rack.code}-Shelf-1`, code: `${rack.code}-S1`, height: 0.45, width: 1.2, length: 0.6 },
-					{ name: `${rack.code}-Shelf-2`, code: `${rack.code}-S2`, height: 0.45, width: 1.2, length: 0.6 },
+					{ name: `${rack.code}-Shelf-1`, code: `${rack.code}-S1`, height: 45, width: 120, length: 60, levelIndex: 0, elevationCm: 5 },
+					{ name: `${rack.code}-Shelf-2`, code: `${rack.code}-S2`, height: 45, width: 120, length: 60, levelIndex: 1, elevationCm: 105 },
 				];
 
 				for (const shelfDef of shelves) {
 					const shelf = await prisma.shelf.upsert({
 						where: { floorId_code: { floorId: rack.floorId, code: shelfDef.code } },
-						update: { name: shelfDef.name, rackId: rack.id, height: shelfDef.height, width: shelfDef.width, length: shelfDef.length, isActive: true },
+						update: { name: shelfDef.name, rackId: rack.id, height: shelfDef.height, width: shelfDef.width, length: shelfDef.length, levelIndex: shelfDef.levelIndex, elevationCm: shelfDef.elevationCm, isActive: true },
 						create: { ...shelfDef, floorId: rack.floorId, rackId: rack.id, hasFreezer: false, hasLock: false },
 					});
 					shelfMap.set(shelf.code, shelf.id);
 
 					const box = await prisma.storageBox.upsert({
 						where: { code: `${shelf.code}-BOX` },
-						update: { shelfId: shelf.id, floorId: rack.floorId, height: 0.4, width: 0.6, length: 0.6, isActive: true },
+						update: { shelfId: shelf.id, floorId: rack.floorId, height: 40, width: 60, length: 60, isActive: true },
 						create: {
 							name: `${shelf.code} Box`,
 							code: `${shelf.code}-BOX`,
 							shelfId: shelf.id,
 							floorId: rack.floorId,
-							height: 0.4,
-							width: 0.6,
-							length: 0.6,
+							height: 40,
+							width: 60,
+							length: 60,
 							stackOrder: 0,
 						},
 					});

@@ -72,6 +72,8 @@ router.post(
     body('height').isFloat({ gt: 0 }),
     body('width').isFloat({ gt: 0 }),
     body('length').isFloat({ gt: 0 }),
+    body('levelIndex').optional({ nullable: true }).isInt({ min: 0 }),
+    body('elevationCm').optional({ nullable: true }).isFloat({ min: 0 }),
     body('hasFreezer').optional().isBoolean(),
     body('hasLock').optional().isBoolean(),
     body('notes').optional().isString(),
@@ -82,7 +84,7 @@ router.post(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { floorId, rackId, name, code, height, width, length, hasFreezer, hasLock, notes } = req.body;
+    const { floorId, rackId, name, code, height, width, length, levelIndex, elevationCm, hasFreezer, hasLock, notes } = req.body;
     const shelf = await prisma.shelf.create({
       data: {
         floorId,
@@ -92,6 +94,8 @@ router.post(
         height,
         width,
         length,
+        levelIndex: levelIndex ?? null,
+        elevationCm: elevationCm ?? null,
         hasFreezer: hasFreezer ?? false,
         hasLock: hasLock ?? false,
         notes,
@@ -112,6 +116,8 @@ router.put(
     body('height').optional().isFloat({ gt: 0 }),
     body('width').optional().isFloat({ gt: 0 }),
     body('length').optional().isFloat({ gt: 0 }),
+    body('levelIndex').optional({ nullable: true }).isInt({ min: 0 }),
+    body('elevationCm').optional({ nullable: true }).isFloat({ min: 0 }),
     body('hasFreezer').optional().isBoolean(),
     body('hasLock').optional().isBoolean(),
     body('notes').optional().isString(),
@@ -122,12 +128,37 @@ router.put(
       res.status(400).json({ errors: errors.array() });
       return;
     }
-    const { name, code, height, width, length, hasFreezer, hasLock, notes, isActive } = req.body;
+    const { name, code, height, width, length, levelIndex, elevationCm, hasFreezer, hasLock, notes, isActive } = req.body;
     const shelf = await prisma.shelf.update({
       where: { id: req.params!.id },
-      data: { name, code, height, width, length, hasFreezer, hasLock, notes, isActive },
+      data: { name, code, height, width, length, levelIndex, elevationCm, hasFreezer, hasLock, notes, isActive },
     });
     res.json(shelf);
+  }
+);
+
+router.delete(
+  '/:id',
+  requireRole('Admin', 'Manager'),
+  [param('id').isUUID()],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+    const shelfId = req.params!.id;
+    const shelf = await prisma.shelf.findUnique({ where: { id: shelfId } });
+    if (!shelf) {
+      res.status(404).json({ error: 'Shelf not found' });
+      return;
+    }
+    await prisma.$transaction([
+      prisma.inventoryRecord.updateMany({ where: { shelfId }, data: { shelfId: null, boxId: null } }),
+      prisma.storageBox.updateMany({ where: { shelfId }, data: { isActive: false } }),
+      prisma.shelf.update({ where: { id: shelfId }, data: { isActive: false } }),
+    ]);
+    res.json({ success: true });
   }
 );
 
