@@ -87,6 +87,7 @@ type SharedSkuRow = {
   batch_pricing: unknown;
   barcode: string | null;
   stock_on_hand: number | string | null;
+  stock_by_branch: Record<string, number> | null;
 };
 
 type SharedVariantRow = {
@@ -95,6 +96,7 @@ type SharedVariantRow = {
   variant_code: string;
   variant_name: string | null;
   variant_stock_on_hand: number | string | null;
+  stock_by_branch: Record<string, number> | null;
   attribute_id: string | null;
   attribute_name: string | null;
   attribute_type: string | null;
@@ -152,12 +154,15 @@ type ReturnCreatedPayload = {
 type PosCloudSaleRow = {
   receipt_number: string;
   terminal_id: string;
+  branch_id: string | null;
   lines: SharedSaleLine[];
   reason: string | null;
 };
 
 type PosCatalogSnapshot = {
   generatedAt: string;
+  branches: Array<{ id: string; code: string; name: string }>;
+  users: Array<{ id: string; code: string; email: string; name: string; initials: string; role: 'CASHIER' | 'MANAGER' }>;
   categories: Array<{
     id: string;
     name: string;
@@ -174,6 +179,7 @@ type PosCatalogSnapshot = {
     packSize: number;
     unitLabel: string;
     stockOnHand: number;
+    stockByBranch: Record<string, number>;
     description?: string;
     priceTiers: Array<{
       id: string;
@@ -189,6 +195,7 @@ type PosCatalogSnapshot = {
       variantCode: string;
       name?: string;
       stockOnHand: number;
+      stockByBranch: Record<string, number>;
       attributes: Array<{
         attributeId: string;
         attributeName: string;
@@ -199,7 +206,14 @@ type PosCatalogSnapshot = {
         sortOrder?: number;
       }>;
     }>;
+    pricingRules: Array<Record<string, unknown>>;
   }>;
+};
+
+type PricingOverlayRow = {
+  id: string; name: string; type: string; value: number; applies_to: Record<string, string[]>;
+  conditions: Record<string, unknown> | null; priority: number; stackable: boolean;
+  valid_from: Date | null; valid_to: Date | null;
 };
 
 const DATABASE_URL = process.env.DATABASE_URL?.trim();
@@ -531,6 +545,7 @@ function buildProductVariants(rows: SharedVariantRow[]) {
       variantCode: row.variant_code,
       name: row.variant_name ?? undefined,
       stockOnHand: normalizeNumber(row.variant_stock_on_hand),
+      stockByBranch: row.stock_by_branch ?? {},
       attributes: [],
     };
     if (row.attribute_id && row.value_id && !variant.attributes.some((item) => item.attributeId === row.attribute_id)) {
@@ -741,7 +756,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
   await ensurePosCloudSchema();
   const inventory = getPool();
 
-  const [categoriesResult, skuResult, variantResult] = await Promise.all([
+  const [categoriesResult, skuResult, variantResult, branchesResult, usersResult, overlaysResult] = await Promise.all([
     inventory.query<SharedCategoryRow>(
       `
         SELECT id, name, parent_id, sort_order
@@ -753,10 +768,14 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<SharedSkuRow>(
       `
         WITH shelf_ready_stock AS (
-          SELECT sku_id, COALESCE(SUM(quantity), 0) AS stock_on_hand
-          FROM inventory_records
-          WHERE state = $1
-          GROUP BY sku_id
+          SELECT ir.sku_id, COALESCE(SUM(ir.branch_qty), 0) AS stock_on_hand,
+            COALESCE(jsonb_object_agg(ir.branch_id, ir.branch_qty) FILTER (WHERE ir.branch_id IS NOT NULL), '{}'::jsonb) AS stock_by_branch
+          FROM (
+            SELECT records.sku_id, floors.branch_id, SUM(records.quantity) AS branch_qty
+            FROM inventory_records records LEFT JOIN floors ON floors.id = records.floor_id
+            WHERE records.state = $1 GROUP BY records.sku_id, floors.branch_id
+          ) ir
+          GROUP BY ir.sku_id
         ),
         preferred_barcodes AS (
           SELECT DISTINCT ON (sku_id) sku_id, barcode
@@ -770,15 +789,21 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
           s.description,
           s.category_id,
           s.unit_of_measure,
-          s.selling_price,
-          s.wholesale_price,
-          s.bulk_price,
+          COALESCE(latest.selling_price, s.selling_price) AS selling_price,
+          COALESCE(latest.wholesale_price, s.wholesale_price) AS wholesale_price,
+          COALESCE(latest.bulk_price, s.bulk_price) AS bulk_price,
           s.batch_pricing,
           pb.barcode,
-          COALESCE(sr.stock_on_hand, 0) AS stock_on_hand
+          COALESCE(sr.stock_on_hand, 0) AS stock_on_hand,
+          COALESCE(sr.stock_by_branch, '{}'::jsonb) AS stock_by_branch
         FROM skus s
         LEFT JOIN preferred_barcodes pb ON pb.sku_id = s.id
         LEFT JOIN shelf_ready_stock sr ON sr.sku_id = s.id
+        LEFT JOIN LATERAL (
+          SELECT selling_price, wholesale_price, bulk_price FROM batches
+          WHERE sku_id = s.id AND variant_id IS NULL AND is_active = TRUE
+          ORDER BY created_at DESC LIMIT 1
+        ) latest ON TRUE
         WHERE s.is_active = TRUE
         ORDER BY s.sku_code ASC
       `,
@@ -787,13 +812,18 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<SharedVariantRow>(
       `
         WITH variant_stock AS (
-          SELECT variant_id, COALESCE(SUM(quantity), 0) AS stock_on_hand
-          FROM inventory_records
-          WHERE state = $1 AND variant_id IS NOT NULL
-          GROUP BY variant_id
+          SELECT ir.variant_id, SUM(ir.branch_qty) AS stock_on_hand,
+            COALESCE(jsonb_object_agg(ir.branch_id, ir.branch_qty) FILTER (WHERE ir.branch_id IS NOT NULL), '{}'::jsonb) AS stock_by_branch
+          FROM (
+            SELECT records.variant_id, floors.branch_id, SUM(records.quantity) AS branch_qty
+            FROM inventory_records records LEFT JOIN floors ON floors.id = records.floor_id
+            WHERE records.state = $1 AND records.variant_id IS NOT NULL
+            GROUP BY records.variant_id, floors.branch_id
+          ) ir GROUP BY ir.variant_id
         )
         SELECT v.sku_id, v.id AS variant_id, v.variant_code, v.name AS variant_name,
           COALESCE(vs.stock_on_hand, 0) AS variant_stock_on_hand,
+          COALESCE(vs.stock_by_branch, '{}'::jsonb) AS stock_by_branch,
           a.id AS attribute_id, a.name AS attribute_name, a.type AS attribute_type,
           a.sort_order AS attribute_sort_order, av.id AS value_id,
           av.display_name AS value_display_name, av.represented_value AS value_represented_value,
@@ -808,6 +838,17 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
         ORDER BY v.variant_code, COALESCE(a.sort_order, 0), COALESCE(av.sort_order, 0)
       `,
       [SHELF_READY_STATE],
+    ),
+    inventory.query<{ id: string; code: string; name: string }>(
+      `SELECT id, code, name FROM branches WHERE is_active = TRUE ORDER BY code`,
+    ),
+    inventory.query<{ id: string; email: string; role: string }>(
+      `SELECT id, email, role FROM users WHERE is_active = TRUE AND role IN ('Admin','Manager','Staff') ORDER BY email`,
+    ),
+    inventory.query<PricingOverlayRow>(
+      `SELECT id, name, type, value, applies_to, conditions, priority, stackable, valid_from, valid_to
+       FROM pricing_overlays WHERE status = 'active' AND (valid_from IS NULL OR valid_from <= NOW()) AND (valid_to IS NULL OR valid_to >= NOW())
+       ORDER BY priority DESC`,
     ),
   ]);
 
@@ -837,9 +878,23 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       packSize: 1,
       unitLabel: row.unit_of_measure?.trim() || 'pcs',
       stockOnHand: normalizeNumber(row.stock_on_hand),
+      stockByBranch: row.stock_by_branch ?? {},
       description: row.description ?? undefined,
       priceTiers: buildPriceTiers(row),
       variants: variantsByProduct.get(row.id) ?? [],
+      pricingRules: overlaysResult.rows
+        .filter((overlay) => {
+          const target = overlay.applies_to ?? {};
+          return (!target.skuIds?.length && !target.categoryIds?.length)
+            || target.skuIds?.includes(row.id)
+            || (row.category_id != null && target.categoryIds?.includes(row.category_id));
+        })
+        .map((overlay) => ({
+          id: overlay.id, name: overlay.name, type: overlay.type, value: overlay.value,
+          priority: overlay.priority, stackable: overlay.stackable,
+          ...(overlay.applies_to ?? {}), ...(overlay.conditions ?? {}),
+          validFrom: overlay.valid_from?.toISOString(), validTo: overlay.valid_to?.toISOString(),
+        })),
     };
   });
 
@@ -870,6 +925,13 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
 
   return {
     generatedAt: new Date().toISOString(),
+    branches: branchesResult.rows,
+    users: usersResult.rows.map((user) => {
+      const name = user.email.split('@')[0]!.replace(/[._-]+/g, ' ');
+      return { id: user.id, code: user.email.split('@')[0]!.toUpperCase(), email: user.email,
+        name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
+        role: user.role === 'Staff' ? 'CASHIER' as const : 'MANAGER' as const };
+    }),
     categories,
     products,
   };
@@ -928,6 +990,7 @@ async function applySharedInventorySale(
     aggregateId: string;
     receiptNumber: string;
     terminalId?: string | null;
+    branchId?: string | null;
     lines: SharedSaleLine[];
   },
 ) {
@@ -941,15 +1004,17 @@ async function applySharedInventorySale(
       const recordResult = await client.query<{ id: string; quantity: number | string }>(
         `
           SELECT id, quantity
-          FROM inventory_records
-          WHERE sku_id = $1
-            AND state = $2
-            AND (($3::text IS NULL AND variant_id IS NULL) OR variant_id = $3)
+          FROM inventory_records ir
+          LEFT JOIN floors f ON f.id = ir.floor_id
+          WHERE ir.sku_id = $1
+            AND ir.state = $2
+            AND (($3::text IS NULL AND ir.variant_id IS NULL) OR ir.variant_id = $3)
+            AND ($4::text IS NULL OR f.branch_id = $4)
             AND quantity > 0
           ORDER BY updated_at ASC, created_at ASC
           FOR UPDATE
         `,
-        [line.productId, SHELF_READY_STATE, line.variantId ?? null],
+        [line.productId, SHELF_READY_STATE, line.variantId ?? null, input.branchId ?? null],
       );
 
       const totalBefore = recordResult.rows.reduce(
@@ -1038,6 +1103,7 @@ async function applySharedInventoryIncrease(
   input: {
     aggregateId: string;
     terminalId?: string | null;
+    branchId?: string | null;
     reason?: string | null;
     lines: SharedSaleLine[];
   },
@@ -1051,12 +1117,19 @@ async function applySharedInventoryIncrease(
 
       const lineScope = line.variantId ?? 'base';
       const recordId = `${input.aggregateId}-${line.productId}-${lineScope}-restock`;
+      const floor = input.branchId
+        ? (await client.query<{ id: string }>(
+            `SELECT id FROM floors WHERE branch_id = $1 AND is_active = TRUE ORDER BY sort_order, created_at LIMIT 1`,
+            [input.branchId],
+          )).rows[0]
+        : undefined;
       await client.query(
         `
           INSERT INTO inventory_records (
             id,
             sku_id,
             variant_id,
+            floor_id,
             quantity,
             state,
             terminal_id,
@@ -1064,14 +1137,14 @@ async function applySharedInventoryIncrease(
             created_at,
             updated_at
           )
-          VALUES ($1, $2, $3, $4, $5, $6, 1, NOW(), NOW())
+          VALUES ($1, $2, $3, $4, $5, $6, $7, 1, NOW(), NOW())
           ON CONFLICT (id) DO UPDATE
           SET quantity = inventory_records.quantity + EXCLUDED.quantity,
               terminal_id = EXCLUDED.terminal_id,
               version = inventory_records.version + 1,
               updated_at = NOW()
         `,
-        [recordId, line.productId, line.variantId ?? null, quantity, SHELF_READY_STATE, input.terminalId ?? null],
+        [recordId, line.productId, line.variantId ?? null, floor?.id ?? null, quantity, SHELF_READY_STATE, input.terminalId ?? null],
       );
 
       const eventId = `${input.aggregateId}-${line.productId}-${lineScope}-restock-event`;
@@ -1122,6 +1195,7 @@ async function applySharedInventoryVoid(
   input: {
     aggregateId: string;
     terminalId?: string | null;
+    branchId?: string | null;
     reason?: string | null;
     lines: SharedSaleLine[];
   },
@@ -1133,6 +1207,7 @@ async function applySharedInventoryReturn(
   input: {
     aggregateId: string;
     terminalId?: string | null;
+    branchId?: string | null;
     reason?: string | null;
     lines: SharedSaleLine[];
   },
@@ -1509,6 +1584,7 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
     aggregateId: event.aggregateId,
     receiptNumber: payload.receiptNumber,
     terminalId: payload.terminalId,
+    branchId: payload.branchId,
     lines: payload.lines.map((line) => ({
       productId: line.productId,
       sku: line.sku,
@@ -1523,7 +1599,7 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
 
 async function getSaleRow(client: PoolClient, saleId: string) {
   const row = (await client.query(
-    `SELECT receipt_number, terminal_id, lines, status FROM pos_sales WHERE id = $1 LIMIT 1`,
+    `SELECT receipt_number, terminal_id, branch_id, lines, status FROM pos_sales WHERE id = $1 LIMIT 1`,
     [saleId],
   )).rows[0];
 
@@ -1534,6 +1610,7 @@ async function getSaleRow(client: PoolClient, saleId: string) {
   return {
     receipt_number: row.receipt_number as string,
     terminal_id: row.terminal_id as string,
+    branch_id: row.branch_id as string | null,
     lines: (row.lines ?? []) as SharedSaleLine[],
     status: row.status as string,
   };
@@ -1567,6 +1644,7 @@ async function applySaleVoidedEvent(client: PoolClient, event: SyncEvent) {
   await applySharedInventoryVoid({
     aggregateId: String(event.payload.saleId),
     terminalId: sale.terminal_id,
+    branchId: sale.branch_id,
     reason: (event.payload.reason as string | undefined) ?? null,
     lines: sale.lines,
   });
@@ -1648,6 +1726,7 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
   await applySharedInventoryReturn({
     aggregateId: event.aggregateId,
     terminalId: payload.terminalId,
+    branchId: sale.branch_id,
     reason: payload.reason ?? null,
     lines: lines.map((line) => {
       const matchedSaleLine = sale?.lines.find(

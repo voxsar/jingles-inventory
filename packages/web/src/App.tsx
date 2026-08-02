@@ -36,6 +36,7 @@ import TagsPage from './pages/TagsPage';
 import UsersPage from './pages/UsersPage';
 import DesktopSyncPage from './pages/DesktopSyncPage';
 import HelpPage from './pages/HelpPage';
+import VouchersPage from './pages/VouchersPage';
 import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
@@ -74,6 +75,7 @@ function AppRoutes() {
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="pricing" element={<PricingPage />} />
         <Route path="pricing-overlays" element={<PricingOverlaysPage />} />
+        <Route path="vouchers" element={<ProtectedRoute roles={['Admin', 'Manager', 'Staff']}><VouchersPage /></ProtectedRoute>} />
         <Route path="warehouse-3d" element={<WarehouseVisualizerPage />} />
         <Route path="tags" element={
           <ProtectedRoute roles={['Admin', 'Manager']}>

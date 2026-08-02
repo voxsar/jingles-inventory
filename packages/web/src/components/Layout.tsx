@@ -67,6 +67,7 @@ const baseNavItems: NavItem[] = [
   { type: 'route', to: '/stock-transfers', label: 'Stock Transfers', icon: TransferIcon },
   { type: 'route', to: '/pricing-overlays', label: 'Pricing Overlays', icon: TargetIcon },
   { type: 'route', to: '/pricing', label: 'Batch Pricing', icon: CoinsIcon },
+  { type: 'route', to: '/vouchers', label: 'Gift Vouchers', icon: CoinsIcon, roles: ['Admin', 'Manager', 'Staff'] },
   { type: 'section', id: 'catalog', label: 'Catalog' },
   { type: 'route', to: '/categories', label: 'Categories', icon: FolderIcon },
   { type: 'route', to: '/tags', label: 'Tags', icon: TagIcon, roles: ['Admin', 'Manager'] },
