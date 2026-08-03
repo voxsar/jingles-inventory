@@ -60,6 +60,8 @@ export default function SKUPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [showCreateForm, setShowCreateForm] = useState(false);
 	const [form, setForm] = useState(defaultForm);
+	const [createBarcode, setCreateBarcode] = useState('');
+	const [createBarcodeMatch, setCreateBarcodeMatch] = useState<any>(null);
 	const [formTags, setFormTags] = useState<string[]>([]);
 	const [newTagInput, setNewTagInput] = useState('');
 	const [searchTerm, setSearchTerm] = useState('');
@@ -79,6 +81,7 @@ export default function SKUPage() {
 	const [saveSuccess, setSaveSuccess] = useState(false);
 	const [barcodes, setBarcodes] = useState<any[]>([]);
 	const [newBarcode, setNewBarcode] = useState({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '', variantId: '' });
+	const [newBarcodeMatch, setNewBarcodeMatch] = useState<any>(null);
 	const [inventoryLocations, setInventoryLocations] = useState<any[]>([]);
 	const [locationsLoading, setLocationsLoading] = useState(false);
 	const [isAssigningInventory, setIsAssigningInventory] = useState(false);
@@ -92,6 +95,36 @@ export default function SKUPage() {
 	const [transitionRecord, setTransitionRecord] = useState<any>(null);
 	const [transitionForm, setTransitionForm] = useState(defaultTransitionForm);
 	const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		const barcode = createBarcode.trim();
+		if (!barcode) {
+			setCreateBarcodeMatch(null);
+			return;
+		}
+		let cancelled = false;
+		const timer = setTimeout(() => {
+			skusApi.lookupBarcode(barcode)
+				.then((res) => { if (!cancelled) setCreateBarcodeMatch(res.data?.data ?? null); })
+				.catch(() => { if (!cancelled) setCreateBarcodeMatch(null); });
+		}, 250);
+		return () => { cancelled = true; clearTimeout(timer); };
+	}, [createBarcode]);
+
+	useEffect(() => {
+		const barcode = newBarcode.barcode.trim();
+		if (!barcode) {
+			setNewBarcodeMatch(null);
+			return;
+		}
+		let cancelled = false;
+		const timer = setTimeout(() => {
+			skusApi.lookupBarcode(barcode)
+				.then((res) => { if (!cancelled) setNewBarcodeMatch(res.data?.data ?? null); })
+				.catch(() => { if (!cancelled) setNewBarcodeMatch(null); });
+		}, 250);
+		return () => { cancelled = true; clearTimeout(timer); };
+	}, [newBarcode.barcode]);
 
 	// Variants tab state
 	const [skuVariants, setSkuVariants] = useState<any[]>([]);
@@ -248,6 +281,8 @@ export default function SKUPage() {
 
 	const resetCreateState = () => {
 		setForm(defaultForm);
+		setCreateBarcode('');
+		setCreateBarcodeMatch(null);
 		setFormTags([]);
 		setNewTagInput('');
 		setCreateFormSelectedAttrs({});
@@ -335,6 +370,10 @@ export default function SKUPage() {
 
 	const handleCreate = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (createBarcodeMatch) {
+			alert(`Barcode is already assigned to ${createBarcodeMatch.sku?.name} (${createBarcodeMatch.sku?.skuCode})`);
+			return;
+		}
 		try {
 			const attributeSelections = Object.entries(createFormSelectedAttrs)
 				.filter(([, vals]) => vals.length > 0)
@@ -360,6 +399,7 @@ export default function SKUPage() {
 				categoryId: form.categoryId || undefined,
 				unitOfMeasureId: form.unitOfMeasureId || undefined,
 				attributeSelections: attributeSelections.length > 0 ? attributeSelections : undefined,
+				barcode: createBarcode.trim() || undefined,
 			};
 
 			console.log('Create payload:', payload);
@@ -491,9 +531,14 @@ export default function SKUPage() {
 
 	const handleAddBarcode = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (newBarcodeMatch) {
+			alert(`Barcode is already assigned to ${newBarcodeMatch.sku?.name} (${newBarcodeMatch.sku?.skuCode})`);
+			return;
+		}
 		try {
 			await skusApi.addBarcode(editingSku.id, newBarcode);
 			setNewBarcode({ barcode: '', barcodeType: 'EAN13', isDefault: false, label: '', variantId: '' });
+			setNewBarcodeMatch(null);
 			await loadBarcodes();
 		} catch (err: any) { alert(err.response?.data?.error ?? 'Failed to add barcode'); }
 	};
@@ -1785,6 +1830,21 @@ export default function SKUPage() {
 										/>
 									</div>
 								</div>
+								<div className="form-group">
+									<label className="form-label">Primary Barcode</label>
+									<input
+										className={`input-field${createBarcodeMatch ? ' border-red-400' : ''}`}
+										type="text"
+										value={createBarcode}
+										placeholder="Scan or type barcode"
+										onChange={(e) => setCreateBarcode(e.target.value)}
+									/>
+									{createBarcodeMatch && (
+										<div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+											Already assigned to <strong>{createBarcodeMatch.sku?.name}</strong> ({createBarcodeMatch.sku?.skuCode}). Choose a different barcode.
+										</div>
+									)}
+								</div>
 								<div className="form-grid-2">
 									<div className="form-group">
 										<label className="form-label">Category</label>
@@ -2041,7 +2101,7 @@ export default function SKUPage() {
 							</div>
 							<div className="modal-footer">
 								<button type="button" className="btn-secondary" onClick={closeCreateForm}>Cancel</button>
-								<button type="submit" className="btn-primary">Create Product & Continue</button>
+								<button type="submit" className="btn-primary" disabled={Boolean(createBarcodeMatch)}>Create Product & Continue</button>
 							</div>
 						</form>
 					</div>
@@ -2299,7 +2359,12 @@ export default function SKUPage() {
 										<p className="text-sm font-semibold text-gray-700">Add Barcode</p>
 										<div className="form-group">
 											<label className="form-label">Barcode value *</label>
-											<input className="input-field" type="text" value={newBarcode.barcode} required onChange={(e) => setNewBarcode((b) => ({ ...b, barcode: e.target.value }))} />
+											<input className={`input-field${newBarcodeMatch ? ' border-red-400' : ''}`} type="text" value={newBarcode.barcode} required onChange={(e) => setNewBarcode((b) => ({ ...b, barcode: e.target.value }))} />
+											{newBarcodeMatch && (
+												<div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+													Already assigned to <strong>{newBarcodeMatch.sku?.name}</strong> ({newBarcodeMatch.sku?.skuCode}).
+												</div>
+											)}
 										</div>
 										<div className="form-grid-2">
 											<div className="form-group">
@@ -2337,7 +2402,7 @@ export default function SKUPage() {
 											<input type="checkbox" checked={newBarcode.isDefault} onChange={(e) => setNewBarcode((b) => ({ ...b, isDefault: e.target.checked }))} />
 											Set as Default
 										</label>
-										<button type="submit" className="btn-primary self-start">Add Barcode</button>
+									<button type="submit" className="btn-primary self-start" disabled={Boolean(newBarcodeMatch)}>Add Barcode</button>
 									</form>
 								</div>
 							)}

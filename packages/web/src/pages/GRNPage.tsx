@@ -37,10 +37,8 @@ export default function GRNPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [editingGrn, setEditingGrn] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ supplierId: '', invoiceReference: '', expectedDeliveryDate: '', notes: '', floorId: '', shelfId: '' });
   const [locations, setLocations] = useState<any[]>([]);
   const [formShelves, setFormShelves] = useState<any[]>([]);
-  const [editFormShelves, setEditFormShelves] = useState<any[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
@@ -137,6 +135,7 @@ export default function GRNPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSavingEdit(true);
     try {
       // Transform form data to match backend API expectations
       const payload = {
@@ -159,8 +158,10 @@ export default function GRNPage() {
         })),
       };
 
-      await grnsApi.create(payload);
+      if (editingGrn) await grnsApi.update(editingGrn.id, payload);
+      else await grnsApi.create(payload);
       setShowForm(false);
+      setEditingGrn(null);
       setForm({
         supplierId: '',
         invoiceReference: '',
@@ -189,7 +190,9 @@ export default function GRNPage() {
       setNextBatchNumbers({});
       await loadData();
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to create GRN');
+      alert(err.response?.data?.error ?? `Failed to ${editingGrn ? 'update' : 'create'} GRN`);
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -349,35 +352,60 @@ export default function GRNPage() {
     }
   };
 
-  const openEdit = (grn: any) => {
-    setEditingGrn(grn);
-    setEditForm({
-      supplierId: grn.supplierId ?? '',
-      invoiceReference: grn.invoiceReference ?? '',
-      expectedDeliveryDate: grn.expectedDeliveryDate ? grn.expectedDeliveryDate.split('T')[0] : getTodayString(),
-      notes: grn.notes ?? '',
-      floorId: grn.floorId ?? '',
-      shelfId: grn.shelfId ?? '',
-    });
-    if (grn.floorId) {
-      shelvesApi.list({ floorId: grn.floorId }).then((res) => {
-        setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
-      }).catch(() => setEditFormShelves([]));
-    } else {
-      setEditFormShelves([]);
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingGrn) return;
+  const openEdit = async (grn: any) => {
     setIsSavingEdit(true);
     try {
-      await grnsApi.update(editingGrn.id, editForm);
-      setEditingGrn(null);
-      setEditFormShelves([]);
-      await loadData();
+      const res = await grnsApi.get(grn.id);
+      const full = res.data?.data ?? grn;
+      const lines = (full.lines ?? []).map((line: any) => ({
+        skuId: line.skuId ?? '',
+        variantId: line.variantId ?? '',
+        expectedQuantity: line.expectedQuantity ?? 1,
+        batchId: line.batchId ?? '',
+        createNewBatch: false,
+        costPrice: (line.costPrice ?? line.batch?.costPrice ?? '').toString(),
+        sellingPrice: (line.sellingPrice ?? line.batch?.sellingPrice ?? '').toString(),
+        wholesalePrice: (line.wholesalePrice ?? line.batch?.wholesalePrice ?? '').toString(),
+        bulkPrice: (line.bulkPrice ?? line.batch?.bulkPrice ?? '').toString(),
+        marginType: line.batch?.marginType ?? '',
+        marginValue: (line.batch?.marginValue ?? '').toString(),
+        notes: line.notes ?? '',
+      }));
+      setEditingGrn(full);
+      setForm({
+        supplierId: full.supplierId ?? '',
+        invoiceReference: full.invoiceReference ?? '',
+        expectedDeliveryDate: full.expectedDeliveryDate ? full.expectedDeliveryDate.split('T')[0] : getTodayString(),
+        notes: full.notes ?? '',
+        floorId: full.floorId ?? '',
+        shelfId: full.shelfId ?? '',
+        lines: lines.length ? lines : [{
+          skuId: '', variantId: '', expectedQuantity: 1, batchId: '', createNewBatch: false,
+          costPrice: '', sellingPrice: '', wholesalePrice: '', bulkPrice: '', marginType: '', marginValue: '', notes: '',
+        }],
+      });
+      if (full.floorId) {
+        const shelfRes = await shelvesApi.list({ floorId: full.floorId });
+        setFormShelves(shelfRes.data?.data?.items ?? shelfRes.data?.data ?? shelfRes.data ?? []);
+      } else setFormShelves([]);
+
+      const variantEntries: Record<number, any[]> = {};
+      const batchEntries: Record<number, any[]> = {};
+      await Promise.all(lines.map(async (line: any, index: number) => {
+        const [variantRes, batchRes] = await Promise.all([
+          variantsApi.list(line.skuId),
+          batchesApi.list({ skuId: line.skuId, ...(line.variantId ? { variantId: line.variantId } : {}), isActive: 'true' }),
+        ]);
+        variantEntries[index] = variantRes.data?.data ?? [];
+        batchEntries[index] = batchRes.data?.data?.items ?? batchRes.data?.data ?? [];
+      }));
+      setLineVariants(variantEntries);
+      setLineBatches(batchEntries);
+      setPricingCollapsed(Object.fromEntries(lines.map((_: any, index: number) => [index, true])));
+      setSkuSearch('');
+      setShowForm(true);
     } catch (err: any) {
-      alert(err.response?.data?.error ?? 'Failed to update GRN');
+      alert(err.response?.data?.error ?? 'Failed to load GRN for editing');
     } finally {
       setIsSavingEdit(false);
     }
@@ -440,7 +468,7 @@ export default function GRNPage() {
           <h1 className="page-title">📋 Goods Receipt Notes</h1>
           <p className="page-subtitle">{total.toLocaleString()} GRNs total</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowForm(true)}>+ New GRN</button>
+        <button className="btn-primary" onClick={() => { setEditingGrn(null); setShowForm(true); }}>+ New GRN</button>
       </div>
 
       {/* Table section */}
@@ -544,11 +572,11 @@ export default function GRNPage() {
 
       {/* Create GRN Modal */}
       {showForm && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setShowForm(false); setEditingGrn(null); } }}>
           <div className="modal-panel-lg">
             <div className="modal-header">
-              <h2 className="modal-title">➕ Create New GRN</h2>
-              <button className="modal-close" onClick={() => setShowForm(false)}>✕</button>
+              <h2 className="modal-title">{editingGrn ? '✏️ Edit Draft GRN' : '➕ Create New GRN'}</h2>
+              <button className="modal-close" onClick={() => { setShowForm(false); setEditingGrn(null); }}>✕</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body form-stack">
@@ -883,101 +911,10 @@ export default function GRNPage() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn-primary">Create GRN</button>
+                <button type="button" className="btn-secondary" onClick={() => { setShowForm(false); setEditingGrn(null); }}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={isSavingEdit}>{isSavingEdit ? 'Saving…' : editingGrn ? 'Save All Changes' : 'Create GRN'}</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit GRN Modal */}
-      {editingGrn && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setEditingGrn(null)}>
-          <div className="modal-panel-md">
-            <div className="modal-header">
-              <div>
-                <h2 className="modal-title">Edit GRN</h2>
-                <span className="text-xs text-gray-400 font-mono">{editingGrn.id.slice(0, 8)}…</span>
-              </div>
-              <button className="modal-close" onClick={() => setEditingGrn(null)}>✕</button>
-            </div>
-            <div className="modal-body form-stack">
-              <div className="form-group">
-                <label className="form-label">Supplier</label>
-                <SearchableSelect
-                  options={[
-                    { value: '', label: 'Select supplier' },
-                    ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
-                  ]}
-                  value={editForm.supplierId}
-                  onChange={(value) => setEditForm((f) => ({ ...f, supplierId: value }))}
-                  placeholder="Select supplier"
-                  isClearable={false}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Invoice Reference</label>
-                <input className="input-field" type="text" value={editForm.invoiceReference} onChange={(e) => setEditForm((f) => ({ ...f, invoiceReference: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Expected Delivery Date</label>
-                <input className="input-field" type="date" value={editForm.expectedDeliveryDate} onChange={(e) => setEditForm((f) => ({ ...f, expectedDeliveryDate: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Notes</label>
-                <input className="input-field" type="text" value={editForm.notes} onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Receive Location — Floor</label>
-                <SearchableSelect
-                  options={[
-                    { value: '', label: '— No Floor —' },
-                    ...locations.map((loc: any) => ({
-                      value: loc.id,
-                      label: loc.branch?.name ? `${loc.branch.name} › ${loc.name}` : `${loc.name} (${loc.code})`
-                    }))
-                  ]}
-                  value={editForm.floorId}
-                  onChange={(value) => {
-                    const floorId = value;
-                    setEditForm((f) => ({ ...f, floorId, shelfId: '' }));
-                    setEditFormShelves([]);
-                    if (floorId) {
-                      shelvesApi.list({ floorId }).then((res) => {
-                        setEditFormShelves(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
-                      }).catch(() => setEditFormShelves([]));
-                    }
-                  }}
-                  placeholder="No Floor"
-                  isClearable={false}
-                />
-              </div>
-              {editForm.floorId && (
-                <div className="form-group">
-                  <label className="form-label">Receive Location — Shelf</label>
-                  <SearchableSelect
-                    options={[
-                      { value: '', label: '— Select Shelf —' },
-                      ...editFormShelves.map((s: any) => ({
-                        value: s.id,
-                        label: `${s.name} (${s.code})`
-                      }))
-                    ]}
-                    value={editForm.shelfId}
-                    onChange={(value) => setEditForm((f) => ({ ...f, shelfId: value }))}
-                    placeholder="Select Shelf"
-                    isClearable={false}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setEditingGrn(null)}>Cancel</button>
-              <button type="button" className="btn-primary" onClick={handleSaveEdit} disabled={isSavingEdit}>
-                {isSavingEdit ? '⏳ Saving…' : '💾 Save Changes'}
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1083,4 +1020,3 @@ export default function GRNPage() {
     </div>
   );
 }
-

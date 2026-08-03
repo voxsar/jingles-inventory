@@ -3,7 +3,7 @@ import { param, validationResult } from 'express-validator';
 import { Prisma } from '@prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@jingles/shared';
-import { createGRN, submitGRN, submitInspection } from '../modules/grn/grnService';
+import { createGRN, updateDraftGRN, submitGRN, submitInspection } from '../modules/grn/grnService';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
 
@@ -147,6 +147,7 @@ router.get(
 							inspectionRecords: {
 								include: { inspector: { select: { id: true, email: true } } },
 							},
+							batch: true,
 						},
 					},
 				},
@@ -175,37 +176,14 @@ router.put(
 			return;
 		}
 		try {
-			const grn = await prisma.gRN.findUnique({ where: { id: req.params!.id } });
-			if (!grn) {
-				res.status(404).json({ success: false, error: 'GRN not found' });
-				return;
+			const payload = { ...req.body };
+			if (payload.expectedDeliveryDate && typeof payload.expectedDeliveryDate === 'string') {
+				const dateStr = payload.expectedDeliveryDate.includes('T')
+					? payload.expectedDeliveryDate
+					: `${payload.expectedDeliveryDate}T00:00:00.000Z`;
+				payload.expectedDeliveryDate = new Date(dateStr);
 			}
-			if (grn.status !== 'Draft') {
-				res.status(400).json({ success: false, error: 'Only Draft GRNs can be edited' });
-				return;
-			}
-			const { supplierId, invoiceReference, expectedDeliveryDate, notes, floorId, shelfId } = req.body;
-			const updateData: any = {};
-			if (supplierId !== undefined) updateData.supplierId = supplierId;
-			if (invoiceReference !== undefined) updateData.invoiceReference = invoiceReference;
-			if (notes !== undefined) updateData.notes = notes;
-			if (floorId !== undefined) {
-				const newFloorId = floorId || null;
-				updateData.floorId = newFloorId;
-				// Clear shelf whenever floor changes; if shelfId is also provided it will be set below
-				updateData.shelfId = null;
-			}
-			if (shelfId !== undefined) updateData.shelfId = shelfId || null;
-			if (expectedDeliveryDate) {
-				// Parse the date string safely; if no time component, treat as UTC midnight
-				const parsed = new Date(expectedDeliveryDate);
-				if (isNaN(parsed.getTime())) {
-					res.status(400).json({ success: false, error: 'Invalid expectedDeliveryDate format' });
-					return;
-				}
-				updateData.expectedDeliveryDate = parsed;
-			}
-			const updated = await prisma.gRN.update({ where: { id: req.params!.id }, data: updateData });
+			const updated = await updateDraftGRN(req.params!.id, payload);
 			res.json({ success: true, data: updated });
 		} catch (error: any) {
 			logger.error('Update GRN error', error);

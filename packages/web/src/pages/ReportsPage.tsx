@@ -159,6 +159,13 @@ const lineCost = (row: any, quantityField: string) => (row.lines ?? []).reduce((
 	return sum + unitCost * Number(line[quantityField] ?? 0);
 }, 0);
 
+const grnItemCosts = (row: any) => (row.lines ?? []).map((line: any) => {
+	const sku = line.sku?.skuCode ?? line.sku?.name ?? 'Item';
+	const unitCost = Number(line.costPrice ?? line.batch?.costPrice ?? line.sku?.costPrice ?? 0);
+	const quantityValue = Number(line.receivedQuantity || line.expectedQuantity || 0);
+	return `${sku}: ${currency(unitCost)} × ${quantityValue}`;
+}).join(' | ');
+
 const badge = (value: any) => value ? <UiBadge>{String(value)}</UiBadge> : '';
 
 const textColumn = (key: string, header: string, paths: string[]): ExportColumn => ({
@@ -224,6 +231,7 @@ const getColumns = (reportId: ReportId): ExportColumn[] => {
 				numberColumn('lineCount', 'Lines', (row) => row.lines?.length ?? 0),
 				numberColumn('expectedQty', 'Expected Qty', (row) => lineQuantity(row, 'expectedQuantity')),
 				numberColumn('receivedQty', 'Received Qty', (row) => lineQuantity(row, 'receivedQuantity')),
+				textColumn('itemUnitCosts', 'Item Unit Costs', ['itemUnitCosts']),
 				moneyColumn('costValue', 'Cost Value', (row) => lineCost(row, 'receivedQuantity')),
 				{ key: 'createdAt', header: 'Created', value: (row) => row.createdAt, render: (row) => dateOnly(row.createdAt), sortable: true },
 			];
@@ -504,6 +512,8 @@ export default function ReportsPage() {
 	const [branches, setBranches] = useState<any[]>([]);
 	const [floors, setFloors] = useState<any[]>([]);
 	const [skus, setSkus] = useState<any[]>([]);
+	const [isExportOpen, setIsExportOpen] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
 
 	const activeReport = REPORTS.find((report) => report.id === activeReportId) ?? REPORTS[0];
 	const columns = useMemo(() => getColumns(activeReportId), [activeReportId]);
@@ -512,8 +522,10 @@ export default function ReportsPage() {
 		header: column.header,
 		sortable: column.sortable,
 		align: column.align,
-		render: (row: any) => column.render ? column.render(row) : cellText(column.value(row)),
-	})), [columns]);
+		render: (row: any) => activeReportId === 'grn' && column.key === 'itemUnitCosts'
+			? grnItemCosts(row)
+			: column.render ? column.render(row) : cellText(column.value(row)),
+	})), [activeReportId, columns]);
 
 	const groupedReports = useMemo(() => GROUPS.map((group) => ({
 		group,
@@ -564,6 +576,18 @@ export default function ReportsPage() {
 		return params;
 	};
 
+	const requestReport = (params: Record<string, string>) => {
+		if (activeReportId === 'valuation') return reportsApi.inventoryValuation(params);
+		if (activeReportId === 'floor') return reportsApi.floorPerformance();
+		if (activeReportId === 'grn') return reportsApi.grn(params);
+		if (activeReportId === 'prn') return reportsApi.prn(params);
+		if (activeReportId === 'stockAdjustment') return reportsApi.stockAdjustment(params);
+		if (activeReportId === 'stockBalance') return reportsApi.stockBalance(params);
+		if (activeReportId === 'stockMovement') return reportsApi.stockMovement(params);
+		if (activeReportId === 'tog') return reportsApi.tog(params);
+		return reportsApi.catalog(activeReportId, params);
+	};
+
 	const loadReport = async (reportPage = page, pageSizeOverride = filters.pageSize) => {
 		setIsLoading(true);
 		setData([]);
@@ -571,16 +595,7 @@ export default function ReportsPage() {
 		setNotice('');
 		try {
 			const params = buildParams(reportPage, pageSizeOverride);
-			let res;
-			if (activeReportId === 'valuation') res = await reportsApi.inventoryValuation(params);
-			else if (activeReportId === 'floor') res = await reportsApi.floorPerformance();
-			else if (activeReportId === 'grn') res = await reportsApi.grn(params);
-			else if (activeReportId === 'prn') res = await reportsApi.prn(params);
-			else if (activeReportId === 'stockAdjustment') res = await reportsApi.stockAdjustment(params);
-			else if (activeReportId === 'stockBalance') res = await reportsApi.stockBalance(params);
-			else if (activeReportId === 'stockMovement') res = await reportsApi.stockMovement(params);
-			else if (activeReportId === 'tog') res = await reportsApi.tog(params);
-			else res = await reportsApi.catalog(activeReportId, params);
+			const res = await requestReport(params);
 
 			const reportData = res.data?.data ?? res.data ?? {};
 			if (reportData.items) {
@@ -622,25 +637,58 @@ export default function ReportsPage() {
 		});
 	}, []);
 
-	const exportRows = () => data.map((row) => columns.map((column) => cellText(column.value(row))));
+	const exportValue = (row: any, column: ExportColumn) => (
+		activeReportId === 'grn' && column.key === 'itemUnitCosts'
+			? grnItemCosts(row)
+			: cellText(column.value(row))
+	);
+	const exportRows = (rows: any[]) => rows.map((row) => columns.map((column) => exportValue(row, column)));
 	const exportFileName = `${activeReport.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'report'}`;
 
-	const exportCsv = () => {
-		const rows = [columns.map((column) => column.header), ...exportRows()];
+	const loadAllReportRows = async () => {
+		const firstRes = await requestReport(buildParams(1, '500'));
+		const firstData = firstRes.data?.data ?? firstRes.data ?? {};
+		if (!firstData.items) return Array.isArray(firstData) ? firstData : [firstData];
+		const rows = Array.isArray(firstData.items) ? [...firstData.items] : [];
+		const pages = Number(firstData.totalPages ?? 1);
+		for (let reportPage = 2; reportPage <= pages; reportPage += 1) {
+			const res = await requestReport(buildParams(reportPage, '500'));
+			const nextData = res.data?.data ?? res.data ?? {};
+			if (Array.isArray(nextData.items)) rows.push(...nextData.items);
+		}
+		return rows;
+	};
+
+	const withAllRows = async (action: (rows: any[]) => void) => {
+		setIsExporting(true);
+		try {
+			const rows = await loadAllReportRows();
+			action(rows);
+			setIsExportOpen(false);
+		} catch (error) {
+			console.error(error);
+			alert('Failed to export the complete report. Please try again.');
+		} finally {
+			setIsExporting(false);
+		}
+	};
+
+	const exportCsv = () => withAllRows((reportRows) => {
+		const rows = [columns.map((column) => column.header), ...exportRows(reportRows)];
 		const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
 		downloadBlob(csv, `${exportFileName}.csv`, 'text/csv;charset=utf-8');
-	};
+	});
 
-	const exportExcel = () => {
+	const exportExcel = () => withAllRows((reportRows) => {
 		const header = columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join('');
-		const body = data.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(column.value(row))}</td>`).join('')}</tr>`).join('');
+		const body = reportRows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(exportValue(row, column))}</td>`).join('')}</tr>`).join('');
 		const html = `<html><head><meta charset="utf-8"></head><body><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
 		downloadBlob(html, `${exportFileName}.xls`, 'application/vnd.ms-excel;charset=utf-8');
-	};
+	});
 
-	const openPdfView = () => {
+	const openPrintableView = (reportRows: any[], shouldPrint: boolean) => {
 		const header = columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join('');
-		const body = data.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(column.value(row))}</td>`).join('')}</tr>`).join('');
+		const body = reportRows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(exportValue(row, column))}</td>`).join('')}</tr>`).join('');
 		const summaryRows = summary
 			? Object.entries(summary).map(([key, value]) => `<div><strong>${escapeHtml(key.replace(/([A-Z])/g, ' $1').trim())}:</strong> ${escapeHtml(value)}</div>`).join('')
 			: '';
@@ -670,8 +718,10 @@ export default function ReportsPage() {
 		`);
 		printWindow.document.close();
 		printWindow.focus();
-		setTimeout(() => printWindow.print(), 250);
+		if (shouldPrint) setTimeout(() => printWindow.print(), 250);
 	};
+	const exportPdf = () => withAllRows((rows) => openPrintableView(rows, true));
+	const printReport = () => withAllRows((rows) => openPrintableView(rows, true));
 
 	const resetFilters = () => {
 		setFilters(initialFilters);
@@ -690,10 +740,20 @@ export default function ReportsPage() {
 					<h1 className="page-title">Reports</h1>
 					<p className="page-subtitle">Inventory, stock, management, and sales reports with date filters and CSV, Excel, and PDF views.</p>
 				</div>
-				<div className="flex flex-wrap gap-2">
-					<button type="button" className="btn-secondary" onClick={openPdfView} disabled={isLoading}>PDF View</button>
-					<button type="button" className="btn-secondary" onClick={exportCsv} disabled={isLoading}>Export CSV</button>
-					<button type="button" className="btn-primary" onClick={exportExcel} disabled={isLoading}>Export Excel</button>
+				<div className="flex flex-wrap items-center gap-2">
+					<div className="relative">
+						<button type="button" className="btn-primary" onClick={() => setIsExportOpen((open) => !open)} disabled={isLoading || isExporting}>
+							{isExporting ? 'Preparing all rows…' : 'Export ▾'}
+						</button>
+						{isExportOpen && (
+							<div className="absolute right-0 z-20 mt-2 min-w-[190px] overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
+								<button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100" onClick={exportPdf}>PDF</button>
+								<button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100" onClick={exportExcel}>Excel (.xls)</button>
+								<button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100" onClick={exportCsv}>CSV</button>
+							</div>
+						)}
+					</div>
+					<button type="button" className="btn-secondary" onClick={printReport} disabled={isLoading || isExporting}>Print</button>
 				</div>
 			</div>
 

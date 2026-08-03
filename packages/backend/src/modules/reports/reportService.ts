@@ -67,8 +67,9 @@ export async function getGRNReport(filters: {
 
 		// Calculate total cost
 		grn.lines.forEach(line => {
-			if (line.batch?.costPrice && line.receivedQuantity) {
-				acc.totalCost += line.batch.costPrice * line.receivedQuantity;
+			const unitCost = line.costPrice ?? line.batch?.costPrice ?? 0;
+			if (unitCost && line.receivedQuantity) {
+				acc.totalCost += unitCost * line.receivedQuantity;
 			}
 		});
 

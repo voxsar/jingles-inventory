@@ -57,6 +57,7 @@ export const skusApi = {
   createVariantFamily: (data: { masterSkuId: string; sourceSkuIds: string[] }) => api.post('/skus/variant-families', data),
   // Barcodes
   getBarcodes: (id: string) => api.get(`/skus/${id}/barcodes`),
+  lookupBarcode: (barcode: string) => api.get('/skus/barcodes/lookup', { params: { barcode } }),
   addBarcode: (id: string, data: any) => api.post(`/skus/${id}/barcodes`, data),
   deleteBarcode: (id: string, bcId: string) => api.delete(`/skus/${id}/barcodes/${bcId}`),
   // Images

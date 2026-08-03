@@ -667,11 +667,12 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 			? ftsSkuIds !== null
 				? { id: { in: ftsSkuIds } }
 				: {
-					OR: [
-						{ name: { contains: search, mode: 'insensitive' } },
-						{ skuCode: { contains: search, mode: 'insensitive' } },
-						{ description: { contains: search, mode: 'insensitive' } },
-						{ vendor: { name: { contains: search, mode: 'insensitive' } } },
+						OR: [
+							{ name: { contains: search, mode: 'insensitive' } },
+							{ skuCode: { contains: search, mode: 'insensitive' } },
+							{ description: { contains: search, mode: 'insensitive' } },
+							{ barcodes: { some: { barcode: search } } },
+							{ vendor: { name: { contains: search, mode: 'insensitive' } } },
 						{ category: { name: { contains: search, mode: 'insensitive' } } },
 					],
 				}
@@ -750,6 +751,24 @@ router.get('/duplicates', async (req: AuthRequest, res: Response): Promise<void>
 			minScore: scoreThreshold,
 		},
 	});
+});
+
+router.get('/barcodes/lookup', async (req: AuthRequest, res: Response): Promise<void> => {
+	const barcode = typeof req.query.barcode === 'string' ? req.query.barcode.trim() : '';
+	if (!barcode) {
+		res.status(400).json({ error: 'barcode is required' });
+		return;
+	}
+
+	const match = await prisma.productBarcode.findUnique({
+		where: { barcode },
+		include: {
+			sku: { select: { id: true, skuCode: true, name: true, isActive: true } },
+			variant: { select: { id: true, variantCode: true, name: true } },
+		},
+	});
+
+	res.json({ success: true, data: match });
 });
 
 router.get(
@@ -1169,6 +1188,7 @@ router.post(
 			batchReferencePricing,
 			lowStockThreshold,
 			attributeSelections,
+			barcode,
 		} = req.body as {
 			skuCode: string;
 			name: string;
@@ -1197,7 +1217,22 @@ router.post(
 			batchReferencePricing?: object;
 			lowStockThreshold?: number;
 			attributeSelections?: { attributeId: string; valueIds: string[] }[];
+			barcode?: string;
 		};
+		const normalizedBarcode = barcode?.trim() || undefined;
+		if (normalizedBarcode) {
+			const existingBarcode = await prisma.productBarcode.findUnique({
+				where: { barcode: normalizedBarcode },
+				include: { sku: { select: { id: true, skuCode: true, name: true } } },
+			});
+			if (existingBarcode) {
+				res.status(409).json({
+					error: `Barcode ${normalizedBarcode} is already assigned to ${existingBarcode.sku.name} (${existingBarcode.sku.skuCode})`,
+					data: existingBarcode,
+				});
+				return;
+			}
+		}
 
 		// Resolve vendor IDs: prefer vendorIds array, fall back to single vendorId
 		const resolvedVendorIds = vendorIds && vendorIds.length > 0 ? vendorIds : (vendorId ? [vendorId] : []);
@@ -1243,6 +1278,9 @@ router.post(
 				skuVendors: {
 					create: resolvedVendorIds.map(vid => ({ vendorId: vid })),
 				},
+				barcodes: normalizedBarcode ? {
+					create: { barcode: normalizedBarcode, barcodeType: 'EAN13', isDefault: true },
+				} : undefined,
 			},
 		});
 
@@ -1475,6 +1513,18 @@ router.post(
 			label?: string;
 			variantId?: string | null;
 		};
+		const normalizedBarcode = barcode.trim();
+		const existingBarcode = await prisma.productBarcode.findUnique({
+			where: { barcode: normalizedBarcode },
+			include: { sku: { select: { id: true, skuCode: true, name: true } } },
+		});
+		if (existingBarcode) {
+			res.status(409).json({
+				error: `Barcode ${normalizedBarcode} is already assigned to ${existingBarcode.sku.name} (${existingBarcode.sku.skuCode})`,
+				data: existingBarcode,
+			});
+			return;
+		}
 		const barcodeVariantId = variantId || null;
 		if (barcodeVariantId) {
 			await assertVariantBelongsToSku(prisma, req.params!.id, barcodeVariantId, 'Barcode');
@@ -1489,7 +1539,7 @@ router.post(
 			data: {
 				skuId: req.params!.id,
 				variantId: barcodeVariantId,
-				barcode,
+				barcode: normalizedBarcode,
 				barcodeType: barcodeType ?? 'EAN13',
 				isDefault: isDefault ?? false,
 				label,

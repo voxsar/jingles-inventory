@@ -137,6 +137,124 @@ export async function createGRN(data: {
 	return grn;
 }
 
+export async function updateDraftGRN(grnId: string, data: {
+	supplierId: string;
+	floorId?: string | null;
+	shelfId?: string | null;
+	invoiceReference?: string | null;
+	expectedDeliveryDate?: Date | null;
+	notes?: string | null;
+	lines: Array<{
+		skuId: string;
+		variantId?: string;
+		expectedQuantity: number;
+		batchId?: string;
+		createNewBatch?: boolean;
+		costPrice?: number;
+		sellingPrice?: number;
+		wholesalePrice?: number;
+		bulkPrice?: number;
+		marginType?: 'fixed' | 'percentage';
+		marginValue?: number;
+		notes?: string;
+	}>;
+}) {
+	const existing = await prisma.gRN.findUnique({ where: { id: grnId } });
+	if (!existing) throw new Error('GRN not found');
+	if (existing.status !== GRNStatus.Draft) throw new Error('Only Draft GRNs can be edited');
+	if (!data.supplierId) throw new Error('Supplier is required');
+	if (!Array.isArray(data.lines) || data.lines.length === 0) throw new Error('At least one GRN line is required');
+
+	if (data.invoiceReference) {
+		const duplicateInvoice = await prisma.gRN.findFirst({
+			where: {
+				id: { not: grnId },
+				invoiceReference: data.invoiceReference,
+				supplierId: data.supplierId,
+			},
+		});
+		if (duplicateInvoice) {
+			throw new Error(`Duplicate invoice reference: ${data.invoiceReference} for this supplier`);
+		}
+	}
+
+	for (const [index, line] of data.lines.entries()) {
+		if (!line.skuId || !Number.isFinite(line.expectedQuantity) || line.expectedQuantity <= 0) {
+			throw new Error(`GRN line ${index + 1} requires a product and a positive quantity`);
+		}
+		await assertVariantBatchReferences(prisma, {
+			skuId: line.skuId,
+			variantId: line.variantId ?? null,
+			batchId: line.createNewBatch ? null : (line.batchId ?? null),
+			context: buildDocumentLineContext('GRN', index),
+		});
+	}
+
+	const lineKeys = data.lines.map((line, index) =>
+		`${line.skuId}:${line.variantId ?? ''}:${line.createNewBatch ? `new-${index}` : (line.batchId ?? '')}`,
+	);
+	if (new Set(lineKeys).size !== lineKeys.length) {
+		throw new Error('Duplicate SKUs or SKU+variant+batch combinations in GRN lines detected');
+	}
+
+	const preparedLines = [];
+	for (const line of data.lines) {
+		let batchId = line.batchId || null;
+		if (line.createNewBatch) {
+			const batch = await createBatch({
+				skuId: line.skuId,
+				variantId: line.variantId,
+				vendorId: data.supplierId,
+				costPrice: line.costPrice,
+				sellingPrice: line.sellingPrice,
+				wholesalePrice: line.wholesalePrice,
+				bulkPrice: line.bulkPrice,
+				marginType: line.marginType,
+				marginValue: line.marginValue,
+				notes: line.notes,
+			});
+			batchId = batch.id;
+		}
+		preparedLines.push({ ...line, batchId });
+	}
+
+	await prisma.$transaction(async (tx) => {
+		await tx.gRN.update({
+			where: { id: grnId },
+			data: {
+				supplierId: data.supplierId,
+				floorId: data.floorId || null,
+				shelfId: data.shelfId || null,
+				invoiceReference: data.invoiceReference || null,
+				expectedDeliveryDate: data.expectedDeliveryDate || null,
+				notes: data.notes || null,
+			},
+		});
+		await tx.gRNLine.deleteMany({ where: { grnId } });
+		await tx.gRNLine.createMany({
+			data: preparedLines.map((line) => ({
+				grnId,
+				skuId: line.skuId,
+				variantId: line.variantId || null,
+				batchId: line.batchId,
+				expectedQuantity: line.expectedQuantity,
+				receivedQuantity: 0,
+				costPrice: line.costPrice,
+				sellingPrice: line.sellingPrice,
+				wholesalePrice: line.wholesalePrice,
+				bulkPrice: line.bulkPrice,
+				notes: line.notes,
+			})),
+		});
+	});
+
+	queueDashboardStatsRefresh();
+	return prisma.gRN.findUnique({
+		where: { id: grnId },
+		include: { lines: { include: { sku: true, variant: true, batch: true } } },
+	});
+}
+
 export async function submitGRN(grnId: string, userId: string, deliveryDate?: Date) {
 	const statusMap = await getStatusesByKeys([
 		SpecialStatusKeys.GRN_DRAFT,
