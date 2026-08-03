@@ -1023,7 +1023,7 @@ async function applySharedInventorySale(
 
       const recordResult = await client.query<{ id: string; quantity: number | string }>(
         `
-          SELECT id, quantity
+          SELECT ir.id, ir.quantity
           FROM inventory_records ir
           LEFT JOIN floors f ON f.id = ir.floor_id
           WHERE ir.sku_id = $1
@@ -1031,7 +1031,7 @@ async function applySharedInventorySale(
             AND (($3::text IS NULL AND ir.variant_id IS NULL) OR ir.variant_id = $3)
             AND ($4::text IS NULL OR f.branch_id = $4)
             AND quantity > 0
-          ORDER BY updated_at ASC, created_at ASC
+          ORDER BY ir.updated_at ASC, ir.created_at ASC
           FOR UPDATE
         `,
         [line.productId, SHELF_READY_STATE, line.variantId ?? null, input.branchId ?? null],
@@ -1509,7 +1509,7 @@ async function applyHeldSaleSavedEvent(client: PoolClient, event: SyncEvent) {
       payload.subtotal ?? 0,
       payload.discountTotal ?? 0,
       payload.total ?? 0,
-      payload.lines ?? [],
+      JSON.stringify(payload.lines ?? []),
       event.vectorClock,
     ],
   );
@@ -1561,7 +1561,7 @@ async function redeemSaleVouchers(client: PoolClient, event: SyncEvent, payload:
         order_id, invoice_number, branch_id, applied_to_items, redeemed_by, redeemed_at, notes
       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW(),$12)
     `, [randomUUID(), voucher.id, code, amount, before, after, event.aggregateId, payload.receiptNumber,
-      payload.branchId ?? null, payload.lines, payload.cashierId ?? null, `POS ${payload.terminalId}`]);
+      payload.branchId ?? null, JSON.stringify(payload.lines), payload.cashierId ?? null, `POS ${payload.terminalId}`]);
   }
 }
 
@@ -1585,7 +1585,7 @@ async function refundSaleVouchers(client: PoolClient, saleId: string, refundId: 
     await client.query(`
       INSERT INTO voucher_redemptions (id,voucher_code_id,code,redeemed_amount,balance_before,balance_after,order_id,applied_to_items,redeemed_at,notes)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),$9)
-    `, [randomUUID(), voucher.id, row.code, -restored, before, after, saleId, [], `Voucher refund ${refundId}`]);
+    `, [randomUUID(), voucher.id, row.code, -restored, before, after, saleId, JSON.stringify([]), `Voucher refund ${refundId}`]);
     remaining -= restored;
   }
 }
@@ -1643,8 +1643,8 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
       payload.taxTotal ?? 0,
       payload.total ?? 0,
       payload.marginTotal ?? 0,
-      payload.lines ?? [],
-      payload.payments ?? [],
+      JSON.stringify(payload.lines ?? []),
+      JSON.stringify(payload.payments ?? []),
       event.deviceId,
       event.sequenceNum,
       event.vectorClock,
@@ -1664,21 +1664,55 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
     );
   }
 
-  await applySharedInventorySale({
-    aggregateId: event.aggregateId,
-    receiptNumber: payload.receiptNumber,
-    terminalId: payload.terminalId,
-    branchId: payload.branchId,
-    lines: payload.lines.map((line) => ({
-      productId: line.productId,
-      sku: line.sku,
-      quantity: line.quantity,
-      name: line.name,
-      variantId: line.variantId ?? null,
-      variantCode: line.variantCode ?? null,
-      variantName: line.variantName ?? null,
-    })),
-  });
+  try {
+    await applySharedInventorySale({
+      aggregateId: event.aggregateId,
+      receiptNumber: payload.receiptNumber,
+      terminalId: payload.terminalId,
+      branchId: payload.branchId,
+      lines: payload.lines.map((line) => ({
+        productId: line.productId,
+        sku: line.sku,
+        quantity: line.quantity,
+        name: line.name,
+        variantId: line.variantId ?? null,
+        variantCode: line.variantCode ?? null,
+        variantName: line.variantName ?? null,
+      })),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Inventory adjustment failed';
+    if (!message.startsWith('Insufficient ShelfReady stock')) {
+      throw error;
+    }
+
+    // A stock reconciliation problem must not discard an otherwise valid POS
+    // sale or block every later event from this workstation. Keep the sale,
+    // acknowledge the event, and surface the stock discrepancy for review.
+    await client.query(
+      `
+        INSERT INTO pos_sync_conflicts (
+          id, aggregate_type, aggregate_id, local_event_id, remote_event_id,
+          policy, status, detail
+        )
+        VALUES ($1, 'inventory', $2, NULL, $3, 'MANUAL', 'OPEN', $4)
+        ON CONFLICT (id) DO UPDATE SET detail = EXCLUDED.detail, status = 'OPEN'
+      `,
+      [
+        `${event.id}-inventory-shortage`,
+        event.aggregateId,
+        event.id,
+        {
+          reason: 'INSUFFICIENT_SHELF_READY_STOCK',
+          message,
+          receiptNumber: payload.receiptNumber,
+          terminalId: payload.terminalId ?? null,
+          branchId: payload.branchId ?? null,
+          lines: payload.lines,
+        },
+      ],
+    );
+  }
 }
 
 async function getSaleRow(client: PoolClient, saleId: string) {
@@ -1776,7 +1810,7 @@ async function applyReturnCreatedEvent(client: PoolClient, event: SyncEvent) {
       payload.terminalId,
       payload.reason ?? null,
       totalRefund,
-      lines,
+      JSON.stringify(lines),
       event.deviceId,
       event.sequenceNum,
       event.vectorClock,
