@@ -411,6 +411,27 @@
     font-weight: 600;
   }
 
+  .crumb-link {
+    padding: 3px 4px;
+    margin: -3px -4px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: color 140ms ease, background 140ms ease;
+  }
+
+  .crumb-link:hover {
+    color: var(--ink);
+    background: var(--row-hover);
+  }
+
+  .crumb-link:focus-visible {
+    outline: 2px solid rgba(var(--accent-glow), 0.5);
+    outline-offset: 2px;
+  }
+
   .shell-command-trigger {
     flex: 1;
     max-width: 560px;

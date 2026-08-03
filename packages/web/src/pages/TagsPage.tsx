@@ -194,11 +194,12 @@ export default function TagsPage() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-panel-md modal-panel-padded">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingTag ? 'Edit Tag' : 'Create Tag'}
-            </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="modal-panel-md">
+            <div className="modal-header">
+              <h3 className="modal-title">{editingTag ? 'Edit Tag' : 'Create Tag'}</h3>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body form-stack">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name *
@@ -232,8 +233,9 @@ export default function TagsPage() {
                   />
                 </div>
               </div>
+              </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="modal-footer">
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"

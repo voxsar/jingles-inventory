@@ -341,7 +341,13 @@ export default function Layout() {
               </button>
 
               <div className="crumbs">
-                <span>{branding.appHeaderTitle}</span>
+                <button
+                  type="button"
+                  className="crumb-link"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  {branding.appHeaderTitle}
+                </button>
                 <ChevronRightIcon size={14} />
                 <strong>{currentLabel}</strong>
               </div>
