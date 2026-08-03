@@ -325,7 +325,7 @@ export default function UsersPage() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-panel-md">
+          <div className="modal-panel-md modal-panel-padded">
             <h3 className="text-lg font-semibold mb-4">
               {editingUser ? 'Edit User' : 'Create User'}
             </h3>
@@ -455,7 +455,7 @@ export default function UsersPage() {
 
       {showPasswordModal && (
         <div className="modal-overlay">
-          <div className="modal-panel-md">
+          <div className="modal-panel-md modal-panel-padded">
             <h3 className="text-lg font-semibold mb-4">
               Change Password for {editingUser?.email}
             </h3>

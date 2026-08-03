@@ -13,7 +13,12 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
   const barcodeRecord = await prisma.productBarcode.findUnique({
     where: { barcode },
     include: {
-      sku: { include: { vendor: { select: { id: true, name: true } } } },
+      sku: {
+        include: {
+          vendor: { select: { id: true, name: true } },
+          skuVendors: { include: { vendor: { select: { id: true, name: true } } } },
+        },
+      },
       variant: { select: { id: true, variantCode: true, name: true } },
     },
   });
@@ -50,7 +55,10 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
       ],
       isActive: true,
     },
-    include: { vendor: { select: { id: true, name: true } } },
+    include: {
+      vendor: { select: { id: true, name: true } },
+      skuVendors: { include: { vendor: { select: { id: true, name: true } } } },
+    },
   });
 
   if (!sku) {

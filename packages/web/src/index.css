@@ -45,6 +45,7 @@
     --font-mono: "SFMono-Regular", Menlo, Consolas, monospace;
     position: relative;
     isolation: isolate;
+    color: var(--ink);
   }
 
   .inventory-app-theme[data-theme='dark'] {
@@ -1159,6 +1160,11 @@
     max-width: 860px;
   }
 
+  /* For compact dialogs that do not use separate header/body/footer sections. */
+  .modal-panel-padded {
+    padding: 22px;
+  }
+
   .modal-header {
     position: sticky;
     top: 0;
@@ -1802,6 +1808,11 @@
     background-color: var(--chip) !important;
   }
 
+  .inventory-app-theme .bg-gray-200,
+  .inventory-app-theme .bg-gray-300 {
+    background-color: var(--chip) !important;
+  }
+
   .inventory-app-theme .border-gray-100,
   .inventory-app-theme .border-gray-200 {
     border-color: var(--line) !important;
@@ -1887,6 +1898,12 @@
     background-color: var(--row-hover) !important;
   }
 
+  .inventory-app-theme .hover\:bg-gray-100:hover,
+  .inventory-app-theme .hover\:bg-gray-200:hover,
+  .inventory-app-theme .hover\:bg-gray-300:hover {
+    background-color: var(--row-hover) !important;
+  }
+
   .inventory-app-theme .hover\:bg-red-50:hover {
     background-color: rgba(239, 68, 68, 0.16) !important;
   }
@@ -1939,6 +1956,29 @@
 }
 
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-panel,
+  .modal-panel-sm,
+  .modal-panel-md,
+  .modal-panel-lg {
+    max-height: calc(100dvh - 24px);
+    border-radius: 18px;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-panel-padded {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+
   .shell-topbar {
     padding: 14px 18px;
     flex-wrap: wrap;

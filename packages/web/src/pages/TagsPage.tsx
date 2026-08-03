@@ -194,7 +194,7 @@ export default function TagsPage() {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-panel-md">
+          <div className="modal-panel-md modal-panel-padded">
             <h3 className="text-lg font-semibold mb-4">
               {editingTag ? 'Edit Tag' : 'Create Tag'}
             </h3>

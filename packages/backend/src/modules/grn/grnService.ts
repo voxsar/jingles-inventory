@@ -332,6 +332,7 @@ export async function submitGRN(grnId: string, userId: string, deliveryDate?: Da
 }
 
 export async function submitInspection(data: {
+	grnId?: string;
 	grnLineId: string;
 	approvedQuantity: number;
 	rejectedQuantity: number;
@@ -341,6 +342,7 @@ export async function submitInspection(data: {
 }) {
 	const statusMap = await getStatusesByKeys([
 		SpecialStatusKeys.GRN_DRAFT,
+		SpecialStatusKeys.GRN_SUBMITTED,
 		SpecialStatusKeys.GRN_FULLY_INSPECTED,
 		SpecialStatusKeys.GRN_PARTIALLY_INSPECTED,
 		SpecialStatusKeys.INVENTORY_UNINSPECTED,
@@ -348,6 +350,7 @@ export async function submitInspection(data: {
 		SpecialStatusKeys.INVENTORY_DAMAGED,
 	]);
 	const grnDraftStatus = statusMap.get(SpecialStatusKeys.GRN_DRAFT)!;
+	const grnSubmittedStatus = statusMap.get(SpecialStatusKeys.GRN_SUBMITTED)!;
 	const grnFullyInspectedStatus = statusMap.get(SpecialStatusKeys.GRN_FULLY_INSPECTED)!;
 	const grnPartiallyInspectedStatus = statusMap.get(SpecialStatusKeys.GRN_PARTIALLY_INSPECTED)!;
 	const inventoryUninspected = statusMap.get(SpecialStatusKeys.INVENTORY_UNINSPECTED)!;
@@ -356,11 +359,16 @@ export async function submitInspection(data: {
 
 	const grnLine = await prisma.gRNLine.findUnique({
 		where: { id: data.grnLineId },
-		include: { grn: true },
+		include: { grn: true, inspectionRecords: { select: { id: true }, take: 1 } },
 	});
 
 	if (!grnLine) throw new Error('GRN line not found');
+	if (data.grnId && grnLine.grnId !== data.grnId) throw new Error('GRN line does not belong to this GRN');
 	if (grnLine.grn.status === grnDraftStatus) throw new Error('GRN must be submitted before inspection');
+	if (![grnSubmittedStatus, grnPartiallyInspectedStatus].includes(grnLine.grn.status)) {
+		throw new Error(`GRN cannot be inspected while its status is ${grnLine.grn.status}`);
+	}
+	if ((grnLine.inspectionRecords?.length ?? 0) > 0) throw new Error('This GRN line has already been inspected');
 
 	const inspection = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 		const record = await tx.inspectionRecord.create({
@@ -374,20 +382,34 @@ export async function submitInspection(data: {
 			},
 		});
 
-		// Find the UNINSPECTED inventory record created during GRN submission
-		const uninspectedRecord = await tx.inventoryRecord.findFirst({
+		// Match through the submission event. Product/variant/batch can be shared
+		// by multiple GRNs and is not a safe identity for the inventory row.
+		const uninspectedCandidates = await tx.inventoryRecord.findMany({
 			where: {
 				skuId: grnLine.skuId,
 				variantId: grnLine.variantId ?? null,
 				batchId: (grnLine as any).batchId ?? null,
 				state: inventoryUninspected,
-				// Match by GRN metadata in events to ensure we get the right record
 			},
 			orderBy: { createdAt: 'desc' },
 		});
+		const submissionEvents = uninspectedCandidates.length > 0
+			? await tx.inventoryEvent.findMany({
+				where: {
+					eventType: InventoryEventType.GRN_CREATED,
+					parentEntityId: { in: uninspectedCandidates.map((candidate) => candidate.id) },
+				},
+				orderBy: { timestamp: 'desc' },
+			})
+			: [];
+		const linkedInventoryId = submissionEvents.find((event) => {
+			const metadata = event.metadata as Record<string, unknown> | null;
+			return metadata?.grnLineId === data.grnLineId && metadata?.grnId === grnLine.grnId;
+		})?.parentEntityId;
+		const uninspectedRecord = uninspectedCandidates.find((candidate) => candidate.id === linkedInventoryId);
 
 		if (!uninspectedRecord) {
-			throw new Error('UNINSPECTED inventory record not found for this GRN line. GRN may not have been properly submitted.');
+			throw new Error('Uninspected inventory record linked to this GRN line was not found. Please verify the GRN submission.');
 		}
 
 		const totalInspected = data.approvedQuantity + data.rejectedQuantity;

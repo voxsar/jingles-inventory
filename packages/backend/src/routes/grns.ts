@@ -223,7 +223,7 @@ router.post(
 	async (req: AuthRequest, res: Response): Promise<void> => {
 		try {
 			const user = req.user!;
-			const inspection = await submitInspection({ ...req.body, inspectorUserId: user.id });
+			const inspection = await submitInspection({ ...req.body, grnId: req.params!.id, inspectorUserId: user.id });
 			res.status(201).json({ success: true, data: inspection });
 		} catch (error: any) {
 			logger.error('Inspection error', error);

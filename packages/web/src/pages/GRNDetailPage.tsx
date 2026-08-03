@@ -94,6 +94,7 @@ export default function GRNDetailPage() {
   const inspectedCount = grn.lines?.filter((l: any) => l.inspectionRecords?.length > 0).length ?? 0;
   const progress = grn.lines?.length > 0 ? Math.round((inspectedCount / grn.lines.length) * 100) : 0;
   const statusTone = STATUS_TONES[grn.status] ?? '';
+  const canInspect = grn.status === GRNStatus.Submitted || grn.status === GRNStatus.PartiallyInspected;
 
   // Aggregate rejected quantities per line (from inspectionRecords)
   const rejectedLines = (grn.lines ?? [])
@@ -219,7 +220,7 @@ export default function GRNDetailPage() {
           )}
         </div>
 
-        {grn.status !== GRNStatus.Draft && grn.lines?.length > 0 && (
+        {(canInspect || inspectedCount > 0) && grn.lines?.length > 0 && (
           <div className="mt-5 pt-5 border-t border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Inspection Progress</span>
@@ -251,7 +252,7 @@ export default function GRNDetailPage() {
                   <span>Received: <strong className="text-gray-900">{line.receivedQuantity}</strong></span>
                 </div>
               </div>
-              {grn.status !== GRNStatus.Draft && line.inspectionRecords?.length === 0 && (
+              {canInspect && line.inspectionRecords?.length === 0 && (
                 <button
                   type="button"
                   className="btn-primary text-sm"

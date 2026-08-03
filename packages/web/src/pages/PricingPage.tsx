@@ -331,7 +331,7 @@ export default function PricingPage() {
 			{/* Edit Modal */}
 			{editingBatch && (
 				<div className="modal-overlay" onClick={() => setEditingBatch(null)}>
-					<div className="modal-panel-md" onClick={(e) => e.stopPropagation()}>
+					<div className="modal-panel-md modal-panel-padded" onClick={(e) => e.stopPropagation()}>
 						<h2 className="text-lg font-semibold mb-4">Edit Batch Pricing: {editingBatch.batchNumber}</h2>
 						<form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="space-y-4">
 							<div className="grid grid-cols-2 gap-4">
@@ -420,7 +420,7 @@ export default function PricingPage() {
 			{/* Bulk Pricing Modal */}
 			{showBulkPricingModal && (
 				<div className="modal-overlay" onClick={() => setShowBulkPricingModal(false)}>
-					<div className="modal-panel-md" onClick={(e) => e.stopPropagation()}>
+					<div className="modal-panel-md modal-panel-padded" onClick={(e) => e.stopPropagation()}>
 						<h2 className="text-lg font-semibold mb-4">Bulk Update Pricing</h2>
 						<form onSubmit={handleBulkPricingSubmit} className="space-y-4">
 							<div>

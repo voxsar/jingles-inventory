@@ -3,6 +3,8 @@ import Select, { Props as SelectProps, StylesConfig } from 'react-select';
 export interface SelectOption {
   value: string;
   label: string;
+  isDisabled?: boolean;
+  isSeparator?: boolean;
 }
 
 interface CommonProps extends Omit<SelectProps<SelectOption, boolean>, 'options' | 'onChange' | 'value' | 'isMulti'> {
@@ -149,6 +151,10 @@ export default function SearchableSelect(props: SearchableSelectProps) {
       isDisabled={isDisabled}
       isLoading={isLoading}
       isSearchable={true}
+      isOptionDisabled={(option) => Boolean(option.isDisabled)}
+      formatOptionLabel={(option) => option.isSeparator ? (
+        <div aria-hidden="true" style={{ borderTop: '1px solid var(--line-strong)', height: 0, margin: '4px 0' }} />
+      ) : option.label}
       isMulti={isMulti}
       {...rest}
     />

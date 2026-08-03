@@ -763,7 +763,17 @@ router.get('/barcodes/lookup', async (req: AuthRequest, res: Response): Promise<
 	const match = await prisma.productBarcode.findUnique({
 		where: { barcode },
 		include: {
-			sku: { select: { id: true, skuCode: true, name: true, isActive: true } },
+			sku: {
+				select: {
+					id: true,
+					skuCode: true,
+					name: true,
+					isActive: true,
+					vendorId: true,
+					vendor: { select: { id: true, name: true } },
+					skuVendors: { include: { vendor: { select: { id: true, name: true } } } },
+				},
+			},
 			variant: { select: { id: true, variantCode: true, name: true } },
 		},
 	});

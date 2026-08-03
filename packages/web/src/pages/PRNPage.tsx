@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { prnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
+import { barcodeApi, prnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
 import { PRNStatus } from '@jingles/shared/enums';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -17,6 +17,7 @@ const STATUS_TONES: Record<string, string> = {
 const PAGE_SIZE = 20;
 
 type LineDraft = {
+  barcode: string;
   skuId: string;
   variantId: string;
   batchId: string;
@@ -25,6 +26,7 @@ type LineDraft = {
 };
 
 const emptyLine = (): LineDraft => ({
+  barcode: '',
   skuId: '',
   variantId: '',
   batchId: '',
@@ -72,6 +74,8 @@ export default function PRNPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [lineVariants, setLineVariants] = useState<Record<number, any[]>>({});
   const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
+  const [barcodeLoading, setBarcodeLoading] = useState<Record<number, boolean>>({});
+  const [barcodeErrors, setBarcodeErrors] = useState<Record<number, string>>({});
   const [form, setForm] = useState(initialForm);
   const [prefillBanner, setPrefillBanner] = useState<string>('');
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,16 +112,15 @@ export default function PRNPage() {
 
   useEffect(() => { loadData(); }, [page, pageSize, debouncedSearch, statusFilter, supplierFilter, branchFilter, floorFilter, fromDateFilter, toDateFilter]);
 
-  // Load SKUs when supplier set / search changes
+  // Products must be available before a supplier is selected (barcode-first flow).
   useEffect(() => {
     if (!showForm) return;
-    if (!form.supplierId) { setSkus([]); return; }
-    const params: Record<string, string> = { pageSize: '200', vendorId: form.supplierId };
+    const params: Record<string, string> = { pageSize: '200', isActive: 'true' };
     if (skuSearch) params.search = skuSearch;
     skusApi.list(params).then((res) => {
       setSkus(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
     }).catch((err) => { console.error('Failed to load SKUs', err); });
-  }, [showForm, skuSearch, form.supplierId]);
+  }, [showForm, skuSearch]);
 
   // Handle prefill from "Return Damaged Items" GRN flow
   useEffect(() => {
@@ -126,6 +129,7 @@ export default function PRNPage() {
     prefillHandledRef.current = true;
     const p = state.prefill;
     const prefilledLines: LineDraft[] = (p.lines ?? []).map((l: any) => ({
+      barcode: '',
       skuId: l.skuId ?? '',
       variantId: l.variantId ?? '',
       batchId: l.batchId ?? '',
@@ -178,6 +182,8 @@ export default function PRNPage() {
     setFormShelves([]);
     setLineVariants({});
     setLineBatches({});
+    setBarcodeLoading({});
+    setBarcodeErrors({});
     setPrefillBanner('');
   };
 
@@ -216,12 +222,30 @@ export default function PRNPage() {
     setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }));
     setLineVariants(prev => { const n = { ...prev }; delete n[i]; return n; });
     setLineBatches(prev => { const n = { ...prev }; delete n[i]; return n; });
+    setBarcodeLoading(prev => { const n = { ...prev }; delete n[i]; return n; });
+    setBarcodeErrors(prev => { const n = { ...prev }; delete n[i]; return n; });
+  };
+
+  const getSkuSupplierIds = (sku: any): string[] => {
+    const ids = new Set<string>();
+    if (sku?.vendorId) ids.add(sku.vendorId);
+    if (sku?.vendor?.id) ids.add(sku.vendor.id);
+    (sku?.skuVendors ?? []).forEach((link: any) => {
+      if (link.vendorId) ids.add(link.vendorId);
+      if (link.vendor?.id) ids.add(link.vendor.id);
+    });
+    return [...ids];
   };
 
   const updateLine = (i: number, field: keyof LineDraft, value: any) => {
     setForm((f) => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
 
     if (field === 'skuId' && value) {
+      const supplierIds = getSkuSupplierIds(skus.find((sku) => sku.id === value));
+      if (!form.supplierId && supplierIds.length === 1) {
+        setForm((current) => ({ ...current, supplierId: supplierIds[0] }));
+      }
+
       variantsApi.list(value).then(res => {
         const variants = res.data?.data ?? [];
         setLineVariants(prev => ({ ...prev, [i]: variants }));
@@ -245,6 +269,46 @@ export default function PRNPage() {
         setLineBatches(prev => ({ ...prev, [i]: batches }));
         setForm(f => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, batchId: '' } : l) }));
       }).catch(() => setLineBatches(prev => ({ ...prev, [i]: [] })));
+    }
+  };
+
+  const lookupLineBarcode = async (i: number) => {
+    const barcode = form.lines[i]?.barcode.trim();
+    if (!barcode || barcodeLoading[i]) return;
+
+    setBarcodeLoading((current) => ({ ...current, [i]: true }));
+    setBarcodeErrors((current) => ({ ...current, [i]: '' }));
+    try {
+      const response = await barcodeApi.scan(barcode);
+      const match = response.data?.data;
+      if (!match?.found || !match?.sku?.id || match.sku.isActive === false) {
+        throw new Error(match?.error ?? `No active product found for barcode ${barcode}`);
+      }
+
+      const matchedSku = match.sku;
+      setSkus((current) => current.some((sku) => sku.id === matchedSku.id) ? current : [matchedSku, ...current]);
+      updateLine(i, 'skuId', matchedSku.id);
+      if (match.variant?.id) {
+        variantsApi.list(matchedSku.id).then((variantResponse) => {
+          setLineVariants((current) => ({ ...current, [i]: variantResponse.data?.data ?? [] }));
+          setForm((current) => ({
+            ...current,
+            lines: current.lines.map((line, index) => index === i ? { ...line, variantId: match.variant.id } : line),
+          }));
+        }).catch(() => undefined);
+      }
+
+      const supplierIds = getSkuSupplierIds(matchedSku);
+      if (!form.supplierId && supplierIds.length === 1) {
+        setForm((current) => ({ ...current, supplierId: supplierIds[0] }));
+      }
+    } catch (error: any) {
+      setBarcodeErrors((current) => ({
+        ...current,
+        [i]: error.response?.data?.error ?? error.message ?? 'Barcode lookup failed',
+      }));
+    } finally {
+      setBarcodeLoading((current) => ({ ...current, [i]: false }));
     }
   };
 
@@ -330,6 +394,26 @@ export default function PRNPage() {
     : locations;
 
   const hasFilters = searchTerm || statusFilter || supplierFilter || branchFilter || floorFilter || fromDateFilter || toDateFilter;
+
+  const supplierMatchCounts = new Map<string, number>();
+  form.lines.forEach((line) => {
+    const sku = skus.find((candidate) => candidate.id === line.skuId);
+    getSkuSupplierIds(sku).forEach((supplierId) => {
+      supplierMatchCounts.set(supplierId, (supplierMatchCounts.get(supplierId) ?? 0) + 1);
+    });
+  });
+  const matchedSuppliers = vendors
+    .filter((vendor) => supplierMatchCounts.has(vendor.id))
+    .sort((a, b) => (supplierMatchCounts.get(b.id) ?? 0) - (supplierMatchCounts.get(a.id) ?? 0));
+  const unmatchedSuppliers = vendors.filter((vendor) => !supplierMatchCounts.has(vendor.id));
+  const supplierOptions = [
+    { value: '', label: 'Select supplier' },
+    ...matchedSuppliers.map((vendor: any) => ({ value: vendor.id, label: vendor.name })),
+    ...(matchedSuppliers.length > 0 && unmatchedSuppliers.length > 0
+      ? [{ value: '__supplier_separator__', label: '', isDisabled: true, isSeparator: true }]
+      : []),
+    ...unmatchedSuppliers.map((vendor: any) => ({ value: vendor.id, label: vendor.name })),
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -457,21 +541,9 @@ export default function PRNPage() {
                   <div className="form-group">
                     <label className="form-label">Supplier *</label>
                     <SearchableSelect
-                      options={[
-                        { value: '', label: 'Select supplier' },
-                        ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
-                      ]}
+                      options={supplierOptions}
                       value={form.supplierId}
-                      onChange={(value) => {
-                        setForm((f) => ({
-                          ...f,
-                          supplierId: value,
-                          lines: [emptyLine()],
-                        }));
-                        setSkuSearch('');
-                        setLineVariants({});
-                        setLineBatches({});
-                      }}
+                      onChange={(value) => setForm((f) => ({ ...f, supplierId: value }))}
                       placeholder="Select supplier"
                       isClearable={false}
                     />
@@ -536,10 +608,10 @@ export default function PRNPage() {
                 )}
 
                 {/* Line items */}
-                <div>
+                <div style={{ order: prefillBanner ? 0 : -1 }}>
                   {!form.supplierId && (
                     <div className="p-3 mb-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-                      Please select a supplier first to load available products.
+                      Scan or type a product barcode first. Matching suppliers will move to the top of the supplier list.
                     </div>
                   )}
                   <div className="flex items-center justify-between mb-3">
@@ -557,6 +629,36 @@ export default function PRNPage() {
                   <div className="flex flex-col gap-3">
                     {form.lines.map((line, i) => (
                       <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="mb-3">
+                          <label className="text-xs font-medium text-gray-600 block mb-1">Barcode</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              className="input-field flex-1"
+                              value={line.barcode}
+                              placeholder="Scan or type barcode, then press Enter"
+                              onChange={(e) => {
+                                updateLine(i, 'barcode', e.target.value);
+                                setBarcodeErrors((current) => ({ ...current, [i]: '' }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  lookupLineBarcode(i);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-sm whitespace-nowrap"
+                              disabled={!line.barcode.trim() || barcodeLoading[i]}
+                              onClick={() => lookupLineBarcode(i)}
+                            >
+                              {barcodeLoading[i] ? 'Finding…' : 'Find'}
+                            </button>
+                          </div>
+                          {barcodeErrors[i] && <div className="text-xs text-red-600 mt-1">{barcodeErrors[i]}</div>}
+                        </div>
                         <div className="flex gap-2 items-start mb-3">
                           <div className="flex-1">
                             <label className="text-xs font-medium text-gray-600 block mb-1">Product *</label>

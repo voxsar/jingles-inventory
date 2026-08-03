@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
+import { barcodeApi, grnsApi, vendorsApi, skusApi, floorsApi, shelvesApi, variantsApi, batchesApi } from '../api/client';
 import { GRNStatus } from '@jingles/shared/enums';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
@@ -44,6 +44,8 @@ export default function GRNPage() {
   const [lineBatches, setLineBatches] = useState<Record<number, any[]>>({});
   const [nextBatchNumbers, setNextBatchNumbers] = useState<Record<number, string>>({});
   const [pricingCollapsed, setPricingCollapsed] = useState<Record<number, boolean>>({});
+  const [barcodeLoading, setBarcodeLoading] = useState<Record<number, boolean>>({});
+  const [barcodeErrors, setBarcodeErrors] = useState<Record<number, string>>({});
   const [showBulkPricing, setShowBulkPricing] = useState(false);
   const [bulkPricing, setBulkPricing] = useState({
     costPrice: '',
@@ -67,6 +69,7 @@ export default function GRNPage() {
     floorId: '',
     shelfId: '',
     lines: [{
+      barcode: '',
       skuId: '',
       variantId: '',
       expectedQuantity: 1,
@@ -113,16 +116,12 @@ export default function GRNPage() {
 
   useEffect(() => {
     if (!showForm) return;
-    if (!form.supplierId) {
-      setSkus([]);
-      return;
-    }
-    const params: Record<string, string> = { pageSize: '200', vendorId: form.supplierId };
+    const params: Record<string, string> = { pageSize: '200', isActive: 'true' };
     if (skuSearch) params.search = skuSearch;
     skusApi.list(params).then((res) => {
       setSkus(res.data?.data?.items ?? res.data?.data ?? res.data ?? []);
     }).catch((err) => { console.error('Failed to load SKUs', err); });
-  }, [showForm, skuSearch, form.supplierId]);
+  }, [showForm, skuSearch]);
 
   const handleSkuSearchChange = (value: string) => {
     setSkuSearch(value);
@@ -172,6 +171,7 @@ export default function GRNPage() {
         floorId: '',
         shelfId: '',
         lines: [{
+          barcode: '',
           skuId: '',
           variantId: '',
           expectedQuantity: 1,
@@ -201,6 +201,7 @@ export default function GRNPage() {
   const addLine = () => setForm((f) => ({
     ...f,
     lines: [...f.lines, {
+      barcode: '',
       skuId: '',
       variantId: '',
       expectedQuantity: 1,
@@ -266,6 +267,12 @@ export default function GRNPage() {
     setForm((f) => ({ ...f, lines: f.lines.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
 
     if (field === 'skuId' && value) {
+      const selectedSku = skus.find((sku) => sku.id === value);
+      const supplierIds = getSkuSupplierIds(selectedSku);
+      if (!form.supplierId && supplierIds.length === 1) {
+        setForm((f) => ({ ...f, supplierId: supplierIds[0] }));
+      }
+
       // Load variants for this SKU
       variantsApi.list(value).then(res => {
         const variants = res.data?.data ?? [];
@@ -354,12 +361,65 @@ export default function GRNPage() {
     }
   };
 
+  const getSkuSupplierIds = (sku: any): string[] => {
+    const ids = new Set<string>();
+    if (sku?.vendorId) ids.add(sku.vendorId);
+    if (sku?.vendor?.id) ids.add(sku.vendor.id);
+    (sku?.skuVendors ?? []).forEach((link: any) => {
+      if (link.vendorId) ids.add(link.vendorId);
+      if (link.vendor?.id) ids.add(link.vendor.id);
+    });
+    return [...ids];
+  };
+
+  const lookupLineBarcode = async (i: number) => {
+    const barcode = form.lines[i]?.barcode.trim();
+    if (!barcode || barcodeLoading[i]) return;
+
+    setBarcodeLoading((current) => ({ ...current, [i]: true }));
+    setBarcodeErrors((current) => ({ ...current, [i]: '' }));
+    try {
+      const response = await barcodeApi.scan(barcode);
+      const match = response.data?.data;
+      if (!match?.found || !match?.sku?.id || match.sku.isActive === false) {
+        throw new Error(match?.error ?? `No active product found for barcode ${barcode}`);
+      }
+
+      const matchedSku = match.sku;
+      setSkus((current) => current.some((sku) => sku.id === matchedSku.id) ? current : [matchedSku, ...current]);
+      updateLine(i, 'skuId', matchedSku.id);
+      if (match.variant?.id) {
+        variantsApi.list(matchedSku.id).then((variantResponse) => {
+          const variants = variantResponse.data?.data ?? [];
+          setLineVariants((current) => ({ ...current, [i]: variants }));
+          setForm((current) => ({
+            ...current,
+            lines: current.lines.map((line, index) => index === i ? { ...line, variantId: match.variant.id } : line),
+          }));
+        }).catch(() => undefined);
+      }
+
+      const supplierIds = getSkuSupplierIds(matchedSku);
+      if (!form.supplierId && supplierIds.length === 1) {
+        setForm((current) => ({ ...current, supplierId: supplierIds[0] }));
+      }
+    } catch (error: any) {
+      setBarcodeErrors((current) => ({
+        ...current,
+        [i]: error.response?.data?.error ?? error.message ?? 'Barcode lookup failed',
+      }));
+    } finally {
+      setBarcodeLoading((current) => ({ ...current, [i]: false }));
+    }
+  };
+
   const openEdit = async (grn: any) => {
     setIsSavingEdit(true);
     try {
       const res = await grnsApi.get(grn.id);
       const full = res.data?.data ?? grn;
       const lines = (full.lines ?? []).map((line: any) => ({
+        barcode: line.sku?.barcodes?.[0]?.barcode ?? '',
         skuId: line.skuId ?? '',
         variantId: line.variantId ?? '',
         expectedQuantity: line.expectedQuantity ?? 1,
@@ -383,7 +443,7 @@ export default function GRNPage() {
         floorId: full.floorId ?? '',
         shelfId: full.shelfId ?? '',
         lines: lines.length ? lines : [{
-          skuId: '', variantId: '', expectedQuantity: 1, batchId: '', createNewBatch: false,
+          barcode: '', skuId: '', variantId: '', expectedQuantity: 1, batchId: '', createNewBatch: false,
           costPrice: '', sellingPrice: '', wholesalePrice: '', bulkPrice: '', marginType: '', marginValue: '', notes: '',
         }],
       });
@@ -462,6 +522,26 @@ export default function GRNPage() {
     : locations;
 
   const hasFilters = searchTerm || statusFilter || supplierFilter || branchFilter || floorFilter || fromDateFilter || toDateFilter;
+
+  const supplierMatchCounts = new Map<string, number>();
+  form.lines.forEach((line) => {
+    const sku = skus.find((candidate) => candidate.id === line.skuId);
+    getSkuSupplierIds(sku).forEach((supplierId) => {
+      supplierMatchCounts.set(supplierId, (supplierMatchCounts.get(supplierId) ?? 0) + 1);
+    });
+  });
+  const matchedSuppliers = vendors
+    .filter((vendor) => supplierMatchCounts.has(vendor.id))
+    .sort((a, b) => (supplierMatchCounts.get(b.id) ?? 0) - (supplierMatchCounts.get(a.id) ?? 0));
+  const unmatchedSuppliers = vendors.filter((vendor) => !supplierMatchCounts.has(vendor.id));
+  const supplierOptions = [
+    { value: '', label: 'Select supplier' },
+    ...matchedSuppliers.map((vendor: any) => ({ value: vendor.id, label: vendor.name })),
+    ...(matchedSuppliers.length > 0 && unmatchedSuppliers.length > 0
+      ? [{ value: '__supplier_separator__', label: '', isDisabled: true, isSeparator: true }]
+      : []),
+    ...unmatchedSuppliers.map((vendor: any) => ({ value: vendor.id, label: vendor.name })),
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -587,26 +667,13 @@ export default function GRNPage() {
                   <div className="form-group">
                     <label className="form-label">Supplier *</label>
                     <SearchableSelect
-                      options={[
-                        { value: '', label: 'Select supplier' },
-                        ...vendors.map((v: any) => ({ value: v.id, label: v.name }))
-                      ]}
+                      options={supplierOptions}
                       value={form.supplierId}
                       onChange={(value) => {
                         setForm((f) => ({
                           ...f,
                           supplierId: value,
-                          lines: [{
-                            skuId: '', variantId: '', expectedQuantity: 1, batchId: '',
-                            createNewBatch: false, costPrice: '', sellingPrice: '',
-                            wholesalePrice: '', bulkPrice: '', marginType: '', marginValue: '', notes: '',
-                          }],
                         }));
-                        setSkuSearch('');
-                        setLineVariants({});
-                        setLineBatches({});
-                        setNextBatchNumbers({});
-                        setPricingCollapsed({});
                       }}
                       placeholder="Select supplier"
                       isClearable={false}
@@ -678,10 +745,10 @@ export default function GRNPage() {
                 )}
 
                 {/* Line items */}
-                <div>
+                <div style={{ order: -1 }}>
                   {!form.supplierId && (
                     <div className="p-3 mb-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
-                      Please select a supplier first to load available products.
+                      Scan or type a product barcode first. Matching suppliers will move to the top of the supplier list.
                     </div>
                   )}
                   <div className="flex items-center justify-between mb-3">
@@ -699,6 +766,36 @@ export default function GRNPage() {
                   <div className="flex flex-col gap-3">
                     {form.lines.map((line, i) => (
                       <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="mb-3">
+                          <label className="text-xs font-medium text-gray-600 block mb-1">Barcode</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              className="input-field flex-1"
+                              value={line.barcode}
+                              placeholder="Scan or type barcode, then press Enter"
+                              onChange={(e) => {
+                                updateLine(i, 'barcode', e.target.value);
+                                setBarcodeErrors((current) => ({ ...current, [i]: '' }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  lookupLineBarcode(i);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-sm whitespace-nowrap"
+                              disabled={!line.barcode.trim() || barcodeLoading[i]}
+                              onClick={() => lookupLineBarcode(i)}
+                            >
+                              {barcodeLoading[i] ? 'Finding…' : 'Find'}
+                            </button>
+                          </div>
+                          {barcodeErrors[i] && <div className="text-xs text-red-600 mt-1">{barcodeErrors[i]}</div>}
+                        </div>
                         {/* Product Selection Row */}
                         <div className="flex gap-2 items-start mb-3">
                           <div className="flex-1">

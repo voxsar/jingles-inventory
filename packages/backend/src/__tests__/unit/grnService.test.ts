@@ -255,6 +255,13 @@ describe('submitGRN', () => {
 });
 
 describe('submitInspection', () => {
+  const linkedSubmissionEvent = (inventoryRecordId: string) => ({
+    id: `event-${inventoryRecordId}`,
+    eventType: InventoryEventType.GRN_CREATED,
+    parentEntityId: inventoryRecordId,
+    metadata: { grnId: GRNS.submittedGRN.id, grnLineId: GRN_LINES.submittedLine1.id },
+  });
+
   beforeEach(() => {
     resetPrismaMocks();
   });
@@ -287,6 +294,21 @@ describe('submitInspection', () => {
     ).rejects.toThrow('GRN must be submitted');
   });
 
+  it('rejects inspection of a closed historical GRN', async () => {
+    prismaMock.gRNLine.findUnique.mockResolvedValue({
+      ...GRN_LINES.submittedLine1,
+      grn: { ...GRNS.submittedGRN, status: GRNStatus.Closed },
+      inspectionRecords: [],
+    });
+
+    await expect(submitInspection({
+      grnLineId: GRN_LINES.submittedLine1.id,
+      approvedQuantity: 30,
+      rejectedQuantity: 0,
+      inspectorUserId: USERS.inspector.id,
+    })).rejects.toThrow('cannot be inspected while its status is Closed');
+  });
+
   it('creates approved records in Inspected state', async () => {
     prismaMock.gRNLine.findUnique.mockResolvedValue({
       ...GRN_LINES.submittedLine1,
@@ -297,15 +319,16 @@ describe('submitInspection', () => {
     const approvedRecord = { id: 'inv-approved-001', state: InventoryState.Inspected, quantity: 28 };
     const damagedRecord = { id: 'inv-damaged-001', state: InventoryState.Damaged, quantity: 2 };
     const uninspectedRecord = { id: 'inv-uninspected-001', state: InventoryState.Uninspected, quantity: 30, floorId: 'floor-001', shelfId: 'shelf-001' };
+    const otherGrnRecord = { ...uninspectedRecord, id: 'inv-other-grn-001' };
 
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue(inspectionRecord) },
       inventoryRecord: {
-        findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
+        findMany: vi.fn().mockResolvedValue([otherGrnRecord, uninspectedRecord]),
         create: vi.fn().mockResolvedValue(damagedRecord),
         update: vi.fn().mockResolvedValue(approvedRecord),
       },
-      inventoryEvent: { create: vi.fn() },
+      inventoryEvent: { findMany: vi.fn().mockResolvedValue([linkedSubmissionEvent(uninspectedRecord.id)]), create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([
         { ...GRN_LINES.submittedLine1, inspectionRecords: [inspectionRecord] },
       ]) },
@@ -325,6 +348,7 @@ describe('submitInspection', () => {
     // Should update existing record to Inspected with approved quantity
     expect(mockTx.inventoryRecord.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { id: uninspectedRecord.id },
         data: expect.objectContaining({ state: InventoryState.Inspected, quantity: 28 }),
       })
     );
@@ -347,11 +371,11 @@ describe('submitInspection', () => {
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue({ id: 'inspect-002' }) },
       inventoryRecord: {
-        findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
+        findMany: vi.fn().mockResolvedValue([uninspectedRecord]),
         create: vi.fn().mockResolvedValue({ id: 'inv-dam-001', state: InventoryState.Damaged }),
         update: vi.fn().mockResolvedValue({ id: 'inv-uninspected-002', state: InventoryState.Damaged }),
       },
-      inventoryEvent: { create: vi.fn() },
+      inventoryEvent: { findMany: vi.fn().mockResolvedValue([linkedSubmissionEvent(uninspectedRecord.id)]), create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([{ inspectionRecords: [{ id: 'inspect-002' }] }]) },
       gRN: { update: vi.fn() },
     };
@@ -387,11 +411,11 @@ describe('submitInspection', () => {
     const mockTx = {
       inspectionRecord: { create: vi.fn().mockResolvedValue(inspectionRecord) },
       inventoryRecord: {
-        findFirst: vi.fn().mockResolvedValue(uninspectedRecord),
+        findMany: vi.fn().mockResolvedValue([uninspectedRecord]),
         create: vi.fn().mockResolvedValue({ id: 'inv-new', state: InventoryState.Inspected }),
         update: vi.fn().mockResolvedValue({ id: 'inv-new', state: InventoryState.Inspected }),
       },
-      inventoryEvent: { create: vi.fn() },
+      inventoryEvent: { findMany: vi.fn().mockResolvedValue([linkedSubmissionEvent(uninspectedRecord.id)]), create: vi.fn() },
       gRNLine: { findMany: vi.fn().mockResolvedValue([
         { ...GRN_LINES.submittedLine1, inspectionRecords: [inspectionRecord] },
       ]) },
