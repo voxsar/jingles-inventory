@@ -1,6 +1,6 @@
 # Legacy SQL Import
 
-This repo now includes a deterministic legacy MySQL migration helper for the old inventory and POS database shape in [Dump20260508.sql](/var/www/jingles-inventory/Dump20260508.sql).
+This repo now includes a deterministic legacy MySQL migration helper for the old inventory and POS database shape in [Dump20260508.sql](/var/www/federation-inventory/jingles-inventory/Dump20260508.sql).
 
 ## What It Supports
 

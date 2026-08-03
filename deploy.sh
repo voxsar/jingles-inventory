@@ -11,7 +11,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Navigate to project root
-cd /var/www/jingles-inventory
+cd /var/www/federation-inventory/jingles-inventory
 
 # Step 1: Pull latest from main
 echo -e "${BLUE}📥 Pulling latest from main...${NC}"
