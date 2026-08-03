@@ -17,6 +17,7 @@ type AuthPayload = {
     role: string;
     vendorId?: string | null;
     createdAt?: string | null;
+    hasPin?: boolean;
   };
 };
 
@@ -50,6 +51,7 @@ function parseAuthPayload(payload: unknown): AuthPayload | null {
   const role = 'role' in user ? user.role : null;
   const vendorId = 'vendorId' in user ? user.vendorId : null;
   const createdAt = 'createdAt' in user ? user.createdAt : null;
+  const hasPin = 'hasPin' in user ? user.hasPin : false;
 
   if (typeof id !== 'string' || typeof email !== 'string' || typeof role !== 'string') {
     return null;
@@ -63,6 +65,7 @@ function parseAuthPayload(payload: unknown): AuthPayload | null {
       role,
       vendorId: typeof vendorId === 'string' || vendorId === null ? vendorId : null,
       createdAt: typeof createdAt === 'string' || createdAt === null ? createdAt : null,
+      hasPin: typeof hasPin === 'boolean' ? hasPin : false,
     },
   };
 }
@@ -171,6 +174,18 @@ async function findLocalUserById(id: string) {
   }
 }
 
+async function findPinHashByUserId(id: string): Promise<string | null> {
+  try {
+    const rows = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
+      SELECT "pin_hash" AS "pinHash" FROM "users" WHERE "id" = ${id} LIMIT 1
+    `;
+    return rows[0]?.pinHash ?? null;
+  } catch (error) {
+    logger.warn('Failed to read the user unlock PIN', error);
+    return null;
+  }
+}
+
 async function requestUpstreamSyncToken(
   email: string,
   password: string
@@ -275,9 +290,16 @@ router.post(
         if (token) {
           const upstreamSyncTokenResult = await requestUpstreamSyncToken(email, password);
           const syncToken = upstreamSyncTokenResult.ok ? upstreamSyncTokenResult.token : null;
+          const pinHash = await findPinHashByUserId(user.id);
           res.json({
             token,
-            user: { id: user.id, email: user.email, role: user.role },
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              vendorId: user.vendorId,
+              hasPin: Boolean(pinHash),
+            },
             ...(syncToken ? { syncToken } : {}),
           });
           return;
@@ -308,6 +330,43 @@ router.post(
     }
 
     res.status(401).json({ error: 'Invalid credentials' });
+  }
+);
+
+router.post(
+  '/unlock',
+  authenticate,
+  [body('pin').matches(/^\d{4,6}$/).withMessage('PIN must contain 4 to 6 digits')],
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(422).json({ error: 'Enter a valid 4 to 6 digit PIN' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.id },
+      select: { isActive: true },
+    });
+
+    if (!user?.isActive) {
+      res.status(403).json({ error: 'This account is not active' });
+      return;
+    }
+    const pinHash = await findPinHashByUserId(req.user!.id);
+    if (!pinHash) {
+      res.status(409).json({ error: 'No unlock PIN has been configured for this user' });
+      return;
+    }
+
+    const valid = await bcrypt.compare(String(req.body.pin), pinHash);
+    if (!valid) {
+      // Deliberately avoid 401: the regular API interceptor treats 401 as a full logout.
+      res.status(422).json({ error: 'Incorrect PIN' });
+      return;
+    }
+
+    res.json({ success: true });
   }
 );
 
@@ -361,7 +420,8 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise
     res.json(req.user);
     return;
   }
-  res.json(user);
+  const pinHash = await findPinHashByUserId(user.id);
+  res.json({ ...user, hasPin: Boolean(pinHash) });
 });
 
 export default router;

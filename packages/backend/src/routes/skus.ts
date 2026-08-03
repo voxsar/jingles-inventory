@@ -671,7 +671,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 							{ name: { contains: search, mode: 'insensitive' } },
 							{ skuCode: { contains: search, mode: 'insensitive' } },
 							{ description: { contains: search, mode: 'insensitive' } },
-							{ barcodes: { some: { barcode: search } } },
+							{ barcodes: { some: { barcode: { contains: search } } } },
 							{ vendor: { name: { contains: search, mode: 'insensitive' } } },
 						{ category: { name: { contains: search, mode: 'insensitive' } } },
 					],

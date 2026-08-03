@@ -35,18 +35,21 @@ export async function searchSKUIdsFts(query: string, limit = 500): Promise<strin
   }
 
   try {
-    const exactBarcodeRows = await prisma.productBarcode.findMany({
-      where: { barcode: query.trim() },
-      select: { skuId: true },
-      take: 10,
+    const barcodeRows = await prisma.productBarcode.findMany({
+      where: { barcode: { contains: query.trim() } },
+      select: { skuId: true, barcode: true },
+      take: 30,
     });
+    const barcodeSkuIds = barcodeRows
+      .sort((left, right) => Number(right.barcode === query.trim()) - Number(left.barcode === query.trim()))
+      .map((row) => row.skuId);
     const rows = (await (prisma as any).$queryRawUnsafe(
       `SELECT id FROM skus_fts WHERE skus_fts MATCH ? ORDER BY rank LIMIT ?`,
       ftsQuery,
       limit
     )) as Array<{ id: string }>;
     return Array.from(new Set([
-      ...exactBarcodeRows.map((row) => row.skuId),
+      ...barcodeSkuIds,
       ...rows.map((row) => row.id),
     ])).slice(0, limit);
   } catch {

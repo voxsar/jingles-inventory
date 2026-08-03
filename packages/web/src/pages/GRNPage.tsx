@@ -61,6 +61,7 @@ export default function GRNPage() {
   const [form, setForm] = useState({
     supplierId: '',
     invoiceReference: '',
+    supplierInvoiceDate: '',
     expectedDeliveryDate: getTodayString(),
     notes: '',
     floorId: '',
@@ -165,6 +166,7 @@ export default function GRNPage() {
       setForm({
         supplierId: '',
         invoiceReference: '',
+        supplierInvoiceDate: '',
         expectedDeliveryDate: getTodayString(),
         notes: '',
         floorId: '',
@@ -375,6 +377,7 @@ export default function GRNPage() {
       setForm({
         supplierId: full.supplierId ?? '',
         invoiceReference: full.invoiceReference ?? '',
+        supplierInvoiceDate: full.supplierInvoiceDate ? full.supplierInvoiceDate.split('T')[0] : '',
         expectedDeliveryDate: full.expectedDeliveryDate ? full.expectedDeliveryDate.split('T')[0] : getTodayString(),
         notes: full.notes ?? '',
         floorId: full.floorId ?? '',
@@ -616,9 +619,15 @@ export default function GRNPage() {
                 </div>
                 <div className="form-grid-2">
                   <div className="form-group">
+                    <label className="form-label">Supplier Invoice Date</label>
+                    <input className="input-field" type="date" value={form.supplierInvoiceDate} onChange={(e) => setForm((f) => ({ ...f, supplierInvoiceDate: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
                     <label className="form-label">Expected Delivery</label>
                     <input className="input-field" type="date" value={form.expectedDeliveryDate} onChange={(e) => setForm((f) => ({ ...f, expectedDeliveryDate: e.target.value }))} />
                   </div>
+                </div>
+                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Notes</label>
                     <input className="input-field" type="text" value={form.notes} placeholder="Optional notes…" onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />

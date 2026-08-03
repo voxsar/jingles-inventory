@@ -4,14 +4,17 @@ import { authApi } from '../api/client';
 import { branding } from '../config/branding';
 import { clearDesktopAuthCache, persistDesktopAuthCache } from '../utils/runtime';
 
+const LAST_ACTIVITY_STORAGE_KEY = 'jingles-inventory-last-activity-at';
+
 interface AuthState {
-	user: IUser | null;
+	user: (IUser & { hasPin?: boolean }) | null;
 	token: string | null;
 	isLoading: boolean;
 	error: string | null;
 	login: (email: string, password: string) => Promise<void>;
 	logout: () => void;
 	loadUser: () => Promise<void>;
+	unlock: (pin: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -28,6 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 			const responseData = res.data?.data ?? res.data;
 			const { token, user, syncToken } = responseData;
 			localStorage.setItem(branding.tokenStorageKey, token);
+			localStorage.setItem(LAST_ACTIVITY_STORAGE_KEY, String(Date.now()));
 			persistDesktopAuthCache(token, user, syncToken);
 			set({ token, user, isLoading: false });
 		} catch (err: any) {
@@ -41,8 +45,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 	logout: () => {
 		localStorage.removeItem(branding.tokenStorageKey);
+		localStorage.removeItem(LAST_ACTIVITY_STORAGE_KEY);
 		clearDesktopAuthCache();
 		set({ user: null, token: null });
+	},
+
+	unlock: async (pin) => {
+		await authApi.unlock(pin);
 	},
 
 	loadUser: async () => {

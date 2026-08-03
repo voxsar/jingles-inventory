@@ -7,7 +7,7 @@ import { GRNStatus, InventoryState, InventoryEventType } from '@jingles/shared';
 vi.mock('../../prisma/client', () => ({ default: prismaMock }));
 
 // Import after mocking
-const { createGRN, submitGRN, submitInspection } = await import('../../modules/grn/grnService');
+const { createGRN, updateDraftGRN, submitGRN, submitInspection } = await import('../../modules/grn/grnService');
 
 describe('createGRN', () => {
   beforeEach(() => {
@@ -139,6 +139,52 @@ describe('createGRN', () => {
         data: expect.objectContaining({ eventType: InventoryEventType.GRN_CREATED }),
       })
     );
+  });
+});
+
+describe('updateDraftGRN', () => {
+  beforeEach(() => {
+    resetPrismaMocks();
+  });
+
+  it('replaces draft header and lines including item pricing', async () => {
+    const updated = {
+      ...GRNS.draftGRN,
+      invoiceReference: 'EDITED-INV-001',
+      lines: [{ ...GRN_LINES.draftLine1, expectedQuantity: 25, costPrice: 81.5 }],
+    };
+    prismaMock.gRN.findUnique
+      .mockResolvedValueOnce(GRNS.draftGRN)
+      .mockResolvedValueOnce(updated as any);
+    prismaMock.gRN.findFirst.mockResolvedValue(null);
+    prismaMock.$transaction.mockImplementation(async (callback: any) => callback(prismaMock));
+    prismaMock.gRN.update.mockResolvedValue(updated as any);
+    prismaMock.gRNLine.deleteMany.mockResolvedValue({ count: 2 });
+    prismaMock.gRNLine.createMany.mockResolvedValue({ count: 1 });
+
+    const result = await updateDraftGRN(GRNS.draftGRN.id, {
+      supplierId: GRNS.draftGRN.supplierId,
+      invoiceReference: 'EDITED-INV-001',
+      shelfId: 'shelf-test-001',
+      lines: [{ skuId: SKUS.widgetBox.id, expectedQuantity: 25, costPrice: 81.5 }],
+    });
+
+    expect(prismaMock.gRN.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ invoiceReference: 'EDITED-INV-001' }),
+    }));
+    expect(prismaMock.gRNLine.deleteMany).toHaveBeenCalledWith({ where: { grnId: GRNS.draftGRN.id } });
+    expect(prismaMock.gRNLine.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ expectedQuantity: 25, costPrice: 81.5 })],
+    });
+    expect(result).toEqual(updated);
+  });
+
+  it('refuses to edit a submitted GRN', async () => {
+    prismaMock.gRN.findUnique.mockResolvedValue(GRNS.submittedGRN);
+    await expect(updateDraftGRN(GRNS.submittedGRN.id, {
+      supplierId: GRNS.submittedGRN.supplierId,
+      lines: [{ skuId: SKUS.widgetBox.id, expectedQuantity: 1 }],
+    })).rejects.toThrow('Only Draft GRNs can be edited');
   });
 });
 

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Router, Response } from 'express';
+import { NextFunction, Router, Response } from 'express';
 import multer from 'multer';
 import { UserRole } from '@jingles/shared';
 import prisma from '../prisma/client';
@@ -41,6 +41,23 @@ const upload = multer({
 		cb(new Error('Unsupported file type. Upload CSV, Excel, JSON, text, PDF, or image files.'));
 	},
 });
+
+function acceptImportUpload(req: AuthRequest, res: Response, next: NextFunction) {
+	upload.single('file')(req, res, (error: unknown) => {
+		if (!error) {
+			next();
+			return;
+		}
+
+		if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+			res.status(413).json({ success: false, error: 'The selected file is larger than the 20 MB upload limit.' });
+			return;
+		}
+
+		const message = error instanceof Error ? error.message : 'The selected file could not be uploaded.';
+		res.status(400).json({ success: false, error: message });
+	});
+}
 
 function canUploadImports(role: string | undefined) {
 	return role === UserRole.Admin || role === UserRole.Manager || role === UserRole.Staff;
@@ -110,7 +127,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 	}
 });
 
-router.post('/', upload.single('file'), async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', acceptImportUpload, async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
 		if (!canUploadImports(req.user?.role)) {
 			if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);

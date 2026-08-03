@@ -121,6 +121,7 @@ describe('POST /api/auth/login', () => {
         id: 'user-001',
         email: 'admin@theredsun.org',
         role: 'Admin',
+        hasPin: false,
       });
       expect(typeof res.body.token).toBe('string');
       expect(fetchSpy).not.toHaveBeenCalled();

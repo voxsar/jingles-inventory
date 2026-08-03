@@ -3,6 +3,7 @@ import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import SessionLock from './components/SessionLock';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import InventoryPage from './pages/InventoryPage';
@@ -53,7 +54,10 @@ function AppRoutes() {
         path="/"
         element={
           <ProtectedRoute>
-            <Layout />
+            <>
+              <SessionLock />
+              <Layout />
+            </>
           </ProtectedRoute>
         }
       >

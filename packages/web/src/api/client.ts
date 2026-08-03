@@ -32,6 +32,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
   me: () => api.get('/auth/me'),
+  unlock: (pin: string) => api.post('/auth/unlock', { pin }),
   refreshSyncToken: (password: string) => api.post('/auth/sync-token', { password }),
 };
 

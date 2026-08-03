@@ -197,4 +197,44 @@ describe('sku routes', () => {
 			}),
 		]);
 	});
+
+	it('returns the exact existing product for a scanned barcode', async () => {
+		prismaMock.productBarcode.findUnique.mockResolvedValue({
+			id: 'barcode-001',
+			barcode: '4791234567890',
+			skuId: 'sku-001',
+			variantId: null,
+			sku: { id: 'sku-001', skuCode: 'SKU-001', name: 'Matched product', isActive: true },
+			variant: null,
+		} as any);
+
+		const res = await request(createTestApp())
+			.get('/api/skus/barcodes/lookup?barcode=4791234567890');
+
+		expect(res.status).toBe(200);
+		expect(res.body.data.sku).toMatchObject({ skuCode: 'SKU-001', name: 'Matched product' });
+	});
+
+	it('blocks creation when the entered barcode already belongs to a product', async () => {
+		prismaMock.productBarcode.findUnique.mockResolvedValue({
+			id: 'barcode-001',
+			barcode: '4791234567890',
+			skuId: 'sku-001',
+			sku: { id: 'sku-001', skuCode: 'SKU-001', name: 'Existing product' },
+		} as any);
+
+		const res = await request(createTestApp())
+			.post('/api/skus')
+			.send({
+				skuCode: 'SKU-NEW',
+				name: 'New product',
+				unitOfMeasure: 'Piece',
+				vendorId: 'vendor-001',
+				barcode: '4791234567890',
+			});
+
+		expect(res.status).toBe(409);
+		expect(res.body.error).toContain('already assigned to Existing product (SKU-001)');
+		expect(prismaMock.sKU.create).not.toHaveBeenCalled();
+	});
 });

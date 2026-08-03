@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS "users" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
+    "pin_hash" TEXT,
     "role" TEXT NOT NULL,
     "vendor_id" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -970,4 +971,3 @@ CREATE INDEX IF NOT EXISTS "voucher_restrictions_restriction_type_idx" ON "vouch
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "voucher_restrictions_sku_id_restriction_type_key" ON "voucher_restrictions"("sku_id", "restriction_type");
-

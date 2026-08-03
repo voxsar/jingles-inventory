@@ -177,6 +177,12 @@ router.put(
 		}
 		try {
 			const payload = { ...req.body };
+			if (payload.supplierInvoiceDate && typeof payload.supplierInvoiceDate === 'string') {
+				const dateStr = payload.supplierInvoiceDate.includes('T')
+					? payload.supplierInvoiceDate
+					: `${payload.supplierInvoiceDate}T00:00:00.000Z`;
+				payload.supplierInvoiceDate = new Date(dateStr);
+			}
 			if (payload.expectedDeliveryDate && typeof payload.expectedDeliveryDate === 'string') {
 				const dateStr = payload.expectedDeliveryDate.includes('T')
 					? payload.expectedDeliveryDate

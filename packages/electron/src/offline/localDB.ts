@@ -219,6 +219,7 @@ function buildFtsQuery(query: string): string {
 
 function runMigrations(): void {
   const database = getDB();
+  ensureColumnExists(database, 'users', 'pin_hash', 'TEXT');
   ensureColumnExists(database, 'skus', 'category', 'TEXT');
   ensureColumnExists(database, 'skus', 'synced_at', 'TEXT');
 
@@ -1236,4 +1237,3 @@ export function searchVendorIds(query: string, limit = 100): string[] {
     return [];
   }
 }
-

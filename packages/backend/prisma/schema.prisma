@@ -11,6 +11,7 @@ model User {
   id           String   @id @default(uuid())
   email        String   @unique
   passwordHash String   @map("password_hash")
+  pinHash      String?  @map("pin_hash")
   role         String
   vendorId     String?  @map("vendor_id")
   createdAt    DateTime @default(now()) @map("created_at")

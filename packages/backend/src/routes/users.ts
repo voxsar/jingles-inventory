@@ -9,6 +9,23 @@ import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
 
+const validPin = (value: unknown) => {
+  const pin = String(value ?? '');
+  return /^\d{4,6}$/.test(pin) && pin !== pin.split('').reverse().join('');
+};
+
+const configuredPinUserIds = async () => {
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT "id" FROM "users" WHERE "pin_hash" IS NOT NULL
+  `;
+  return new Set(rows.map((row) => row.id));
+};
+
+const publicUser = <T extends object>(user: T, pinUserIds: Set<string>) => {
+  const id = 'id' in user ? String(user.id) : '';
+  return { ...user, hasPin: pinUserIds.has(id) };
+};
+
 router.use(authenticate);
 router.use(requireRole('Admin', 'Manager'));
 
@@ -57,7 +74,16 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
       }),
       prisma.user.count({ where }),
     ]);
-    res.json({ success: true, data: paginatedPayload(items, total, pagination.page, pagination.pageSize) });
+    const pinUserIds = await configuredPinUserIds();
+    res.json({
+      success: true,
+      data: paginatedPayload(
+        items.map((item) => publicUser(item, pinUserIds)),
+        total,
+        pagination.page,
+        pagination.pageSize
+      ),
+    });
     return;
   }
 
@@ -67,7 +93,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     select,
   });
 
-  res.json(users);
+  const pinUserIds = await configuredPinUserIds();
+  res.json(users.map((user) => publicUser(user, pinUserIds)));
 });
 
 // GET /api/users/:id - Get a single user
@@ -104,7 +131,7 @@ router.get(
       return;
     }
 
-    res.json(user);
+    res.json(publicUser(user, await configuredPinUserIds()));
   }
 );
 
@@ -115,6 +142,9 @@ router.post(
   [
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 6 }),
+    body('pin')
+      .custom(validPin)
+      .withMessage('PIN must contain 4 to 6 digits and cannot read the same backwards'),
     body('role').isIn(Object.values(UserRole)),
     body('vendorId')
       .optional({ nullable: true })
@@ -128,9 +158,10 @@ router.post(
       return;
     }
 
-    const { email, password, role, vendorId } = req.body as {
+    const { email, password, pin, role, vendorId } = req.body as {
       email: string;
       password: string;
+      pin: string;
       role: string;
       vendorId?: string;
     };
@@ -150,6 +181,7 @@ router.post(
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
+    const pinHash = await bcrypt.hash(pin, 10);
 
     const user = await prisma.user.create({
       data: {
@@ -174,7 +206,10 @@ router.post(
       },
     });
 
-    res.status(201).json(user);
+    await prisma.$executeRaw`
+      UPDATE "users" SET "pin_hash" = ${pinHash} WHERE "id" = ${user.id}
+    `;
+    res.status(201).json({ ...user, hasPin: true });
   }
 );
 
@@ -191,6 +226,10 @@ router.put(
       .if(body('vendorId').notEmpty())
       .isUUID(),
     body('isActive').optional().isBoolean(),
+    body('pin')
+      .optional()
+      .custom(validPin)
+      .withMessage('PIN must contain 4 to 6 digits and cannot read the same backwards'),
   ],
   async (req: AuthRequest, res: Response): Promise<void> => {
     const errors = validationResult(req);
@@ -199,11 +238,12 @@ router.put(
       return;
     }
 
-    const { email, role, vendorId, isActive } = req.body as {
+    const { email, role, vendorId, isActive, pin } = req.body as {
       email?: string;
       role?: string;
       vendorId?: string | null;
       isActive?: boolean;
+      pin?: string;
     };
 
     // If updating email, check uniqueness
@@ -219,6 +259,13 @@ router.put(
     if (role === UserRole.Vendor && vendorId === null) {
       res.status(400).json({ error: 'Vendor role requires a vendorId' });
       return;
+    }
+
+    if (pin) {
+      const pinHash = await bcrypt.hash(pin, 10);
+      await prisma.$executeRaw`
+        UPDATE "users" SET "pin_hash" = ${pinHash} WHERE "id" = ${req.params!.id}
+      `;
     }
 
     const user = await prisma.user.update({
@@ -245,7 +292,7 @@ router.put(
       },
     });
 
-    res.json(user);
+    res.json(publicUser(user, await configuredPinUserIds()));
   }
 );
 

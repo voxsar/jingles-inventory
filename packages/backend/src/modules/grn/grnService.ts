@@ -142,6 +142,7 @@ export async function updateDraftGRN(grnId: string, data: {
 	floorId?: string | null;
 	shelfId?: string | null;
 	invoiceReference?: string | null;
+	supplierInvoiceDate?: Date | null;
 	expectedDeliveryDate?: Date | null;
 	notes?: string | null;
 	lines: Array<{
@@ -197,7 +198,7 @@ export async function updateDraftGRN(grnId: string, data: {
 		throw new Error('Duplicate SKUs or SKU+variant+batch combinations in GRN lines detected');
 	}
 
-	const preparedLines = [];
+	const preparedLines: Array<Omit<(typeof data.lines)[number], 'batchId'> & { batchId: string | null }> = [];
 	for (const line of data.lines) {
 		let batchId = line.batchId || null;
 		if (line.createNewBatch) {
@@ -226,6 +227,7 @@ export async function updateDraftGRN(grnId: string, data: {
 				floorId: data.floorId || null,
 				shelfId: data.shelfId || null,
 				invoiceReference: data.invoiceReference || null,
+				supplierInvoiceDate: data.supplierInvoiceDate || null,
 				expectedDeliveryDate: data.expectedDeliveryDate || null,
 				notes: data.notes || null,
 			},

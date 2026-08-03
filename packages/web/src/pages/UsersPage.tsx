@@ -6,6 +6,7 @@ import SearchableSelect from '../components/SearchableSelect';
 const defaultUserForm = {
   email: '',
   password: '',
+  pin: '',
   role: 'Staff',
   vendorId: '',
   isActive: true,
@@ -73,6 +74,7 @@ export default function UsersPage() {
     setUserForm({
       email: user.email || '',
       password: '', // Don't populate password
+      pin: '', // PIN hashes are never returned by the API
       role: user.role || 'Staff',
       vendorId: user.vendorId || '',
       isActive: user.isActive !== false,
@@ -97,8 +99,23 @@ export default function UsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { vendorId, password, ...rest } = userForm;
+      const { vendorId, password, pin, ...rest } = userForm;
       const payload: Record<string, any> = { ...rest };
+
+      if (pin) {
+        if (!/^\d{4,6}$/.test(pin)) {
+          alert('PIN must contain 4 to 6 digits');
+          return;
+        }
+        if (pin === pin.split('').reverse().join('')) {
+          alert('PIN cannot read the same forwards and backwards');
+          return;
+        }
+        payload.pin = pin;
+      } else if (!editingUser) {
+        alert('A 4 to 6 digit PIN is required');
+        return;
+      }
 
       // Include vendorId only if non-empty
       if (vendorId) {
@@ -167,6 +184,15 @@ export default function UsersPage() {
         ) : (
           <span className="text-gray-400">—</span>
         ),
+    },
+    {
+      header: 'PIN Lock',
+      key: 'hasPin',
+      render: (row: any) => row.hasPin ? (
+        <span className="text-sm font-medium text-green-700">Configured</span>
+      ) : (
+        <span className="text-sm font-medium text-amber-700">Setup needed</span>
+      ),
     },
     {
       header: 'Status',
@@ -332,6 +358,28 @@ export default function UsersPage() {
                   />
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {editingUser ? 'New PIN (leave blank to keep current)' : 'PIN *'}
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="new-password"
+                  pattern="[0-9]{4,6}"
+                  minLength={4}
+                  maxLength={6}
+                  value={userForm.pin}
+                  onChange={(e) => setUserForm({ ...userForm, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                  required={!editingUser}
+                  placeholder="4–6 digits"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Used to unlock the screen after 60 seconds of inactivity. Palindromic PINs are not allowed.
+                </p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
