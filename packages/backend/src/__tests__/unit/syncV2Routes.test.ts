@@ -65,7 +65,13 @@ describe('sync v2 routes', () => {
       },
     ]);
     prismaMock.inventoryRecord.findUnique
-      .mockResolvedValueOnce({ id: 'inv-001', quantity: 8, version: 4 } as any)
+      .mockResolvedValueOnce({
+        id: 'inv-001',
+        skuId: 'sku-001',
+        quantity: 8,
+        version: 4,
+        updatedAt: new Date('2026-05-18T12:09:00.000Z'),
+      } as any)
       .mockResolvedValueOnce(null);
     prismaMock.inventoryEvent.findUnique.mockResolvedValueOnce({
       id: 'evt-001',
@@ -95,7 +101,13 @@ describe('sync v2 routes', () => {
         seq: 10,
         table: 'inventory_records',
         action: 'upsert',
-        row: { id: 'inv-001', quantity: 8, version: 4 },
+        row: {
+          id: 'inv-001',
+          sku_id: 'sku-001',
+          quantity: 8,
+          version: 4,
+          updated_at: '2026-05-18T12:09:00.000Z',
+        },
         emittedAt: '2026-05-18T12:10:00.000Z',
       },
       {
@@ -104,8 +116,8 @@ describe('sync v2 routes', () => {
         action: 'upsert',
         row: {
           id: 'evt-001',
-          eventType: 'STATE_CHANGE',
-          parentEntityId: 'inv-001',
+          event_type: 'STATE_CHANGE',
+          parent_entity_id: 'inv-001',
         },
         emittedAt: '2026-05-18T12:11:00.000Z',
       },
@@ -122,12 +134,12 @@ describe('sync v2 routes', () => {
         action: 'upsert',
         row: {
           id: 'status-001',
-          entityType: 'inventory',
+          entity_type: 'inventory',
           value: 'ShelfReady',
           label: 'Shelf Ready',
-          specialKey: 'INVENTORY_SHELF_READY',
-          serverSeq: 13,
-          deletedAt: null,
+          special_key: 'INVENTORY_SHELF_READY',
+          server_seq: 13,
+          deleted_at: null,
         },
         emittedAt: '2026-05-18T12:13:00.000Z',
       },

@@ -77,6 +77,19 @@ function isReplicaRowDeleted(row: Record<string, unknown> | null) {
       : false;
 }
 
+function toReplicaRow(row: Record<string, unknown> | null) {
+  if (!row) {
+    return null;
+  }
+
+  return Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [
+      key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase(),
+      value,
+    ])
+  );
+}
+
 router.get('/replica/export', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const snapshot: Record<string, unknown[]> = {};
@@ -862,17 +875,17 @@ router.get('/log', async (req: AuthRequest, res: Response): Promise<void> => {
       let row: Record<string, unknown> | null = null;
 
       if (changeRow.tableName === 'inventory_records') {
-        row = (await prisma.inventoryRecord.findUnique({
+        row = toReplicaRow((await prisma.inventoryRecord.findUnique({
           where: { id: changeRow.rowId },
-        })) as unknown as Record<string, unknown> | null;
+        })) as unknown as Record<string, unknown> | null);
       } else if (changeRow.tableName === 'inventory_events') {
-        row = (await prisma.inventoryEvent.findUnique({
+        row = toReplicaRow((await prisma.inventoryEvent.findUnique({
           where: { id: changeRow.rowId },
-        })) as unknown as Record<string, unknown> | null;
+        })) as unknown as Record<string, unknown> | null);
       } else if (changeRow.tableName === 'status_options') {
-        row = (await prisma.statusOption.findUnique({
+        row = toReplicaRow((await prisma.statusOption.findUnique({
           where: { id: changeRow.rowId },
-        })) as unknown as Record<string, unknown> | null;
+        })) as unknown as Record<string, unknown> | null);
       }
 
       const shouldDelete = changeRow.action === 'delete' || isReplicaRowDeleted(row);
