@@ -142,7 +142,7 @@ export async function startServer(
 	}
 
 	await new Promise<void>((resolve, reject) => {
-		const server = app.listen(port, host, async () => {
+		const onListening = async () => {
 			activeServer = server;
 			logger.info(`Server running on ${host ?? 'default interface'}:${port}`);
 			try {
@@ -156,7 +156,8 @@ export async function startServer(
 				logger.error('Failed to initialize replica realtime sync', err);
 			}
 			resolve();
-		});
+		};
+		const server = host ? app.listen(port, host, onListening) : app.listen(port, onListening);
 
 		server.on('error', reject);
 	});

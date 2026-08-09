@@ -28,10 +28,10 @@
 	},
 	"devDependencies": {
 		"electron": "^43.2.0",
-		"prisma": "^7.9.1",
+		"prisma": "^5.22.0",
 		"typescript": "^5.3.3"
 	},
 	"dependencies": {
-		"@prisma/client": "^7.9.1"
+		"@prisma/client": "^5.22.0"
 	}
 }

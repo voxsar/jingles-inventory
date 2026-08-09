@@ -882,6 +882,7 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
 
       refreshRealtimeSyncConnection();
       void syncAll();
+      void heartbeatDesktopDevice();
       refreshTrayMenu();
     }
   );
@@ -900,6 +901,7 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
       }
 
       refreshRealtimeSyncConnection();
+      void heartbeatDesktopDevice();
       refreshTrayMenu();
     }
   );

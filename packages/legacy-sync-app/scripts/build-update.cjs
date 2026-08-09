@@ -25,6 +25,15 @@ if (!/^[a-z0-9][a-z0-9._-]*$/i.test(channel)) {
   process.exit(1);
 }
 
+const allowUnsigned = process.env.JINGLES_ALLOW_UNSIGNED_UPDATES === '1';
+const publisher = process.env.JINGLES_WINDOWS_PUBLISHER?.trim();
+const signingCertificate = process.env.CSC_LINK || process.env.WIN_CSC_LINK;
+if (!allowUnsigned && (!publisher || !signingCertificate)) {
+  console.error('Signed update required. Set JINGLES_WINDOWS_PUBLISHER and CSC_LINK (plus CSC_KEY_PASSWORD when needed).');
+  console.error('For localhost-only development builds, explicitly set JINGLES_ALLOW_UNSIGNED_UPDATES=1.');
+  process.exit(1);
+}
+
 const cli = require.resolve('electron-builder/out/cli/cli');
 const args = [
   cli, '--win', 'nsis', '--publish', 'never',
@@ -32,6 +41,7 @@ const args = [
   `-c.publish.url=${updateUrl}`,
   `-c.publish.channel=${channel}`,
 ];
+if (publisher) args.push(`-c.win.publisherName=${publisher}`);
 const result = spawnSync(process.execPath, args, { stdio: 'inherit', env: process.env });
 if (result.error) throw result.error;
 process.exit(result.status ?? 1);

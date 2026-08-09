@@ -249,6 +249,11 @@ export type LegacyEntityLink = $Result.DefaultSelection<Prisma.$LegacyEntityLink
  */
 export type LegacySyncRun = $Result.DefaultSelection<Prisma.$LegacySyncRunPayload>
 /**
+ * Model ManagedDevice
+ * 
+ */
+export type ManagedDevice = $Result.DefaultSelection<Prisma.$ManagedDevicePayload>
+/**
  * Model VoucherRestriction
  * 
  */
@@ -848,6 +853,16 @@ export class PrismaClient<
   get legacySyncRun(): Prisma.LegacySyncRunDelegate<ExtArgs>;
 
   /**
+   * `prisma.managedDevice`: Exposes CRUD operations for the **ManagedDevice** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ManagedDevices
+    * const managedDevices = await prisma.managedDevice.findMany()
+    * ```
+    */
+  get managedDevice(): Prisma.ManagedDeviceDelegate<ExtArgs>;
+
+  /**
    * `prisma.voucherRestriction`: Exposes CRUD operations for the **VoucherRestriction** model.
     * Example usage:
     * ```ts
@@ -1344,6 +1359,7 @@ export namespace Prisma {
     VoucherRedemption: 'VoucherRedemption',
     LegacyEntityLink: 'LegacyEntityLink',
     LegacySyncRun: 'LegacySyncRun',
+    ManagedDevice: 'ManagedDevice',
     VoucherRestriction: 'VoucherRestriction'
   };
 
@@ -1360,7 +1376,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats" | "voucherBatch" | "voucherCode" | "voucherRedemption" | "legacyEntityLink" | "legacySyncRun" | "voucherRestriction"
+      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats" | "voucherBatch" | "voucherCode" | "voucherRedemption" | "legacyEntityLink" | "legacySyncRun" | "managedDevice" | "voucherRestriction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4651,6 +4667,76 @@ export namespace Prisma {
           count: {
             args: Prisma.LegacySyncRunCountArgs<ExtArgs>
             result: $Utils.Optional<LegacySyncRunCountAggregateOutputType> | number
+          }
+        }
+      }
+      ManagedDevice: {
+        payload: Prisma.$ManagedDevicePayload<ExtArgs>
+        fields: Prisma.ManagedDeviceFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ManagedDeviceFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ManagedDeviceFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          findFirst: {
+            args: Prisma.ManagedDeviceFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ManagedDeviceFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          findMany: {
+            args: Prisma.ManagedDeviceFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>[]
+          }
+          create: {
+            args: Prisma.ManagedDeviceCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          createMany: {
+            args: Prisma.ManagedDeviceCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ManagedDeviceCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>[]
+          }
+          delete: {
+            args: Prisma.ManagedDeviceDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          update: {
+            args: Prisma.ManagedDeviceUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          deleteMany: {
+            args: Prisma.ManagedDeviceDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ManagedDeviceUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ManagedDeviceUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ManagedDevicePayload>
+          }
+          aggregate: {
+            args: Prisma.ManagedDeviceAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateManagedDevice>
+          }
+          groupBy: {
+            args: Prisma.ManagedDeviceGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ManagedDeviceGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ManagedDeviceCountArgs<ExtArgs>
+            result: $Utils.Optional<ManagedDeviceCountAggregateOutputType> | number
           }
         }
       }
@@ -56815,6 +56901,1080 @@ export namespace Prisma {
 
 
   /**
+   * Model ManagedDevice
+   */
+
+  export type AggregateManagedDevice = {
+    _count: ManagedDeviceCountAggregateOutputType | null
+    _avg: ManagedDeviceAvgAggregateOutputType | null
+    _sum: ManagedDeviceSumAggregateOutputType | null
+    _min: ManagedDeviceMinAggregateOutputType | null
+    _max: ManagedDeviceMaxAggregateOutputType | null
+  }
+
+  export type ManagedDeviceAvgAggregateOutputType = {
+    nameVersion: number | null
+    pendingCount: number | null
+    conflictCount: number | null
+  }
+
+  export type ManagedDeviceSumAggregateOutputType = {
+    nameVersion: number | null
+    pendingCount: number | null
+    conflictCount: number | null
+  }
+
+  export type ManagedDeviceMinAggregateOutputType = {
+    id: string | null
+    displayName: string | null
+    reportedName: string | null
+    nameVersion: number | null
+    application: string | null
+    applicationVersion: string | null
+    platform: string | null
+    hostname: string | null
+    branchId: string | null
+    terminalId: string | null
+    lastIp: string | null
+    lastConnection: string | null
+    lastSeenAt: Date | null
+    lastSyncAt: Date | null
+    pendingCount: number | null
+    conflictCount: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ManagedDeviceMaxAggregateOutputType = {
+    id: string | null
+    displayName: string | null
+    reportedName: string | null
+    nameVersion: number | null
+    application: string | null
+    applicationVersion: string | null
+    platform: string | null
+    hostname: string | null
+    branchId: string | null
+    terminalId: string | null
+    lastIp: string | null
+    lastConnection: string | null
+    lastSeenAt: Date | null
+    lastSyncAt: Date | null
+    pendingCount: number | null
+    conflictCount: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ManagedDeviceCountAggregateOutputType = {
+    id: number
+    displayName: number
+    reportedName: number
+    nameVersion: number
+    application: number
+    applicationVersion: number
+    platform: number
+    hostname: number
+    branchId: number
+    terminalId: number
+    lastIp: number
+    lastConnection: number
+    lastSeenAt: number
+    lastSyncAt: number
+    pendingCount: number
+    conflictCount: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ManagedDeviceAvgAggregateInputType = {
+    nameVersion?: true
+    pendingCount?: true
+    conflictCount?: true
+  }
+
+  export type ManagedDeviceSumAggregateInputType = {
+    nameVersion?: true
+    pendingCount?: true
+    conflictCount?: true
+  }
+
+  export type ManagedDeviceMinAggregateInputType = {
+    id?: true
+    displayName?: true
+    reportedName?: true
+    nameVersion?: true
+    application?: true
+    applicationVersion?: true
+    platform?: true
+    hostname?: true
+    branchId?: true
+    terminalId?: true
+    lastIp?: true
+    lastConnection?: true
+    lastSeenAt?: true
+    lastSyncAt?: true
+    pendingCount?: true
+    conflictCount?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ManagedDeviceMaxAggregateInputType = {
+    id?: true
+    displayName?: true
+    reportedName?: true
+    nameVersion?: true
+    application?: true
+    applicationVersion?: true
+    platform?: true
+    hostname?: true
+    branchId?: true
+    terminalId?: true
+    lastIp?: true
+    lastConnection?: true
+    lastSeenAt?: true
+    lastSyncAt?: true
+    pendingCount?: true
+    conflictCount?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ManagedDeviceCountAggregateInputType = {
+    id?: true
+    displayName?: true
+    reportedName?: true
+    nameVersion?: true
+    application?: true
+    applicationVersion?: true
+    platform?: true
+    hostname?: true
+    branchId?: true
+    terminalId?: true
+    lastIp?: true
+    lastConnection?: true
+    lastSeenAt?: true
+    lastSyncAt?: true
+    pendingCount?: true
+    conflictCount?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ManagedDeviceAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ManagedDevice to aggregate.
+     */
+    where?: ManagedDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ManagedDevices to fetch.
+     */
+    orderBy?: ManagedDeviceOrderByWithRelationInput | ManagedDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ManagedDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ManagedDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ManagedDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ManagedDevices
+    **/
+    _count?: true | ManagedDeviceCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ManagedDeviceAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ManagedDeviceSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ManagedDeviceMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ManagedDeviceMaxAggregateInputType
+  }
+
+  export type GetManagedDeviceAggregateType<T extends ManagedDeviceAggregateArgs> = {
+        [P in keyof T & keyof AggregateManagedDevice]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateManagedDevice[P]>
+      : GetScalarType<T[P], AggregateManagedDevice[P]>
+  }
+
+
+
+
+  export type ManagedDeviceGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ManagedDeviceWhereInput
+    orderBy?: ManagedDeviceOrderByWithAggregationInput | ManagedDeviceOrderByWithAggregationInput[]
+    by: ManagedDeviceScalarFieldEnum[] | ManagedDeviceScalarFieldEnum
+    having?: ManagedDeviceScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ManagedDeviceCountAggregateInputType | true
+    _avg?: ManagedDeviceAvgAggregateInputType
+    _sum?: ManagedDeviceSumAggregateInputType
+    _min?: ManagedDeviceMinAggregateInputType
+    _max?: ManagedDeviceMaxAggregateInputType
+  }
+
+  export type ManagedDeviceGroupByOutputType = {
+    id: string
+    displayName: string
+    reportedName: string
+    nameVersion: number
+    application: string
+    applicationVersion: string
+    platform: string | null
+    hostname: string | null
+    branchId: string | null
+    terminalId: string | null
+    lastIp: string | null
+    lastConnection: string | null
+    lastSeenAt: Date
+    lastSyncAt: Date | null
+    pendingCount: number
+    conflictCount: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ManagedDeviceCountAggregateOutputType | null
+    _avg: ManagedDeviceAvgAggregateOutputType | null
+    _sum: ManagedDeviceSumAggregateOutputType | null
+    _min: ManagedDeviceMinAggregateOutputType | null
+    _max: ManagedDeviceMaxAggregateOutputType | null
+  }
+
+  type GetManagedDeviceGroupByPayload<T extends ManagedDeviceGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ManagedDeviceGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ManagedDeviceGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ManagedDeviceGroupByOutputType[P]>
+            : GetScalarType<T[P], ManagedDeviceGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ManagedDeviceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    displayName?: boolean
+    reportedName?: boolean
+    nameVersion?: boolean
+    application?: boolean
+    applicationVersion?: boolean
+    platform?: boolean
+    hostname?: boolean
+    branchId?: boolean
+    terminalId?: boolean
+    lastIp?: boolean
+    lastConnection?: boolean
+    lastSeenAt?: boolean
+    lastSyncAt?: boolean
+    pendingCount?: boolean
+    conflictCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["managedDevice"]>
+
+  export type ManagedDeviceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    displayName?: boolean
+    reportedName?: boolean
+    nameVersion?: boolean
+    application?: boolean
+    applicationVersion?: boolean
+    platform?: boolean
+    hostname?: boolean
+    branchId?: boolean
+    terminalId?: boolean
+    lastIp?: boolean
+    lastConnection?: boolean
+    lastSeenAt?: boolean
+    lastSyncAt?: boolean
+    pendingCount?: boolean
+    conflictCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["managedDevice"]>
+
+  export type ManagedDeviceSelectScalar = {
+    id?: boolean
+    displayName?: boolean
+    reportedName?: boolean
+    nameVersion?: boolean
+    application?: boolean
+    applicationVersion?: boolean
+    platform?: boolean
+    hostname?: boolean
+    branchId?: boolean
+    terminalId?: boolean
+    lastIp?: boolean
+    lastConnection?: boolean
+    lastSeenAt?: boolean
+    lastSyncAt?: boolean
+    pendingCount?: boolean
+    conflictCount?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $ManagedDevicePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ManagedDevice"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      displayName: string
+      reportedName: string
+      nameVersion: number
+      application: string
+      applicationVersion: string
+      platform: string | null
+      hostname: string | null
+      branchId: string | null
+      terminalId: string | null
+      lastIp: string | null
+      lastConnection: string | null
+      lastSeenAt: Date
+      lastSyncAt: Date | null
+      pendingCount: number
+      conflictCount: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["managedDevice"]>
+    composites: {}
+  }
+
+  type ManagedDeviceGetPayload<S extends boolean | null | undefined | ManagedDeviceDefaultArgs> = $Result.GetResult<Prisma.$ManagedDevicePayload, S>
+
+  type ManagedDeviceCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ManagedDeviceFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ManagedDeviceCountAggregateInputType | true
+    }
+
+  export interface ManagedDeviceDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ManagedDevice'], meta: { name: 'ManagedDevice' } }
+    /**
+     * Find zero or one ManagedDevice that matches the filter.
+     * @param {ManagedDeviceFindUniqueArgs} args - Arguments to find a ManagedDevice
+     * @example
+     * // Get one ManagedDevice
+     * const managedDevice = await prisma.managedDevice.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ManagedDeviceFindUniqueArgs>(args: SelectSubset<T, ManagedDeviceFindUniqueArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ManagedDevice that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ManagedDeviceFindUniqueOrThrowArgs} args - Arguments to find a ManagedDevice
+     * @example
+     * // Get one ManagedDevice
+     * const managedDevice = await prisma.managedDevice.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ManagedDeviceFindUniqueOrThrowArgs>(args: SelectSubset<T, ManagedDeviceFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ManagedDevice that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceFindFirstArgs} args - Arguments to find a ManagedDevice
+     * @example
+     * // Get one ManagedDevice
+     * const managedDevice = await prisma.managedDevice.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ManagedDeviceFindFirstArgs>(args?: SelectSubset<T, ManagedDeviceFindFirstArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ManagedDevice that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceFindFirstOrThrowArgs} args - Arguments to find a ManagedDevice
+     * @example
+     * // Get one ManagedDevice
+     * const managedDevice = await prisma.managedDevice.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ManagedDeviceFindFirstOrThrowArgs>(args?: SelectSubset<T, ManagedDeviceFindFirstOrThrowArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ManagedDevices that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ManagedDevices
+     * const managedDevices = await prisma.managedDevice.findMany()
+     * 
+     * // Get first 10 ManagedDevices
+     * const managedDevices = await prisma.managedDevice.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const managedDeviceWithIdOnly = await prisma.managedDevice.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ManagedDeviceFindManyArgs>(args?: SelectSubset<T, ManagedDeviceFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ManagedDevice.
+     * @param {ManagedDeviceCreateArgs} args - Arguments to create a ManagedDevice.
+     * @example
+     * // Create one ManagedDevice
+     * const ManagedDevice = await prisma.managedDevice.create({
+     *   data: {
+     *     // ... data to create a ManagedDevice
+     *   }
+     * })
+     * 
+     */
+    create<T extends ManagedDeviceCreateArgs>(args: SelectSubset<T, ManagedDeviceCreateArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ManagedDevices.
+     * @param {ManagedDeviceCreateManyArgs} args - Arguments to create many ManagedDevices.
+     * @example
+     * // Create many ManagedDevices
+     * const managedDevice = await prisma.managedDevice.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ManagedDeviceCreateManyArgs>(args?: SelectSubset<T, ManagedDeviceCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ManagedDevices and returns the data saved in the database.
+     * @param {ManagedDeviceCreateManyAndReturnArgs} args - Arguments to create many ManagedDevices.
+     * @example
+     * // Create many ManagedDevices
+     * const managedDevice = await prisma.managedDevice.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ManagedDevices and only return the `id`
+     * const managedDeviceWithIdOnly = await prisma.managedDevice.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ManagedDeviceCreateManyAndReturnArgs>(args?: SelectSubset<T, ManagedDeviceCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ManagedDevice.
+     * @param {ManagedDeviceDeleteArgs} args - Arguments to delete one ManagedDevice.
+     * @example
+     * // Delete one ManagedDevice
+     * const ManagedDevice = await prisma.managedDevice.delete({
+     *   where: {
+     *     // ... filter to delete one ManagedDevice
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ManagedDeviceDeleteArgs>(args: SelectSubset<T, ManagedDeviceDeleteArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ManagedDevice.
+     * @param {ManagedDeviceUpdateArgs} args - Arguments to update one ManagedDevice.
+     * @example
+     * // Update one ManagedDevice
+     * const managedDevice = await prisma.managedDevice.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ManagedDeviceUpdateArgs>(args: SelectSubset<T, ManagedDeviceUpdateArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ManagedDevices.
+     * @param {ManagedDeviceDeleteManyArgs} args - Arguments to filter ManagedDevices to delete.
+     * @example
+     * // Delete a few ManagedDevices
+     * const { count } = await prisma.managedDevice.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ManagedDeviceDeleteManyArgs>(args?: SelectSubset<T, ManagedDeviceDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ManagedDevices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ManagedDevices
+     * const managedDevice = await prisma.managedDevice.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ManagedDeviceUpdateManyArgs>(args: SelectSubset<T, ManagedDeviceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ManagedDevice.
+     * @param {ManagedDeviceUpsertArgs} args - Arguments to update or create a ManagedDevice.
+     * @example
+     * // Update or create a ManagedDevice
+     * const managedDevice = await prisma.managedDevice.upsert({
+     *   create: {
+     *     // ... data to create a ManagedDevice
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ManagedDevice we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ManagedDeviceUpsertArgs>(args: SelectSubset<T, ManagedDeviceUpsertArgs<ExtArgs>>): Prisma__ManagedDeviceClient<$Result.GetResult<Prisma.$ManagedDevicePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ManagedDevices.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceCountArgs} args - Arguments to filter ManagedDevices to count.
+     * @example
+     * // Count the number of ManagedDevices
+     * const count = await prisma.managedDevice.count({
+     *   where: {
+     *     // ... the filter for the ManagedDevices we want to count
+     *   }
+     * })
+    **/
+    count<T extends ManagedDeviceCountArgs>(
+      args?: Subset<T, ManagedDeviceCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ManagedDeviceCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ManagedDevice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ManagedDeviceAggregateArgs>(args: Subset<T, ManagedDeviceAggregateArgs>): Prisma.PrismaPromise<GetManagedDeviceAggregateType<T>>
+
+    /**
+     * Group by ManagedDevice.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ManagedDeviceGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ManagedDeviceGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ManagedDeviceGroupByArgs['orderBy'] }
+        : { orderBy?: ManagedDeviceGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ManagedDeviceGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetManagedDeviceGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ManagedDevice model
+   */
+  readonly fields: ManagedDeviceFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ManagedDevice.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ManagedDeviceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ManagedDevice model
+   */ 
+  interface ManagedDeviceFieldRefs {
+    readonly id: FieldRef<"ManagedDevice", 'String'>
+    readonly displayName: FieldRef<"ManagedDevice", 'String'>
+    readonly reportedName: FieldRef<"ManagedDevice", 'String'>
+    readonly nameVersion: FieldRef<"ManagedDevice", 'Int'>
+    readonly application: FieldRef<"ManagedDevice", 'String'>
+    readonly applicationVersion: FieldRef<"ManagedDevice", 'String'>
+    readonly platform: FieldRef<"ManagedDevice", 'String'>
+    readonly hostname: FieldRef<"ManagedDevice", 'String'>
+    readonly branchId: FieldRef<"ManagedDevice", 'String'>
+    readonly terminalId: FieldRef<"ManagedDevice", 'String'>
+    readonly lastIp: FieldRef<"ManagedDevice", 'String'>
+    readonly lastConnection: FieldRef<"ManagedDevice", 'String'>
+    readonly lastSeenAt: FieldRef<"ManagedDevice", 'DateTime'>
+    readonly lastSyncAt: FieldRef<"ManagedDevice", 'DateTime'>
+    readonly pendingCount: FieldRef<"ManagedDevice", 'Int'>
+    readonly conflictCount: FieldRef<"ManagedDevice", 'Int'>
+    readonly createdAt: FieldRef<"ManagedDevice", 'DateTime'>
+    readonly updatedAt: FieldRef<"ManagedDevice", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ManagedDevice findUnique
+   */
+  export type ManagedDeviceFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter, which ManagedDevice to fetch.
+     */
+    where: ManagedDeviceWhereUniqueInput
+  }
+
+  /**
+   * ManagedDevice findUniqueOrThrow
+   */
+  export type ManagedDeviceFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter, which ManagedDevice to fetch.
+     */
+    where: ManagedDeviceWhereUniqueInput
+  }
+
+  /**
+   * ManagedDevice findFirst
+   */
+  export type ManagedDeviceFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter, which ManagedDevice to fetch.
+     */
+    where?: ManagedDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ManagedDevices to fetch.
+     */
+    orderBy?: ManagedDeviceOrderByWithRelationInput | ManagedDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ManagedDevices.
+     */
+    cursor?: ManagedDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ManagedDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ManagedDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ManagedDevices.
+     */
+    distinct?: ManagedDeviceScalarFieldEnum | ManagedDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * ManagedDevice findFirstOrThrow
+   */
+  export type ManagedDeviceFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter, which ManagedDevice to fetch.
+     */
+    where?: ManagedDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ManagedDevices to fetch.
+     */
+    orderBy?: ManagedDeviceOrderByWithRelationInput | ManagedDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ManagedDevices.
+     */
+    cursor?: ManagedDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ManagedDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ManagedDevices.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ManagedDevices.
+     */
+    distinct?: ManagedDeviceScalarFieldEnum | ManagedDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * ManagedDevice findMany
+   */
+  export type ManagedDeviceFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter, which ManagedDevices to fetch.
+     */
+    where?: ManagedDeviceWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ManagedDevices to fetch.
+     */
+    orderBy?: ManagedDeviceOrderByWithRelationInput | ManagedDeviceOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ManagedDevices.
+     */
+    cursor?: ManagedDeviceWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ManagedDevices from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ManagedDevices.
+     */
+    skip?: number
+    distinct?: ManagedDeviceScalarFieldEnum | ManagedDeviceScalarFieldEnum[]
+  }
+
+  /**
+   * ManagedDevice create
+   */
+  export type ManagedDeviceCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * The data needed to create a ManagedDevice.
+     */
+    data: XOR<ManagedDeviceCreateInput, ManagedDeviceUncheckedCreateInput>
+  }
+
+  /**
+   * ManagedDevice createMany
+   */
+  export type ManagedDeviceCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ManagedDevices.
+     */
+    data: ManagedDeviceCreateManyInput | ManagedDeviceCreateManyInput[]
+  }
+
+  /**
+   * ManagedDevice createManyAndReturn
+   */
+  export type ManagedDeviceCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ManagedDevices.
+     */
+    data: ManagedDeviceCreateManyInput | ManagedDeviceCreateManyInput[]
+  }
+
+  /**
+   * ManagedDevice update
+   */
+  export type ManagedDeviceUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * The data needed to update a ManagedDevice.
+     */
+    data: XOR<ManagedDeviceUpdateInput, ManagedDeviceUncheckedUpdateInput>
+    /**
+     * Choose, which ManagedDevice to update.
+     */
+    where: ManagedDeviceWhereUniqueInput
+  }
+
+  /**
+   * ManagedDevice updateMany
+   */
+  export type ManagedDeviceUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ManagedDevices.
+     */
+    data: XOR<ManagedDeviceUpdateManyMutationInput, ManagedDeviceUncheckedUpdateManyInput>
+    /**
+     * Filter which ManagedDevices to update
+     */
+    where?: ManagedDeviceWhereInput
+  }
+
+  /**
+   * ManagedDevice upsert
+   */
+  export type ManagedDeviceUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * The filter to search for the ManagedDevice to update in case it exists.
+     */
+    where: ManagedDeviceWhereUniqueInput
+    /**
+     * In case the ManagedDevice found by the `where` argument doesn't exist, create a new ManagedDevice with this data.
+     */
+    create: XOR<ManagedDeviceCreateInput, ManagedDeviceUncheckedCreateInput>
+    /**
+     * In case the ManagedDevice was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ManagedDeviceUpdateInput, ManagedDeviceUncheckedUpdateInput>
+  }
+
+  /**
+   * ManagedDevice delete
+   */
+  export type ManagedDeviceDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+    /**
+     * Filter which ManagedDevice to delete.
+     */
+    where: ManagedDeviceWhereUniqueInput
+  }
+
+  /**
+   * ManagedDevice deleteMany
+   */
+  export type ManagedDeviceDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ManagedDevices to delete
+     */
+    where?: ManagedDeviceWhereInput
+  }
+
+  /**
+   * ManagedDevice without action
+   */
+  export type ManagedDeviceDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ManagedDevice
+     */
+    select?: ManagedDeviceSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Model VoucherRestriction
    */
 
@@ -58673,6 +59833,30 @@ export namespace Prisma {
   };
 
   export type LegacySyncRunScalarFieldEnum = (typeof LegacySyncRunScalarFieldEnum)[keyof typeof LegacySyncRunScalarFieldEnum]
+
+
+  export const ManagedDeviceScalarFieldEnum: {
+    id: 'id',
+    displayName: 'displayName',
+    reportedName: 'reportedName',
+    nameVersion: 'nameVersion',
+    application: 'application',
+    applicationVersion: 'applicationVersion',
+    platform: 'platform',
+    hostname: 'hostname',
+    branchId: 'branchId',
+    terminalId: 'terminalId',
+    lastIp: 'lastIp',
+    lastConnection: 'lastConnection',
+    lastSeenAt: 'lastSeenAt',
+    lastSyncAt: 'lastSyncAt',
+    pendingCount: 'pendingCount',
+    conflictCount: 'conflictCount',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ManagedDeviceScalarFieldEnum = (typeof ManagedDeviceScalarFieldEnum)[keyof typeof ManagedDeviceScalarFieldEnum]
 
 
   export const VoucherRestrictionScalarFieldEnum: {
@@ -63092,6 +64276,125 @@ export namespace Prisma {
     finishedAt?: DateTimeNullableWithAggregatesFilter<"LegacySyncRun"> | Date | string | null
     stats?: StringNullableWithAggregatesFilter<"LegacySyncRun"> | string | null
     errorMessage?: StringNullableWithAggregatesFilter<"LegacySyncRun"> | string | null
+  }
+
+  export type ManagedDeviceWhereInput = {
+    AND?: ManagedDeviceWhereInput | ManagedDeviceWhereInput[]
+    OR?: ManagedDeviceWhereInput[]
+    NOT?: ManagedDeviceWhereInput | ManagedDeviceWhereInput[]
+    id?: StringFilter<"ManagedDevice"> | string
+    displayName?: StringFilter<"ManagedDevice"> | string
+    reportedName?: StringFilter<"ManagedDevice"> | string
+    nameVersion?: IntFilter<"ManagedDevice"> | number
+    application?: StringFilter<"ManagedDevice"> | string
+    applicationVersion?: StringFilter<"ManagedDevice"> | string
+    platform?: StringNullableFilter<"ManagedDevice"> | string | null
+    hostname?: StringNullableFilter<"ManagedDevice"> | string | null
+    branchId?: StringNullableFilter<"ManagedDevice"> | string | null
+    terminalId?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastIp?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastConnection?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastSeenAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+    lastSyncAt?: DateTimeNullableFilter<"ManagedDevice"> | Date | string | null
+    pendingCount?: IntFilter<"ManagedDevice"> | number
+    conflictCount?: IntFilter<"ManagedDevice"> | number
+    createdAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+    updatedAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+  }
+
+  export type ManagedDeviceOrderByWithRelationInput = {
+    id?: SortOrder
+    displayName?: SortOrder
+    reportedName?: SortOrder
+    nameVersion?: SortOrder
+    application?: SortOrder
+    applicationVersion?: SortOrder
+    platform?: SortOrderInput | SortOrder
+    hostname?: SortOrderInput | SortOrder
+    branchId?: SortOrderInput | SortOrder
+    terminalId?: SortOrderInput | SortOrder
+    lastIp?: SortOrderInput | SortOrder
+    lastConnection?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrder
+    lastSyncAt?: SortOrderInput | SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ManagedDeviceWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ManagedDeviceWhereInput | ManagedDeviceWhereInput[]
+    OR?: ManagedDeviceWhereInput[]
+    NOT?: ManagedDeviceWhereInput | ManagedDeviceWhereInput[]
+    displayName?: StringFilter<"ManagedDevice"> | string
+    reportedName?: StringFilter<"ManagedDevice"> | string
+    nameVersion?: IntFilter<"ManagedDevice"> | number
+    application?: StringFilter<"ManagedDevice"> | string
+    applicationVersion?: StringFilter<"ManagedDevice"> | string
+    platform?: StringNullableFilter<"ManagedDevice"> | string | null
+    hostname?: StringNullableFilter<"ManagedDevice"> | string | null
+    branchId?: StringNullableFilter<"ManagedDevice"> | string | null
+    terminalId?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastIp?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastConnection?: StringNullableFilter<"ManagedDevice"> | string | null
+    lastSeenAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+    lastSyncAt?: DateTimeNullableFilter<"ManagedDevice"> | Date | string | null
+    pendingCount?: IntFilter<"ManagedDevice"> | number
+    conflictCount?: IntFilter<"ManagedDevice"> | number
+    createdAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+    updatedAt?: DateTimeFilter<"ManagedDevice"> | Date | string
+  }, "id">
+
+  export type ManagedDeviceOrderByWithAggregationInput = {
+    id?: SortOrder
+    displayName?: SortOrder
+    reportedName?: SortOrder
+    nameVersion?: SortOrder
+    application?: SortOrder
+    applicationVersion?: SortOrder
+    platform?: SortOrderInput | SortOrder
+    hostname?: SortOrderInput | SortOrder
+    branchId?: SortOrderInput | SortOrder
+    terminalId?: SortOrderInput | SortOrder
+    lastIp?: SortOrderInput | SortOrder
+    lastConnection?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrder
+    lastSyncAt?: SortOrderInput | SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ManagedDeviceCountOrderByAggregateInput
+    _avg?: ManagedDeviceAvgOrderByAggregateInput
+    _max?: ManagedDeviceMaxOrderByAggregateInput
+    _min?: ManagedDeviceMinOrderByAggregateInput
+    _sum?: ManagedDeviceSumOrderByAggregateInput
+  }
+
+  export type ManagedDeviceScalarWhereWithAggregatesInput = {
+    AND?: ManagedDeviceScalarWhereWithAggregatesInput | ManagedDeviceScalarWhereWithAggregatesInput[]
+    OR?: ManagedDeviceScalarWhereWithAggregatesInput[]
+    NOT?: ManagedDeviceScalarWhereWithAggregatesInput | ManagedDeviceScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ManagedDevice"> | string
+    displayName?: StringWithAggregatesFilter<"ManagedDevice"> | string
+    reportedName?: StringWithAggregatesFilter<"ManagedDevice"> | string
+    nameVersion?: IntWithAggregatesFilter<"ManagedDevice"> | number
+    application?: StringWithAggregatesFilter<"ManagedDevice"> | string
+    applicationVersion?: StringWithAggregatesFilter<"ManagedDevice"> | string
+    platform?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    hostname?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    branchId?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    terminalId?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    lastIp?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    lastConnection?: StringNullableWithAggregatesFilter<"ManagedDevice"> | string | null
+    lastSeenAt?: DateTimeWithAggregatesFilter<"ManagedDevice"> | Date | string
+    lastSyncAt?: DateTimeNullableWithAggregatesFilter<"ManagedDevice"> | Date | string | null
+    pendingCount?: IntWithAggregatesFilter<"ManagedDevice"> | number
+    conflictCount?: IntWithAggregatesFilter<"ManagedDevice"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ManagedDevice"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ManagedDevice"> | Date | string
   }
 
   export type VoucherRestrictionWhereInput = {
@@ -67929,6 +69232,153 @@ export namespace Prisma {
     errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type ManagedDeviceCreateInput = {
+    id: string
+    displayName: string
+    reportedName: string
+    nameVersion?: number
+    application: string
+    applicationVersion: string
+    platform?: string | null
+    hostname?: string | null
+    branchId?: string | null
+    terminalId?: string | null
+    lastIp?: string | null
+    lastConnection?: string | null
+    lastSeenAt?: Date | string
+    lastSyncAt?: Date | string | null
+    pendingCount?: number
+    conflictCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ManagedDeviceUncheckedCreateInput = {
+    id: string
+    displayName: string
+    reportedName: string
+    nameVersion?: number
+    application: string
+    applicationVersion: string
+    platform?: string | null
+    hostname?: string | null
+    branchId?: string | null
+    terminalId?: string | null
+    lastIp?: string | null
+    lastConnection?: string | null
+    lastSeenAt?: Date | string
+    lastSyncAt?: Date | string | null
+    pendingCount?: number
+    conflictCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ManagedDeviceUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    reportedName?: StringFieldUpdateOperationsInput | string
+    nameVersion?: IntFieldUpdateOperationsInput | number
+    application?: StringFieldUpdateOperationsInput | string
+    applicationVersion?: StringFieldUpdateOperationsInput | string
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    hostname?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastIp?: NullableStringFieldUpdateOperationsInput | string | null
+    lastConnection?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pendingCount?: IntFieldUpdateOperationsInput | number
+    conflictCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ManagedDeviceUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    reportedName?: StringFieldUpdateOperationsInput | string
+    nameVersion?: IntFieldUpdateOperationsInput | number
+    application?: StringFieldUpdateOperationsInput | string
+    applicationVersion?: StringFieldUpdateOperationsInput | string
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    hostname?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastIp?: NullableStringFieldUpdateOperationsInput | string | null
+    lastConnection?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pendingCount?: IntFieldUpdateOperationsInput | number
+    conflictCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ManagedDeviceCreateManyInput = {
+    id: string
+    displayName: string
+    reportedName: string
+    nameVersion?: number
+    application: string
+    applicationVersion: string
+    platform?: string | null
+    hostname?: string | null
+    branchId?: string | null
+    terminalId?: string | null
+    lastIp?: string | null
+    lastConnection?: string | null
+    lastSeenAt?: Date | string
+    lastSyncAt?: Date | string | null
+    pendingCount?: number
+    conflictCount?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ManagedDeviceUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    reportedName?: StringFieldUpdateOperationsInput | string
+    nameVersion?: IntFieldUpdateOperationsInput | number
+    application?: StringFieldUpdateOperationsInput | string
+    applicationVersion?: StringFieldUpdateOperationsInput | string
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    hostname?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastIp?: NullableStringFieldUpdateOperationsInput | string | null
+    lastConnection?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pendingCount?: IntFieldUpdateOperationsInput | number
+    conflictCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ManagedDeviceUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    reportedName?: StringFieldUpdateOperationsInput | string
+    nameVersion?: IntFieldUpdateOperationsInput | number
+    application?: StringFieldUpdateOperationsInput | string
+    applicationVersion?: StringFieldUpdateOperationsInput | string
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    hostname?: NullableStringFieldUpdateOperationsInput | string | null
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastIp?: NullableStringFieldUpdateOperationsInput | string | null
+    lastConnection?: NullableStringFieldUpdateOperationsInput | string | null
+    lastSeenAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pendingCount?: IntFieldUpdateOperationsInput | number
+    conflictCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type VoucherRestrictionCreateInput = {
     id?: string
     restrictionType: string
@@ -71111,6 +72561,81 @@ export namespace Prisma {
     finishedAt?: SortOrder
     stats?: SortOrder
     errorMessage?: SortOrder
+  }
+
+  export type ManagedDeviceCountOrderByAggregateInput = {
+    id?: SortOrder
+    displayName?: SortOrder
+    reportedName?: SortOrder
+    nameVersion?: SortOrder
+    application?: SortOrder
+    applicationVersion?: SortOrder
+    platform?: SortOrder
+    hostname?: SortOrder
+    branchId?: SortOrder
+    terminalId?: SortOrder
+    lastIp?: SortOrder
+    lastConnection?: SortOrder
+    lastSeenAt?: SortOrder
+    lastSyncAt?: SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ManagedDeviceAvgOrderByAggregateInput = {
+    nameVersion?: SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+  }
+
+  export type ManagedDeviceMaxOrderByAggregateInput = {
+    id?: SortOrder
+    displayName?: SortOrder
+    reportedName?: SortOrder
+    nameVersion?: SortOrder
+    application?: SortOrder
+    applicationVersion?: SortOrder
+    platform?: SortOrder
+    hostname?: SortOrder
+    branchId?: SortOrder
+    terminalId?: SortOrder
+    lastIp?: SortOrder
+    lastConnection?: SortOrder
+    lastSeenAt?: SortOrder
+    lastSyncAt?: SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ManagedDeviceMinOrderByAggregateInput = {
+    id?: SortOrder
+    displayName?: SortOrder
+    reportedName?: SortOrder
+    nameVersion?: SortOrder
+    application?: SortOrder
+    applicationVersion?: SortOrder
+    platform?: SortOrder
+    hostname?: SortOrder
+    branchId?: SortOrder
+    terminalId?: SortOrder
+    lastIp?: SortOrder
+    lastConnection?: SortOrder
+    lastSeenAt?: SortOrder
+    lastSyncAt?: SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ManagedDeviceSumOrderByAggregateInput = {
+    nameVersion?: SortOrder
+    pendingCount?: SortOrder
+    conflictCount?: SortOrder
   }
 
   export type VoucherRestrictionSkuIdRestrictionTypeCompoundUniqueInput = {
@@ -96684,6 +98209,10 @@ export namespace Prisma {
      * @deprecated Use LegacySyncRunDefaultArgs instead
      */
     export type LegacySyncRunArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = LegacySyncRunDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ManagedDeviceDefaultArgs instead
+     */
+    export type ManagedDeviceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ManagedDeviceDefaultArgs<ExtArgs>
     /**
      * @deprecated Use VoucherRestrictionDefaultArgs instead
      */

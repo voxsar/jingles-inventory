@@ -759,6 +759,27 @@ exports.Prisma.LegacySyncRunScalarFieldEnum = {
   errorMessage: 'errorMessage'
 };
 
+exports.Prisma.ManagedDeviceScalarFieldEnum = {
+  id: 'id',
+  displayName: 'displayName',
+  reportedName: 'reportedName',
+  nameVersion: 'nameVersion',
+  application: 'application',
+  applicationVersion: 'applicationVersion',
+  platform: 'platform',
+  hostname: 'hostname',
+  branchId: 'branchId',
+  terminalId: 'terminalId',
+  lastIp: 'lastIp',
+  lastConnection: 'lastConnection',
+  lastSeenAt: 'lastSeenAt',
+  lastSyncAt: 'lastSyncAt',
+  pendingCount: 'pendingCount',
+  conflictCount: 'conflictCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.VoucherRestrictionScalarFieldEnum = {
   id: 'id',
   skuId: 'skuId',
@@ -834,6 +855,7 @@ exports.Prisma.ModelName = {
   VoucherRedemption: 'VoucherRedemption',
   LegacyEntityLink: 'LegacyEntityLink',
   LegacySyncRun: 'LegacySyncRun',
+  ManagedDevice: 'ManagedDevice',
   VoucherRestriction: 'VoucherRestriction'
 };
 

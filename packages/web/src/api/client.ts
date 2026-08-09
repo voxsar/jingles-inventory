@@ -36,6 +36,12 @@ export const authApi = {
   refreshSyncToken: (password: string) => api.post('/auth/sync-token', { password }),
 };
 
+export const devicesApi = {
+  list: () => api.get('/devices'),
+  rename: (deviceId: string, name: string) =>
+    api.patch(`/devices/${encodeURIComponent(deviceId)}/name`, { name }),
+};
+
 // Dashboard
 export const dashboardApi = {
   getStats: () => api.get('/dashboard/stats'),

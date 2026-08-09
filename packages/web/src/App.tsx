@@ -38,6 +38,7 @@ import UsersPage from './pages/UsersPage';
 import DesktopSyncPage from './pages/DesktopSyncPage';
 import HelpPage from './pages/HelpPage';
 import VouchersPage from './pages/VouchersPage';
+import DevicesPage from './pages/DevicesPage';
 import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
@@ -89,6 +90,11 @@ function AppRoutes() {
         <Route path="users" element={
           <ProtectedRoute roles={['Admin', 'Manager']}>
             <UsersPage />
+          </ProtectedRoute>
+        } />
+        <Route path="devices" element={
+          <ProtectedRoute roles={['Admin']}>
+            <DevicesPage />
           </ProtectedRoute>
         } />
         <Route path="spreadsheet" element={<SpreadsheetPage />} />

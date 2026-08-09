@@ -9,18 +9,21 @@ import {
   subscribeSyncHealth,
   syncAll,
   syncPullOnly,
+  syncPushOnly,
 } from '../sync/syncEngine';
 
 vi.mock('../offline/localDB', () => ({
   FAILED_PERMANENT_STATUS: 'failed_permanent',
   applyReplicaMutation: vi.fn(),
   clearProcessedRequestSyncQueue: vi.fn(),
+  clearProcessedPosLanEvents: vi.fn(),
   deleteInventoryRecord: vi.fn(),
   getConfig: vi.fn().mockReturnValue(null),
   getPendingSyncConflicts: vi.fn().mockReturnValue([]),
   getPendingSyncConflictDetailById: vi.fn(),
   getPendingSyncConflictDetails: vi.fn().mockReturnValue([]),
   getPendingSyncOperationLogs: vi.fn().mockReturnValue([]),
+  getPendingPosLanEvents: vi.fn().mockReturnValue([]),
   getPendingRequestSyncQueue: vi.fn().mockReturnValue([]),
   getSyncOutboxSummary: vi.fn().mockReturnValue({
     pending: 0,
@@ -34,6 +37,8 @@ vi.mock('../offline/localDB', () => ({
   markSyncOperationLogConflict: vi.fn(),
   markSyncOperationLogFailed: vi.fn(),
   markSyncOperationLogProcessed: vi.fn(),
+  markPosLanEventsFailed: vi.fn(),
+  markPosLanEventsProcessed: vi.fn(),
   pruneFailedPermanentOutbox: vi.fn().mockReturnValue(0),
   replaceReplicaSnapshot: vi.fn(),
   setConfig: vi.fn(),
@@ -49,6 +54,7 @@ import {
   getPendingSyncConflictDetailById,
   getPendingSyncConflictDetails,
   getPendingSyncOperationLogs,
+  getPendingPosLanEvents,
   getPendingRequestSyncQueue,
   getSyncOutboxSummary,
   insertPendingSyncConflict,
@@ -58,6 +64,7 @@ import {
   markSyncOperationLogConflict,
   markSyncOperationLogFailed,
   markSyncOperationLogProcessed,
+  markPosLanEventsProcessed,
   pruneFailedPermanentOutbox,
   replaceReplicaSnapshot,
   setConfig,
@@ -130,6 +137,7 @@ describe('syncEngine', () => {
     (deleteInventoryRecord as ReturnType<typeof vi.fn>).mockReset();
     (getConfig as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncOperationLogs as ReturnType<typeof vi.fn>).mockReset();
+    (getPendingPosLanEvents as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncConflicts as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncConflictDetailById as ReturnType<typeof vi.fn>).mockReset();
     (getPendingSyncConflictDetails as ReturnType<typeof vi.fn>).mockReset();
@@ -142,6 +150,7 @@ describe('syncEngine', () => {
     (markSyncOperationLogConflict as ReturnType<typeof vi.fn>).mockReset();
     (markSyncOperationLogFailed as ReturnType<typeof vi.fn>).mockReset();
     (markSyncOperationLogProcessed as ReturnType<typeof vi.fn>).mockReset();
+    (markPosLanEventsProcessed as ReturnType<typeof vi.fn>).mockReset();
     (pruneFailedPermanentOutbox as ReturnType<typeof vi.fn>).mockReset();
     (replaceReplicaSnapshot as ReturnType<typeof vi.fn>).mockReset();
     (setConfig as ReturnType<typeof vi.fn>).mockReset();
@@ -149,6 +158,7 @@ describe('syncEngine', () => {
 
     (getConfig as ReturnType<typeof vi.fn>).mockReturnValue(null);
     (getPendingSyncOperationLogs as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    (getPendingPosLanEvents as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingSyncConflicts as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingSyncConflictDetails as ReturnType<typeof vi.fn>).mockReturnValue([]);
     (getPendingRequestSyncQueue as ReturnType<typeof vi.fn>).mockReturnValue([]);
@@ -174,6 +184,42 @@ describe('syncEngine', () => {
         getToken: () => 'test-token',
       })
     ).not.toThrow();
+  });
+
+  it('relays LAN-accepted POS events to the cloud before completing a push', async () => {
+    (getPendingPosLanEvents as ReturnType<typeof vi.fn>).mockReturnValue([
+      {
+        event_id: 'sale-event-001',
+        device_id: 'pos-001',
+        terminal_id: 'till-01',
+        sequence_num: 4,
+        vector_clock: JSON.stringify({ 'pos-001': 4 }),
+        event_json: JSON.stringify({
+          id: 'sale-event-001',
+          deviceId: 'pos-001',
+          sequenceNum: 4,
+          eventType: 'SALE_COMPLETED',
+        }),
+      },
+    ]);
+    fetchMock
+      .mockResolvedValueOnce(createJsonResponse({
+        acceptedEventIds: ['sale-event-001'],
+        remoteEvents: [],
+        serverVectorClock: { 'pos-001': 4 },
+        conflicts: [],
+      }))
+      .mockResolvedValueOnce(createJsonResponse({ serverVectorClock: { 'pos-001': 4 } }));
+
+    const result = await syncPushOnly();
+
+    expect(result.pushed).toBe(1);
+    expect(markPosLanEventsProcessed).toHaveBeenCalledWith(['sale-event-001']);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:3001/api/pos/sync/playback',
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('returns pending sync conflicts in the outbox snapshot', () => {

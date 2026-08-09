@@ -778,6 +778,28 @@ CREATE TABLE IF NOT EXISTS "legacy_sync_runs" (
 );
 
 -- CreateTable
+CREATE TABLE IF NOT EXISTS "managed_devices" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "display_name" TEXT NOT NULL,
+    "reported_name" TEXT NOT NULL,
+    "name_version" INTEGER NOT NULL DEFAULT 0,
+    "application" TEXT NOT NULL,
+    "application_version" TEXT NOT NULL,
+    "platform" TEXT,
+    "hostname" TEXT,
+    "branch_id" TEXT,
+    "terminal_id" TEXT,
+    "last_ip" TEXT,
+    "last_connection" TEXT,
+    "last_seen_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_sync_at" DATETIME,
+    "pending_count" INTEGER NOT NULL DEFAULT 0,
+    "conflict_count" INTEGER NOT NULL DEFAULT 0,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL
+);
+
+-- CreateTable
 CREATE TABLE IF NOT EXISTS "voucher_restrictions" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sku_id" TEXT NOT NULL,
@@ -962,6 +984,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS "legacy_entity_links_source_type_source_id_key
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "legacy_sync_runs_started_at_idx" ON "legacy_sync_runs"("started_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "managed_devices_application_last_seen_at_idx" ON "managed_devices"("application", "last_seen_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "managed_devices_branch_id_idx" ON "managed_devices"("branch_id");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "voucher_restrictions_sku_id_idx" ON "voucher_restrictions"("sku_id");

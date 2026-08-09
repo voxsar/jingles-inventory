@@ -9,6 +9,8 @@ import {
   posSyncPlayback,
 } from '../services/posCloud';
 import { validateVoucher } from '../services/voucherService';
+import { isLocalReplicaMode } from '../utils/runtimePaths';
+import { getPosLanVectorClock, queuePosLanPlayback } from '../services/posLanBridge';
 
 const router = Router();
 
@@ -21,6 +23,10 @@ function readVectorClock(value: unknown) {
 }
 
 router.use(async (_req, res, next) => {
+  if (isLocalReplicaMode()) {
+    next();
+    return;
+  }
   try {
     await ensurePosCloudSchema();
     next();
@@ -34,6 +40,9 @@ router.use(authenticatePosSyncRequest);
 
 router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'The LAN hub catalog is still converging; use the cloud fallback.' });
+    }
     return res.json(await getPosCatalogSnapshot());
   } catch (error) {
     console.error(error);
@@ -43,6 +52,9 @@ router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
 
 router.get('/legacy-records', async (req: Request, res: Response) => {
   try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'Legacy POS records are available from the cloud host.' });
+    }
     return res.json(await listLegacyPosRecords({
       sourceTable: typeof req.query.sourceTable === 'string' ? req.query.sourceTable : undefined,
       page: typeof req.query.page === 'string' ? Number(req.query.page) : undefined,
@@ -55,6 +67,9 @@ router.get('/legacy-records', async (req: Request, res: Response) => {
 
 router.post('/vouchers/validate', async (req: Request, res: Response) => {
   try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'Voucher validation requires the cloud host.' });
+    }
     const result = await validateVoucher(req.body);
     return res.status(result.isValid ? 200 : 422).json(result);
   } catch (error) {
@@ -65,6 +80,13 @@ router.post('/vouchers/validate', async (req: Request, res: Response) => {
 
 router.post('/sync/handshake', async (req: Request, res: Response) => {
   try {
+    if (isLocalReplicaMode()) {
+      return res.json({
+        serverVectorClock: await getPosLanVectorClock(),
+        pendingRemoteCount: 0,
+        conflictCount: 0,
+      });
+    }
     return res.json(await posSyncHandshake(readVectorClock(req.body?.vectorClock)));
   } catch (error) {
     console.error(error);
@@ -80,6 +102,15 @@ router.post('/sync/playback', async (req: Request, res: Response) => {
 
     if (!deviceId || !terminalId) {
       return res.status(400).json({ error: 'deviceId and terminalId are required' });
+    }
+
+    if (isLocalReplicaMode()) {
+      return res.json(await queuePosLanPlayback({
+        deviceId,
+        terminalId,
+        vectorClock: readVectorClock(req.body?.vectorClock),
+        events,
+      }));
     }
 
     return res.json(
@@ -103,6 +134,11 @@ router.post('/sync/confirm', async (req: Request, res: Response) => {
 
     if (!deviceId || !terminalId) {
       return res.status(400).json({ error: 'deviceId and terminalId are required' });
+    }
+
+
+    if (isLocalReplicaMode()) {
+      return res.json({ serverVectorClock: await getPosLanVectorClock() });
     }
 
     return res.json({

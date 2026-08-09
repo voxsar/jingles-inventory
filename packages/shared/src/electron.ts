@@ -186,6 +186,18 @@ export interface ElectronDiscoveredDevice {
   source: 'mdns';
 }
 
+export type ElectronUpdatePolicy = 'automatic' | 'ask' | 'manual';
+
+export interface ElectronUpdateStatus {
+  state: 'disabled' | 'idle' | 'checking' | 'available' | 'downloading' | 'downloaded' | 'current' | 'error';
+  currentVersion: string;
+  availableVersion: string | null;
+  progressPercent: number | null;
+  message: string;
+  policy: ElectronUpdatePolicy;
+  portable: boolean;
+}
+
 export interface ElectronAPI {
   barcode: {
     onScan: (callback: (barcode: string) => void) => void;
@@ -246,6 +258,13 @@ export interface ElectronAPI {
     list: () => Promise<ElectronDiscoveredDevice[]>;
     refresh: () => Promise<ElectronDiscoveredDevice[]>;
     onChanged: (callback: (devices: ElectronDiscoveredDevice[]) => void) => () => void;
+  };
+  updates: {
+    getStatus: () => Promise<ElectronUpdateStatus>;
+    check: () => Promise<ElectronUpdateStatus>;
+    choosePolicy: () => Promise<ElectronUpdatePolicy>;
+    install: () => Promise<boolean>;
+    onStatus: (callback: (status: ElectronUpdateStatus) => void) => () => void;
   };
   network: {
     isOnline: () => boolean;

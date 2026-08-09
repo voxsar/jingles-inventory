@@ -185,19 +185,16 @@ if (shouldGenerateLocalClient) {
   process.stdout.write('Local Prisma client is up to date; skipping generate.\n');
 }
 
-const hasLocalSql = fs.existsSync(localSqlPath);
-if (schemaChanged || !hasLocalSql) {
-  const sqlScript = runPrismaCommand([
-    'migrate',
-    'diff',
-    '--from-empty',
-    '--to-schema-datamodel',
-    path.relative(backendRoot, localSchemaPath),
-    '--script',
-  ]);
+const sqlScript = runPrismaCommand([
+  'migrate',
+  'diff',
+  '--from-empty',
+  '--to-schema-datamodel',
+  path.relative(backendRoot, localSchemaPath),
+  '--script',
+]);
 
-  writeFileIfChanged(localSqlPath, toIdempotentSql(sqlScript));
-}
+writeFileIfChanged(localSqlPath, toIdempotentSql(sqlScript));
 
 const schemaVerb = schemaChanged ? 'Wrote' : 'Verified';
 const sqlVerb = fs.existsSync(localSqlPath) ? 'verified' : 'missing';

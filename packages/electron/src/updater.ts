@@ -260,6 +260,7 @@ export function initializeUpdater(environmentVariable: string) {
 
   ipcMain.handle('updater:get-status', () => status);
   ipcMain.handle('updater:check', () => checkForUpdates(true));
+  ipcMain.handle('updater:choose-policy', () => chooseUpdatePolicy());
   ipcMain.handle('updater:set-policy', (_event, policy: UpdatePolicy) => {
     if (!['automatic', 'ask', 'manual'].includes(policy)) throw new Error('Invalid update policy.');
     preferences.policy = policy;

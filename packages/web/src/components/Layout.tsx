@@ -80,6 +80,7 @@ const baseNavItems: NavItem[] = [
   { type: 'route', to: '/spreadsheet', label: 'Spreadsheet', icon: SpreadsheetIcon },
   { type: 'route', to: '/reports', label: 'Reports', icon: ChartIcon },
   { type: 'route', to: '/users', label: 'Users', icon: UsersIcon, roles: ['Admin', 'Manager'] },
+  { type: 'route', to: '/devices', label: 'Devices', icon: CloudIcon, roles: ['Admin'] },
   { type: 'route', to: '/settings', label: 'Settings', icon: SettingsIcon },
   { type: 'route', to: '/help', label: 'Help & Docs', icon: HelpIcon },
   { type: 'section', id: 'desktop', label: 'Desktop' },

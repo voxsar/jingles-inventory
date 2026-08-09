@@ -112,6 +112,18 @@ const electronAPI = {
     },
   },
 
+  updates: {
+    getStatus: () => ipcRenderer.invoke('updater:get-status'),
+    check: () => ipcRenderer.invoke('updater:check'),
+    choosePolicy: () => ipcRenderer.invoke('updater:choose-policy'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    onStatus: (callback: (status: unknown) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: unknown) => callback(status);
+      ipcRenderer.on('updater:status', listener);
+      return () => ipcRenderer.removeListener('updater:status', listener);
+    },
+  },
+
   // Online/offline detection
   network: {
     isOnline: () => navigator.onLine,

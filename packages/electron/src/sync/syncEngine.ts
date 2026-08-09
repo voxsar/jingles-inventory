@@ -9,6 +9,7 @@ import {
   getPendingSyncConflictDetailById,
   getPendingSyncConflictDetails,
   getPendingSyncOperationLogs,
+  getPendingPosLanEvents,
   getPendingRequestSyncQueue,
   getSyncOutboxSummary,
   insertPendingSyncConflict,
@@ -18,6 +19,9 @@ import {
   markSyncOperationLogConflict,
   markSyncOperationLogFailed,
   markSyncOperationLogProcessed,
+  markPosLanEventsFailed,
+  markPosLanEventsProcessed,
+  clearProcessedPosLanEvents,
   pruneFailedPermanentOutbox,
   replaceReplicaSnapshot,
   setConfig,
@@ -73,6 +77,15 @@ type QueuedSyncConflictRecord = {
   aggregate_type: string;
   aggregate_id: string | null;
   status: string;
+};
+
+type QueuedPosLanEventRecord = {
+  event_id: string;
+  device_id: string;
+  terminal_id: string;
+  sequence_num: number;
+  vector_clock: string;
+  event_json: string;
 };
 
 type SyncConflictDetailRecord = QueuedSyncConflictRecord & {
@@ -1690,6 +1703,78 @@ async function pushSyncV2OperationLog(
   return result;
 }
 
+async function pushPosLanEvents(serverUrl: string, token: string) {
+  const queued = getPendingPosLanEvents() as QueuedPosLanEventRecord[];
+  const result = { pushed: 0, errors: [] as string[], blockPull: false };
+  const groups = new Map<string, QueuedPosLanEventRecord[]>();
+  for (const row of queued) {
+    const key = `${row.device_id}\u0000${row.terminal_id}`;
+    const group = groups.get(key) ?? [];
+    group.push(row);
+    groups.set(key, group);
+  }
+
+  for (const rows of groups.values()) {
+    const eventIds = rows.map((row) => row.event_id);
+    try {
+      const vectorClock = rows.reduce<Record<string, number>>((clock, row) => {
+        const candidate = parseJsonValue<Record<string, number>>(row.vector_clock, {});
+        for (const [deviceId, sequence] of Object.entries(candidate)) {
+          if (Number.isFinite(sequence)) clock[deviceId] = Math.max(clock[deviceId] ?? 0, sequence);
+        }
+        return clock;
+      }, {});
+      const response = await fetch(`${serverUrl}/api/pos/sync/playback`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: rows[0].device_id,
+          terminalId: rows[0].terminal_id,
+          vectorClock,
+          events: rows.map((row) => parseJsonValue(row.event_json, {})),
+        }),
+      });
+      const payload = await readJsonBody<{
+        error?: string;
+        acceptedEventIds?: string[];
+        serverVectorClock?: Record<string, number>;
+      }>(response);
+      if (!response.ok) throw new Error(payload?.error ?? `HTTP ${response.status}`);
+      const accepted = new Set(payload?.acceptedEventIds ?? []);
+      const acknowledged = eventIds.filter((id) => accepted.has(id));
+      markPosLanEventsProcessed(acknowledged);
+      result.pushed += acknowledged.length;
+      const missing = eventIds.filter((id) => !accepted.has(id));
+      if (missing.length > 0) {
+        const message = `Cloud did not acknowledge ${missing.length} relayed POS event(s).`;
+        markPosLanEventsFailed(missing, message);
+        result.errors.push(message);
+        result.blockPull = true;
+      }
+
+      if (payload?.serverVectorClock) {
+        await fetch(`${serverUrl}/api/pos/sync/confirm`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deviceId: rows[0].device_id,
+            terminalId: rows[0].terminal_id,
+            vectorClock: payload.serverVectorClock,
+          }),
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown relayed POS sync error';
+      markPosLanEventsFailed(eventIds, message);
+      result.errors.push(`Relayed POS sync failed: ${message}`);
+      result.blockPull = true;
+    }
+  }
+
+  clearProcessedPosLanEvents();
+  return result;
+}
+
 async function pushChanges(): Promise<{ pushed: number; conflicts: number; errors: string[]; blockPull: boolean }> {
   if (!syncConfig) {
     updateSyncProgress({
@@ -1723,8 +1808,9 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
   };
   const queuedSyncOperations = getPendingSyncOperationLogs() as QueuedSyncOperationRecord[];
   const queuedRequests = getPendingRequestSyncQueue() as QueuedRequestRecord[];
+  const queuedPosLanEvents = getPendingPosLanEvents() as QueuedPosLanEventRecord[];
   const syncOperationWorkUnits = queuedSyncOperations.length;
-  const totalWorkUnits = syncOperationWorkUnits + queuedRequests.length;
+  const totalWorkUnits = syncOperationWorkUnits + queuedRequests.length + queuedPosLanEvents.length;
   let processedWorkUnits = 0;
 
   const publishPushProgress = (detail?: string) => {
@@ -1741,6 +1827,13 @@ async function pushChanges(): Promise<{ pushed: number; conflicts: number; error
   };
 
   publishPushProgress();
+
+  const posLanResult = await pushPosLanEvents(syncConfig.serverUrl, token);
+  result.pushed += posLanResult.pushed;
+  result.errors.push(...posLanResult.errors);
+  result.blockPull ||= posLanResult.blockPull;
+  processedWorkUnits += queuedPosLanEvents.length;
+  publishPushProgress(posLanResult.errors[0]);
 
   const syncV2Result = await pushSyncV2OperationLog(syncConfig.serverUrl, token, {
     queuedOps: queuedSyncOperations,

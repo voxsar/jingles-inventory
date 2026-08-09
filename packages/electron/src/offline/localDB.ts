@@ -104,8 +104,23 @@ function createAppTables(): void {
       attempt_count INTEGER DEFAULT 0
     );
 
+    CREATE TABLE IF NOT EXISTS pos_lan_sync_queue (
+      event_id TEXT PRIMARY KEY,
+      device_id TEXT NOT NULL,
+      terminal_id TEXT NOT NULL,
+      sequence_num INTEGER NOT NULL,
+      vector_clock TEXT NOT NULL,
+      event_json TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'Pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      processed_at TEXT,
+      last_error TEXT,
+      attempt_count INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE INDEX IF NOT EXISTS idx_cached_responses_updated_at ON cached_responses(updated_at);
     CREATE INDEX IF NOT EXISTS idx_request_sync_queue_status ON request_sync_queue(status, created_at);
+    CREATE INDEX IF NOT EXISTS idx_pos_lan_sync_queue_status ON pos_lan_sync_queue(status, created_at);
   `);
 }
 
@@ -1085,6 +1100,45 @@ export function clearProcessedRequestSyncQueue() {
   getDB().prepare(`DELETE FROM request_sync_queue WHERE status = 'Processed'`).run();
 }
 
+export function getPendingPosLanEvents() {
+  return getDB()
+    .prepare(`
+      SELECT *
+      FROM pos_lan_sync_queue
+      WHERE status = 'Pending'
+      ORDER BY device_id ASC, sequence_num ASC, created_at ASC
+    `)
+    .all();
+}
+
+export function markPosLanEventsProcessed(eventIds: string[]) {
+  if (eventIds.length === 0) return;
+  const update = getDB().prepare(`
+    UPDATE pos_lan_sync_queue
+    SET status = 'Processed', processed_at = datetime('now'), last_error = NULL
+    WHERE event_id = ?
+  `);
+  getDB().transaction((ids: string[]) => {
+    for (const id of ids) update.run(id);
+  })(eventIds);
+}
+
+export function markPosLanEventsFailed(eventIds: string[], error: string) {
+  if (eventIds.length === 0) return;
+  const update = getDB().prepare(`
+    UPDATE pos_lan_sync_queue
+    SET last_error = ?, attempt_count = attempt_count + 1
+    WHERE event_id = ? AND status = 'Pending'
+  `);
+  getDB().transaction((ids: string[]) => {
+    for (const id of ids) update.run(error, id);
+  })(eventIds);
+}
+
+export function clearProcessedPosLanEvents() {
+  getDB().prepare(`DELETE FROM pos_lan_sync_queue WHERE status = 'Processed'`).run();
+}
+
 export function pruneFailedPermanentOutbox(retentionDays: number) {
   const database = getDB();
   const normalizedDays = Math.max(0, Math.trunc(retentionDays));
@@ -1119,7 +1173,8 @@ export function getSyncOutboxSummary(): SyncOutboxSummary {
   return {
     pending:
       readCount(`SELECT COUNT(*) AS count FROM request_sync_queue WHERE status = 'Pending'`) +
-      readCount(`SELECT COUNT(*) AS count FROM sync_operation_log WHERE status = 'Pending'`),
+      readCount(`SELECT COUNT(*) AS count FROM sync_operation_log WHERE status = 'Pending'`) +
+      readCount(`SELECT COUNT(*) AS count FROM pos_lan_sync_queue WHERE status = 'Pending'`),
     conflicts:
       readCount(`SELECT COUNT(*) AS count FROM sync_conflicts WHERE status = 'Pending'`),
     failedPermanent:
