@@ -681,18 +681,22 @@ export default function ReportsPage() {
 		if (activeReportId !== 'grn-document') {
 			return { headers: columns.map((column) => column.header), rows: exportRows(rows) };
 		}
-		const headers = ['Document No', 'Location', 'Supplier', 'Purchase Date', 'Product Code', 'Product Name', 'P.Size', 'Cost Price', 'Selling Price', 'Qty', 'Free', 'Discount', 'Amount', '%', 'Prepared By'];
+		const headers = ['Location', 'Supplier', 'Purchase Type', 'Reference', 'Document No', 'Purchase Date', 'PO No', 'Payment Mode', 'Product Code', 'Product Name', 'P.Size', 'Cost Price', 'Selling Price', 'Qty', 'Free', 'Discount', 'Amount', '%', 'Prepared By', 'Checked By', 'Approved By'];
 		const detailRows = rows.flatMap((grn) => (grn.lines ?? []).map((line: any) => {
 			const qty = Number(line.receivedQuantity || line.expectedQuantity || 0);
 			const cost = Number(line.costPrice ?? line.batch?.costPrice ?? 0);
 			return [
-				grn.invoiceReference ?? grn.id,
 				grn.floor?.branch?.name ?? grn.floor?.name ?? '',
 				grn.supplier?.name ?? '',
+				'General',
+				grn.notes ?? '',
+				grn.invoiceReference ?? grn.id,
 				dateOnly(grn.supplierInvoiceDate ?? grn.deliveryDate ?? grn.createdAt),
+				'',
+				'',
 				line.sku?.skuCode ?? '', line.sku?.name ?? '', line.variant?.name ?? '1', cost,
 				Number(line.sellingPrice ?? line.batch?.sellingPrice ?? 0), qty, 0, 0, cost * qty, 0,
-				grn.creator?.email ?? '',
+				grn.creator?.email ?? '', '', '',
 			].map(cellText);
 		}));
 		return { headers, rows: detailRows };
@@ -754,9 +758,9 @@ export default function ReportsPage() {
 			return `<article class="grn-document">
 				<header><div><h1>JINGLES</h1><p>${escapeHtml(grn.floor?.branch?.address ?? '')}</p></div><div class="duplicate">${String(grn.status).toLowerCase() === 'closed' ? 'Original' : 'Draft'}</div></header>
 				<h2>Goods Received Note</h2>
-				<div class="meta"><div><b>Location</b><span>${escapeHtml(grn.floor?.branch?.code ?? '')} ${escapeHtml(grn.floor?.branch?.name ?? grn.floor?.name ?? '')}</span><b>Supplier</b><span>${escapeHtml(grn.supplier?.name ?? '')}</span><b>Purchase Type</b><span>General</span><b>Reference</b><span>${escapeHtml(grn.notes ?? '')}</span></div><div><b>Document No</b><span>${escapeHtml(grn.invoiceReference ?? grn.id)}</span><b>Purchase Date</b><span>${escapeHtml(dateOnly(grn.supplierInvoiceDate ?? grn.deliveryDate ?? grn.createdAt))}</span><b>PO No</b><span></span><b>Pay Mode</b><span></span></div></div>
+				<div class="meta"><div><b>Location</b><span>${escapeHtml(grn.floor?.branch?.code ?? '')} ${escapeHtml(grn.floor?.branch?.name ?? grn.floor?.name ?? '')}</span><b>Supplier</b><span>${escapeHtml(grn.supplier?.name ?? '')}</span><b>Purchase Type</b><span>General</span><b>Reference</b><span>${escapeHtml(grn.notes ?? '')}</span></div><div><b>Document No</b><span>${escapeHtml(grn.invoiceReference ?? grn.id)}</span><b>Purchase Date</b><span>${escapeHtml(dateOnly(grn.supplierInvoiceDate ?? grn.deliveryDate ?? grn.createdAt))}</span><b>PO No</b><span></span><b>Payment Mode</b><span></span></div></div>
 				<table><thead><tr><th>#</th><th>Product Code</th><th>Product Name</th><th>P.Size</th><th>Cost Price</th><th>Selling Price</th><th>Qty</th><th>Free</th><th>Discount</th><th>Amount</th><th>%</th></tr></thead><tbody>${itemRows}</tbody></table>
-				<div class="grn-bottom"><div class="signatures"><span>........................<br>Prepared By<br><i>${escapeHtml(grn.creator?.email ?? '')}</i></span><span>........................<br>Checked By</span><span>........................<br>Approved By</span></div><div class="totals"><b>Total Product</b><span>${lines.length}</span><b>Total Qty</b><span>${quantity(lines.reduce((sum: number, line: any) => sum + Number(line.receivedQuantity || line.expectedQuantity || 0), 0))}</span><strong>Gross Amount</strong><strong>${currency(gross)}</strong><span>Line Discount</span><span>0.00</span><span>Sub Total Discount</span><span>0.00</span><span>Tax</span><span>0.00</span><span>Other Charges</span><span>0.00</span><strong>Nett Amount</strong><strong>${currency(gross)}</strong></div></div>
+				<div class="grn-bottom"><div class="signatures"><span>........................<br>Prepared By<br><i>${escapeHtml(grn.creator?.email ?? '')}</i></span><span>........................<br>Checked By</span><span>........................<br>Approved By</span></div><div class="totals"><b>Total Product</b><span>${lines.length}</span><b>Total Qty</b><span>${quantity(lines.reduce((sum: number, line: any) => sum + Number(line.receivedQuantity || line.expectedQuantity || 0), 0))}</span><strong>Gross Amount</strong><strong>${currency(gross)}</strong><span>Sub Total Amount</span><span>${currency(gross)}</span><span>Tax</span><span>0.00</span><span>Other Charges</span><span>0.00</span><strong>Nett Amount</strong><strong>${currency(gross)}</strong></div></div>
 				<footer>Report generated ${escapeHtml(new Date().toLocaleString())}</footer>
 			</article>`;
 		}).join('') : '';
