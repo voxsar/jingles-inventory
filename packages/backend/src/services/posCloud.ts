@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import type { PoolClient, QueryResultRow } from 'pg';
 import { Pool } from 'pg';
+import type { LegacySyncPosRecord } from '@jingles/shared';
 
 type VectorClock = Record<string, number>;
 
@@ -223,6 +224,29 @@ type PricingOverlayRow = {
 const DATABASE_URL = process.env.DATABASE_URL?.trim();
 const SHELF_READY_STATE = 'ShelfReady';
 const POS_SCHEMA_STATEMENTS = [
+	`
+		CREATE TABLE IF NOT EXISTS legacy_pos_records (
+			source_table TEXT NOT NULL,
+			source_id TEXT NOT NULL,
+			payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+			first_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			last_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (source_table, source_id)
+		)
+	`,
+	`
+		CREATE TABLE IF NOT EXISTS legacy_pos_record_versions (
+			id TEXT PRIMARY KEY,
+			source_table TEXT NOT NULL,
+			source_id TEXT NOT NULL,
+			payload JSONB NOT NULL,
+			content_hash TEXT NOT NULL,
+			sync_run_id TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (source_table, source_id, content_hash)
+		)
+	`,
+	`CREATE INDEX IF NOT EXISTS legacy_pos_records_table_idx ON legacy_pos_records (source_table)`,
   `
     CREATE TABLE IF NOT EXISTS pos_shifts (
       id TEXT PRIMARY KEY,
@@ -761,6 +785,83 @@ export async function ensurePosCloudSchema() {
   } finally {
     client.release();
   }
+}
+
+export async function upsertLegacyPosRecords(records: LegacySyncPosRecord[], syncRunId: string) {
+	if (records.length === 0) return { created: 0, updated: 0, unchanged: 0 };
+	await ensurePosCloudSchema();
+	const client = await getPool().connect();
+	const counts = { created: 0, updated: 0, unchanged: 0 };
+	try {
+		await client.query('BEGIN');
+		for (const record of records) {
+			const payload = JSON.stringify(record.data);
+			const existing = await client.query<{ same: boolean }>(
+				`SELECT payload = $3::jsonb AS same FROM legacy_pos_records WHERE source_table = $1 AND source_id = $2`,
+				[record.sourceTable, record.sourceId, payload],
+			);
+			if (existing.rows[0]?.same) {
+				counts.unchanged += 1;
+				continue;
+			}
+			await client.query(
+				`INSERT INTO legacy_pos_records (source_table, source_id, payload)
+				 VALUES ($1, $2, $3::jsonb)
+				 ON CONFLICT (source_table, source_id) DO UPDATE
+				 SET payload = EXCLUDED.payload, last_synced_at = NOW()`,
+				[record.sourceTable, record.sourceId, payload],
+			);
+			const contentHash = await client.query<{ hash: string }>(`SELECT md5($1::text) AS hash`, [payload]);
+			await client.query(
+				`INSERT INTO legacy_pos_record_versions
+				 (id, source_table, source_id, payload, content_hash, sync_run_id)
+				 VALUES ($1, $2, $3, $4::jsonb, $5, $6)
+				 ON CONFLICT (source_table, source_id, content_hash) DO NOTHING`,
+				[randomUUID(), record.sourceTable, record.sourceId, payload, contentHash.rows[0].hash, syncRunId],
+			);
+			if (existing.rowCount) counts.updated += 1;
+			else counts.created += 1;
+		}
+		await client.query('COMMIT');
+		return counts;
+	} catch (error) {
+		await client.query('ROLLBACK');
+		throw error;
+	} finally {
+		client.release();
+	}
+}
+
+export async function listLegacyPosRecords(args: { sourceTable?: string; page?: number; pageSize?: number }) {
+	await ensurePosCloudSchema();
+	const page = Math.max(1, args.page ?? 1);
+	const pageSize = Math.min(500, Math.max(1, args.pageSize ?? 100));
+	const offset = (page - 1) * pageSize;
+	const values: unknown[] = [];
+	const where = args.sourceTable ? 'WHERE source_table = $1' : '';
+	if (args.sourceTable) values.push(args.sourceTable.toLowerCase());
+	const limitIndex = values.length + 1;
+	const offsetIndex = values.length + 2;
+	const inventory = getPool();
+	const [items, total, tables] = await Promise.all([
+		inventory.query(
+			`SELECT source_table, source_id, payload, first_synced_at, last_synced_at
+			 FROM legacy_pos_records ${where}
+			 ORDER BY source_table, source_id LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
+			[...values, pageSize, offset],
+		),
+		inventory.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM legacy_pos_records ${where}`, values),
+		inventory.query<{ source_table: string; count: string }>(
+			`SELECT source_table, COUNT(*)::text AS count FROM legacy_pos_records GROUP BY source_table ORDER BY source_table`,
+		),
+	]);
+	return {
+		page,
+		pageSize,
+		total: Number(total.rows[0]?.count ?? 0),
+		tables: tables.rows.map((row) => ({ sourceTable: row.source_table, count: Number(row.count) })),
+		items: items.rows,
+	};
 }
 
 export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {

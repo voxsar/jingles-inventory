@@ -79,12 +79,23 @@ export interface LegacySyncVariantRow {
 	details: LegacySyncLocationDetail[];
 }
 
+// Lossless copy of a row from a legacy POS operational table. Keeping the
+// original column names and values is intentional: legacy installations have
+// several schema revisions, and report/cash fields are not consistent enough
+// to safely force into one shape at the desktop boundary.
+export interface LegacySyncPosRecord {
+	sourceTable: string;
+	sourceId: string;
+	data: Record<string, unknown>;
+}
+
 export interface LegacySyncChunk {
 	units?: LegacySyncUnitRow[];
 	suppliers?: LegacySyncSupplierRow[];
 	locations?: LegacySyncLocationRow[];
 	products?: LegacySyncProductRow[];
 	variants?: LegacySyncVariantRow[];
+	posRecords?: LegacySyncPosRecord[];
 }
 
 export interface LegacySyncEntityCounts {

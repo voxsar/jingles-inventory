@@ -8,7 +8,14 @@ export type LegacyRow = Record<string, unknown>;
 
 export interface LegacyDb {
 	query(sql: string): Promise<LegacyRow[]>;
+	listTables(): Promise<string[]>;
+	queryTable(table: string): Promise<LegacyRow[]>;
 	close(): Promise<void>;
+}
+
+function safeIdentifier(value: string) {
+	if (!/^[A-Za-z0-9_]+$/.test(value)) throw new Error(`Unsafe database identifier: ${value}`);
+	return value;
 }
 
 async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<LegacyDb> {
@@ -37,6 +44,16 @@ async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 			const result = await pool.request().query(prefixed);
 			return result.recordset as LegacyRow[];
 		},
+		async listTables() {
+			const result = await pool.request().query(
+				`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '${safeIdentifier(schema)}' AND TABLE_TYPE = 'BASE TABLE'`,
+			);
+			return result.recordset.map((row: any) => String(row.TABLE_NAME));
+		},
+		async queryTable(table: string) {
+			const result = await pool.request().query(`SELECT * FROM [${safeIdentifier(schema)}].[${safeIdentifier(table)}]`);
+			return result.recordset as LegacyRow[];
+		},
 		async close() {
 			await pool.close();
 		},
@@ -60,6 +77,16 @@ async function createMysqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 	return {
 		async query(sqlText: string) {
 			const [rows] = await pool.query(sqlText);
+			return rows as LegacyRow[];
+		},
+		async listTables() {
+			const [rows] = await pool.query(
+				'SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = \'BASE TABLE\'',
+			);
+			return (rows as any[]).map((row) => String(row.TABLE_NAME));
+		},
+		async queryTable(table: string) {
+			const [rows] = await pool.query(`SELECT * FROM \`${safeIdentifier(table)}\``);
 			return rows as LegacyRow[];
 		},
 		async close() {

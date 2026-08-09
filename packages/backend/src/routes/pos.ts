@@ -3,6 +3,7 @@ import { authenticatePosSyncRequest } from '../middleware/posSyncAuth';
 import {
   ensurePosCloudSchema,
   getPosCatalogSnapshot,
+  listLegacyPosRecords,
   posSyncConfirm,
   posSyncHandshake,
   posSyncPlayback,
@@ -37,6 +38,18 @@ router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Failed to load the POS catalog snapshot' });
+  }
+});
+
+router.get('/legacy-records', async (req: Request, res: Response) => {
+  try {
+    return res.json(await listLegacyPosRecords({
+      sourceTable: typeof req.query.sourceTable === 'string' ? req.query.sourceTable : undefined,
+      page: typeof req.query.page === 'string' ? Number(req.query.page) : undefined,
+      pageSize: typeof req.query.pageSize === 'string' ? Number(req.query.pageSize) : undefined,
+    }));
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message ?? 'Failed to load legacy POS records' });
   }
 });
 

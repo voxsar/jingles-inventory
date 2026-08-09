@@ -39,6 +39,11 @@ The app lives in the system tray; closing the window keeps it syncing in the
 background. Quit from the tray menu. Config + change-detection state are stored
 in the app's user-data folder.
 
+Each cycle also discovers legacy POS, invoice, payment, cash/shift,
+day-end/Z-report, return/refund and cashier tables. Their rows are mirrored
+losslessly with change history so opening/closing balances and report source
+data survive differences between legacy schema versions.
+
 **Buttons:** *Sync now* runs a cycle immediately, *Full re-sync* re-applies the
 entire legacy snapshot, *Reset state* clears local change detection so the next
 cycle re-sends everything (safe — the server applies idempotently).

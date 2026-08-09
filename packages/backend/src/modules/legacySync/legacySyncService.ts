@@ -11,6 +11,7 @@ import {
 	LegacySyncUnitRow,
 	LegacySyncVariantRow,
 } from '@jingles/shared';
+import { upsertLegacyPosRecords } from '../../services/posCloud';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
 
 export const LEGACY_SYNC_TERMINAL_ID = 'legacy-desktop-sync';
@@ -1147,6 +1148,7 @@ export async function applyChunk(runId: string, chunk: LegacySyncChunk): Promise
 			locations: newCounts(),
 			products: newCounts(),
 			variants: newCounts(),
+			posRecords: newCounts(),
 		},
 		inventoryAdjustments: 0,
 		warnings: [],
@@ -1183,6 +1185,13 @@ export async function applyChunk(runId: string, chunk: LegacySyncChunk): Promise
 			ctx.counts.variants.skipped += 1;
 			warn(ctx, `Legacy variant ${row.productColorSizeId} failed: ${error?.message ?? error}`);
 		}
+	}
+	if ((chunk.posRecords?.length ?? 0) > 0) {
+		const posCounts = await upsertLegacyPosRecords(chunk.posRecords!, runId);
+		ctx.counts.posRecords.received += chunk.posRecords!.length;
+		ctx.counts.posRecords.created += posCounts.created;
+		ctx.counts.posRecords.updated += posCounts.updated;
+		ctx.counts.posRecords.unchanged += posCounts.unchanged;
 	}
 
 	if (ctx.inventoryAdjustments > 0) {

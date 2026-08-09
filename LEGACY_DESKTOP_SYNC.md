@@ -40,10 +40,19 @@ shop desktop                                this server
 | `department` / `category` / `subcategory1-3` | Category tree (same slugs as the one-time importer) |
 | `product` + `productdetail` | SKUs **or SKU variants** (see below), prices, per-branch quantities |
 | `productcolorsize` + `productcolorsizedetail` | SKU variants + variant batch prices |
+| Discovered POS/report tables (sales, invoices, tenders/payments, shifts/cash, day-end/Z-report, customers, loyalty/vouchers/promotions, returns/refunds, orders, configuration and cashier permissions) | Lossless current mirror plus append-only versions in `legacy_pos_records` / `legacy_pos_record_versions` |
 
-The first cycle sends the whole catalog (the server applies idempotently);
+The first cycle sends the whole catalog and POS/report history (the server applies idempotently);
 afterwards the app keeps one content-hash per legacy row locally and only
 pushes rows that actually changed.
+
+Legacy POS/report rows retain their original table and column names because
+deployed legacy databases use several schema revisions. This preserves sales,
+payments, opening/closing values, cash declarations and stored Z/day-end data
+without guessing or dropping installation-specific columns. Historical sales
+are deliberately not applied as inventory deductions: current legacy on-hand
+quantities are already mirrored separately, so deducting them again would
+corrupt stock.
 
 ## How variant merges are respected
 
@@ -82,6 +91,8 @@ products. The server keeps them variants forever:
 - `GET /api/legacy-sync/links?sourceType=product&q=P101` — inspect how legacy
   rows are mapped (`resolution`: `variant-code`, `sku-code`, `barcode`,
   `created`, `manual`). Set `isLocked` on a row to pin a mapping permanently.
+- `GET /api/legacy-sync/pos-records?sourceTable=invoiceheader` inspects the
+  mirrored POS/report tables and their original row payloads.
 - Run history lives in `legacy_sync_runs`; every quantity change is an
   `inventory_events` row with the run id in its metadata.
 
@@ -94,5 +105,9 @@ products. The server keeps them variants forever:
 - If legacy on-hand drops below what non-legacy records (GRNs created here)
   hold, the app logs a warning and a negative sync balance is recorded so
   branch totals still match the POS — review those SKUs manually.
-- Sales/invoices, customers, loyalty and accounting tables are out of scope;
-  this sync covers catalog, suppliers, locations, prices and stock balances.
+- Customer, loyalty and general-ledger/accounting domains are not converted
+  into first-class new-system entities. POS operational/report rows are fully
+  mirrored losslessly, but installation-specific fields remain in their
+original JSON shape until a dedicated UI/report mapping is added.
+- Passwords, PINs, tokens, secrets and credential material are redacted by the
+  desktop extractor and are never sent to either new application.

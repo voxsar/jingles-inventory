@@ -11,6 +11,7 @@ import {
 	listLinks,
 	openRun,
 } from '../modules/legacySync/legacySyncService';
+import { listLegacyPosRecords } from '../services/posCloud';
 
 const router = Router();
 
@@ -27,6 +28,32 @@ router.get('/status', async (_req: AuthRequest, res: Response) => {
 		res.status(500).json({ success: false, error: err.message ?? 'Failed to load legacy sync status' });
 	}
 });
+
+router.get(
+	'/pos-records',
+	[
+		query('sourceTable').optional().isString().isLength({ max: 120 }),
+		query('page').optional().isInt({ min: 1 }),
+		query('pageSize').optional().isInt({ min: 1, max: 500 }),
+	],
+	async (req: AuthRequest, res: Response) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ errors: errors.array() });
+			return;
+		}
+		try {
+			const data = await listLegacyPosRecords({
+				sourceTable: req.query.sourceTable as string | undefined,
+				page: req.query.page ? Number(req.query.page) : undefined,
+				pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
+			});
+			res.json({ success: true, data });
+		} catch (err: any) {
+			res.status(500).json({ success: false, error: err.message ?? 'Failed to list legacy POS records' });
+		}
+	},
+);
 
 router.get(
 	'/links',

@@ -2,11 +2,13 @@ import type {
 	LegacySyncCategorySegment,
 	LegacySyncLocationDetail,
 	LegacySyncLocationRow,
+	LegacySyncPosRecord,
 	LegacySyncProductRow,
 	LegacySyncSupplierRow,
 	LegacySyncUnitRow,
 	LegacySyncVariantRow,
 } from '@jingles/shared';
+import crypto from 'crypto';
 import type { LegacyDb, LegacyRow } from './legacyDb';
 
 export interface LegacySnapshot {
@@ -15,6 +17,7 @@ export interface LegacySnapshot {
 	locations: LegacySyncLocationRow[];
 	products: LegacySyncProductRow[];
 	variants: LegacySyncVariantRow[];
+	posRecords: LegacySyncPosRecord[];
 }
 
 function str(value: unknown): string | undefined {
@@ -49,9 +52,67 @@ function joinParts(parts: Array<unknown>, separator = ', ') {
 	return parts.map(str).filter(Boolean).join(separator) || undefined;
 }
 
-// Pulls the full relevant slice of the legacy database with plain SELECTs.
-// These are master-data tables (not transactions), so a complete snapshot per
-// cycle is cheap; change detection happens afterwards against local hashes.
+const POS_TABLE_NAME = /(pos|invoice|receipt|sale|payment|tender|cash|drawer|till|shift|session|opening|closing|balance|settlement|counter|transaction|report|day.?end|z.?report|refund|return|cashier|customer|loyalty|voucher|promotion|order|document|config|credit|cheque|advance|permission|usergroup|privilege)/i;
+const NON_POS_TABLE_NAME = /^(purchase|supplier|product|stock|transfer|adjustment|price|grn|prn)/i;
+
+function jsonValue(value: unknown): unknown {
+	if (value === null || value === undefined || typeof value === 'string' || typeof value === 'boolean') return value ?? null;
+	if (typeof value === 'number') return Number.isFinite(value) ? value : String(value);
+	if (typeof value === 'bigint') return value.toString();
+	if (value instanceof Date) return value.toISOString();
+	if (Buffer.isBuffer(value)) return value.toString('base64');
+	if (Array.isArray(value)) return value.map(jsonValue);
+	if (typeof value === 'object') {
+		return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, jsonValue(item)]));
+	}
+	return String(value);
+}
+
+const SENSITIVE_COLUMN_NAME = /(password|passwd|passwordhash|credential|secret|token|salt|(^|_)pin(code)?$)/i;
+
+function jsonRecord(row: LegacyRow): Record<string, unknown> {
+	return Object.fromEntries(Object.entries(row).map(([key, value]) => [
+		key,
+		SENSITIVE_COLUMN_NAME.test(key) ? '[REDACTED]' : jsonValue(value),
+	]));
+}
+
+function sourceIdFor(table: string, row: LegacyRow, index: number) {
+	const entries = Object.entries(row);
+	const preferred = entries.find(([key, value]) =>
+		value !== null && value !== undefined && new RegExp(`^${table.replace(/[^A-Za-z0-9]/g, '')}id$`, 'i').test(key.replace(/_/g, '')),
+	);
+	if (preferred) return String(preferred[1]);
+	const idParts = entries
+		.filter(([key, value]) => value !== null && value !== undefined && /(?:^|_)id$/i.test(key))
+		.map(([key, value]) => `${key}=${String(value)}`);
+	if (idParts.length > 0) return idParts.join('|');
+	// Tables without any identifier are still mirrored losslessly. Their
+	// content hash is a deterministic identity; the row number is only a final
+	// collision guard for exact duplicate rows.
+	const hash = crypto.createHash('sha1').update(JSON.stringify(jsonRecord(row))).digest('hex');
+	return `${hash}:${index + 1}`;
+}
+
+async function extractPosRecords(db: LegacyDb): Promise<LegacySyncPosRecord[]> {
+	const tableNames = (await db.listTables())
+		.filter((table) => POS_TABLE_NAME.test(table) && !NON_POS_TABLE_NAME.test(table))
+		.sort((left, right) => left.localeCompare(right));
+	const records: LegacySyncPosRecord[] = [];
+	for (const table of tableNames) {
+		const rows = await db.queryTable(table);
+		rows.forEach((row, index) => records.push({
+			sourceTable: table.toLowerCase(),
+			sourceId: sourceIdFor(table, row, index),
+			data: jsonRecord(row),
+		}));
+	}
+	return records;
+}
+
+// Pulls the full relevant slice of the legacy database with read-only SELECTs.
+// Change detection happens afterwards against local hashes; this full scan is
+// what lets schema variants and edits to older report rows sync reliably.
 export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 	const [
 		unitRows,
@@ -68,6 +129,7 @@ export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 		productDetailRows,
 		colorSizeRows,
 		colorSizeDetailRows,
+		posRecords,
 	] = await Promise.all([
 		db.query('SELECT UnitOfMeasureID, UnitOfMeasureCode, UnitOfMeasureName, IsDelete FROM unitofmeasure'),
 		db.query('SELECT SupplierID, SupplierCode, SupplierName, ContactName, ContactNo, Phone1, Phone2, Phone3, Email, WebSite, Address1, Address2, Address3, Country, VatNo, NICNo, CreditPeriod, IsActive, IsDelete FROM supplier'),
@@ -83,6 +145,7 @@ export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 		db.query('SELECT ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, SpecialPrice, Qty, ReOrderLevel FROM productdetail'),
 		db.query('SELECT ProductColorSizeID, ProductID, ColorSizeCode, ColorSizeName, ColorID, SizeID, IsActive, IsDelete FROM productcolorsize'),
 		db.query('SELECT ProductColorSizeID, ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, IsActive, IsDelete FROM productcolorsizedetail'),
+		extractPosRecords(db),
 	]);
 
 	const unitNameByCode = new Map<string, string>();
@@ -249,5 +312,5 @@ export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 		});
 	}
 
-	return { units, suppliers, locations, products, variants };
+	return { units, suppliers, locations, products, variants, posRecords };
 }

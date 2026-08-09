@@ -66,7 +66,8 @@ export async function runSyncCycle(
 
 	onLog(
 		`Snapshot: ${snapshot.products.length} products, ${snapshot.variants.length} color/size variants, `
-		+ `${snapshot.suppliers.length} suppliers, ${snapshot.locations.length} locations, ${snapshot.units.length} units.`,
+		+ `${snapshot.suppliers.length} suppliers, ${snapshot.locations.length} locations, ${snapshot.units.length} units. `
+		+ `${snapshot.posRecords.length} POS/report rows discovered.`,
 	);
 
 	const changedUnits = diffRows('unit', snapshot.units, (row) => row.unitId, state.hashes, force);
@@ -74,10 +75,11 @@ export async function runSyncCycle(
 	const changedLocations = diffRows('location', snapshot.locations, (row) => row.locationId, state.hashes, force);
 	const changedProducts = diffRows('product', snapshot.products, (row) => row.productId, state.hashes, force);
 	const changedVariants = diffRows('variant', snapshot.variants, (row) => row.productColorSizeId, state.hashes, force);
+	const changedPosRecords = diffRows('pos', snapshot.posRecords, (row) => `${row.sourceTable}:${row.sourceId}`, state.hashes, force);
 
 	const totalChanged =
 		changedUnits.length + changedSuppliers.length + changedLocations.length
-		+ changedProducts.length + changedVariants.length;
+		+ changedProducts.length + changedVariants.length + changedPosRecords.length;
 
 	if (totalChanged === 0) {
 		state.lastRunAt = new Date().toISOString();
@@ -88,7 +90,8 @@ export async function runSyncCycle(
 
 	onLog(
 		`Changes: ${changedProducts.length} products, ${changedVariants.length} variants, `
-		+ `${changedSuppliers.length} suppliers, ${changedLocations.length} locations, ${changedUnits.length} units.`,
+		+ `${changedSuppliers.length} suppliers, ${changedLocations.length} locations, ${changedUnits.length} units. `
+		+ `${changedPosRecords.length} POS/report rows.`,
 	);
 
 	const run = await openRun(config, onLog);
@@ -129,6 +132,9 @@ export async function runSyncCycle(
 		for (const [index, group] of chunked(changedVariants, config.chunkSize).entries()) {
 			await push({ variants: group.map((entry) => entry.row) }, group, `variants chunk ${index + 1}`);
 		}
+		for (const [index, group] of chunked(changedPosRecords, config.chunkSize).entries()) {
+			await push({ posRecords: group.map((entry) => entry.row) }, group, `POS/report chunk ${index + 1}`);
+		}
 
 		await completeRun(config, run.id, {
 			status: warnings > 0 ? 'CompletedWithWarnings' : 'Completed',
@@ -160,6 +166,7 @@ export async function runSyncCycle(
 		...snapshot.locations.map((row) => `location:${row.locationId}`),
 		...snapshot.products.map((row) => `product:${row.productId}`),
 		...snapshot.variants.map((row) => `variant:${row.productColorSizeId}`),
+		...snapshot.posRecords.map((row) => `pos:${row.sourceTable}:${row.sourceId}`),
 	]);
 	for (const key of Object.keys(state.hashes)) {
 		if (!liveKeys.has(key)) delete state.hashes[key];
