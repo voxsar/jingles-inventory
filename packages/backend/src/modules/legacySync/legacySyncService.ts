@@ -545,10 +545,21 @@ async function ensureVariantPriceBatch(skuId: string, variant: { id: string; var
 		orderBy: { sequenceNumber: 'desc' },
 		select: { sequenceNumber: true },
 	});
-	const sequenceNumber = (lastSequence?.sequenceNumber ?? 0) + 1;
+	let sequenceNumber = (lastSequence?.sequenceNumber ?? 0) + 1;
+	let batchNumber = `${variant.variantCode}-B${String(sequenceNumber).padStart(3, '0')}`;
+
+	// Batch numbers are globally unique. After standalone products are merged
+	// into a variant family, another variant in the family can already own the
+	// conventional <variant-code>-B001 number. Advance until both the per-
+	// variant sequence and the global batch number are available.
+	while (await prisma.batch.findUnique({ where: { batchNumber }, select: { id: true } })) {
+		sequenceNumber += 1;
+		batchNumber = `${variant.variantCode}-B${String(sequenceNumber).padStart(3, '0')}`;
+	}
+
 	return prisma.batch.create({
 		data: {
-			batchNumber: `${variant.variantCode}-B${String(sequenceNumber).padStart(3, '0')}`,
+			batchNumber,
 			skuId,
 			variantId: variant.id,
 			sequenceNumber,

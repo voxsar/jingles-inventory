@@ -156,6 +156,46 @@ describe('legacySyncService.applyChunk — merged products stay variants', () =>
 		expect(result.counts.products.created).toBe(0);
 	});
 
+	it('advances the price batch suffix when another variant owns the conventional number', async () => {
+		wireBranch();
+		wireLinks([locationLink]);
+
+		prismaMock.sKUVariant.findUnique.mockImplementation(async ({ where }: any) =>
+			where.variantCode === 'P203'
+				? ({ id: 'var-3', variantCode: 'P203', skuId: 'sku-master', name: 'Green', isActive: true } as any)
+				: null,
+		);
+		prismaMock.batch.findFirst
+			.mockResolvedValueOnce(null)
+			.mockResolvedValueOnce(null);
+		prismaMock.batch.findUnique
+			.mockResolvedValueOnce({ id: 'other-variant-batch' } as any)
+			.mockResolvedValueOnce(null);
+		prismaMock.batch.create.mockResolvedValue({
+			id: 'batch-3', sequenceNumber: 2,
+			costPrice: null, sellingPrice: null, wholesalePrice: null, bulkPrice: null,
+		} as any);
+		prismaMock.batch.update.mockResolvedValue({} as any);
+
+		const result = await applyChunk('run-1', {
+			products: [{
+				productId: '203',
+				productCode: 'P203',
+				name: 'Green Shirt',
+				isActive: true,
+				details: [{ locationId: 'loc1', sellingPrice: 85 }],
+			}],
+		});
+
+		expect(prismaMock.batch.create).toHaveBeenCalledWith(
+			expect.objectContaining({
+				data: expect.objectContaining({ batchNumber: 'P203-B002', sequenceNumber: 2 }),
+			}),
+		);
+		expect(result.warnings).toEqual([]);
+		expect(result.counts.products.skipped).toBe(0);
+	});
+
 	it('creates a new SKU when no variant, SKU code, or barcode matches', async () => {
 		wireBranch();
 		wireLinks([locationLink]);
