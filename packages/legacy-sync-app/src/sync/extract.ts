@@ -94,18 +94,21 @@ function sourceIdFor(table: string, row: LegacyRow, index: number) {
 	return `${hash}:${index + 1}`;
 }
 
-async function extractPosRecords(db: LegacyDb): Promise<LegacySyncPosRecord[]> {
+async function extractPosRecords(db: LegacyDb, onProgress?: (message: string) => void): Promise<LegacySyncPosRecord[]> {
 	const tableNames = (await db.listTables())
 		.filter((table) => POS_TABLE_NAME.test(table) && !NON_POS_TABLE_NAME.test(table))
 		.sort((left, right) => left.localeCompare(right));
+	onProgress?.(`Discovered ${tableNames.length} legacy POS/report tables.`);
 	const records: LegacySyncPosRecord[] = [];
 	for (const table of tableNames) {
+		onProgress?.(`Reading legacy table ${table}...`);
 		const rows = await db.queryTable(table);
 		rows.forEach((row, index) => records.push({
 			sourceTable: table.toLowerCase(),
 			sourceId: sourceIdFor(table, row, index),
 			data: jsonRecord(row),
 		}));
+		onProgress?.(`Read ${rows.length} rows from ${table}.`);
 	}
 	return records;
 }
@@ -113,7 +116,8 @@ async function extractPosRecords(db: LegacyDb): Promise<LegacySyncPosRecord[]> {
 // Pulls the full relevant slice of the legacy database with read-only SELECTs.
 // Change detection happens afterwards against local hashes; this full scan is
 // what lets schema variants and edits to older report rows sync reliably.
-export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
+export async function extractSnapshot(db: LegacyDb, onProgress?: (message: string) => void): Promise<LegacySnapshot> {
+	onProgress?.('Reading legacy catalog and stock tables...');
 	const [
 		unitRows,
 		supplierRows,
@@ -145,7 +149,7 @@ export async function extractSnapshot(db: LegacyDb): Promise<LegacySnapshot> {
 		db.query('SELECT ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, SpecialPrice, Qty, ReOrderLevel FROM productdetail'),
 		db.query('SELECT ProductColorSizeID, ProductID, ColorSizeCode, ColorSizeName, ColorID, SizeID, IsActive, IsDelete FROM productcolorsize'),
 		db.query('SELECT ProductColorSizeID, ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, IsActive, IsDelete FROM productcolorsizedetail'),
-		extractPosRecords(db),
+		extractPosRecords(db, onProgress),
 	]);
 
 	const unitNameByCode = new Map<string, string>();

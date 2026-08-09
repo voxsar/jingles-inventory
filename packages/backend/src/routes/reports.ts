@@ -273,6 +273,10 @@ router.get('/tog', async (req: AuthRequest, res: Response): Promise<void> => {
 // current inventory schema.
 router.get('/catalog/:reportId', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+	if (req.params.reportId === 'z-reading' && ![UserRole.Admin, UserRole.Manager].includes(req.user!.role as UserRole)) {
+	  res.status(403).json({ success: false, error: 'Z Reading reports require manager access' });
+	  return;
+	}
     const filters = buildCatalogFilters(req.query as Record<string, string>);
     const data = await getGenericReport(req.params.reportId, filters);
     res.json({ success: true, data });
@@ -286,6 +290,10 @@ router.get('/catalog/:reportId', async (req: AuthRequest, res: Response): Promis
 // directly instead of going through /api/reports/catalog/<report-id>.
 router.get('/:reportId', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+	if (req.params.reportId === 'z-reading' && ![UserRole.Admin, UserRole.Manager].includes(req.user!.role as UserRole)) {
+	  res.status(403).json({ success: false, error: 'Z Reading reports require manager access' });
+	  return;
+	}
     const filters = buildCatalogFilters(req.query as Record<string, string>);
     const data = await getGenericReport(req.params.reportId, filters);
     res.json({ success: true, data });

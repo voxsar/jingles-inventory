@@ -1098,6 +1098,84 @@ export async function getSalesEventReport(filters: CommonReportFilters, options:
 	};
 }
 
+export async function getZReadingReport(filters: CommonReportFilters) {
+	await ensurePosCloudSchema();
+	const params: unknown[] = [];
+	const clauses: string[] = [];
+	if (filters.fromDate) { params.push(filters.fromDate); clauses.push(`opened_at >= $${params.length}`); }
+	if (filters.toDate) { params.push(filters.toDate); clauses.push(`opened_at <= $${params.length}`); }
+	if (filters.branchId) { params.push(filters.branchId); clauses.push(`branch_id = $${params.length}`); }
+	if (filters.status) { params.push(filters.status.toUpperCase()); clauses.push(`status = $${params.length}`); }
+	const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+	const shifts = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_shifts ${where} ORDER BY opened_at DESC`, ...params);
+	if (shifts.length === 0) return { ...paginateRows([], filters), summary: { totalShifts: 0, grossSale: 0, netSale: 0 } };
+
+	const shiftIds = shifts.map((shift) => shift.id);
+	const sales = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_sales WHERE shift_id = ANY($1::text[]) ORDER BY created_at`, shiftIds);
+	const returns = await prisma.$queryRawUnsafe<any[]>(`
+		SELECT r.*, s.shift_id FROM pos_returns r
+		INNER JOIN pos_sales s ON s.id = r.sale_id
+		WHERE s.shift_id = ANY($1::text[])
+	`, shiftIds);
+	const [branches, users] = await Promise.all([
+		prisma.branch.findMany({ select: { id: true, name: true, code: true } }),
+		prisma.user.findMany({ select: { id: true, email: true } }),
+	]);
+	const branchMap = new Map(branches.map((branch) => [branch.id, branch]));
+	const userMap = new Map(users.map((user) => [user.id, user.email]));
+	const salesByShift = new Map<string, any[]>();
+	const refundsByShift = new Map<string, number>();
+	for (const sale of sales) salesByShift.set(sale.shift_id, [...(salesByShift.get(sale.shift_id) ?? []), sale]);
+	for (const row of returns) refundsByShift.set(row.shift_id, (refundsByShift.get(row.shift_id) ?? 0) + numberFrom(row.total_refund));
+
+	let rows = shifts.map((shift) => {
+		const shiftSales = salesByShift.get(shift.id) ?? [];
+		const paymentBreakdown: Record<string, number> = {};
+		const paymentCounts: Record<string, number> = {};
+		let productCount = 0;
+		let discountedLineCount = 0;
+		for (const sale of shiftSales) {
+			const payments = Array.isArray(sale.payments) ? sale.payments : [];
+			for (const payment of payments) {
+				const method = stringFrom(payment.method, 'OTHER').toUpperCase();
+				paymentBreakdown[method] = (paymentBreakdown[method] ?? 0) + numberFrom(payment.amount);
+				paymentCounts[method] = (paymentCounts[method] ?? 0) + 1;
+			}
+			const lines = Array.isArray(sale.lines) ? sale.lines : [];
+			for (const line of lines) {
+				productCount += numberFrom(line.quantity);
+				if (numberFrom(line.discountAmount, line.discountPercent) > 0) discountedLineCount += 1;
+			}
+		}
+		const grossSale = shiftSales.reduce((sum, sale) => sum + numberFrom(sale.subtotal), 0);
+		const discounts = shiftSales.reduce((sum, sale) => sum + numberFrom(sale.discount_total), 0);
+		const refunds = refundsByShift.get(shift.id) ?? 0;
+		const netSale = shiftSales.reduce((sum, sale) => sum + numberFrom(sale.total), 0) - refunds;
+		const cashSale = paymentBreakdown.CASH ?? 0;
+		const nonCashTotal = Object.entries(paymentBreakdown).filter(([method]) => method !== 'CASH').reduce((sum, [, amount]) => sum + amount, 0);
+		const expectedDrawer = numberFrom(shift.opening_float) + cashSale - refunds;
+		const declaredAmount = shift.closing_float == null ? null : numberFrom(shift.closing_float);
+		const branch = branchMap.get(shift.branch_id);
+		return {
+			id: shift.id, shiftId: shift.id, unit: shift.terminal_id, terminalId: shift.terminal_id,
+			branchId: shift.branch_id ?? '', branch: branch?.name ?? shift.branch_id ?? '', branchCode: branch?.code ?? '',
+			cashier: userMap.get(shift.user_id) ?? shift.user_id, status: shift.status,
+			openedAt: shift.opened_at, closedAt: shift.closed_at, grossSale, discounts, discountedLineCount,
+			refunds, netSale, billCount: shiftSales.length, productCount, paymentBreakdown, paymentCounts,
+			cashSale, nonCashTotal, openingFloat: numberFrom(shift.opening_float), expectedDrawer,
+			declaredAmount, cashExcess: declaredAmount == null ? null : declaredAmount - expectedDrawer,
+		};
+	});
+	const needle = normalizeSearch(filters.search)?.toLowerCase();
+	if (needle) rows = rows.filter((row) => [row.shiftId, row.unit, row.branch, row.cashier, row.status].join(' ').toLowerCase().includes(needle));
+	const paged = paginateRows(rows, filters);
+	const summary = rows.reduce((acc, row) => {
+		acc.totalShifts += 1; acc.grossSale += row.grossSale; acc.netSale += row.netSale; acc.refunds += row.refunds;
+		return acc;
+	}, { totalShifts: 0, grossSale: 0, netSale: 0, refunds: 0 });
+	return { ...paged, summary };
+}
+
 export async function getSalesAggregateReport(filters: CommonReportFilters, sort: 'top' | 'slow' | 'summary' = 'summary') {
 	const aggregateFilters = { ...filters, page: 1, pageSize: 10000 };
 	const posData = await getPosTransactionRows(aggregateFilters);
@@ -1483,6 +1561,8 @@ export async function getGenericReport(reportId: string, filters: CommonReportFi
 			return getCreditorsDebtorsReport(filters);
 		case 'pos-sales':
 			return getSalesEventReport(filters);
+		case 'z-reading':
+			return getZReadingReport(filters);
 		case 'paid-in-out':
 			return getPaidInOutReport(filters);
 		case 'product-exchange':

@@ -1,8 +1,9 @@
 import path from 'path';
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from 'electron';
+import { Worker } from 'worker_threads';
 import { AppConfig, isConfigured, loadConfig, saveConfig } from './sync/config';
 import { clearState } from './sync/state';
-import { CycleSummary, runSyncCycle } from './sync/runner';
+import type { CycleSummary } from './sync/runner';
 
 const TRAY_ICON_DATA_URL =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIElEQVR4nGOISrrTQwlmgDL+k4lHDRg1YNQAahtANgYAPAN8K8e5wnsAAAAASUVORK5CYII=';
@@ -41,6 +42,33 @@ function pushStatus() {
 	updateTrayTooltip();
 }
 
+function runCycleInWorker(force: boolean): Promise<CycleSummary> {
+	return new Promise((resolve, reject) => {
+		const worker = new Worker(path.join(__dirname, 'syncWorker.js'), {
+			workerData: { config, userDataDir: app.getPath('userData'), force },
+		});
+		let settled = false;
+		worker.on('message', (message: any) => {
+			if (message?.type === 'log') pushLog(String(message.message));
+			if (message?.type === 'complete') {
+				settled = true;
+				resolve(message.summary as CycleSummary);
+			}
+			if (message?.type === 'error') {
+				settled = true;
+				reject(new Error(String(message.message)));
+			}
+		});
+		worker.once('error', (error) => {
+			settled = true;
+			reject(error);
+		});
+		worker.once('exit', (code) => {
+			if (!settled) reject(new Error(`Sync worker exited before completion (code ${code}).`));
+		});
+	});
+}
+
 async function doCycle(force: boolean) {
 	if (syncRunning) {
 		pushLog('A sync cycle is already running; skipped.');
@@ -53,7 +81,7 @@ async function doCycle(force: boolean) {
 	syncRunning = true;
 	pushStatus();
 	try {
-		const summary = await runSyncCycle(config, app.getPath('userData'), pushLog, { force });
+		const summary = await runCycleInWorker(force);
 		lastCycle = { ...summary, at: new Date().toISOString() };
 	} catch (error: any) {
 		lastCycle = {

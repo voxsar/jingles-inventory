@@ -9,6 +9,7 @@ import { formatQuantity } from '../utils/quantity';
 type ReportId =
 	| 'purchase-order'
 	| 'grn'
+	| 'grn-document'
 	| 'prn'
 	| 'tog'
 	| 'tog-product-wise'
@@ -33,6 +34,7 @@ type ReportId =
 	| 'top-sales'
 	| 'salesmen-commission'
 	| 'advanced-receipts'
+	| 'z-reading'
 	| 'valuation'
 	| 'floor';
 
@@ -77,6 +79,7 @@ type ExportColumn = {
 const REPORTS: ReportDefinition[] = [
 	{ id: 'purchase-order', label: 'Purchase order note report', group: 'Inventory', description: 'Purchase orders by supplier, status, product, and date range.', source: 'catalog', periodFilter: true, statusFilter: true },
 	{ id: 'grn', label: 'GRN note report', group: 'Inventory', description: 'Goods received notes with supplier, line, quantity, and cost totals.', source: 'legacy', periodFilter: true, statusFilter: true },
+	{ id: 'grn-document', label: 'GRN document report', group: 'Inventory', description: 'Print-ready goods received note layout with item pricing, totals, and sign-off fields.', source: 'legacy', periodFilter: true, statusFilter: true },
 	{ id: 'prn', label: 'Purchase return note report', group: 'Inventory', description: 'Supplier return notes with picked-up quantities and return value.', source: 'legacy', periodFilter: true, statusFilter: true },
 	{ id: 'tog', label: 'Transfer of good note report', group: 'Inventory', description: 'Transfer notes by origin, destination, status, and requested date.', source: 'legacy', periodFilter: true, statusFilter: true },
 	{ id: 'tog-product-wise', label: 'Product-wise TOG in/out report', group: 'Inventory', description: 'Transfer note lines split by product with TOG in/out quantities.', source: 'catalog', periodFilter: true, statusFilter: true },
@@ -101,6 +104,7 @@ const REPORTS: ReportDefinition[] = [
 	{ id: 'top-sales', label: 'Top sales report', group: 'Sales', description: 'Highest-selling products, departments, or categories.', source: 'catalog', periodFilter: true, groupFilter: true },
 	{ id: 'salesmen-commission', label: 'Salesmen commission report', group: 'Sales', description: 'Commission report by salesman for daily, monthly, or yearly periods.', source: 'catalog', periodFilter: true },
 	{ id: 'advanced-receipts', label: 'Advanced receipt reports', group: 'Sales', description: 'Advanced receipts by all, pending, and recalled status.', source: 'catalog', periodFilter: true, statusFilter: true },
+	{ id: 'z-reading', label: 'Z Reading report', group: 'Sales', description: 'Shift-closing sales, tender, drawer, bill, and product totals in the till Z format.', source: 'catalog', periodFilter: true, statusFilter: true },
 ];
 
 const GROUPS: ReportGroup[] = ['Inventory', 'Stock', 'Management', 'Sales'];
@@ -234,6 +238,35 @@ const getColumns = (reportId: ReportId): ExportColumn[] => {
 				textColumn('itemUnitCosts', 'Item Unit Costs', ['itemUnitCosts']),
 				moneyColumn('costValue', 'Cost Value', (row) => lineCost(row, 'receivedQuantity')),
 				{ key: 'createdAt', header: 'Created', value: (row) => row.createdAt, render: (row) => dateOnly(row.createdAt), sortable: true },
+			];
+		case 'grn-document':
+			return [
+				textColumn('documentNo', 'Document No', ['invoiceReference', 'id']),
+				textColumn('location', 'Location', ['floor.branch.name', 'floor.name']),
+				textColumn('supplier', 'Supplier', ['supplier.name']),
+				{ key: 'purchaseDate', header: 'Purchase Date', value: (row) => row.supplierInvoiceDate ?? row.deliveryDate ?? row.createdAt, render: (row) => dateOnly(row.supplierInvoiceDate ?? row.deliveryDate ?? row.createdAt), sortable: true },
+				numberColumn('products', 'Products', (row) => row.lines?.length ?? 0),
+				numberColumn('quantity', 'Total Qty', (row) => lineQuantity(row, 'receivedQuantity')),
+				moneyColumn('nettAmount', 'Nett Amount', (row) => lineCost(row, 'receivedQuantity')),
+				textColumn('preparedBy', 'Prepared By', ['creator.email']),
+			];
+		case 'z-reading':
+			return [
+				textColumn('shiftId', 'Shift', ['shiftId']),
+				{ key: 'openedAt', header: 'Opened', value: (row) => row.openedAt, render: (row) => dateTime(row.openedAt), sortable: true },
+				textColumn('unit', 'POS Unit', ['unit']),
+				textColumn('branch', 'Location', ['branch']),
+				textColumn('cashier', 'Cashier', ['cashier']),
+				moneyColumn('grossSale', 'Gross Sale', (row) => row.grossSale),
+				moneyColumn('discounts', 'Discount', (row) => row.discounts),
+				moneyColumn('refunds', 'Refunds', (row) => row.refunds),
+				moneyColumn('netSale', 'Net Sale', (row) => row.netSale),
+				moneyColumn('cashSale', 'Cash Sale', (row) => row.cashSale),
+				moneyColumn('nonCashTotal', 'Non Cash', (row) => row.nonCashTotal),
+				moneyColumn('declaredAmount', 'Declared', (row) => row.declaredAmount),
+				moneyColumn('cashExcess', 'Excess / (Short)', (row) => row.cashExcess),
+				numberColumn('billCount', 'Bills', (row) => row.billCount),
+				numberColumn('productCount', 'Products', (row) => row.productCount),
 			];
 		case 'prn':
 			return [
@@ -480,6 +513,7 @@ const isReportId = (value: string | null): value is ReportId =>
 const getRowLink = (reportId: ReportId, row: any): string | null => {
 	switch (reportId) {
 		case 'grn':
+		case 'grn-document':
 			return row.id ? `/grns/${row.id}` : null;
 		case 'prn':
 			return row.id ? `/prns/${row.id}` : null;
@@ -493,7 +527,7 @@ const getRowLink = (reportId: ReportId, row: any): string | null => {
 	}
 };
 
-const LINKED_REPORTS: ReportId[] = ['grn', 'prn', 'price-change', 'tog', 'tog-product-wise'];
+const LINKED_REPORTS: ReportId[] = ['grn', 'grn-document', 'prn', 'price-change', 'tog', 'tog-product-wise'];
 
 export default function ReportsPage() {
 	const navigate = useNavigate();
@@ -579,7 +613,7 @@ export default function ReportsPage() {
 	const requestReport = (params: Record<string, string>) => {
 		if (activeReportId === 'valuation') return reportsApi.inventoryValuation(params);
 		if (activeReportId === 'floor') return reportsApi.floorPerformance();
-		if (activeReportId === 'grn') return reportsApi.grn(params);
+		if (activeReportId === 'grn' || activeReportId === 'grn-document') return reportsApi.grn(params);
 		if (activeReportId === 'prn') return reportsApi.prn(params);
 		if (activeReportId === 'stockAdjustment') return reportsApi.stockAdjustment(params);
 		if (activeReportId === 'stockBalance') return reportsApi.stockBalance(params);
@@ -643,6 +677,26 @@ export default function ReportsPage() {
 			: cellText(column.value(row))
 	);
 	const exportRows = (rows: any[]) => rows.map((row) => columns.map((column) => exportValue(row, column)));
+	const spreadsheetData = (rows: any[]): { headers: string[]; rows: string[][] } => {
+		if (activeReportId !== 'grn-document') {
+			return { headers: columns.map((column) => column.header), rows: exportRows(rows) };
+		}
+		const headers = ['Document No', 'Location', 'Supplier', 'Purchase Date', 'Product Code', 'Product Name', 'P.Size', 'Cost Price', 'Selling Price', 'Qty', 'Free', 'Discount', 'Amount', '%', 'Prepared By'];
+		const detailRows = rows.flatMap((grn) => (grn.lines ?? []).map((line: any) => {
+			const qty = Number(line.receivedQuantity || line.expectedQuantity || 0);
+			const cost = Number(line.costPrice ?? line.batch?.costPrice ?? 0);
+			return [
+				grn.invoiceReference ?? grn.id,
+				grn.floor?.branch?.name ?? grn.floor?.name ?? '',
+				grn.supplier?.name ?? '',
+				dateOnly(grn.supplierInvoiceDate ?? grn.deliveryDate ?? grn.createdAt),
+				line.sku?.skuCode ?? '', line.sku?.name ?? '', line.variant?.name ?? '1', cost,
+				Number(line.sellingPrice ?? line.batch?.sellingPrice ?? 0), qty, 0, 0, cost * qty, 0,
+				grn.creator?.email ?? '',
+			].map(cellText);
+		}));
+		return { headers, rows: detailRows };
+	};
 	const exportFileName = `${activeReport.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'report'}`;
 
 	const loadAllReportRows = async () => {
@@ -674,19 +728,42 @@ export default function ReportsPage() {
 	};
 
 	const exportCsv = () => withAllRows((reportRows) => {
-		const rows = [columns.map((column) => column.header), ...exportRows(reportRows)];
+		const sheet = spreadsheetData(reportRows);
+		const rows = [sheet.headers, ...sheet.rows];
 		const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
 		downloadBlob(csv, `${exportFileName}.csv`, 'text/csv;charset=utf-8');
 	});
 
 	const exportExcel = () => withAllRows((reportRows) => {
-		const header = columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join('');
-		const body = reportRows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(exportValue(row, column))}</td>`).join('')}</tr>`).join('');
+		const sheet = spreadsheetData(reportRows);
+		const header = sheet.headers.map((heading) => `<th>${escapeHtml(heading)}</th>`).join('');
+		const body = sheet.rows.map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(value)}</td>`).join('')}</tr>`).join('');
 		const html = `<html><head><meta charset="utf-8"></head><body><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
 		downloadBlob(html, `${exportFileName}.xls`, 'application/vnd.ms-excel;charset=utf-8');
 	});
 
 	const openPrintableView = (reportRows: any[], shouldPrint: boolean) => {
+		const grnDocuments = activeReportId === 'grn-document' ? reportRows.map((grn) => {
+			const lines = grn.lines ?? [];
+			const gross = lines.reduce((sum: number, line: any) => sum + Number(line.costPrice ?? line.batch?.costPrice ?? 0) * Number(line.receivedQuantity || line.expectedQuantity || 0), 0);
+			const itemRows = lines.map((line: any, index: number) => {
+				const qty = Number(line.receivedQuantity || line.expectedQuantity || 0);
+				const cost = Number(line.costPrice ?? line.batch?.costPrice ?? 0);
+				return `<tr><td>${index + 1}</td><td>${escapeHtml(line.sku?.skuCode)}</td><td>${escapeHtml(line.sku?.name)}</td><td>${escapeHtml(line.variant?.name ?? '1')}</td><td class="num">${currency(cost)}</td><td class="num">${currency(line.sellingPrice ?? line.batch?.sellingPrice ?? 0)}</td><td class="num">${quantity(qty)}</td><td class="num">0.00</td><td class="num">0.00</td><td class="num">${currency(cost * qty)}</td><td class="num">0.00</td></tr>`;
+			}).join('');
+			return `<article class="grn-document">
+				<header><div><h1>JINGLES</h1><p>${escapeHtml(grn.floor?.branch?.address ?? '')}</p></div><div class="duplicate">${String(grn.status).toLowerCase() === 'closed' ? 'Original' : 'Draft'}</div></header>
+				<h2>Goods Received Note</h2>
+				<div class="meta"><div><b>Location</b><span>${escapeHtml(grn.floor?.branch?.code ?? '')} ${escapeHtml(grn.floor?.branch?.name ?? grn.floor?.name ?? '')}</span><b>Supplier</b><span>${escapeHtml(grn.supplier?.name ?? '')}</span><b>Purchase Type</b><span>General</span><b>Reference</b><span>${escapeHtml(grn.notes ?? '')}</span></div><div><b>Document No</b><span>${escapeHtml(grn.invoiceReference ?? grn.id)}</span><b>Purchase Date</b><span>${escapeHtml(dateOnly(grn.supplierInvoiceDate ?? grn.deliveryDate ?? grn.createdAt))}</span><b>PO No</b><span></span><b>Pay Mode</b><span></span></div></div>
+				<table><thead><tr><th>#</th><th>Product Code</th><th>Product Name</th><th>P.Size</th><th>Cost Price</th><th>Selling Price</th><th>Qty</th><th>Free</th><th>Discount</th><th>Amount</th><th>%</th></tr></thead><tbody>${itemRows}</tbody></table>
+				<div class="grn-bottom"><div class="signatures"><span>........................<br>Prepared By<br><i>${escapeHtml(grn.creator?.email ?? '')}</i></span><span>........................<br>Checked By</span><span>........................<br>Approved By</span></div><div class="totals"><b>Total Product</b><span>${lines.length}</span><b>Total Qty</b><span>${quantity(lines.reduce((sum: number, line: any) => sum + Number(line.receivedQuantity || line.expectedQuantity || 0), 0))}</span><strong>Gross Amount</strong><strong>${currency(gross)}</strong><span>Line Discount</span><span>0.00</span><span>Sub Total Discount</span><span>0.00</span><span>Tax</span><span>0.00</span><span>Other Charges</span><span>0.00</span><strong>Nett Amount</strong><strong>${currency(gross)}</strong></div></div>
+				<footer>Report generated ${escapeHtml(new Date().toLocaleString())}</footer>
+			</article>`;
+		}).join('') : '';
+		const zDocuments = activeReportId === 'z-reading' ? reportRows.map((row) => {
+			const tenders = Object.entries(row.paymentBreakdown ?? {}).filter(([method]) => method !== 'CASH').map(([method, amount]) => `<div><span>${escapeHtml(method)}</span><span>${escapeHtml(row.paymentCounts?.[method] ?? 0)} &nbsp; ${currency(amount)}</span></div>`).join('');
+			return `<article class="z-document"><h1>JINGLES</h1><p>Cashier: ${escapeHtml(row.cashier)}<br>Unit No: ${escapeHtml(row.unit)}<br>Location: ${escapeHtml(row.branch)}</p><h2>Z Reading</h2><small>${escapeHtml(dateTime(row.openedAt))}${row.closedAt ? ` - ${escapeHtml(dateTime(row.closedAt))}` : ''}</small><section><div><span>GROSS SALE</span><b>${currency(row.grossSale)}</b></div><div><span>PRODUCT DISCOUNT</span><span>${row.discountedLineCount} &nbsp; ${currency(row.discounts)}</span></div><div><span>REFUNDS</span><span>${currency(row.refunds)}</span></div><div><strong>NET SALE</strong><strong>${currency(row.netSale)}</strong></div></section><section><div><span>CASH SALE</span><span>${row.paymentCounts?.CASH ?? 0} &nbsp; ${currency(row.cashSale)}</span></div><div><span>OPENING FLOAT</span><span>${currency(row.openingFloat)}</span></div><div><span>EXPECTED DRAWER</span><span>${currency(row.expectedDrawer)}</span></div><div><span>DECLARED AMOUNT</span><span>${row.declaredAmount == null ? '-' : currency(row.declaredAmount)}</span></div><div><strong>CASH EXCESS / (SHORT)</strong><strong>${row.cashExcess == null ? '-' : currency(row.cashExcess)}</strong></div></section><section><h3>NON CASH SALES</h3>${tenders}<div><strong>NON CASH TOTAL</strong><strong>${currency(row.nonCashTotal)}</strong></div></section><footer>BILL COUNT: ${row.billCount}<br>PRODUCT COUNT: ${quantity(row.productCount)}<br>SHIFT: ${escapeHtml(row.shiftId)}</footer></article>`;
+		}).join('') : '';
 		const header = columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join('');
 		const body = reportRows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(exportValue(row, column))}</td>`).join('')}</tr>`).join('');
 		const summaryRows = summary
@@ -706,13 +783,21 @@ export default function ReportsPage() {
 						table { width: 100%; border-collapse: collapse; font-size: 11px; }
 						th, td { border: 1px solid #d1d5db; padding: 6px; text-align: left; vertical-align: top; }
 						th { background: #f3f4f6; }
+						.grn-document { min-height: 180mm; page-break-after: always; position: relative; padding-bottom: 28px; }
+						.grn-document header { display:flex; justify-content:space-between; } .grn-document header h1 { font-size:24px; }
+						.grn-document h2 { border:2px solid #111; display:inline-block; padding:4px 8px; font-size:16px; }
+						.meta { display:grid; grid-template-columns:1fr 1fr; gap:50px; margin:0 0 10px; } .meta>div { display:grid; grid-template-columns:110px 1fr; gap:7px; font-size:11px; }
+						.num { text-align:right; } .grn-bottom { display:grid; grid-template-columns:1fr 260px; gap:30px; margin-top:10px; }
+						.signatures { display:flex; justify-content:space-around; align-items:end; text-align:center; font-size:11px; } .totals { display:grid; grid-template-columns:1fr auto; gap:7px; font-size:11px; }
+						.grn-document footer { position:absolute; bottom:0; width:100%; border-top:1px solid #aaa; font-size:9px; padding-top:5px; }
+						.z-document { width:80mm; margin:0 auto; font:12px 'Courier New',monospace; page-break-after:always; text-align:center; }
+						.z-document h1 { font-size:24px; } .z-document h2 { margin:20px 0 4px; } .z-document section { border-top:1px dashed #111; margin-top:12px; padding-top:10px; }
+						.z-document section div { display:flex; justify-content:space-between; gap:12px; text-align:left; margin:6px 0; } .z-document h3 { font-size:13px; } .z-document footer { border-top:1px dashed #111; margin-top:12px; padding-top:10px; }
+						@page { margin: 12mm; }
 					</style>
 				</head>
 				<body>
-					<h1>${escapeHtml(activeReport.label)}</h1>
-					<p>${escapeHtml(activeReport.description)}</p>
-					<div class="summary">${summaryRows}</div>
-					<table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>
+					${grnDocuments || zDocuments || `<h1>${escapeHtml(activeReport.label)}</h1><p>${escapeHtml(activeReport.description)}</p><div class="summary">${summaryRows}</div><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`}
 				</body>
 			</html>
 		`);

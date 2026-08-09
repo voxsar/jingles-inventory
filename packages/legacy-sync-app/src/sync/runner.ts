@@ -59,7 +59,7 @@ export async function runSyncCycle(
 	const db = await connectLegacyDb(config.legacyDatabase);
 	let snapshot;
 	try {
-		snapshot = await extractSnapshot(db);
+		snapshot = await extractSnapshot(db, onLog);
 	} finally {
 		await db.close().catch(() => undefined);
 	}
