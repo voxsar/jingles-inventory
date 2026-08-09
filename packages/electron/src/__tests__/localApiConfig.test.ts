@@ -18,6 +18,10 @@ function createConfig(overrides: Partial<DesktopLocalApiConfig>): DesktopLocalAp
 }
 
 describe('localApiConfig', () => {
+  it('uses the hosted inventory API by default for installed desktop builds', () => {
+    expect(getDesktopLocalApiConfig({}).upstreamUrl).toBe('https://inv.theredsun.org');
+  });
+
   it('reads the desktop local API config from the current environment values', () => {
     const config = getDesktopLocalApiConfig({
       ELECTRON_LOCAL_API_HOST: ' localhost ',

@@ -1,0 +1,20 @@
+# The MCP configuration supplies the Docker Compose development database URL.
+# This connection is intentionally restricted to read-only development diagnostics.
+
+[[sources]]
+id = "inventory_dev"
+description = "Jingles Inventory development PostgreSQL database"
+dsn = "${DBHUB_INVENTORY_URL}"
+connection_timeout = 10
+query_timeout = 15
+lazy = true
+
+[[tools]]
+name = "execute_sql"
+source = "inventory_dev"
+readonly = true
+max_rows = 200
+
+[[tools]]
+name = "search_objects"
+source = "inventory_dev"

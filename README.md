@@ -236,6 +236,8 @@ npm run dev:electron
 
 `npm run dev:electron` now starts the shared web frontend and the Electron shell together, so desktop and browser flows use the same React app.
 
+The desktop app runs its own local API and SQLite replica, queues offline changes, and synchronizes with `https://inv.theredsun.org` by default. Set `JINGLES_UPSTREAM_SERVER_URL` before launching to use a different inventory host. The local API binds only to `127.0.0.1:3630` by default.
+
 ## Domain Model
 
 ### Inventory States
@@ -420,7 +422,9 @@ packages/backend/src/
 | `JWT_EXPIRES_IN` | Token expiry | `7d` |
 | `PORT` | Server port | `3001` |
 | `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
-| `VITE_API_BASE_URL` | Optional hosted API base URL for the web/electron frontend | unset |
+| `VITE_API_BASE_URL` | Optional hosted API base URL for browser development | unset |
+| `JINGLES_UPSTREAM_SERVER_URL` | Inventory host used by the desktop sync engine | `https://inv.theredsun.org` |
+| `ELECTRON_SYNC_INTERVAL_MS` | Desktop automatic sync interval in milliseconds | `30000` |
 
 ### Building for Production
 
@@ -428,10 +432,11 @@ packages/backend/src/
 # Build all packages
 npm run build
 
-# Build Electron distributable
-cd packages/electron
+# Build all desktop inputs and the Electron distributable
 npm run build:electron
 ```
+
+On Windows, the installer is written to `packages/electron/release/Jingles Inventory Setup <version>.exe`. The installed app keeps running in the system tray when its window is closed; use **Quit** from the tray menu to stop the local API and sync service.
 
 ### Manual GitHub Release
 
