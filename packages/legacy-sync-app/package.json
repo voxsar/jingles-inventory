@@ -9,9 +9,11 @@
 		"start": "npm run build && electron .",
 		"dev": "npm run build && electron .",
 		"dist:win": "npm run build && electron-builder --win",
+		"dist:update": "npm run build && node scripts/build-update.cjs JINGLES_LEGACY_SYNC_UPDATE_URL",
 		"test": "echo \"no tests\" && exit 0"
 	},
 	"dependencies": {
+		"electron-updater": "^6.8.9",
 		"mssql": "^11.0.1",
 		"mysql2": "^3.11.0"
 	},

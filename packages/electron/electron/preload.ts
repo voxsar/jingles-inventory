@@ -102,6 +102,16 @@ const electronAPI = {
     },
   },
 
+  devices: {
+    list: () => ipcRenderer.invoke('devices:list'),
+    refresh: () => ipcRenderer.invoke('devices:refresh'),
+    onChanged: (callback: (devices: unknown[]) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, devices: unknown[]) => callback(devices);
+      ipcRenderer.on('devices:changed', listener);
+      return () => ipcRenderer.removeListener('devices:changed', listener);
+    },
+  },
+
   // Online/offline detection
   network: {
     isOnline: () => navigator.onLine,

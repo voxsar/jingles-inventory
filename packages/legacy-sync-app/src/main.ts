@@ -4,6 +4,7 @@ import { Worker } from 'worker_threads';
 import { AppConfig, isConfigured, loadConfig, saveConfig } from './sync/config';
 import { clearState } from './sync/state';
 import type { CycleSummary } from './sync/runner';
+import { getUpdateMenu, initializeUpdater } from './updater';
 
 const TRAY_ICON_DATA_URL =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIElEQVR4nGOISrrTQwlmgDL+k4lHDRg1YNQAahtANgYAPAN8K8e5wnsAAAAASUVORK5CYII=';
@@ -161,6 +162,7 @@ function createTray() {
 	tray.setContextMenu(Menu.buildFromTemplate([
 		{ label: 'Open', click: showWindow },
 		{ label: 'Sync now', click: () => void doCycle(false) },
+		getUpdateMenu(),
 		{ type: 'separator' },
 		{
 			label: 'Quit',
@@ -182,6 +184,7 @@ if (!gotLock) {
 
 	app.whenReady().then(() => {
 		config = loadConfig(app.getPath('userData'));
+		initializeUpdater('JINGLES_LEGACY_SYNC_UPDATE_URL');
 
 		ipcMain.handle('legacy-sync:get-config', () => config);
 		ipcMain.handle('legacy-sync:save-config', (_event, next: AppConfig) => {

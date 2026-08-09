@@ -13,6 +13,7 @@ import {
   Tray,
 } from 'electron';
 import path from 'path';
+import os from 'os';
 import { pathToFileURL } from 'url';
 import {
   backupLocalDatabase,
@@ -29,6 +30,11 @@ import {
 } from '../src/offline/localDB';
 import { setupBarcodeIPC } from '../src/barcode/scanner';
 import { getDesktopLocalApiUrl, startLocalApiServer } from '../src/backend/localApi';
+import { getDesktopLocalApiConfig } from '../src/backend/localApiConfig';
+import {
+  JinglesMdnsService,
+  type DiscoveredJinglesDevice,
+} from '../src/network/mdns';
 import {
   clearConfiguredDesktopDatabasePath,
   setConfiguredDesktopDatabasePath,
@@ -58,6 +64,7 @@ import {
   listDesktopLogs,
   subscribeDesktopLogs,
 } from '../src/runtime/logStore';
+import { getUpdateMenu, initializeUpdater } from '../src/updater';
 
 let mainWindow: BrowserWindow | null = null;
 let localApiServer: Awaited<ReturnType<typeof startLocalApiServer>> | null = null;
@@ -66,12 +73,103 @@ let isQuitting = false;
 let hasShownBackgroundNotice = false;
 let unsubscribeSyncHealth: (() => void) | null = null;
 let unsubscribeDesktopLogs: (() => void) | null = null;
+let mdnsService: JinglesMdnsService | null = null;
+let deviceHeartbeatTimer: NodeJS.Timeout | null = null;
 
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL ?? 'http://localhost:5173';
 const SYNC_HEALTH_EVENT = 'sync:health-changed';
 const LOG_ENTRY_EVENT = 'logs:entry';
+const DEVICES_CHANGED_EVENT = 'devices:changed';
+const DEVICE_HEARTBEAT_INTERVAL_MS = 30_000;
 
 installMainProcessConsoleCapture();
+
+function getDesktopDeviceIdentity() {
+  const deviceId = getConfig('clientId')?.trim();
+  if (!deviceId) {
+    throw new Error('Desktop device identity is not initialized.');
+  }
+  return {
+    deviceId,
+    deviceName: getConfig('deviceDisplayName')?.trim() || `Jingles Inventory - ${os.hostname()}`,
+    nameVersion: Number.parseInt(getConfig('deviceNameVersion') ?? '0', 10) || 0,
+  };
+}
+
+function broadcastDiscoveredDevices(devices: DiscoveredJinglesDevice[]) {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) window.webContents.send(DEVICES_CHANGED_EVENT, devices);
+  }
+}
+
+async function heartbeatDesktopDevice() {
+  const token = getConfig('upstreamAuthToken')?.trim();
+  if (!token || !mdnsService) return;
+  const identity = getDesktopDeviceIdentity();
+  const syncStatus = getSyncStatus();
+  const config = getDesktopLocalApiConfig();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4000);
+  try {
+    const response = await fetch(new URL('/api/devices/heartbeat', `${config.upstreamUrl}/`), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        deviceId: identity.deviceId,
+        deviceName: identity.deviceName,
+        application: 'inventory',
+        applicationVersion: app.getVersion(),
+        platform: `${process.platform}-${process.arch}`,
+        hostname: os.hostname(),
+        connection: 'cloud',
+        lastSyncAt: syncStatus.lastSuccessfulSyncAt,
+        pendingCount: syncStatus.outbox.pending,
+        conflictCount: syncStatus.outbox.conflicts,
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) return;
+    const result = await response.json() as {
+      deviceName?: string;
+      nameVersion?: number;
+    };
+    if (
+      typeof result.deviceName === 'string' &&
+      result.deviceName.trim() &&
+      typeof result.nameVersion === 'number' &&
+      result.nameVersion >= identity.nameVersion
+    ) {
+      setConfig('deviceDisplayName', result.deviceName.trim());
+      setConfig('deviceNameVersion', String(result.nameVersion));
+      mdnsService.updateAdvertisement({ deviceName: result.deviceName.trim() });
+    }
+  } catch (error) {
+    console.debug('[Devices] Cloud heartbeat unavailable', error);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function startDeviceDiscovery() {
+  const identity = getDesktopDeviceIdentity();
+  const config = getDesktopLocalApiConfig();
+  mdnsService = new JinglesMdnsService({
+    deviceId: identity.deviceId,
+    deviceName: identity.deviceName,
+    application: 'inventory',
+    applicationVersion: app.getVersion(),
+    port: config.port,
+    protocol: 'http',
+    apiPath: '/api',
+  });
+  mdnsService.subscribe(broadcastDiscoveredDevices);
+  mdnsService.start();
+  void heartbeatDesktopDevice();
+  deviceHeartbeatTimer = setInterval(() => void heartbeatDesktopDevice(), DEVICE_HEARTBEAT_INTERVAL_MS);
+}
 
 function getAuthCacheUserId(user: unknown) {
   if (!user || typeof user !== 'object') {
@@ -226,6 +324,7 @@ function refreshTrayMenu() {
           });
         },
       },
+      getUpdateMenu(),
       { type: 'separator' },
       {
         label: 'Quit',
@@ -524,9 +623,11 @@ app.whenReady().then(async () => {
     app.setAppUserModelId('com.jingles.inventory');
     initLocalDB();
     localApiServer = await startLocalApiServer();
+    startDeviceDiscovery();
 
     setupBarcodeIPC(ipcMain);
     setupOfflineIPC(ipcMain);
+    initializeUpdater('JINGLES_INVENTORY_UPDATE_URL');
     setupLocalAssetProtocol();
     ensureTray();
     unsubscribeSyncHealth = subscribeSyncHealth((syncHealth) => {
@@ -569,6 +670,10 @@ app.on('before-quit', () => {
   unsubscribeSyncHealth = null;
   unsubscribeDesktopLogs?.();
   unsubscribeDesktopLogs = null;
+  if (deviceHeartbeatTimer) clearInterval(deviceHeartbeatTimer);
+  deviceHeartbeatTimer = null;
+  mdnsService?.stop();
+  mdnsService = null;
 
   if (tray) {
     tray.destroy();
@@ -809,5 +914,12 @@ function setupOfflineIPC(ipcMain: Electron.IpcMain) {
 
   ipcMain.handle('app:backend-url', () => {
     return localApiServer?.url ?? getDesktopLocalApiUrl();
+  });
+
+  ipcMain.handle('devices:list', () => mdnsService?.getDevices() ?? []);
+  ipcMain.handle('devices:refresh', () => {
+    mdnsService?.query();
+    void heartbeatDesktopDevice();
+    return mdnsService?.getDevices() ?? [];
   });
 }

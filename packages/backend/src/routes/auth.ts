@@ -22,7 +22,7 @@ type AuthPayload = {
 };
 
 type UpstreamSyncTokenResult =
-  | { ok: true; token: string }
+  | { ok: true; token: string; user: AuthPayload['user'] }
   | { ok: false; status: number; error: string };
 
 function parseAuthPayload(payload: unknown): AuthPayload | null {
@@ -238,7 +238,7 @@ async function requestUpstreamSyncToken(
 
     const payload = parseAuthPayload(await response.json().catch(() => null));
     const token = payload?.token?.trim();
-    if (!token) {
+    if (!payload || !token) {
       return {
         ok: false,
         status: 502,
@@ -249,6 +249,7 @@ async function requestUpstreamSyncToken(
     return {
       ok: true,
       token,
+      user: payload.user,
     };
   } catch (error) {
     logger.info('Unable to refresh the upstream sync token after local sign-in.', {
@@ -321,15 +322,46 @@ router.post(
       return;
     }
 
-    if (user && (!user.passwordHash || user.passwordHash.length === 0)) {
-      res.status(503).json({
-        error:
-          'Local sign-in is not ready for this user on this desktop yet because no local password hash is cached.',
+    const upstreamResult = await requestUpstreamSyncToken(email, password);
+    if (!upstreamResult.ok) {
+      const invalidCredentials = upstreamResult.status === 400;
+      res.status(invalidCredentials ? 401 : upstreamResult.status).json({
+        error: invalidCredentials ? 'Invalid credentials' : upstreamResult.error,
       });
       return;
     }
 
-    res.status(401).json({ error: 'Invalid credentials' });
+    if (upstreamResult.user.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      res.status(502).json({ error: 'The host returned a different user for these credentials.' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    try {
+      await upsertReplicaUser(upstreamResult.user, passwordHash);
+    } catch (error) {
+      logger.error('Failed to bootstrap the authenticated user in the local replica', error);
+      res.status(500).json({ error: 'Unable to prepare local sign-in on this desktop.' });
+      return;
+    }
+
+    const token = buildJwtForUser(upstreamResult.user);
+    if (!token) {
+      res.status(503).json({ error: 'Local sign-in is unavailable because JWT_SECRET is not configured.' });
+      return;
+    }
+
+    res.json({
+      token,
+      syncToken: upstreamResult.token,
+      user: {
+        id: upstreamResult.user.id,
+        email: upstreamResult.user.email,
+        role: upstreamResult.user.role,
+        vendorId: upstreamResult.user.vendorId,
+        hasPin: Boolean(upstreamResult.user.hasPin),
+      },
+    });
   }
 );
 

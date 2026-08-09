@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { createHash } from 'crypto';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
@@ -51,6 +52,83 @@ type DesktopCachedSession = {
   token: string;
   user: AuthTokenPayload;
 };
+
+type CachedLanToken = {
+  user: AuthTokenPayload;
+  expiresAt: string;
+};
+
+function lanTokenCacheKey(token: string) {
+  return `lanAuth:${createHash('sha256').update(token).digest('hex')}`;
+}
+
+function tokenCacheExpiry(token: string) {
+  const maximum = Date.now() + 24 * 60 * 60 * 1000;
+  try {
+    const payload = jwt.decode(token) as { exp?: unknown } | null;
+    const expiresAt = typeof payload?.exp === 'number' ? payload.exp * 1000 : maximum;
+    return new Date(Math.min(maximum, expiresAt)).toISOString();
+  } catch {
+    return new Date(maximum).toISOString();
+  }
+}
+
+async function readCachedLanUser(token: string): Promise<AuthTokenPayload | null> {
+  try {
+    const rows = await (prisma as any).$queryRawUnsafe(
+      'SELECT value FROM config WHERE key = ? LIMIT 1',
+      lanTokenCacheKey(token)
+    ) as Array<{ value?: string }>;
+    if (!rows[0]?.value) return null;
+    const cached = JSON.parse(rows[0].value) as CachedLanToken;
+    return Date.parse(cached.expiresAt) > Date.now() && isAuthTokenPayload(cached.user)
+      ? cached.user
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+async function cacheLanUser(token: string, user: AuthTokenPayload) {
+  try {
+    await (prisma as any).$executeRawUnsafe(
+      `INSERT INTO config (key, value) VALUES (?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+      lanTokenCacheKey(token),
+      JSON.stringify({ user, expiresAt: tokenCacheExpiry(token) } satisfies CachedLanToken)
+    );
+  } catch (error) {
+    logger.warn('Failed to cache an authenticated LAN sync token', error);
+  }
+}
+
+async function verifyLanTokenWithUpstream(token: string): Promise<AuthTokenPayload | null> {
+  const cached = await readCachedLanUser(token);
+  if (cached) return cached;
+
+  const upstreamUrl = process.env.JINGLES_UPSTREAM_SERVER_URL?.trim();
+  if (!upstreamUrl) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  try {
+    const response = await fetch(new URL('/api/auth/me', `${upstreamUrl.replace(/\/+$/, '')}/`), {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const payload = await response.json() as unknown;
+    const candidate = payload && typeof payload === 'object' && 'data' in payload
+      ? (payload as { data: unknown }).data
+      : payload;
+    if (!isAuthTokenPayload(candidate)) return null;
+    await cacheLanUser(token, candidate);
+    return candidate;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 async function readDesktopCachedSession(): Promise<DesktopCachedSession | null> {
   if (!isLocalReplicaMode()) {
@@ -117,6 +195,13 @@ export async function authenticate(req: AuthRequest, res: Response, next: NextFu
       const cachedUser = await getCachedDesktopUserForToken(token);
       if (cachedUser) {
         req.user = cachedUser;
+        next();
+        return;
+      }
+
+      const lanUser = await verifyLanTokenWithUpstream(token);
+      if (lanUser) {
+        req.user = lanUser;
         next();
         return;
       }

@@ -167,6 +167,25 @@ export interface ElectronDatabaseSwitchResult {
   relaunching: boolean;
 }
 
+export interface ElectronDiscoveredDevice {
+  deviceId: string;
+  deviceName: string;
+  application: 'inventory' | 'pos';
+  applicationVersion: string;
+  address: string;
+  port: number;
+  protocol?: 'http' | 'https';
+  apiPath?: string;
+  branchId?: string;
+  terminalId?: string;
+  hostname: string;
+  instanceName: string;
+  discoveredAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  source: 'mdns';
+}
+
 export interface ElectronAPI {
   barcode: {
     onScan: (callback: (barcode: string) => void) => void;
@@ -222,6 +241,11 @@ export interface ElectronAPI {
     list: (options?: { afterId?: number; limit?: number }) => Promise<ElectronAppLogEntry[]>;
     clear: () => Promise<void>;
     onEntry: (callback: (entry: ElectronAppLogEntry) => void) => () => void;
+  };
+  devices: {
+    list: () => Promise<ElectronDiscoveredDevice[]>;
+    refresh: () => Promise<ElectronDiscoveredDevice[]>;
+    onChanged: (callback: (devices: ElectronDiscoveredDevice[]) => void) => () => void;
   };
   network: {
     isOnline: () => boolean;

@@ -1047,6 +1047,31 @@ model LegacySyncRun {
   @@map("legacy_sync_runs")
 }
 
+model ManagedDevice {
+  id                 String   @id
+  displayName        String   @map("display_name")
+  reportedName       String   @map("reported_name")
+  nameVersion        Int      @default(0) @map("name_version")
+  application        String
+  applicationVersion String   @map("application_version")
+  platform           String?
+  hostname           String?
+  branchId           String?  @map("branch_id")
+  terminalId         String?  @map("terminal_id")
+  lastIp             String?  @map("last_ip")
+  lastConnection     String?  @map("last_connection")
+  lastSeenAt         DateTime @default(now()) @map("last_seen_at")
+  lastSyncAt         DateTime? @map("last_sync_at")
+  pendingCount       Int      @default(0) @map("pending_count")
+  conflictCount      Int      @default(0) @map("conflict_count")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@index([application, lastSeenAt])
+  @@index([branchId])
+  @@map("managed_devices")
+}
+
 model VoucherRestriction {
   id                              String   @id @default(uuid())
   skuId                           String   @map("sku_id")

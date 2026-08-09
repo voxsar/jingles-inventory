@@ -40,6 +40,7 @@ import importRoutes from './routes/imports';
 import posRoutes from './routes/pos';
 import voucherRoutes from './routes/vouchers';
 import legacySyncRoutes from './routes/legacySync';
+import deviceRoutes from './routes/devices';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 import { startReplicaRealtime } from './sync/realtime';
 import { getStorageRoot } from './utils/runtimePaths';
@@ -121,6 +122,7 @@ export function createApp() {
 	app.use('/api/imports', importRoutes);
 	app.use('/api/pos', posRoutes);
 	app.use('/api/vouchers', voucherRoutes);
+	app.use('/api/devices', deviceRoutes);
 
 	app.use(errorHandler);
 
@@ -131,15 +133,18 @@ export const app = createApp();
 
 let activeServer: Server | null = null;
 
-export async function startServer(port = Number(process.env.PORT ?? 3001)) {
+export async function startServer(
+	port = Number(process.env.PORT ?? 3001),
+	host = process.env.HOST?.trim() || undefined
+) {
 	if (activeServer) {
 		return activeServer;
 	}
 
 	await new Promise<void>((resolve, reject) => {
-		const server = app.listen(port, async () => {
+		const server = app.listen(port, host, async () => {
 			activeServer = server;
-			logger.info(`Server running on port ${port}`);
+			logger.info(`Server running on ${host ?? 'default interface'}:${port}`);
 			try {
 				await preloadStatusCache();
 			} catch (err) {

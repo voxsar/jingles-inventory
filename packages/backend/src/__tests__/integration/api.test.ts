@@ -8,6 +8,7 @@ vi.mock('../../prisma/client', () => ({
   default: {
     user: {
       findUnique: vi.fn(),
+      upsert: vi.fn(),
     },
     inventoryEvent: {
       create: vi.fn().mockResolvedValue({ id: 'ev-test' }),
@@ -175,6 +176,60 @@ describe('POST /api/auth/login', () => {
           body: JSON.stringify({
             email: 'admin@theredsun.org',
             password: 'password123',
+          }),
+        })
+      );
+    } finally {
+      process.env.JINGLES_LOCAL_SQLITE = originalReplicaMode;
+      process.env.JINGLES_UPSTREAM_SERVER_URL = originalUpstreamUrl;
+      global.fetch = originalFetch;
+    }
+  });
+
+  it('bootstraps the first desktop user from the upstream login', async () => {
+    const { default: prisma } = await import('../../prisma/client');
+    const originalReplicaMode = process.env.JINGLES_LOCAL_SQLITE;
+    const originalUpstreamUrl = process.env.JINGLES_UPSTREAM_SERVER_URL;
+    const originalFetch = global.fetch;
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        token: 'upstream-token-first-login',
+        user: {
+          id: 'user-first-login',
+          email: 'first@theredsun.org',
+          role: 'Admin',
+        },
+      }),
+    });
+
+    try {
+      process.env.JINGLES_LOCAL_SQLITE = '1';
+      process.env.JINGLES_UPSTREAM_SERVER_URL = 'https://inv.theredsun.org';
+      global.fetch = fetchSpy as typeof global.fetch;
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (prisma.user.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'first@theredsun.org', password: 'password123' });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({
+        syncToken: 'upstream-token-first-login',
+        user: {
+          id: 'user-first-login',
+          email: 'first@theredsun.org',
+          role: 'Admin',
+        },
+      });
+      expect(res.body.token).not.toBe('upstream-token-first-login');
+      expect(prisma.user.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'user-first-login' },
+          create: expect.objectContaining({
+            email: 'first@theredsun.org',
+            passwordHash: expect.stringMatching(/^\$2[aby]\$/),
           }),
         })
       );

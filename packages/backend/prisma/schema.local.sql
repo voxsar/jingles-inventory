@@ -971,3 +971,4 @@ CREATE INDEX IF NOT EXISTS "voucher_restrictions_restriction_type_idx" ON "vouch
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "voucher_restrictions_sku_id_restriction_type_key" ON "voucher_restrictions"("sku_id", "restriction_type");
+

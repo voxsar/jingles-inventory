@@ -126,6 +126,7 @@ function buildChildEnv(
       .join(path.delimiter),
     ELECTRON_RUN_AS_NODE: '1',
     PORT: String(config.port),
+    HOST: config.host,
     JINGLES_LOCAL_SQLITE: '1',
     JINGLES_STORAGE_ROOT: runtimeRoot,
     JINGLES_SERVER_AUTOSTART: 'true',

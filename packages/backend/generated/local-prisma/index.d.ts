@@ -6191,6 +6191,7 @@ export namespace Prisma {
     id: string | null
     email: string | null
     passwordHash: string | null
+    pinHash: string | null
     role: string | null
     vendorId: string | null
     createdAt: Date | null
@@ -6201,6 +6202,7 @@ export namespace Prisma {
     id: string | null
     email: string | null
     passwordHash: string | null
+    pinHash: string | null
     role: string | null
     vendorId: string | null
     createdAt: Date | null
@@ -6211,6 +6213,7 @@ export namespace Prisma {
     id: number
     email: number
     passwordHash: number
+    pinHash: number
     role: number
     vendorId: number
     createdAt: number
@@ -6223,6 +6226,7 @@ export namespace Prisma {
     id?: true
     email?: true
     passwordHash?: true
+    pinHash?: true
     role?: true
     vendorId?: true
     createdAt?: true
@@ -6233,6 +6237,7 @@ export namespace Prisma {
     id?: true
     email?: true
     passwordHash?: true
+    pinHash?: true
     role?: true
     vendorId?: true
     createdAt?: true
@@ -6243,6 +6248,7 @@ export namespace Prisma {
     id?: true
     email?: true
     passwordHash?: true
+    pinHash?: true
     role?: true
     vendorId?: true
     createdAt?: true
@@ -6326,6 +6332,7 @@ export namespace Prisma {
     id: string
     email: string
     passwordHash: string
+    pinHash: string | null
     role: string
     vendorId: string | null
     createdAt: Date
@@ -6353,6 +6360,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     passwordHash?: boolean
+    pinHash?: boolean
     role?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -6377,6 +6385,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     passwordHash?: boolean
+    pinHash?: boolean
     role?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -6388,6 +6397,7 @@ export namespace Prisma {
     id?: boolean
     email?: boolean
     passwordHash?: boolean
+    pinHash?: boolean
     role?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -6435,6 +6445,7 @@ export namespace Prisma {
       id: string
       email: string
       passwordHash: string
+      pinHash: string | null
       role: string
       vendorId: string | null
       createdAt: Date
@@ -6848,6 +6859,7 @@ export namespace Prisma {
     readonly id: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
+    readonly pinHash: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'String'>
     readonly vendorId: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
@@ -57886,6 +57898,7 @@ export namespace Prisma {
     id: 'id',
     email: 'email',
     passwordHash: 'passwordHash',
+    pinHash: 'pinHash',
     role: 'role',
     vendorId: 'vendorId',
     createdAt: 'createdAt',
@@ -58747,6 +58760,7 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
+    pinHash?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -58770,6 +58784,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
+    pinHash?: SortOrderInput | SortOrder
     role?: SortOrder
     vendorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -58796,6 +58811,7 @@ export namespace Prisma {
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     passwordHash?: StringFilter<"User"> | string
+    pinHash?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -58819,6 +58835,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
+    pinHash?: SortOrderInput | SortOrder
     role?: SortOrder
     vendorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -58835,6 +58852,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
+    pinHash?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: StringWithAggregatesFilter<"User"> | string
     vendorId?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -63178,6 +63196,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -63200,6 +63219,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -63222,6 +63242,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -63244,6 +63265,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -63266,6 +63288,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -63276,6 +63299,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -63285,6 +63309,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -68183,6 +68208,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
+    pinHash?: SortOrder
     role?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -68193,6 +68219,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
+    pinHash?: SortOrder
     role?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -68203,6 +68230,7 @@ export namespace Prisma {
     id?: SortOrder
     email?: SortOrder
     passwordHash?: SortOrder
+    pinHash?: SortOrder
     role?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -71328,6 +71356,10 @@ export namespace Prisma {
     set?: string
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -71512,10 +71544,6 @@ export namespace Prisma {
     update?: VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput | VoucherRedemptionUpdateWithWhereUniqueWithoutRedeemerInput[]
     updateMany?: VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput | VoucherRedemptionUpdateManyWithWhereWithoutRedeemerInput[]
     deleteMany?: VoucherRedemptionScalarWhereInput | VoucherRedemptionScalarWhereInput[]
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type InventoryRecordUncheckedUpdateManyWithoutUserNestedInput = {
@@ -77295,6 +77323,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -77316,6 +77345,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -77632,6 +77662,7 @@ export namespace Prisma {
     id?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
+    pinHash?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -84310,6 +84341,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -84331,6 +84363,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -84357,6 +84390,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -84378,6 +84412,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -84628,6 +84663,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -84649,6 +84685,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -84681,6 +84718,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -84702,6 +84740,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -85585,6 +85624,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -85606,6 +85646,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -86021,6 +86062,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -86042,6 +86084,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -86063,6 +86106,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -86084,6 +86128,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -86121,6 +86166,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -86142,6 +86188,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -86300,6 +86347,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -86321,6 +86369,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -86552,6 +86601,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -86573,6 +86623,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -87881,6 +87932,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -87902,6 +87954,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -88021,6 +88074,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -88042,6 +88096,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -88243,6 +88298,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -88264,6 +88320,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -88518,6 +88575,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -88539,6 +88597,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -89080,6 +89139,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -89101,6 +89161,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -89185,6 +89246,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -89206,6 +89268,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -89366,6 +89429,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -89387,6 +89451,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -89424,6 +89489,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -89445,6 +89511,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -89612,6 +89679,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -89633,6 +89701,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -89885,6 +89954,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -89906,6 +89976,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90185,6 +90256,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -90206,6 +90278,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -90548,6 +90621,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -90569,6 +90643,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90694,6 +90769,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -90715,6 +90791,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     vendorId?: string | null
     createdAt?: Date | string
@@ -90852,6 +90929,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -90873,6 +90951,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91878,6 +91957,7 @@ export namespace Prisma {
     id?: string
     email: string
     passwordHash: string
+    pinHash?: string | null
     role: string
     createdAt?: Date | string
     isActive?: boolean
@@ -91977,6 +92057,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -91998,6 +92079,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -92019,6 +92101,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    pinHash?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
