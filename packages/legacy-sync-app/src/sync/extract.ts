@@ -17,7 +17,6 @@ export interface LegacySnapshot {
 	locations: LegacySyncLocationRow[];
 	products: LegacySyncProductRow[];
 	variants: LegacySyncVariantRow[];
-	posRecords: LegacySyncPosRecord[];
 }
 
 function str(value: unknown): string | undefined {
@@ -94,23 +93,18 @@ function sourceIdFor(table: string, row: LegacyRow, index: number) {
 	return `${hash}:${index + 1}`;
 }
 
-async function extractPosRecords(db: LegacyDb, onProgress?: (message: string) => void): Promise<LegacySyncPosRecord[]> {
-	const tableNames = (await db.listTables())
+export async function listPosTables(db: LegacyDb): Promise<string[]> {
+	return (await db.listTables())
 		.filter((table) => POS_TABLE_NAME.test(table) && !NON_POS_TABLE_NAME.test(table))
 		.sort((left, right) => left.localeCompare(right));
-	onProgress?.(`Discovered ${tableNames.length} legacy POS/report tables.`);
-	const records: LegacySyncPosRecord[] = [];
-	for (const table of tableNames) {
-		onProgress?.(`Reading legacy table ${table}...`);
-		const rows = await db.queryTable(table);
-		rows.forEach((row, index) => records.push({
+}
+
+export function toPosRecords(table: string, rows: LegacyRow[], startIndex: number): LegacySyncPosRecord[] {
+	return rows.map((row, index) => ({
 			sourceTable: table.toLowerCase(),
-			sourceId: sourceIdFor(table, row, index),
+			sourceId: sourceIdFor(table, row, startIndex + index),
 			data: jsonRecord(row),
 		}));
-		onProgress?.(`Read ${rows.length} rows from ${table}.`);
-	}
-	return records;
 }
 
 // Pulls the full relevant slice of the legacy database with read-only SELECTs.
@@ -133,7 +127,6 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		productDetailRows,
 		colorSizeRows,
 		colorSizeDetailRows,
-		posRecords,
 	] = await Promise.all([
 		db.query('SELECT UnitOfMeasureID, UnitOfMeasureCode, UnitOfMeasureName, IsDelete FROM unitofmeasure'),
 		db.query('SELECT SupplierID, SupplierCode, SupplierName, ContactName, ContactNo, Phone1, Phone2, Phone3, Email, WebSite, Address1, Address2, Address3, Country, VatNo, NICNo, CreditPeriod, IsActive, IsDelete FROM supplier'),
@@ -149,7 +142,6 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		db.query('SELECT ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, SpecialPrice, Qty, ReOrderLevel FROM productdetail'),
 		db.query('SELECT ProductColorSizeID, ProductID, ColorSizeCode, ColorSizeName, ColorID, SizeID, IsActive, IsDelete FROM productcolorsize'),
 		db.query('SELECT ProductColorSizeID, ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, IsActive, IsDelete FROM productcolorsizedetail'),
-		extractPosRecords(db, onProgress),
 	]);
 
 	const unitNameByCode = new Map<string, string>();
@@ -316,5 +308,5 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		});
 	}
 
-	return { units, suppliers, locations, products, variants, posRecords };
+	return { units, suppliers, locations, products, variants };
 }

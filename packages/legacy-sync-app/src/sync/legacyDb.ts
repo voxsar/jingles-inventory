@@ -9,7 +9,7 @@ export type LegacyRow = Record<string, unknown>;
 export interface LegacyDb {
 	query(sql: string): Promise<LegacyRow[]>;
 	listTables(): Promise<string[]>;
-	queryTable(table: string): Promise<LegacyRow[]>;
+	iterateTable(table: string, batchSize: number): AsyncIterable<LegacyRow[]>;
 	close(): Promise<void>;
 }
 
@@ -50,9 +50,55 @@ async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 			);
 			return result.recordset.map((row: any) => String(row.TABLE_NAME));
 		},
-		async queryTable(table: string) {
-			const result = await pool.request().query(`SELECT * FROM [${safeIdentifier(schema)}].[${safeIdentifier(table)}]`);
-			return result.recordset as LegacyRow[];
+		async *iterateTable(table: string, batchSize: number) {
+			const request = pool.request();
+			request.stream = true;
+			const batches: LegacyRow[][] = [];
+			let current: LegacyRow[] = [];
+			let finished = false;
+			let failure: unknown;
+			let wake: (() => void) | undefined;
+
+			const signal = () => {
+				wake?.();
+				wake = undefined;
+			};
+			request.on('row', (row: LegacyRow) => {
+				current.push(row);
+				if (current.length >= batchSize) {
+					request.pause();
+					batches.push(current);
+					current = [];
+					signal();
+				}
+			});
+			request.on('error', (error: unknown) => {
+				failure = error;
+				finished = true;
+				signal();
+			});
+			request.on('done', () => {
+				if (current.length > 0) batches.push(current);
+				finished = true;
+				signal();
+			});
+			const queryPromise = request.query(`SELECT * FROM [${safeIdentifier(schema)}].[${safeIdentifier(table)}]`);
+
+			try {
+				while (!finished || batches.length > 0) {
+					if (batches.length === 0) {
+						await new Promise<void>((resolve) => { wake = resolve; });
+						continue;
+					}
+					const batch = batches.shift()!;
+					yield batch;
+					if (!finished) request.resume();
+				}
+			} finally {
+				if (!finished) request.cancel();
+				await queryPromise.catch((error: unknown) => { failure ??= error; });
+			}
+			if (failure) throw failure;
 		},
 		async close() {
 			await pool.close();
@@ -85,9 +131,24 @@ async function createMysqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 			);
 			return (rows as any[]).map((row) => String(row.TABLE_NAME));
 		},
-		async queryTable(table: string) {
-			const [rows] = await pool.query(`SELECT * FROM \`${safeIdentifier(table)}\``);
-			return rows as LegacyRow[];
+		async *iterateTable(table: string, batchSize: number) {
+			const connection = await pool.getConnection();
+			try {
+				const stream = connection.connection
+					.query(`SELECT * FROM \`${safeIdentifier(table)}\``)
+					.stream({ highWaterMark: batchSize });
+				let batch: LegacyRow[] = [];
+				for await (const row of stream) {
+					batch.push(row as LegacyRow);
+					if (batch.length >= batchSize) {
+						yield batch;
+						batch = [];
+					}
+				}
+				if (batch.length > 0) yield batch;
+			} finally {
+				connection.release();
+			}
 		},
 		async close() {
 			await pool.end();

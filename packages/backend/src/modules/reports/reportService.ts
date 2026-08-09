@@ -36,7 +36,7 @@ export async function getGRNReport(filters: {
 			orderBy: { createdAt: 'desc' },
 			include: {
 				supplier: { select: { id: true, name: true, contactEmail: true } },
-				floor: { include: { branch: { select: { id: true, name: true } } } },
+				floor: { include: { branch: { select: { id: true, name: true, code: true, address: true, phone: true } } } },
 				shelf: { select: { id: true, name: true, code: true } },
 				creator: { select: { id: true, email: true } },
 				lines: {
@@ -49,7 +49,7 @@ export async function getGRNReport(filters: {
 								},
 							},
 						},
-						batch: { select: { id: true, batchNumber: true, costPrice: true } },
+						batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true } },
 					},
 				},
 			},
