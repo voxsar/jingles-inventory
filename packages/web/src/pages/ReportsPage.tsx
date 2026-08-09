@@ -109,9 +109,35 @@ const REPORTS: ReportDefinition[] = [
 
 const GROUPS: ReportGroup[] = ['Inventory', 'Stock', 'Management', 'Sales'];
 
+type TimeTab = 'week' | 'month' | 'year';
+
+const timeTabRange = (tab: TimeTab, anchor: Date) => {
+	const start = new Date(anchor);
+	start.setHours(0, 0, 0, 0);
+	if (tab === 'week') start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+	if (tab === 'month') start.setDate(1);
+	if (tab === 'year') start.setMonth(0, 1);
+	const end = new Date(start);
+	if (tab === 'week') end.setDate(end.getDate() + 6);
+	if (tab === 'month') end.setMonth(end.getMonth() + 1, 0);
+	if (tab === 'year') end.setFullYear(end.getFullYear() + 1, 0, 0);
+	const inputDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+	return { fromDate: inputDate(start), toDate: inputDate(end) };
+};
+
+const moveTimeTab = (tab: TimeTab, anchor: Date, direction: number) => {
+	const next = new Date(anchor);
+	if (tab === 'week') next.setDate(next.getDate() + (7 * direction));
+	if (tab === 'month') next.setMonth(next.getMonth() + direction);
+	if (tab === 'year') next.setFullYear(next.getFullYear() + direction);
+	return next;
+};
+
+const defaultTimeRange = timeTabRange('week', new Date());
+
 const initialFilters: FilterState = {
-	fromDate: '',
-	toDate: '',
+	fromDate: defaultTimeRange.fromDate,
+	toDate: defaultTimeRange.toDate,
 	search: '',
 	supplierId: '',
 	branchId: '',
@@ -252,8 +278,10 @@ const getColumns = (reportId: ReportId): ExportColumn[] => {
 			];
 		case 'z-reading':
 			return [
-				textColumn('shiftId', 'Shift', ['shiftId']),
-				{ key: 'openedAt', header: 'Opened', value: (row) => row.openedAt, render: (row) => dateTime(row.openedAt), sortable: true },
+				textColumn('shiftId', 'Slot', ['shiftId']),
+				{ key: 'openedAt', header: 'Slot Open', value: (row) => row.openedAt, render: (row) => dateTime(row.openedAt), sortable: true },
+				{ key: 'closedAt', header: 'Slot Close', value: (row) => row.closedAt, render: (row) => row.closedAt ? dateTime(row.closedAt) : 'Open', sortable: true },
+				{ key: 'status', header: 'Status', value: (row) => row.status, render: (row) => badge(row.status), sortable: true },
 				textColumn('unit', 'POS Unit', ['unit']),
 				textColumn('branch', 'Location', ['branch']),
 				textColumn('cashier', 'Cashier', ['cashier']),
@@ -616,6 +644,8 @@ export default function ReportsPage() {
 	const [skus, setSkus] = useState<any[]>([]);
 	const [isExportOpen, setIsExportOpen] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
+	const [timeTab, setTimeTab] = useState<TimeTab>('week');
+	const [timeAnchor, setTimeAnchor] = useState(() => new Date());
 
 	const activeReport = REPORTS.find((report) => report.id === activeReportId) ?? REPORTS[0];
 	const columns = useMemo(() => getColumns(activeReportId), [activeReportId]);
@@ -721,7 +751,13 @@ export default function ReportsPage() {
 		}
 	};
 
-	useEffect(() => { loadReport(); }, [activeReportId, page]);
+	useEffect(() => { loadReport(); }, [activeReportId, page, filters.fromDate, filters.toDate]);
+
+	useEffect(() => {
+		const range = timeTabRange(timeTab, timeAnchor);
+		setFilters((current) => ({ ...current, ...range }));
+		setPage(1);
+	}, [timeTab, timeAnchor]);
 
 	useEffect(() => {
 		Promise.all([
@@ -883,6 +919,8 @@ export default function ReportsPage() {
 
 	const resetFilters = () => {
 		setFilters(initialFilters);
+		setTimeTab('week');
+		setTimeAnchor(new Date());
 		setPage(1);
 	};
 
@@ -952,6 +990,27 @@ export default function ReportsPage() {
 							<div className="flex gap-2">
 								<button type="button" className="btn-secondary" onClick={resetFilters}>Reset</button>
 								<button type="button" className="btn-primary" onClick={runReport} disabled={isLoading}>Run Report</button>
+							</div>
+						</div>
+						<div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3">
+							<div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="tablist" aria-label="Report time period">
+								{(['week', 'month', 'year'] as TimeTab[]).map((tab) => (
+									<button
+										type="button"
+										role="tab"
+										aria-selected={timeTab === tab}
+										key={tab}
+										onClick={() => { setTimeTab(tab); setTimeAnchor(new Date()); }}
+										className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors ${timeTab === tab ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
+									>
+										{tab}
+									</button>
+								))}
+							</div>
+							<div className="flex items-center gap-2">
+								<button type="button" className="btn-secondary px-3" aria-label={`Previous ${timeTab}`} onClick={() => setTimeAnchor((current) => moveTimeTab(timeTab, current, -1))}>‹</button>
+								<span className="min-w-[190px] text-center text-sm font-semibold text-gray-700">{dateOnly(filters.fromDate)} – {dateOnly(filters.toDate)}</span>
+								<button type="button" className="btn-secondary px-3" aria-label={`Next ${timeTab}`} onClick={() => setTimeAnchor((current) => moveTimeTab(timeTab, current, 1))}>›</button>
 							</div>
 						</div>
 						<div className="grid grid-cols-1 gap-3 border-b border-gray-100 bg-gray-50/60 p-4 md:grid-cols-2 xl:grid-cols-4">

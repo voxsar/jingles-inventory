@@ -1102,13 +1102,15 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 	await ensurePosCloudSchema();
 	const params: unknown[] = [];
 	const clauses: string[] = [];
-	if (filters.fromDate) { params.push(filters.fromDate); clauses.push(`opened_at >= $${params.length}`); }
-	if (filters.toDate) { params.push(filters.toDate); clauses.push(`opened_at <= $${params.length}`); }
+	// A Z slot is selected by its close boundary. The currently open slot falls
+	// back to its opening time until it receives a close boundary.
+	if (filters.fromDate) { params.push(filters.fromDate); clauses.push(`COALESCE(closed_at, opened_at) >= $${params.length}`); }
+	if (filters.toDate) { params.push(filters.toDate); clauses.push(`COALESCE(closed_at, opened_at) <= $${params.length}`); }
 	if (filters.branchId) { params.push(filters.branchId); clauses.push(`branch_id = $${params.length}`); }
 	if (filters.status) { params.push(filters.status.toUpperCase()); clauses.push(`status = $${params.length}`); }
 	const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-	const shifts = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_shifts ${where} ORDER BY opened_at DESC`, ...params);
-	if (shifts.length === 0) return { ...paginateRows([], filters), summary: { totalShifts: 0, grossSale: 0, netSale: 0 } };
+	const shifts = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_shifts ${where} ORDER BY COALESCE(closed_at, opened_at) DESC`, ...params);
+	if (shifts.length === 0) return { ...paginateRows([], filters), summary: { totalSlots: 0, grossSale: 0, netSale: 0 } };
 
 	const shiftIds = shifts.map((shift) => shift.id);
 	const sales = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM pos_sales WHERE shift_id = ANY($1::text[]) ORDER BY created_at`, shiftIds);
@@ -1160,6 +1162,7 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 			id: shift.id, shiftId: shift.id, unit: shift.terminal_id, terminalId: shift.terminal_id,
 			branchId: shift.branch_id ?? '', branch: branch?.name ?? shift.branch_id ?? '', branchCode: branch?.code ?? '',
 			cashier: userMap.get(shift.user_id) ?? shift.user_id, status: shift.status,
+			slotOpenedAt: shift.opened_at, slotClosedAt: shift.closed_at,
 			openedAt: shift.opened_at, closedAt: shift.closed_at, grossSale, discounts, discountedLineCount,
 			refunds, netSale, billCount: shiftSales.length, productCount, paymentBreakdown, paymentCounts,
 			cashSale, nonCashTotal, openingFloat: numberFrom(shift.opening_float), expectedDrawer,
@@ -1170,9 +1173,9 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 	if (needle) rows = rows.filter((row) => [row.shiftId, row.unit, row.branch, row.cashier, row.status].join(' ').toLowerCase().includes(needle));
 	const paged = paginateRows(rows, filters);
 	const summary = rows.reduce((acc, row) => {
-		acc.totalShifts += 1; acc.grossSale += row.grossSale; acc.netSale += row.netSale; acc.refunds += row.refunds;
+		acc.totalSlots += 1; acc.grossSale += row.grossSale; acc.netSale += row.netSale; acc.refunds += row.refunds;
 		return acc;
-	}, { totalShifts: 0, grossSale: 0, netSale: 0, refunds: 0 });
+	}, { totalSlots: 0, grossSale: 0, netSale: 0, refunds: 0 });
 	return { ...paged, summary };
 }
 

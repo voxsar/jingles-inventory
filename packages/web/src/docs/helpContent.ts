@@ -563,7 +563,7 @@ export const HELP_SECTIONS: HelpSection[] = [
 		group: 'Tools',
 		route: '/reports',
 		intro:
-			'A workbench of 27 reports across Inventory, Stock, Management, and Sales. Every report supports filters, pagination, and export to CSV, Excel, or a printable PDF view. The selected report is part of the page URL, so you can bookmark or share a specific report.',
+			'A workbench of 27 reports across Inventory, Stock, Management, and Sales. Every report has week, month, and year period tabs plus filters, pagination, and export to CSV, Excel, or a printable PDF view. The selected report is part of the page URL, so you can bookmark or share a specific report.',
 		screenshot: 'reports.png',
 		actions: [
 			{
