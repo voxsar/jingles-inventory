@@ -386,17 +386,12 @@ export default function UsersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role *
                 </label>
-                <select
+                <SearchableSelect
+                  options={roleOptions.map((role) => ({ value: role, label: role }))}
                   value={userForm.role}
-                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  {roleOptions.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setUserForm({ ...userForm, role: value })}
+                  isClearable={false}
+                />
               </div>
 
               {userForm.role === 'Vendor' && (
@@ -404,19 +399,12 @@ export default function UsersPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Vendor *
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={[{ value: '', label: 'Select Vendor' }, ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name }))]}
                     value={userForm.vendorId}
-                    onChange={(e) => setUserForm({ ...userForm, vendorId: e.target.value })}
-                    required={userForm.role === 'Vendor'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Select Vendor</option>
-                    {vendors.map((vendor) => (
-                      <option key={vendor.id} value={vendor.id}>
-                        {vendor.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setUserForm({ ...userForm, vendorId: value })}
+                    isClearable={false}
+                  />
                 </div>
               )}
 

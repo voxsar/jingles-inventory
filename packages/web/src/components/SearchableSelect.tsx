@@ -1,4 +1,4 @@
-import Select, { Props as SelectProps, StylesConfig } from 'react-select';
+import Select, { components, MenuListProps, Props as SelectProps, StylesConfig } from 'react-select';
 
 export interface SelectOption {
   value: string;
@@ -29,6 +29,49 @@ interface MultiSelectProps extends CommonProps {
 }
 
 type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
+
+function SearchableMenuList(props: MenuListProps<SelectOption, boolean>) {
+  const { selectProps } = props;
+
+  return (
+    <components.MenuList {...props}>
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          padding: '4px 4px 8px',
+          background: 'var(--glass-strong)',
+        }}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        <input
+          aria-label="Search options"
+          type="search"
+          value={selectProps.inputValue}
+          readOnly
+          tabIndex={-1}
+          placeholder="Search options…"
+          style={{
+            width: '100%',
+            minHeight: '38px',
+            border: '1px solid var(--line-2)',
+            borderRadius: '9px',
+            padding: '7px 10px',
+            background: 'var(--bg-2)',
+            color: 'var(--ink)',
+            outline: 'none',
+            fontSize: '0.875rem',
+          }}
+        />
+      </div>
+      {props.children}
+    </components.MenuList>
+  );
+}
 
 export default function SearchableSelect(props: SearchableSelectProps) {
   const {
@@ -134,6 +177,7 @@ export default function SearchableSelect(props: SearchableSelectProps) {
 
   return (
     <Select<SelectOption, boolean>
+      {...rest}
       options={options}
       value={selectedOption}
       onChange={(option) => {
@@ -151,12 +195,12 @@ export default function SearchableSelect(props: SearchableSelectProps) {
       isDisabled={isDisabled}
       isLoading={isLoading}
       isSearchable={true}
+      components={{ ...rest.components, MenuList: SearchableMenuList }}
       isOptionDisabled={(option) => Boolean(option.isDisabled)}
       formatOptionLabel={(option) => option.isSeparator ? (
         <div aria-hidden="true" style={{ borderTop: '1px solid var(--line-strong)', height: 0, margin: '4px 0' }} />
       ) : option.label}
       isMulti={isMulti}
-      {...rest}
     />
   );
 }

@@ -1923,11 +1923,7 @@ export default function SKUPage() {
 										</div>
 										<div className="form-group">
 											<label className="form-label">Margin Type</label>
-											<select className="input-field" value={form.marginType} onChange={(e) => setForm((f) => ({ ...f, marginType: e.target.value as 'fixed' | 'percentage' | '' }))}>
-												<option value="">— No Margin —</option>
-												<option value="fixed">Fixed Amount</option>
-												<option value="percentage">Percentage</option>
-											</select>
+											<SearchableSelect options={[{ value: '', label: '— No Margin —' }, { value: 'fixed', label: 'Fixed Amount' }, { value: 'percentage', label: 'Percentage' }]} value={form.marginType} onChange={(value) => setForm((f) => ({ ...f, marginType: value as 'fixed' | 'percentage' | '' }))} isClearable={false} />
 										</div>
 										<div className="form-group">
 											<label className="form-label">Margin Value</label>
@@ -2237,11 +2233,7 @@ export default function SKUPage() {
 											</div>
 											<div className="form-group">
 												<label className="form-label">Margin Type</label>
-												<select className="input-field" value={editForm.marginType} onChange={(e) => setEditForm((f) => ({ ...f, marginType: e.target.value as 'fixed' | 'percentage' | '' }))}>
-													<option value="">— No Margin —</option>
-													<option value="fixed">Fixed Amount</option>
-													<option value="percentage">Percentage</option>
-												</select>
+												<SearchableSelect options={[{ value: '', label: '— No Margin —' }, { value: 'fixed', label: 'Fixed Amount' }, { value: 'percentage', label: 'Percentage' }]} value={editForm.marginType} onChange={(value) => setEditForm((f) => ({ ...f, marginType: value as 'fixed' | 'percentage' | '' }))} isClearable={false} />
 											</div>
 											<div className="form-group">
 												<label className="form-label">Margin Value</label>

@@ -218,6 +218,41 @@ const isEmptyValue = (value: unknown) => {
 
 const areValuesEqual = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
+const focusSpreadsheetDropdownSearch = (root: HTMLElement) => {
+  const dropdown = root.ownerDocument.querySelector<HTMLElement>('.jdropdown-focus');
+  if (!dropdown) return;
+
+  const existing = dropdown.querySelector<HTMLInputElement>('.spreadsheet-dropdown-search');
+  if (existing) {
+    existing.value = '';
+    existing.dispatchEvent(new Event('input', { bubbles: true }));
+    existing.focus();
+    return;
+  }
+
+  const content = dropdown.querySelector<HTMLElement>('.jdropdown-content');
+  const container = dropdown.querySelector<HTMLElement>('.jdropdown-container');
+  if (!content || !container) return;
+
+  const search = root.ownerDocument.createElement('input');
+  search.type = 'search';
+  search.className = 'spreadsheet-dropdown-search';
+  search.placeholder = 'Search options…';
+  search.setAttribute('aria-label', 'Search spreadsheet dropdown options');
+  search.addEventListener('mousedown', (event) => event.stopPropagation());
+  search.addEventListener('click', (event) => event.stopPropagation());
+  search.addEventListener('keydown', (event) => event.stopPropagation());
+  search.addEventListener('input', () => {
+    const query = search.value.trim().toLocaleLowerCase();
+    content.querySelectorAll<HTMLElement>('.jdropdown-item').forEach((item) => {
+      item.style.display = !query || (item.textContent ?? '').toLocaleLowerCase().includes(query) ? '' : 'none';
+    });
+  });
+
+  container.insertBefore(search, content);
+  search.focus();
+};
+
 export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
   columns,
   data,
@@ -343,6 +378,9 @@ export default function ReactSpreadsheetWrapper<T extends Record<string, any>>({
       window.setTimeout(() => {
         if (instance.edition) return;
         instance.openEditor(instance.getCellFromCoords(left, top));
+        window.setTimeout(() => {
+          if (containerRef.current) focusSpreadsheetDropdownSearch(containerRef.current);
+        }, 0);
       }, 0);
     };
 

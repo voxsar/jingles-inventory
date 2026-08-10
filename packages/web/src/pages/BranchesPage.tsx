@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { branchesApi, floorsApi, racksApi, shelvesApi, boxesApi, inventoryApi, spaceApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
+import SearchableSelect from '../components/SearchableSelect';
 import { formatQuantity } from '../utils/quantity';
 
 // ── Form defaults ─────────────────────────────────────────────────────────────
@@ -880,10 +881,7 @@ export default function BranchesPage() {
 								<div className="form-grid-2">
 									<div className="form-group">
 										<label className="form-label">Parent box</label>
-										<select className="input-field" value={boxForm.parentBoxId} onChange={e => setBoxForm(f => ({ ...f, parentBoxId: e.target.value }))}>
-											<option value="">None</option>
-											{[...boxes, ...floorBoxes].filter((candidate: any) => candidate.id !== editingBox?.id).map((candidate: any) => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}
-										</select>
+										<SearchableSelect options={[{ value: '', label: 'None' }, ...[...boxes, ...floorBoxes].filter((candidate: any) => candidate.id !== editingBox?.id).map((candidate: any) => ({ value: candidate.id, label: candidate.name }))]} value={boxForm.parentBoxId} onChange={(value) => setBoxForm(f => ({ ...f, parentBoxId: value }))} isClearable={false} />
 									</div>
 									<div className="form-group">
 										<label className="form-label">Stack order</label>

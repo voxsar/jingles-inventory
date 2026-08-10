@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { branchesApi, floorsApi, reportsApi, skusApi, vendorsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import SearchableSelect from '../components/SearchableSelect';
 import { UiBadge } from '../components/UiPrimitives';
 import { formatQuantity } from '../utils/quantity';
 
@@ -109,31 +110,114 @@ const REPORTS: ReportDefinition[] = [
 
 const GROUPS: ReportGroup[] = ['Inventory', 'Stock', 'Management', 'Sales'];
 
-type TimeTab = 'week' | 'month' | 'year';
+const REPORT_YEAR_COUNT = 12;
+const REPORT_MONTHS = Array.from({ length: 12 }, (_, month) => ({
+	value: month,
+	label: new Intl.DateTimeFormat(undefined, { month: 'short' }).format(new Date(2020, month, 1)),
+}));
 
-const timeTabRange = (tab: TimeTab, anchor: Date) => {
-	const start = new Date(anchor);
-	start.setHours(0, 0, 0, 0);
-	if (tab === 'week') start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-	if (tab === 'month') start.setDate(1);
-	if (tab === 'year') start.setMonth(0, 1);
+const inputDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+const firstReportWeekStart = (year: number, month: number) => {
+	const first = new Date(year, month, 1);
+	first.setDate(first.getDate() + ((8 - first.getDay()) % 7));
+	return first;
+};
+
+const reportWeekCount = (year: number, month: number) => {
+	const first = firstReportWeekStart(year, month);
+	return Math.floor((new Date(year, month + 1, 0).getDate() - first.getDate()) / 7) + 1;
+};
+
+const reportWeekRange = (year: number, month: number, week: number) => {
+	const start = firstReportWeekStart(year, month);
+	start.setDate(start.getDate() + (week * 7));
 	const end = new Date(start);
-	if (tab === 'week') end.setDate(end.getDate() + 6);
-	if (tab === 'month') end.setMonth(end.getMonth() + 1, 0);
-	if (tab === 'year') end.setFullYear(end.getFullYear() + 1, 0, 0);
-	const inputDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+	end.setDate(end.getDate() + 6);
 	return { fromDate: inputDate(start), toDate: inputDate(end) };
 };
 
-const moveTimeTab = (tab: TimeTab, anchor: Date, direction: number) => {
-	const next = new Date(anchor);
-	if (tab === 'week') next.setDate(next.getDate() + (7 * direction));
-	if (tab === 'month') next.setMonth(next.getMonth() + direction);
-	if (tab === 'year') next.setFullYear(next.getFullYear() + direction);
-	return next;
+const currentReportPeriod = (date: Date) => {
+	const weekStart = new Date(date);
+	weekStart.setHours(0, 0, 0, 0);
+	weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+	const year = weekStart.getFullYear();
+	const month = weekStart.getMonth();
+	const first = firstReportWeekStart(year, month);
+	return { year, month, week: Math.floor((weekStart.getDate() - first.getDate()) / 7) };
 };
 
-const defaultTimeRange = timeTabRange('week', new Date());
+function TimeFilterTabRow<T extends string | number>(props: {
+	label: string;
+	options: Array<{ value: T; label: string }>;
+	value: T;
+	onChange: (value: T) => void;
+}) {
+	const tabsRef = useRef<HTMLDivElement>(null);
+	const [canScrollBack, setCanScrollBack] = useState(false);
+	const [canScrollForward, setCanScrollForward] = useState(false);
+
+	const updateScrollButtons = useCallback(() => {
+		const tabs = tabsRef.current;
+		if (!tabs) return;
+		setCanScrollBack(tabs.scrollLeft > 1);
+		setCanScrollForward(tabs.scrollLeft + tabs.clientWidth < tabs.scrollWidth - 1);
+	}, []);
+
+	useEffect(() => {
+		const tabs = tabsRef.current;
+		if (!tabs) return undefined;
+		const selectedTab = tabs.querySelector<HTMLElement>('[aria-selected="true"]');
+		if (selectedTab) {
+			const selectedStart = selectedTab.offsetLeft;
+			const selectedEnd = selectedStart + selectedTab.offsetWidth;
+			if (selectedStart < tabs.scrollLeft) tabs.scrollLeft = selectedStart;
+			if (selectedEnd > tabs.scrollLeft + tabs.clientWidth) tabs.scrollLeft = selectedEnd - tabs.clientWidth;
+		}
+		updateScrollButtons();
+		const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateScrollButtons);
+		observer?.observe(tabs);
+		return () => observer?.disconnect();
+	}, [props.options.length, props.value, updateScrollButtons]);
+
+	const scroll = (direction: number) => {
+		const tabs = tabsRef.current;
+		if (!tabs) return;
+		tabs.scrollBy({ left: direction * Math.max(160, tabs.clientWidth * 0.7), behavior: 'smooth' });
+	};
+
+	return (
+		<div className="grid min-w-0 grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
+			<span className="text-xs font-semibold uppercase tracking-wide text-gray-500">{props.label}</span>
+			<div className="flex min-w-0 items-center gap-1.5">
+				{canScrollBack && (
+					<button type="button" className="btn-secondary h-9 w-9 shrink-0 px-0" aria-label={`Show earlier ${props.label.toLowerCase()} options`} onClick={() => scroll(-1)}>‹</button>
+				)}
+				<div ref={tabsRef} className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label={`Report ${props.label.toLowerCase()}`} onScroll={updateScrollButtons}>
+					{props.options.map((option) => (
+						<button
+							type="button"
+							role="tab"
+							aria-selected={props.value === option.value}
+							key={String(option.value)}
+							onClick={() => props.onChange(option.value)}
+							className={`h-9 shrink-0 rounded-md px-4 text-sm font-medium transition-colors ${props.value === option.value ? 'bg-primary-600 text-white shadow-sm' : 'border border-gray-200 bg-gray-50 text-gray-600 hover:bg-white'}`}
+						>
+							{option.label}
+						</button>
+					))}
+				</div>
+				{canScrollForward && (
+					<button type="button" className="btn-secondary h-9 w-9 shrink-0 px-0" aria-label={`Show more ${props.label.toLowerCase()} options`} onClick={() => scroll(1)}>›</button>
+				)}
+			</div>
+		</div>
+	);
+}
+
+const defaultDate = new Date();
+const defaultPeriod = currentReportPeriod(defaultDate);
+const defaultTimeRange = reportWeekRange(defaultPeriod.year, defaultPeriod.month, defaultPeriod.week);
 
 const initialFilters: FilterState = {
 	fromDate: defaultTimeRange.fromDate,
@@ -644,8 +728,11 @@ export default function ReportsPage() {
 	const [skus, setSkus] = useState<any[]>([]);
 	const [isExportOpen, setIsExportOpen] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
-	const [timeTab, setTimeTab] = useState<TimeTab>('week');
-	const [timeAnchor, setTimeAnchor] = useState(() => new Date());
+	const today = useMemo(() => new Date(), []);
+	const initialPeriod = useMemo(() => currentReportPeriod(today), [today]);
+	const [selectedYear, setSelectedYear] = useState(initialPeriod.year);
+	const [selectedMonth, setSelectedMonth] = useState(initialPeriod.month);
+	const [selectedWeek, setSelectedWeek] = useState(initialPeriod.week);
 
 	const activeReport = REPORTS.find((report) => report.id === activeReportId) ?? REPORTS[0];
 	const columns = useMemo(() => getColumns(activeReportId), [activeReportId]);
@@ -663,6 +750,25 @@ export default function ReportsPage() {
 		group,
 		reports: REPORTS.filter((report) => report.group === group),
 	})), []);
+	const years = useMemo(() => Array.from({ length: REPORT_YEAR_COUNT }, (_, index) => ({
+		value: today.getFullYear() - index,
+		label: String(today.getFullYear() - index),
+	})), [today]);
+	const weekCount = reportWeekCount(selectedYear, selectedMonth);
+	const weeks = useMemo(() => Array.from({ length: weekCount }, (_, week) => ({
+		value: week,
+		label: String(week + 1),
+	})), [weekCount]);
+
+	const selectYear = (year: number) => {
+		setSelectedYear(year);
+		setSelectedWeek((week) => Math.min(week, reportWeekCount(year, selectedMonth) - 1));
+	};
+
+	const selectMonth = (month: number) => {
+		setSelectedMonth(month);
+		setSelectedWeek((week) => Math.min(week, reportWeekCount(selectedYear, month) - 1));
+	};
 
 	const updateFilter = (key: keyof FilterState, value: string) => {
 		setFilters((current) => ({ ...current, [key]: value }));
@@ -754,10 +860,10 @@ export default function ReportsPage() {
 	useEffect(() => { loadReport(); }, [activeReportId, page, filters.fromDate, filters.toDate]);
 
 	useEffect(() => {
-		const range = timeTabRange(timeTab, timeAnchor);
+		const range = reportWeekRange(selectedYear, selectedMonth, selectedWeek);
 		setFilters((current) => ({ ...current, ...range }));
 		setPage(1);
-	}, [timeTab, timeAnchor]);
+	}, [selectedYear, selectedMonth, selectedWeek]);
 
 	useEffect(() => {
 		Promise.all([
@@ -919,8 +1025,10 @@ export default function ReportsPage() {
 
 	const resetFilters = () => {
 		setFilters(initialFilters);
-		setTimeTab('week');
-		setTimeAnchor(new Date());
+		const current = currentReportPeriod(new Date());
+		setSelectedYear(current.year);
+		setSelectedMonth(current.month);
+		setSelectedWeek(current.week);
 		setPage(1);
 	};
 
@@ -992,25 +1100,12 @@ export default function ReportsPage() {
 								<button type="button" className="btn-primary" onClick={runReport} disabled={isLoading}>Run Report</button>
 							</div>
 						</div>
-						<div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-white px-4 py-3">
-							<div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1" role="tablist" aria-label="Report time period">
-								{(['week', 'month', 'year'] as TimeTab[]).map((tab) => (
-									<button
-										type="button"
-										role="tab"
-										aria-selected={timeTab === tab}
-										key={tab}
-										onClick={() => { setTimeTab(tab); setTimeAnchor(new Date()); }}
-										className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors ${timeTab === tab ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-600 hover:bg-white'}`}
-									>
-										{tab}
-									</button>
-								))}
-							</div>
-							<div className="flex items-center gap-2">
-								<button type="button" className="btn-secondary px-3" aria-label={`Previous ${timeTab}`} onClick={() => setTimeAnchor((current) => moveTimeTab(timeTab, current, -1))}>‹</button>
-								<span className="min-w-[190px] text-center text-sm font-semibold text-gray-700">{dateOnly(filters.fromDate)} – {dateOnly(filters.toDate)}</span>
-								<button type="button" className="btn-secondary px-3" aria-label={`Next ${timeTab}`} onClick={() => setTimeAnchor((current) => moveTimeTab(timeTab, current, 1))}>›</button>
+						<div className="flex min-w-0 flex-col gap-2.5 border-b border-gray-100 bg-white px-4 py-3">
+							<TimeFilterTabRow label="Year" options={years} value={selectedYear} onChange={selectYear} />
+							<TimeFilterTabRow label="Month" options={REPORT_MONTHS} value={selectedMonth} onChange={selectMonth} />
+							<TimeFilterTabRow label="Week" options={weeks} value={selectedWeek} onChange={setSelectedWeek} />
+							<div className="text-right text-sm font-semibold text-gray-700" aria-live="polite">
+								{dateOnly(filters.fromDate)} – {dateOnly(filters.toDate)}
 							</div>
 						</div>
 						<div className="grid grid-cols-1 gap-3 border-b border-gray-100 bg-gray-50/60 p-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1028,31 +1123,19 @@ export default function ReportsPage() {
 							</label>
 							<label className="form-group">
 								<span className="form-label">Supplier / vendor</span>
-								<select className="input-field" value={filters.supplierId} onChange={(e) => updateFilter('supplierId', e.target.value)}>
-									<option value="">All suppliers</option>
-									{vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
-								</select>
+								<SearchableSelect options={[{ value: '', label: 'All suppliers' }, ...vendors.map((vendor) => ({ value: vendor.id, label: vendor.name }))]} value={filters.supplierId} onChange={(value) => updateFilter('supplierId', value)} isClearable={false} />
 							</label>
 							<label className="form-group">
 								<span className="form-label">Branch</span>
-								<select className="input-field" value={filters.branchId} onChange={(e) => updateFilter('branchId', e.target.value)}>
-									<option value="">All branches</option>
-									{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-								</select>
+								<SearchableSelect options={[{ value: '', label: 'All branches' }, ...branches.map((branch) => ({ value: branch.id, label: branch.name }))]} value={filters.branchId} onChange={(value) => updateFilter('branchId', value)} isClearable={false} />
 							</label>
 							<label className="form-group">
 								<span className="form-label">Floor</span>
-								<select className="input-field" value={filters.floorId} onChange={(e) => updateFilter('floorId', e.target.value)}>
-									<option value="">All floors</option>
-									{floors.map((floor) => <option key={floor.id} value={floor.id}>{floor.branch?.name ? `${floor.branch.name} - ${floor.name}` : floor.name}</option>)}
-								</select>
+								<SearchableSelect options={[{ value: '', label: 'All floors' }, ...floors.map((floor) => ({ value: floor.id, label: floor.branch?.name ? `${floor.branch.name} - ${floor.name}` : floor.name }))]} value={filters.floorId} onChange={(value) => updateFilter('floorId', value)} isClearable={false} />
 							</label>
 							<label className="form-group">
 								<span className="form-label">Product</span>
-								<select className="input-field" value={filters.skuId} onChange={(e) => updateFilter('skuId', e.target.value)}>
-									<option value="">All products</option>
-									{skus.map((sku) => <option key={sku.id} value={sku.id}>{sku.skuCode} - {sku.name}</option>)}
-								</select>
+								<SearchableSelect options={[{ value: '', label: 'All products' }, ...skus.map((sku) => ({ value: sku.id, label: `${sku.skuCode} - ${sku.name}` }))]} value={filters.skuId} onChange={(value) => updateFilter('skuId', value)} isClearable={false} />
 							</label>
 							<label className="form-group">
 								<span className="form-label">Status / state</span>
@@ -1064,11 +1147,7 @@ export default function ReportsPage() {
 							</label>
 							<label className="form-group">
 								<span className="form-label">Group by</span>
-								<select className="input-field" value={filters.groupBy} onChange={(e) => updateFilter('groupBy', e.target.value)}>
-									<option value="product">Product</option>
-									<option value="department">Department</option>
-									<option value="category">Category</option>
-								</select>
+								<SearchableSelect options={[{ value: 'product', label: 'Product' }, { value: 'department', label: 'Department' }, { value: 'category', label: 'Category' }]} value={filters.groupBy} onChange={(value) => updateFilter('groupBy', value)} isClearable={false} />
 							</label>
 							<label className="form-group">
 								<span className="form-label">Expiry window</span>
@@ -1076,12 +1155,7 @@ export default function ReportsPage() {
 							</label>
 							<label className="form-group">
 								<span className="form-label">Rows</span>
-								<select className="input-field" value={filters.pageSize} onChange={(e) => { updateFilter('pageSize', e.target.value); setPage(1); }}>
-									<option value="25">25</option>
-									<option value="50">50</option>
-									<option value="100">100</option>
-									<option value="250">250</option>
-								</select>
+								<SearchableSelect options={['25', '50', '100', '250'].map((value) => ({ value, label: value }))} value={filters.pageSize} onChange={(value) => { updateFilter('pageSize', value); setPage(1); }} isClearable={false} />
 							</label>
 						</div>
 					</div>

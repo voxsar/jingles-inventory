@@ -1849,6 +1849,25 @@
     color: var(--ink-3);
   }
 
+  .spreadsheet-dropdown-search {
+    display: block;
+    width: calc(100% - 16px);
+    min-height: 36px;
+    margin: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    background: var(--bg-2);
+    color: var(--ink);
+    font: inherit;
+    outline: none;
+  }
+
+  .spreadsheet-dropdown-search:focus {
+    border-color: rgba(var(--accent-glow), 0.5);
+    box-shadow: 0 0 0 3px rgba(var(--accent-glow), 0.12);
+  }
+
   .spreadsheet-shell .jss_about {
     display: none;
   }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SearchableSelect from '../components/SearchableSelect';
 
 interface EntityType {
   id: string;
@@ -80,17 +81,13 @@ export default function SpreadsheetPage() {
           className="filter-input-wide"
           style={{ flex: '1 1 300px', minWidth: '200px' }}
         />
-        <select
+        <SearchableSelect
+          options={[{ value: '', label: 'All Categories' }, ...categories.map((cat) => ({ value: cat.id, label: `${cat.icon} ${cat.name}` }))]}
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="filter-select"
-          style={{ minWidth: '180px' }}
-        >
-          <option value="">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-          ))}
-        </select>
+          onChange={setSelectedCategory}
+          className="min-w-[180px]"
+          isClearable={false}
+        />
         {(searchTerm || selectedCategory) && (
           <button
             onClick={() => { setSearchTerm(''); setSelectedCategory(''); }}

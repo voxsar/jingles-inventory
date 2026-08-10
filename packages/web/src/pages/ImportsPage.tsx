@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { importsApi } from '../api/client';
 import DataTable from '../components/DataTable';
 import Pagination from '../components/Pagination';
+import SearchableSelect from '../components/SearchableSelect';
 import { formatQuantity } from '../utils/quantity';
 
 const ENTITY_OPTIONS = [
@@ -606,11 +607,7 @@ export default function ImportsPage() {
 						<form className="mt-5 space-y-4" onSubmit={handleUpload}>
 							<div className="form-group">
 								<label className="form-label">Import Type</label>
-								<select className="input-field" value={entityType} onChange={(event) => setEntityType(event.target.value)}>
-									{ENTITY_OPTIONS.map((option) => (
-										<option key={option.value} value={option.value}>{option.label}</option>
-									))}
-								</select>
+								<SearchableSelect options={ENTITY_OPTIONS} value={entityType} onChange={setEntityType} isClearable={false} />
 							</div>
 							<div className="form-group">
 								<label className="form-label">Source File</label>
@@ -778,18 +775,15 @@ export default function ImportsPage() {
 											value={searchInput}
 											onChange={(event) => setSearchInput(event.target.value)}
 										/>
-										<select
-											className="filter-select"
+										<SearchableSelect
+											options={RECORD_STATUS_OPTIONS}
 											value={recordStatusFilter}
-											onChange={(event) => {
-												setRecordStatusFilter(event.target.value);
+											onChange={(value) => {
+												setRecordStatusFilter(value);
 												setRecordPage(1);
 											}}
-										>
-											{RECORD_STATUS_OPTIONS.map((option) => (
-												<option key={option.value} value={option.value}>{option.label}</option>
-											))}
-										</select>
+											isClearable={false}
+										/>
 										{pendingPageIds.length > 0 && (
 											<>
 												<button className="btn-secondary text-xs" type="button" onClick={() => updateSelection(true, pendingPageIds)}>

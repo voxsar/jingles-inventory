@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { tagsApi } from '../api/client';
 import PaginatedDataTable from '../components/PaginatedDataTable';
+import SearchableSelect from '../components/SearchableSelect';
 
 const defaultTagForm = { name: '', color: '' };
 
@@ -159,24 +160,18 @@ export default function TagsPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
-        <select
+        <SearchableSelect
+          options={[{ value: '', label: 'All Colors' }, { value: 'true', label: 'Has Color' }, { value: 'false', label: 'No Color' }]}
           value={colorFilter}
-          onChange={(e) => setColorFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Colors</option>
-          <option value="true">Has Color</option>
-          <option value="false">No Color</option>
-        </select>
-        <select
+          onChange={setColorFilter}
+          isClearable={false}
+        />
+        <SearchableSelect
+          options={[{ value: '', label: 'All Usage' }, { value: 'used', label: 'Used on Products' }, { value: 'unused', label: 'Unused' }]}
           value={usageFilter}
-          onChange={(e) => setUsageFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="">All Usage</option>
-          <option value="used">Used on Products</option>
-          <option value="unused">Unused</option>
-        </select>
+          onChange={setUsageFilter}
+          isClearable={false}
+        />
         {(searchTerm || colorFilter || usageFilter) && (
           <button type="button" className="btn-secondary text-xs" onClick={() => { setSearchTerm(''); setColorFilter(''); setUsageFilter(''); }}>
             ✕ Clear filters

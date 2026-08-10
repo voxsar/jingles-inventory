@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import voucherApi from '../api/voucherApi';
 import { skusApi } from '../api/client';
+import SearchableSelect from '../components/SearchableSelect';
 
 export default function VouchersPage() {
   const [codes, setCodes] = useState<any[]>([]);
@@ -31,9 +32,7 @@ export default function VouchersPage() {
     <div className="page-header"><div><h1 className="page-title">Gift Vouchers</h1><p className="page-subtitle">Issue, monitor, and manage voucher balances used by POS.</p></div></div>
     {error && <div className="alert-error">{error}</div>}
     <form className="card p-5 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4" onSubmit={create}>
-      <select className="form-input" required value={skuId} onChange={(e) => setSkuId(e.target.value)}>
-        <option value="">Voucher product</option>{skus.map((sku) => <option key={sku.id} value={sku.id}>{sku.skuCode} — {sku.name}</option>)}
-      </select>
+      <SearchableSelect options={[{ value: '', label: 'Voucher product' }, ...skus.map((sku) => ({ value: sku.id, label: `${sku.skuCode} — ${sku.name}` }))]} value={skuId} onChange={setSkuId} placeholder="Voucher product" isClearable={false} />
       <input className="form-input" required min="0.01" step="0.01" type="number" placeholder="Value" value={value} onChange={(e) => setValue(e.target.value)} />
       <input className="form-input" placeholder="Code prefix" value={prefix} onChange={(e) => setPrefix(e.target.value)} />
       <button className="btn-primary" type="submit" disabled={!skuId || !value}>Issue voucher</button>

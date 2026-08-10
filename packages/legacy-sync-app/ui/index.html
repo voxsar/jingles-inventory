@@ -57,10 +57,11 @@
 	<h2>Legacy database (desktop MSSQL server)</h2>
 	<form id="form" onsubmit="return false;">
 		<label>Dialect
-			<select id="dialect">
+			<input id="dialect" list="dialect-options" type="search" placeholder="Search dialects" />
+			<datalist id="dialect-options">
 				<option value="mssql">MSSQL (original POS)</option>
 				<option value="mysql">MySQL (converted copy)</option>
-			</select>
+			</datalist>
 		</label>
 		<label>Host<input id="dbHost" placeholder="localhost" /></label>
 		<label>Port<input id="dbPort" type="number" placeholder="1433" /></label>

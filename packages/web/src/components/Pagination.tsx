@@ -1,3 +1,5 @@
+import SearchableSelect from './SearchableSelect';
+
 interface PaginationProps {
   page: number;
   totalPages: number;
@@ -43,15 +45,13 @@ export default function Pagination({
           {total === 0 ? 'No results' : `Showing ${start}-${end} of ${total}`}
         </span>
         {onPageSizeChange && (
-          <select
-            className="pagination-size"
-            value={pageSize}
-            onChange={e => onPageSizeChange(Number(e.target.value))}
-          >
-            {pageSizeOptions.map(s => (
-              <option key={s} value={s}>{s} per page</option>
-            ))}
-          </select>
+          <SearchableSelect
+            options={pageSizeOptions.map((size) => ({ value: String(size), label: `${size} per page` }))}
+            className="min-w-[140px]"
+            value={String(pageSize)}
+            onChange={(value) => onPageSizeChange(Number(value))}
+            isClearable={false}
+          />
         )}
       </div>
       {safeTotalPages > 1 && (
