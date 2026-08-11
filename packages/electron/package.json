@@ -2,6 +2,7 @@
   "name": "jingles-inventory-desktop",
   "version": "1.0.3",
   "description": "Offline-capable Jingles Inventory desktop application",
+  "author": "The Red Sun",
   "main": "dist/electron/main.js",
   "private": true,
   "scripts": {
@@ -53,6 +54,7 @@
   "build": {
     "appId": "com.jingles.inventory",
     "productName": "Jingles Inventory",
+    "copyright": "Copyright © 2026 The Red Sun",
     "electronVersion": "38.8.6",
     "directories": {
       "output": "release"
@@ -99,8 +101,18 @@
     },
     "win": {
       "icon": "icon.ico",
+      "signtoolOptions": {
+        "publisherName": "The Red Sun"
+      },
       "target": "nsis"
     },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://inv.theredsun.org/updates/inventory",
+        "channel": "latest"
+      }
+    ],
     "linux": {
       "target": "AppImage"
     }

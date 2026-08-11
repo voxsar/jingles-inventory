@@ -23,17 +23,17 @@ Use a separate HTTPS directory for every app. Do not point multiple apps at the 
 
 ```powershell
 cd quantum-shelf
-$env:JINGLES_INVENTORY_UPDATE_URL='https://updates.example.com/inventory'
-$env:JINGLES_WINDOWS_PUBLISHER='Exact certificate Common Name'
+$env:JINGLES_INVENTORY_UPDATE_URL='https://inv.theredsun.org/updates/inventory'
+$env:JINGLES_WINDOWS_PUBLISHER='The Red Sun'
 $env:CSC_LINK='C:\secure\jingles-signing.pfx'
 $env:CSC_KEY_PASSWORD='read-from-your-secret-store'
 npm run release:update:inventory
 
-$env:JINGLES_LEGACY_SYNC_UPDATE_URL='https://updates.example.com/legacy-sync'
+$env:JINGLES_LEGACY_SYNC_UPDATE_URL='https://inv.theredsun.org/updates/legacy-sync'
 npm run release:update:legacy-sync
 
 cd ..\federation-commerce
-$env:JINGLES_POS_UPDATE_URL='https://updates.example.com/pos'
+$env:JINGLES_POS_UPDATE_URL='https://pos.theredsun.org/updates/pos'
 npm run release:update:pos
 ```
 
@@ -51,6 +51,8 @@ Release outputs are:
 
 The static host must support HTTPS, byte-range requests, and ordinary `GET`/`HEAD` requests. Serve YAML with a short/no-cache policy and versioned installers/blockmaps with immutable caching.
 
+The canonical feed directories are `/var/www/federation-inventory/desktop-updates/inventory`, `/var/www/federation-inventory/desktop-updates/pos`, and `/var/www/federation-inventory/desktop-updates/legacy-sync`. Install the matching nginx locations from each repository before publishing. A missing `latest.yml` must return 404 and must never fall through to the web application's `index.html`.
+
 ## Signing and feed security
 
 Production releases should be Authenticode-signed with the same publisher identity. `electron-updater` verifies Windows update signatures by default; never disable that verification. Keep signing keys and feed deployment credentials in CI secrets, not in either repository.
@@ -67,4 +69,3 @@ For an emergency feed override, launch an installed app with its app-specific en
 ```
 
 Only HTTPS feeds are accepted, except localhost feeds used for development. To roll back a faulty release, publish a fixed build with a higher version; do not replace an artifact in place after clients may have cached it.
-

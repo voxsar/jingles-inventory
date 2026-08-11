@@ -1,8 +1,9 @@
 {
 	"name": "@jingles/legacy-sync-app",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"private": true,
 	"description": "Standalone desktop app that syncs the legacy POS database (MSSQL) into the Jingles inventory system every 5 minutes.",
+	"author": "The Red Sun",
 	"main": "dist/main.js",
 	"scripts": {
 		"build": "tsc",
@@ -27,6 +28,7 @@
 	"build": {
 		"appId": "com.jingles.legacysync",
 		"productName": "Jingles Legacy Sync",
+		"copyright": "Copyright © 2026 The Red Sun",
 		"electronVersion": "38.8.6",
 		"directories": {
 			"output": "release"
@@ -37,11 +39,21 @@
 			"package.json"
 		],
 		"win": {
+			"signtoolOptions": {
+				"publisherName": "The Red Sun"
+			},
 			"target": [
 				"nsis",
 				"portable"
 			]
 		},
+		"publish": [
+			{
+				"provider": "generic",
+				"url": "https://inv.theredsun.org/updates/legacy-sync",
+				"channel": "latest"
+			}
+		],
 		"nsis": {
 			"oneClick": true,
 			"perMachine": false

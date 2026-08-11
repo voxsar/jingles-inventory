@@ -12,6 +12,8 @@ NC='\033[0m' # No Color
 
 # Navigate to project root
 cd /var/www/federation-inventory/jingles-inventory
+mkdir -p /var/www/federation-inventory/desktop-updates/inventory
+mkdir -p /var/www/federation-inventory/desktop-updates/legacy-sync
 
 # Step 1: Pull latest from main
 echo -e "${BLUE}📥 Pulling latest from main...${NC}"
