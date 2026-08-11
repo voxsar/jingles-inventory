@@ -29,6 +29,7 @@ export class SyncState {
 	private readonly getHashStatement;
 	private readonly putHashStatement;
 	private readonly pruneStatement;
+	private readonly getMetadataStatement;
 	private readonly setMetadataStatement;
 
 	constructor(userDataDir: string) {
@@ -55,6 +56,7 @@ export class SyncState {
 			ON CONFLICT(key) DO UPDATE SET hash = excluded.hash, seen_cycle = excluded.seen_cycle
 		`);
 		this.pruneStatement = this.db.prepare('DELETE FROM row_hash WHERE key >= ? AND key < ? AND seen_cycle <> ?');
+		this.getMetadataStatement = this.db.prepare('SELECT value FROM metadata WHERE key = ?');
 		this.setMetadataStatement = this.db.prepare(`
 			INSERT INTO metadata(key, value) VALUES (?, ?)
 			ON CONFLICT(key) DO UPDATE SET value = excluded.value
@@ -83,6 +85,14 @@ export class SyncState {
 
 	prunePrefix(prefix: string, cycle: string) {
 		this.pruneStatement.run(prefix, `${prefix}\uffff`, cycle);
+	}
+
+	getMetadata(key: string): string | undefined {
+		return (this.getMetadataStatement.get(key) as { value?: string } | undefined)?.value;
+	}
+
+	setMetadata(key: string, value: string) {
+		this.setMetadataStatement.run(key, value);
 	}
 
 	finishCycle(at: string) {

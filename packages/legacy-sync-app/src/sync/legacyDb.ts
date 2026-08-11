@@ -51,6 +51,19 @@ async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 			return result.recordset.map((row: any) => String(row.TABLE_NAME));
 		},
 		async *iterateTable(table: string, batchSize: number) {
+			const safeTable = safeIdentifier(table);
+			const primaryKeyResult = await pool.request().query(`
+				SELECT c.name AS COLUMN_NAME
+				FROM sys.indexes i
+				JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+				JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+				JOIN sys.tables t ON i.object_id = t.object_id
+				JOIN sys.schemas s ON t.schema_id = s.schema_id
+				WHERE i.is_primary_key = 1 AND s.name = '${safeIdentifier(schema)}' AND t.name = '${safeTable}'
+				ORDER BY ic.key_ordinal
+			`);
+			const orderColumns = primaryKeyResult.recordset.map((row: any) => `[${safeIdentifier(String(row.COLUMN_NAME))}]`);
+			const orderBy = orderColumns.length > 0 ? ` ORDER BY ${orderColumns.join(', ')}` : '';
 			const request = pool.request();
 			request.stream = true;
 			const batches: LegacyRow[][] = [];
@@ -82,7 +95,7 @@ async function createMssqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 				finished = true;
 				signal();
 			});
-			const queryPromise = request.query(`SELECT * FROM [${safeIdentifier(schema)}].[${safeIdentifier(table)}]`);
+			const queryPromise = request.query(`SELECT * FROM [${safeIdentifier(schema)}].[${safeTable}]${orderBy}`);
 
 			try {
 				while (!finished || batches.length > 0) {
@@ -132,10 +145,19 @@ async function createMysqlDb(config: AppConfig['legacyDatabase']): Promise<Legac
 			return (rows as any[]).map((row) => String(row.TABLE_NAME));
 		},
 		async *iterateTable(table: string, batchSize: number) {
+			const safeTable = safeIdentifier(table);
+			const [primaryKeyRows] = await pool.query(
+				`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+				 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'
+				 ORDER BY ORDINAL_POSITION`,
+				[safeTable],
+			);
+			const orderColumns = (primaryKeyRows as any[]).map((row) => `\`${safeIdentifier(String(row.COLUMN_NAME))}\``);
+			const orderBy = orderColumns.length > 0 ? ` ORDER BY ${orderColumns.join(', ')}` : '';
 			const connection = await pool.getConnection();
 			try {
 				const stream = connection.connection
-					.query(`SELECT * FROM \`${safeIdentifier(table)}\``)
+					.query(`SELECT * FROM \`${safeTable}\`${orderBy}`)
 					.stream({ highWaterMark: batchSize });
 				let batch: LegacyRow[] = [];
 				for await (const row of stream) {

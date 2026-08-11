@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import type { PoolClient, QueryResultRow } from 'pg';
 import { Pool } from 'pg';
 import type { LegacySyncPosRecord } from '@jingles/shared';
@@ -791,39 +791,56 @@ export async function upsertLegacyPosRecords(records: LegacySyncPosRecord[], syn
 	if (records.length === 0) return { created: 0, updated: 0, unchanged: 0 };
 	await ensurePosCloudSchema();
 	const client = await getPool().connect();
-	const counts = { created: 0, updated: 0, unchanged: 0 };
 	try {
 		await client.query('BEGIN');
-		for (const record of records) {
-			const payload = JSON.stringify(record.data);
-			const existing = await client.query<{ same: boolean }>(
-				`SELECT payload = $3::jsonb AS same FROM legacy_pos_records WHERE source_table = $1 AND source_id = $2`,
-				[record.sourceTable, record.sourceId, payload],
-			);
-			if (existing.rows[0]?.same) {
-				counts.unchanged += 1;
-				continue;
-			}
-			await client.query(
-				`INSERT INTO legacy_pos_records (source_table, source_id, payload)
-				 VALUES ($1, $2, $3::jsonb)
-				 ON CONFLICT (source_table, source_id) DO UPDATE
-				 SET payload = EXCLUDED.payload, last_synced_at = NOW()`,
-				[record.sourceTable, record.sourceId, payload],
-			);
-			const contentHash = await client.query<{ hash: string }>(`SELECT md5($1::text) AS hash`, [payload]);
+		const incoming = records.map((record) => ({
+			source_table: record.sourceTable,
+			source_id: record.sourceId,
+			payload: record.data,
+		}));
+		const changed = await client.query<{ source_table: string; source_id: string; created: boolean }>(
+			`WITH incoming AS (
+				SELECT source_table, source_id, payload
+				FROM jsonb_to_recordset($1::jsonb)
+					AS row(source_table text, source_id text, payload jsonb)
+			)
+			INSERT INTO legacy_pos_records (source_table, source_id, payload)
+			SELECT source_table, source_id, payload FROM incoming
+			ON CONFLICT (source_table, source_id) DO UPDATE
+			SET payload = EXCLUDED.payload, last_synced_at = NOW()
+			WHERE legacy_pos_records.payload IS DISTINCT FROM EXCLUDED.payload
+			RETURNING source_table, source_id, (xmax = 0) AS created`,
+			[JSON.stringify(incoming)],
+		);
+		const changedKeys = new Set(changed.rows.map((row) => `${row.source_table}\u0000${row.source_id}`));
+		const versions = records
+			.filter((record) => changedKeys.has(`${record.sourceTable}\u0000${record.sourceId}`))
+			.map((record) => {
+				const payload = JSON.stringify(record.data);
+				return {
+					id: randomUUID(), source_table: record.sourceTable, source_id: record.sourceId,
+					payload: record.data, content_hash: createHash('sha256').update(payload).digest('hex'),
+					sync_run_id: syncRunId,
+				};
+			});
+		if (versions.length > 0) {
 			await client.query(
 				`INSERT INTO legacy_pos_record_versions
-				 (id, source_table, source_id, payload, content_hash, sync_run_id)
-				 VALUES ($1, $2, $3, $4::jsonb, $5, $6)
+					(id, source_table, source_id, payload, content_hash, sync_run_id)
+				 SELECT id, source_table, source_id, payload, content_hash, sync_run_id
+				 FROM jsonb_to_recordset($1::jsonb)
+					AS row(id text, source_table text, source_id text, payload jsonb, content_hash text, sync_run_id text)
 				 ON CONFLICT (source_table, source_id, content_hash) DO NOTHING`,
-				[randomUUID(), record.sourceTable, record.sourceId, payload, contentHash.rows[0].hash, syncRunId],
+				[JSON.stringify(versions)],
 			);
-			if (existing.rowCount) counts.updated += 1;
-			else counts.created += 1;
 		}
 		await client.query('COMMIT');
-		return counts;
+		const created = changed.rows.filter((row) => row.created).length;
+		return {
+			created,
+			updated: changed.rows.length - created,
+			unchanged: records.length - changed.rows.length,
+		};
 	} catch (error) {
 		await client.query('ROLLBACK');
 		throw error;
@@ -862,6 +879,22 @@ export async function listLegacyPosRecords(args: { sourceTable?: string; page?: 
 		tables: tables.rows.map((row) => ({ sourceTable: row.source_table, count: Number(row.count) })),
 		items: items.rows,
 	};
+}
+
+export async function getLegacyTableRows(sourceTables: string[]): Promise<Record<string, Array<Record<string, unknown>>>> {
+	await ensurePosCloudSchema();
+	const normalized = Array.from(new Set(sourceTables.map((table) => table.toLowerCase())));
+	if (normalized.length === 0) return {};
+	const result = await getPool().query<{ source_table: string; payload: Record<string, unknown> }>(
+		`SELECT source_table, payload FROM legacy_pos_records
+		 WHERE source_table = ANY($1::text[]) ORDER BY source_table, source_id`,
+		[normalized],
+	);
+	const rows: Record<string, Array<Record<string, unknown>>> = {};
+	for (const item of result.rows) {
+		(rows[item.source_table] ??= []).push(item.payload);
+	}
+	return rows;
 }
 
 export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {

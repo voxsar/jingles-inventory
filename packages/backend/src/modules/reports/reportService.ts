@@ -1,6 +1,6 @@
 import prisma from '../../prisma/client';
 import { InventoryEventType } from '@jingles/shared';
-import { ensurePosCloudSchema } from '../../services/posCloud';
+import { ensurePosCloudSchema, getLegacyTableRows } from '../../services/posCloud';
 
 /**
  * GRN Report - Good Received Note Report
@@ -1268,6 +1268,94 @@ const quotationSourceRequirement: SourceRequirement = {
 	notes: ['No quotation model, route, or Prisma relation exists in the current codebase.'],
 };
 
+async function getLegacyDocumentReport(
+	kind: 'purchase-order' | 'quotation',
+	filters: CommonReportFilters,
+) {
+	const isPurchaseOrder = kind === 'purchase-order';
+	const tables = isPurchaseOrder
+		? ['purchaseheader', 'purchasedetail', 'supplier', 'product']
+		: ['invoiceheader', 'invoicedetail', 'customer', 'product'];
+	const archived = await getLegacyTableRows(tables);
+	const headers = archived[isPurchaseOrder ? 'purchaseheader' : 'invoiceheader'] ?? [];
+	const details = archived[isPurchaseOrder ? 'purchasedetail' : 'invoicedetail'] ?? [];
+	const parties = archived[isPurchaseOrder ? 'supplier' : 'customer'] ?? [];
+	const products = archived.product ?? [];
+	const expectedDocumentId = isPurchaseOrder ? 100 : 105;
+	const headerIdField = isPurchaseOrder ? 'PurchaseHeaderID' : 'InvoiceHeaderID';
+	const dateField = isPurchaseOrder ? 'PurchaseDate' : 'InvoiceDate';
+	const partyIdField = isPurchaseOrder ? 'SupplierID' : 'CustomerID';
+	const partyNameField = isPurchaseOrder ? 'SupplierName' : 'CustomerName';
+	const partyLabel = isPurchaseOrder ? 'supplier' : 'customer';
+	const partyNames = new Map(parties.map((row) => [String(row[partyIdField] ?? ''), stringFrom(row[partyNameField], row.Name)]));
+	const productNames = new Map(products.map((row) => [String(row.ProductID ?? ''), {
+		code: stringFrom(row.ProductCode, row.BarCode),
+		name: stringFrom(row.ProductName, row.Name),
+	}]));
+	const detailsByHeader = new Map<string, any[]>();
+	for (const detail of details) {
+		const headerId = String(detail[headerIdField] ?? '');
+		if (!headerId || Number(detail.DocumentID) !== expectedDocumentId) continue;
+		const grouped = detailsByHeader.get(headerId) ?? [];
+		grouped.push(detail);
+		detailsByHeader.set(headerId, grouped);
+	}
+
+	const fromTime = filters.fromDate?.getTime();
+	const toTime = filters.toDate?.getTime();
+	const needle = normalizeSearch(filters.search)?.toLowerCase();
+	const rows = headers
+		.filter((header) => Number(header.DocumentID) === expectedDocumentId)
+		.flatMap((header) => {
+			const headerId = String(header[headerIdField] ?? '');
+			const documentDate = new Date(String(header[dateField] ?? header.CreatedDate ?? ''));
+			const timestamp = documentDate.getTime();
+			if (fromTime !== undefined && (!Number.isFinite(timestamp) || timestamp < fromTime)) return [];
+			if (toTime !== undefined && (!Number.isFinite(timestamp) || timestamp > toTime)) return [];
+			const rawStatus = numberFrom(header.Status);
+			const status = rawStatus === 1 ? 'Completed' : rawStatus === 0 ? 'Draft' : `Status ${rawStatus}`;
+			if (filters.status && status.toLowerCase() !== filters.status.toLowerCase()) return [];
+			const partyId = String(header[partyIdField] ?? '');
+			const partyName = partyNames.get(partyId) || `${isPurchaseOrder ? 'Supplier' : 'Customer'} ${partyId}`;
+			const reference = stringFrom(header.DocumentNo, header.ReferenceNo, headerId);
+			return (detailsByHeader.get(headerId) ?? []).map((detail, index) => {
+				const productId = String(detail.ProductID ?? '');
+				const product = productNames.get(productId);
+				const quantity = numberFrom(detail.Qty) + Math.max(numberFrom(detail.FreeQty), 0);
+				const unitAmount = numberFrom(isPurchaseOrder ? detail.CostPrice : detail.SellingPrice, detail.UnitPrice);
+				return {
+					id: `${kind}:${headerId}:${stringFrom(detail[isPurchaseOrder ? 'PurchaseDetailID' : 'InvoiceDetailID'], index)}`,
+					reference,
+					status,
+					[partyLabel]: partyName,
+					supplier: partyName,
+					skuCode: product?.code ?? productId,
+					productName: product?.name ?? `Product ${productId}`,
+					quantity,
+					amount: numberFrom(detail.NetAmount, unitAmount * quantity),
+					date: Number.isFinite(timestamp) ? documentDate : header.CreatedDate,
+					legacyHeaderId: headerId,
+					legacyDetailId: stringFrom(detail[isPurchaseOrder ? 'PurchaseDetailID' : 'InvoiceDetailID']),
+				};
+			});
+		})
+		.filter((row) => !needle || [row.reference, row.supplier, row.skuCode, row.productName].join(' ').toLowerCase().includes(needle));
+	const paged = paginateRows(rows, filters);
+	return {
+		...paged,
+		summary: {
+			sourceStatus: 'Legacy MaxSoft archive',
+			documents: new Set(rows.map((row) => row.legacyHeaderId)).size,
+			lines: rows.length,
+			totalQuantity: rows.reduce((sum, row) => sum + row.quantity, 0),
+			totalAmount: rows.reduce((sum, row) => sum + row.amount, 0),
+		},
+		notice: headers.length === 0
+			? `No ${kind === 'purchase-order' ? 'purchase order' : 'quotation'} rows have reached the lossless legacy archive yet.`
+			: undefined,
+	};
+}
+
 export async function getPaidInOutReport(filters: CommonReportFilters) {
 	const { fromDate, toDate, status, search } = filters;
 	const where: any = {
@@ -1543,9 +1631,9 @@ export async function getCreditorsDebtorsReport(filters: CommonReportFilters) {
 export async function getGenericReport(reportId: string, filters: CommonReportFilters & { daysToExpiry?: number }) {
 	switch (reportId) {
 		case 'purchase-order':
-			return emptySourceReport('Purchase order note report', filters, purchaseOrderSourceRequirement);
+			return getLegacyDocumentReport('purchase-order', filters);
 		case 'quotation':
-			return emptySourceReport('Quotation report', filters, quotationSourceRequirement);
+			return getLegacyDocumentReport('quotation', filters);
 		case 'sales-return':
 			return getSalesEventReport(filters, { returnsOnly: true });
 		case 'tog-product-wise':

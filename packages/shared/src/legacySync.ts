@@ -79,7 +79,7 @@ export interface LegacySyncVariantRow {
 	details: LegacySyncLocationDetail[];
 }
 
-// Lossless copy of a row from a legacy POS operational table. Keeping the
+// Lossless copy of a row from any legacy base table. Keeping the
 // original column names and values is intentional: legacy installations have
 // several schema revisions, and report/cash fields are not consistent enough
 // to safely force into one shape at the desktop boundary.

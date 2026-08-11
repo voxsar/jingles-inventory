@@ -40,13 +40,20 @@ shop desktop                                this server
 | `department` / `category` / `subcategory1-3` | Category tree (same slugs as the one-time importer) |
 | `product` + `productdetail` + `vwStockReport` | SKUs **or SKU variants** (see below), prices, per-branch quantities |
 | `productcolorsize` + `productcolorsizedetail` | SKU variants + variant batch prices |
-| Discovered POS/report tables (sales, invoices, tenders/payments, shifts/cash, day-end/Z-report, customers, loyalty/vouchers/promotions, returns/refunds, orders, configuration and cashier permissions) | Lossless current mirror plus append-only versions in `legacy_pos_records` / `legacy_pos_record_versions` |
+| `purchaseheader` / `purchasedetail` (`DocumentID` 101/102) | Historical GRNs and PRNs (audit-only; stock is not applied twice) |
+| `transfernoteheader` / `transfernotedetail`, `adjustmentheader` / `adjustmentdetail` | Historical transfers and adjustment events (audit-only) |
+| Purchase `DocumentID` 100 and invoice `DocumentID` 105 | Purchase-order and quotation reports |
+| Every legacy base table (including sales, purchasing, stock ledger, reports, customers, loyalty, vouchers, configuration and permissions) | Lossless current mirror plus append-only versions in `legacy_pos_records` / `legacy_pos_record_versions` |
 
-The first cycle sends the whole catalog and POS/report history (the server applies idempotently);
-afterwards the app keeps one content-hash per legacy row locally and only
-pushes rows that actually changed.
+The first cycle sends the whole catalog and every legacy base-table row (the server applies idempotently).
+Afterwards the five-minute cycle always updates catalog, `vwStockReport`, GRN,
+PRN, transfer, adjustment and quotation/order sources. A complete all-table
+audit defaults to every 1,440 minutes (configurable in the app) so the 3.7M-row
+archive does not block routine inventory updates. The app keeps one
+content-hash per legacy row locally and only pushes rows that changed. **Full
+re-sync** always scans all tables immediately.
 
-Legacy POS/report rows retain their original table and column names because
+All archived legacy rows retain their original table and column names because
 deployed legacy databases use several schema revisions. This preserves sales,
 payments, opening/closing values, cash declarations and stored Z/day-end data
 without guessing or dropping installation-specific columns. Historical sales
@@ -91,8 +98,8 @@ products. The server keeps them variants forever:
 - `GET /api/legacy-sync/links?sourceType=product&q=P101` — inspect how legacy
   rows are mapped (`resolution`: `variant-code`, `sku-code`, `barcode`,
   `created`, `manual`). Set `isLocked` on a row to pin a mapping permanently.
-- `GET /api/legacy-sync/pos-records?sourceTable=invoiceheader` inspects the
-  mirrored POS/report tables and their original row payloads.
+- `GET /api/legacy-sync/pos-records?sourceTable=invoiceheader` inspects any
+  mirrored legacy table and its original row payloads.
 - Run history lives in `legacy_sync_runs`; every quantity change is an
   `inventory_events` row with the run id in its metadata.
 
@@ -108,6 +115,6 @@ products. The server keeps them variants forever:
 - Customer, loyalty and general-ledger/accounting domains are not converted
   into first-class new-system entities. POS operational/report rows are fully
   mirrored losslessly, but installation-specific fields remain in their
-original JSON shape until a dedicated UI/report mapping is added.
+  original JSON shape until a dedicated UI/report mapping is added.
 - Passwords, PINs, tokens, secrets and credential material are redacted by the
   desktop extractor and are never sent to either new application.

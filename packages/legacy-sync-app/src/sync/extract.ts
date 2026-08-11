@@ -76,9 +76,6 @@ function joinParts(parts: Array<unknown>, separator = ', ') {
 	return parts.map(str).filter(Boolean).join(separator) || undefined;
 }
 
-const POS_TABLE_NAME = /(pos|invoice|receipt|sale|payment|tender|cash|drawer|till|shift|session|opening|closing|balance|settlement|counter|transaction|report|day.?end|z.?report|refund|return|cashier|customer|loyalty|voucher|promotion|order|document|config|credit|cheque|advance|permission|usergroup|privilege)/i;
-const NON_POS_TABLE_NAME = /^(purchase|supplier|product|stock|transfer|adjustment|price|grn|prn)/i;
-
 function jsonValue(value: unknown): unknown {
 	if (value === null || value === undefined || typeof value === 'string' || typeof value === 'boolean') return value ?? null;
 	if (typeof value === 'number') return Number.isFinite(value) ? value : String(value);
@@ -118,11 +115,16 @@ function sourceIdFor(table: string, row: LegacyRow, index: number) {
 	return `${hash}:${index + 1}`;
 }
 
-export async function listPosTables(db: LegacyDb): Promise<string[]> {
+// Every base table is mirrored. Domain-specific extractors still populate the
+// native Inventory models, while this archive guarantees that tables without
+// a first-class target are retained without dropping columns.
+export async function listLegacyTables(db: LegacyDb): Promise<string[]> {
 	return (await db.listTables())
-		.filter((table) => POS_TABLE_NAME.test(table) && !NON_POS_TABLE_NAME.test(table))
 		.sort((left, right) => left.localeCompare(right));
 }
+
+// Backward-compatible name for callers compiled against older releases.
+export const listPosTables = listLegacyTables;
 
 export function toPosRecords(table: string, rows: LegacyRow[], startIndex: number): LegacySyncPosRecord[] {
 	return rows.map((row, index) => ({

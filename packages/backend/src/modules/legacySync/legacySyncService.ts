@@ -13,6 +13,7 @@ import {
 } from '@jingles/shared';
 import { upsertLegacyPosRecords } from '../../services/posCloud';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
+import { importLegacyDocuments, LegacyDocumentImportResult } from './legacyDocumentImport';
 
 export const LEGACY_SYNC_TERMINAL_ID = 'legacy-desktop-sync';
 const LEGACY_IMPORT_TERMINAL_ID = 'legacy-sql-import';
@@ -1087,13 +1088,37 @@ export async function openRun(agentId?: string) {
 }
 
 export async function completeRun(runId: string, args: { status?: string; stats?: unknown; errorMessage?: string }) {
+	let status = args.status ?? 'Completed';
+	let errorMessage = args.errorMessage ?? null;
+	let historicalDocuments: LegacyDocumentImportResult | undefined;
+
+	// The raw archive is the lossless source of truth. Converting supported
+	// documents into native Inventory records is deliberately best-effort so a
+	// mapping problem cannot discard or roll back the archived MaxSoft rows.
+	if (status !== 'Failed') {
+		try {
+			historicalDocuments = await importLegacyDocuments(runId);
+			if (historicalDocuments.warnings.length > 0 && status === 'Completed') {
+				status = 'CompletedWithWarnings';
+			}
+		} catch (error: any) {
+			const message = `Historical documents were archived but native conversion failed: ${error?.message ?? error}`;
+			historicalDocuments = { grns: 0, prns: 0, transfers: 0, adjustments: 0, warnings: [message] };
+			if (status === 'Completed') status = 'CompletedWithWarnings';
+			errorMessage = errorMessage ? `${errorMessage}\n${message}` : message;
+		}
+	}
+
+	const inputStats = args.stats && typeof args.stats === 'object' && !Array.isArray(args.stats)
+		? args.stats as Record<string, unknown>
+		: {};
 	return prisma.legacySyncRun.update({
 		where: { id: runId },
 		data: {
-			status: args.status ?? 'Completed',
+			status,
 			finishedAt: new Date(),
-			stats: (args.stats as any) ?? undefined,
-			errorMessage: args.errorMessage ?? null,
+			stats: historicalDocuments ? { ...inputStats, historicalDocuments } as any : (args.stats as any) ?? undefined,
+			errorMessage,
 		},
 	});
 }

@@ -142,6 +142,23 @@ export const prismaMock = {
 		deleteMany: vi.fn(),
 		createMany: vi.fn(),
 	},
+	pRN: {
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		update: vi.fn(),
+		count: vi.fn(),
+	},
+	stockTransfer: {
+		findUnique: vi.fn(),
+		findFirst: vi.fn(),
+		findMany: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		count: vi.fn(),
+	},
 	inspectionRecord: {
 		findUnique: vi.fn(),
 		findMany: vi.fn(),

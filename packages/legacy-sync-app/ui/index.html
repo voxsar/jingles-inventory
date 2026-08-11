@@ -70,6 +70,7 @@
 		<label>Password<input id="dbPassword" type="password" /></label>
 		<label>Schema (MSSQL)<input id="dbSchema" placeholder="dbo" /></label>
 		<label>Sync every (minutes)<input id="interval" type="number" min="1" placeholder="5" /></label>
+		<label>Full archive every (minutes)<input id="archiveInterval" type="number" min="1" placeholder="1440" /></label>
 
 		<label class="span2">New system URL<input id="serverUrl" placeholder="https://inventory.example.com" /></label>
 		<label class="span2">Sync token<input id="serverToken" type="password" placeholder="JINGLES_LEGACY_SYNC_TOKEN value" /></label>
@@ -100,6 +101,7 @@
 		$('dbPassword').value = config.legacyDatabase.password ?? '';
 		$('dbSchema').value = config.legacyDatabase.schema ?? 'dbo';
 		$('interval').value = config.intervalMinutes ?? 5;
+		$('archiveInterval').value = config.archiveIntervalMinutes ?? 1440;
 		$('serverUrl').value = config.server.baseUrl ?? '';
 		$('serverToken').value = config.server.token ?? '';
 		$('autoSync').checked = config.autoSync !== false;
@@ -109,6 +111,7 @@
 		return {
 			autoSync: $('autoSync').checked,
 			intervalMinutes: Number($('interval').value) || 5,
+			archiveIntervalMinutes: Number($('archiveInterval').value) || 1440,
 			legacyDatabase: {
 				dialect: $('dialect').value,
 				host: $('dbHost').value.trim(),

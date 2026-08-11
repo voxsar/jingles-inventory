@@ -34,15 +34,18 @@ portable exe). Install it on the shop desktop.
 - **New system URL** — the inventory server, e.g. `https://inventory.example.com`.
 - **Sync token** — must match `JINGLES_LEGACY_SYNC_TOKEN` in the backend env.
 - **Sync every** — default 5 minutes. Enable **Sync automatically**.
+- **Full archive every** — default 1,440 minutes. Routine cycles still process
+  stock and operational documents; this controls the complete all-table audit.
 
 The app lives in the system tray; closing the window keeps it syncing in the
 background. Quit from the tray menu. Config + change-detection state are stored
 in the app's user-data folder.
 
-Each cycle also discovers legacy POS, invoice, payment, cash/shift,
-day-end/Z-report, return/refund and cashier tables. Their rows are mirrored
-losslessly with change history so opening/closing balances and report source
-data survive differences between legacy schema versions.
+The first cycle discovers and archives every legacy base table. Routine cycles
+keep catalog, stock, GRN/PRN, transfer, adjustment and quotation/order sources
+current; the full lossless all-table audit repeats on the configured cadence.
+All changed rows retain version history so purchasing, stock movements, POS
+data, opening/closing balances and report sources survive schema differences.
 
 **Buttons:** *Sync now* runs a cycle immediately, *Full re-sync* re-applies the
 entire legacy snapshot, *Reset state* clears local change detection so the next

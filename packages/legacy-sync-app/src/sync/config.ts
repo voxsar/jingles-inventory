@@ -6,6 +6,7 @@ export interface AppConfig {
 	agentId: string;
 	autoSync: boolean;
 	intervalMinutes: number;
+	archiveIntervalMinutes: number;
 	chunkSize: number;
 	legacyDatabase: {
 		dialect: 'mssql' | 'mysql';
@@ -29,6 +30,7 @@ export function defaultConfig(): AppConfig {
 		agentId: `legacy-sync@${os.hostname()}`,
 		autoSync: true,
 		intervalMinutes: 5,
+		archiveIntervalMinutes: 1440,
 		chunkSize: 150,
 		legacyDatabase: {
 			dialect: 'mssql',

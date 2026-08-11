@@ -1,7 +1,7 @@
 import type { LegacySyncChunk } from '@jingles/shared';
 import type { AppConfig } from './config';
 import { connectLegacyDb } from './legacyDb';
-import { extractSnapshot, listPosTables, toPosRecords } from './extract';
+import { extractSnapshot, listLegacyTables, toPosRecords } from './extract';
 import { hashRow, StoredHash, SyncState } from './state';
 import { completeRun, openRun, sendChunk } from './serverClient';
 
@@ -31,6 +31,42 @@ function inspectRows<T>(
 function chunked<T>(items: T[], size: number): T[][] {
 	const result: T[][] = [];
 	for (let index = 0; index < items.length; index += size) result.push(items.slice(index, index + size));
+	return result;
+}
+
+const MAX_ARCHIVE_CHUNK_BYTES = 15 * 1024 * 1024;
+const MIN_ARCHIVE_READ_BATCH_ROWS = 1000;
+const DOCUMENT_ARCHIVE_TABLES = new Set([
+	'purchaseheader', 'purchasedetail', 'returntype',
+	'invoiceheader', 'invoicedetail', 'customer',
+	'transfernoteheader', 'transfernotedetail',
+	'adjustmentheader', 'adjustmentdetail',
+]);
+
+function fullArchiveIsDue(state: SyncState, intervalMinutes: number, force: boolean) {
+	if (force) return true;
+	const lastArchiveAt = state.getMetadata('lastFullArchiveAt');
+	if (!lastArchiveAt) return true;
+	const last = Date.parse(lastArchiveAt);
+	if (!Number.isFinite(last)) return true;
+	return Date.now() - last >= Math.max(1, intervalMinutes) * 60 * 1000;
+}
+
+function chunkedByArchivePayloadSize<T extends Keyed<unknown>>(items: T[]): T[][] {
+	const result: T[][] = [];
+	let current: T[] = [];
+	let currentBytes = 32;
+	for (const item of items) {
+		const bytes = Buffer.byteLength(JSON.stringify(item.row), 'utf8') + 2;
+		if (current.length > 0 && currentBytes + bytes > MAX_ARCHIVE_CHUNK_BYTES) {
+			result.push(current);
+			current = [];
+			currentBytes = 32;
+		}
+		current.push(item);
+		currentBytes += bytes;
+	}
+	if (current.length > 0) result.push(current);
 	return result;
 }
 
@@ -121,31 +157,40 @@ export async function runSyncCycle(
 		state.markManySeen(variants.all, cycle);
 		state.prunePrefix('variant:', cycle);
 
-		const posTables = await listPosTables(db);
-		onLog(`Discovered ${posTables.length} legacy POS/report tables.`);
+		const legacyTables = await listLegacyTables(db);
+		const fullArchive = fullArchiveIsDue(state, config.archiveIntervalMinutes, force);
+		const archiveTables = fullArchive
+			? legacyTables
+			: legacyTables.filter((table) => DOCUMENT_ARCHIVE_TABLES.has(table.toLowerCase()));
+		onLog(`Discovered ${legacyTables.length} legacy base tables. ${fullArchive
+			? 'Running the complete lossless archive scan.'
+			: `Complete archive is not due; scanning ${archiveTables.length} operational document tables.`}`);
 		let posRows = 0;
-		for (const table of posTables) {
+		for (const table of archiveTables) {
 			onLog(`Reading legacy table ${table} in bounded batches...`);
 			let tableRows = 0;
 			let chunkNumber = 0;
-			for await (const rawRows of db.iterateTable(table, config.chunkSize)) {
+			for await (const rawRows of db.iterateTable(table, Math.max(config.chunkSize, MIN_ARCHIVE_READ_BATCH_ROWS))) {
 				const records = toPosRecords(table, rawRows, tableRows);
 				tableRows += records.length;
 				posRows += records.length;
 				const inspected = inspectRows('pos', records, (row) => `${row.sourceTable}:${row.sourceId}`, state, force);
 				changedCount += inspected.changed.length;
-				chunkNumber += 1;
-				await push(
-					{ posRecords: inspected.changed.map((entry) => entry.row) },
-					inspected.changed,
-					`${table} chunk ${chunkNumber}`,
-				);
+				for (const payloadGroup of chunkedByArchivePayloadSize(inspected.changed)) {
+					chunkNumber += 1;
+					await push(
+						{ posRecords: payloadGroup.map((entry) => entry.row) },
+						payloadGroup,
+						`${table} archive chunk ${chunkNumber}`,
+					);
+				}
 				state.markManySeen(inspected.all, cycle);
 			}
 			state.prunePrefix(`pos:${table.toLowerCase()}:`, cycle);
 			onLog(`Read ${tableRows} rows from ${table}.`);
 		}
-		onLog(`${posRows} POS/report rows discovered; ${changedCount} total changed rows.`);
+		if (fullArchive) state.setMetadata('lastFullArchiveAt', new Date().toISOString());
+		onLog(`${posRows} legacy rows inspected across ${archiveTables.length} tables; ${changedCount} total changed rows.`);
 
 		const completedRun = run as { id: string } | null;
 		if (!completedRun) {
