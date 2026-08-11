@@ -620,7 +620,16 @@ export default function DesktopSyncPage() {
     conflictCount: 0,
     totalCount: 0,
   };
-  const connectionLabel = syncStatus?.websocketConnected ? 'Realtime connected' : 'Realtime offline';
+  const lastSuccessfulSyncMs = syncHealth?.lastSuccessfulSyncAt
+    ? Date.parse(syncHealth.lastSuccessfulSyncAt)
+    : Number.NaN;
+  const hasRecentHttpSync = Number.isFinite(lastSuccessfulSyncMs)
+    && Date.now() - lastSuccessfulSyncMs < Math.max(syncStatus?.autoSyncIntervalMs ?? 30_000, 30_000) * 3;
+  const connectionLabel = syncStatus?.websocketConnected
+    ? 'Online · realtime connected'
+    : syncStatus?.running || hasRecentHttpSync
+      ? 'Online · scheduled sync'
+      : 'Connection unavailable';
   const feedbackToneClasses =
     feedback?.tone === 'error'
       ? 'border-red-200 bg-red-50 text-red-700'
