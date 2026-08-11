@@ -39,9 +39,7 @@
 			"package.json"
 		],
 		"win": {
-			"signtoolOptions": {
-				"publisherName": "The Red Sun"
-			},
+			"verifyUpdateCodeSignature": false,
 			"target": [
 				"nsis",
 				"portable"
