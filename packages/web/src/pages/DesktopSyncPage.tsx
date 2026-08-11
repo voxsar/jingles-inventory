@@ -275,7 +275,7 @@ export default function DesktopSyncPage() {
     ]);
 
     const fallbackDesktopBuildInfo =
-      createFallbackBuildInfo('@jingles/electron', nextDesktopVersion) ?? null;
+      createFallbackBuildInfo('jingles-inventory-desktop', nextDesktopVersion) ?? null;
     const resolvedDesktopBuildInfo = nextDesktopBuildInfo ?? fallbackDesktopBuildInfo;
     const fallbackRuntimeInfo: BackendRuntimeInfo | null =
       nextRuntimeInfoResponse ??

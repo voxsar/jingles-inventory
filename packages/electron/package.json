@@ -1,5 +1,5 @@
 {
-  "name": "@jingles/electron",
+  "name": "jingles-inventory-desktop",
   "version": "1.0.2",
   "description": "Offline-capable Jingles Inventory desktop application",
   "main": "dist/electron/main.js",

@@ -787,6 +787,29 @@ function isNetworkRetriableStatus(status: number) {
   return status >= 500 || status === 408 || status === 429;
 }
 
+async function fetchReplicaWithRetry(input: string | URL, init?: RequestInit) {
+  const retryDelaysMs = [500, 1500];
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt <= retryDelaysMs.length; attempt += 1) {
+    try {
+      const response = await fetch(input, init);
+      if (!isNetworkRetriableStatus(response.status) || attempt === retryDelaysMs.length) {
+        return response;
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === retryDelaysMs.length) {
+        throw error;
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, retryDelaysMs[attempt]));
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Replica request failed.');
+}
+
 async function replayQueuedRequest(
   request: QueuedRequestRecord,
   serverUrl: string,
@@ -1900,9 +1923,11 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
     errors: [] as string[],
     skipped: false,
     skipReason: null as string | null,
+    snapshotCheckpoint: null as number | null,
   };
 
   let cursor = getSyncV2Cursor();
+  const isInitialReplicaBootstrap = cursor === 0;
 
   while (true) {
     try {
@@ -1910,7 +1935,7 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
       url.searchParams.set('sinceSeq', String(cursor));
       url.searchParams.set('limit', '200');
 
-      const response = await fetch(url.toString(), {
+      const response = await fetchReplicaWithRetry(url.toString(), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -1936,20 +1961,36 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
         };
       }>(response);
       const changes = payload?.data?.changes ?? [];
+      const lastServerSeq = payload?.data?.lastServerSeq;
+
+      if (isInitialReplicaBootstrap) {
+        result.skipped = true;
+        result.skipReason =
+          'Initializing from a full server snapshot before applying incremental changes.';
+        result.snapshotCheckpoint =
+          typeof lastServerSeq === 'number' ? Math.max(0, lastServerSeq) : 0;
+        return result;
+      }
 
       for (const change of changes) {
-        applyReplicaMutation({
-          type: 'replica.mutation',
-          table: change.table as any,
-          action: change.action === 'delete' ? 'delete' : 'upsert',
-          row: change.row,
-          emittedAt: change.emittedAt,
-        });
+        try {
+          applyReplicaMutation({
+            type: 'replica.mutation',
+            table: change.table as any,
+            action: change.action === 'delete' ? 'delete' : 'upsert',
+            row: change.row,
+            emittedAt: change.emittedAt,
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          throw new Error(
+            `Failed to apply sync change ${change.seq} for ${change.table} row ${String(change.row?.id ?? 'unknown')}: ${message}`
+          );
+        }
         cursor = Math.max(cursor, change.seq);
         result.pulled++;
       }
 
-      const lastServerSeq = payload?.data?.lastServerSeq;
       if (typeof lastServerSeq === 'number') {
         cursor = Math.max(cursor, lastServerSeq);
       }
@@ -2027,7 +2068,7 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
     });
 
     const snapshotDownloadStartedAt = Date.now();
-    const response = await fetch(`${syncConfig.serverUrl}/api/sync/replica/export`, {
+    const response = await fetchReplicaWithRetry(`${syncConfig.serverUrl}/api/sync/replica/export`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -2070,6 +2111,9 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
       pulled: result.pulled,
     });
     replaceReplicaSnapshot(snapshot);
+    if (syncV2Result.snapshotCheckpoint !== null) {
+      setSyncV2Cursor(syncV2Result.snapshotCheckpoint);
+    }
     clearProcessedRequestSyncQueue();
 
     result.pulled = snapshotRowCount;

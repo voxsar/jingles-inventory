@@ -79,7 +79,7 @@ function createDesktopSyncState() {
       conflicts: [],
     },
     desktopBuildInfo: {
-      packageName: '@jingles/electron',
+      packageName: 'jingles-inventory-desktop',
       appVersion: '1.0.1',
       buildNumber: '101',
       commitHash: 'desktop-commit-hash',

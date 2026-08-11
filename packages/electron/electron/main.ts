@@ -66,6 +66,39 @@ import {
 } from '../src/runtime/logStore';
 import { getUpdateMenu, initializeUpdater } from '../src/updater';
 
+const legacySharedUserDataPath = path.join(app.getPath('appData'), '@jingles', 'electron');
+const inventoryUserDataPath = path.join(app.getPath('appData'), 'Jingles', 'Inventory');
+
+function migrateLegacyInventoryUserData() {
+  if (path.resolve(legacySharedUserDataPath) === path.resolve(inventoryUserDataPath)) {
+    return;
+  }
+
+  fs.mkdirSync(inventoryUserDataPath, { recursive: true });
+  for (const fileName of ['desktop-db.json', 'update-preferences.json']) {
+    const sourcePath = path.join(legacySharedUserDataPath, fileName);
+    const destinationPath = path.join(inventoryUserDataPath, fileName);
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destinationPath)) {
+      fs.copyFileSync(sourcePath, destinationPath);
+    }
+  }
+
+  const legacyBackendPath = path.join(legacySharedUserDataPath, 'backend');
+  const inventoryBackendPath = path.join(inventoryUserDataPath, 'backend');
+  fs.mkdirSync(inventoryBackendPath, { recursive: true });
+  for (const suffix of ['', '-wal', '-shm']) {
+    const fileName = `jingles-inventory.sqlite${suffix}`;
+    const sourcePath = path.join(legacyBackendPath, fileName);
+    const destinationPath = path.join(inventoryBackendPath, fileName);
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destinationPath)) {
+      fs.copyFileSync(sourcePath, destinationPath);
+    }
+  }
+}
+
+migrateLegacyInventoryUserData();
+app.setPath('userData', inventoryUserDataPath);
+
 let mainWindow: BrowserWindow | null = null;
 let localApiServer: Awaited<ReturnType<typeof startLocalApiServer>> | null = null;
 let tray: Tray | null = null;

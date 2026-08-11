@@ -15,16 +15,27 @@ function getDesktopBackendBuildInfo(): RuntimeBuildInfo {
 
 async function fetchUpstreamBuildInfo(upstreamUrl: string) {
   const targetUrl = new URL('/api/runtime/build', `${upstreamUrl}/`);
-  const response = await fetch(targetUrl, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-    signal: AbortSignal.timeout(5000),
-  });
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await fetch(targetUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (response.status < 500 || attempt === 2) {
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
 
-  if (!response.ok) {
-    throw new Error(`received HTTP ${response.status} from ${targetUrl.pathname}`);
+  if (!response || !response.ok) {
+    throw new Error(
+      response
+        ? `received HTTP ${response.status} from ${targetUrl.pathname}`
+        : `received no response from ${targetUrl.pathname}`
+    );
   }
 
   const payload = (await response.json()) as {

@@ -527,7 +527,46 @@ describe('syncEngine', () => {
         skus: expect.any(Array),
       })
     );
+    expect(applyReplicaMutation).not.toHaveBeenCalled();
+    expect(setConfig).toHaveBeenCalledWith('syncV2Cursor', '0');
     expect(setConfig).toHaveBeenCalledWith('lastSyncTime', expect.any(String));
+  });
+
+  it('checkpoints but does not replay incremental rows before the initial snapshot', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          data: {
+            changes: [
+              {
+                seq: 8,
+                table: 'inventory_records',
+                action: 'upsert',
+                row: { id: 'inv-orphan', sku_id: 'sku-not-local-yet', quantity: 1 },
+                emittedAt: '2026-08-12T00:00:00.000Z',
+              },
+            ],
+            lastServerSeq: 8,
+            hasMore: false,
+          },
+        })
+      )
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          data: {
+            skus: [{ id: 'sku-not-local-yet', sku_code: 'SKU-001' }],
+            inventory_records: [
+              { id: 'inv-orphan', sku_id: 'sku-not-local-yet', quantity: 1 },
+            ],
+          },
+        })
+      );
+
+    await syncAll({ forcePull: true });
+
+    expect(applyReplicaMutation).not.toHaveBeenCalled();
+    expect(replaceReplicaSnapshot).toHaveBeenCalled();
+    expect(setConfig).toHaveBeenCalledWith('syncV2Cursor', '8');
   });
 
   it('falls back to snapshot-only sync when the host does not expose /api/sync/log', async () => {
@@ -848,7 +887,10 @@ describe('syncEngine', () => {
     expect(replaceReplicaSnapshot).not.toHaveBeenCalled();
   });
 
-  it('applies sync-v2 delta log rows before the snapshot pull', async () => {
+  it('applies sync-v2 delta log rows after the replica has an initial checkpoint', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+      key === 'syncV2Cursor' ? '10' : null
+    );
     fetchMock
       .mockResolvedValueOnce(
         createJsonResponse({
@@ -882,6 +924,9 @@ describe('syncEngine', () => {
   });
 
   it('applies status_options delta rows through the sync-v2 cursor pull', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+      key === 'syncV2Cursor' ? '14' : null
+    );
     fetchMock
       .mockResolvedValueOnce(
         createJsonResponse({
