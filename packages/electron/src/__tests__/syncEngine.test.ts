@@ -529,6 +529,7 @@ describe('syncEngine', () => {
     );
     expect(applyReplicaMutation).not.toHaveBeenCalled();
     expect(setConfig).toHaveBeenCalledWith('syncV2Cursor', '0');
+    expect(setConfig).toHaveBeenCalledWith('syncV2ReplicaBootstrapped', '1');
     expect(setConfig).toHaveBeenCalledWith('lastSyncTime', expect.any(String));
   });
 
@@ -888,9 +889,16 @@ describe('syncEngine', () => {
   });
 
   it('applies sync-v2 delta log rows after the replica has an initial checkpoint', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
-      key === 'syncV2Cursor' ? '10' : null
-    );
+    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'syncV2Cursor') return '10';
+      if (key === 'syncV2ReplicaBootstrapped') return '1';
+      return null;
+    });
+    configureSyncEngine({
+      serverUrl: 'http://localhost:3001',
+      clientId: 'client-test-001',
+      getToken: () => 'test-token',
+    });
     fetchMock
       .mockResolvedValueOnce(
         createJsonResponse({
@@ -908,8 +916,7 @@ describe('syncEngine', () => {
             hasMore: false,
           },
         })
-      )
-      .mockResolvedValueOnce(createJsonResponse({ data: { users: [] } }));
+      );
 
     await syncAll();
 
@@ -921,12 +928,21 @@ describe('syncEngine', () => {
       emittedAt: '2026-05-18T12:10:00.000Z',
     });
     expect(setConfig).toHaveBeenCalledWith('syncV2Cursor', '11');
+    expect(replaceReplicaSnapshot).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('applies status_options delta rows through the sync-v2 cursor pull', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
-      key === 'syncV2Cursor' ? '14' : null
-    );
+    (getConfig as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'syncV2Cursor') return '14';
+      if (key === 'syncV2ReplicaBootstrapped') return '1';
+      return null;
+    });
+    configureSyncEngine({
+      serverUrl: 'http://localhost:3001',
+      clientId: 'client-test-001',
+      getToken: () => 'test-token',
+    });
     fetchMock
       .mockResolvedValueOnce(
         createJsonResponse({
@@ -952,8 +968,7 @@ describe('syncEngine', () => {
             hasMore: false,
           },
         })
-      )
-      .mockResolvedValueOnce(createJsonResponse({ data: { users: [] } }));
+      );
 
     await syncAll();
 
@@ -973,6 +988,8 @@ describe('syncEngine', () => {
       emittedAt: '2026-05-18T12:15:00.000Z',
     });
     expect(setConfig).toHaveBeenCalledWith('syncV2Cursor', '15');
+    expect(replaceReplicaSnapshot).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('applies realtime replica mutation events directly to the local replica', () => {

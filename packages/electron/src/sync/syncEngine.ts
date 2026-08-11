@@ -275,7 +275,8 @@ let syncWebSocket: WebSocket | null = null;
 let syncWebSocketTarget: string | null = null;
 let syncWebSocketReconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let realtimeReconnectDelayMs = 1000;
-let needsFullReplicaPull = true;
+let needsFullReplicaPull = false;
+let needsReplicaCatchup = false;
 let autoSyncEnabled = false;
 let syncHealthInitialized = false;
 let latestObservedServerSeq: number | null = null;
@@ -414,11 +415,11 @@ function buildPreparationDetail(pendingCount: number, options: SyncRunOptions) {
   }
 
   if (options.mode === 'pull_only') {
-    return 'Skipping local push. A manual replica refresh will run against the host.';
+    return 'Skipping local push. Checking the host for changes newer than the saved replica cursor.';
   }
 
   return options.forcePull
-    ? `${queuedLabel} A full replica refresh will run after the push.`
+    ? `${queuedLabel} The host will be checked for newer replica changes after the push.`
     : `${queuedLabel} Checking whether the desktop replica needs a refresh.`;
 }
 
@@ -1211,6 +1212,14 @@ function getSyncV2Cursor() {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+function hasBootstrappedSyncV2Replica() {
+  return getConfig('syncV2ReplicaBootstrapped') === '1';
+}
+
+function markSyncV2ReplicaBootstrapped() {
+  setConfig('syncV2ReplicaBootstrapped', '1');
+}
+
 function setSyncV2Cursor(seq: number) {
   const normalizedSeq = Math.max(0, Math.trunc(seq));
   setConfig('syncV2Cursor', String(normalizedSeq));
@@ -1220,7 +1229,8 @@ function setSyncV2Cursor(seq: number) {
 
 export function configureSyncEngine(config: SyncConfig) {
   syncConfig = config;
-  needsFullReplicaPull = true;
+  needsFullReplicaPull = !hasBootstrappedSyncV2Replica();
+  needsReplicaCatchup = true;
   syncHealthInitialized = false;
   lastPublishedSyncHealth = null;
   applySyncStatusPatch(
@@ -1355,7 +1365,8 @@ export function startAutoSync(intervalMs = 30000) {
   }
 
   autoSyncEnabled = true;
-  needsFullReplicaPull = true;
+  needsFullReplicaPull = !hasBootstrappedSyncV2Replica();
+  needsReplicaCatchup = true;
   applySyncStatusPatch(
     {
       autoSyncIntervalMs: intervalMs,
@@ -1482,6 +1493,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
         result.errors.push(...pullResult.errors);
         if (pullResult.errors.length === 0) {
           needsFullReplicaPull = false;
+          needsReplicaCatchup = false;
         }
       } else {
         const pushResult = await pushChanges();
@@ -1503,7 +1515,10 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
           });
         } else {
           const shouldPull =
-            options.forcePull || needsFullReplicaPull || !syncStatus.websocketConnected;
+            options.forcePull ||
+            needsFullReplicaPull ||
+            needsReplicaCatchup ||
+            !syncStatus.websocketConnected;
 
           if (pushResult.blockPull) {
             skippedPull = true;
@@ -1514,6 +1529,7 @@ export async function syncAll(options: SyncRunOptions = {}): Promise<SyncRunResu
             result.errors.push(...pullResult.errors);
             if (pullResult.errors.length === 0) {
               needsFullReplicaPull = false;
+              needsReplicaCatchup = false;
             }
           } else {
             skippedPull = true;
@@ -1924,10 +1940,11 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
     skipped: false,
     skipReason: null as string | null,
     snapshotCheckpoint: null as number | null,
+    requiresSnapshot: false,
   };
 
   let cursor = getSyncV2Cursor();
-  const isInitialReplicaBootstrap = cursor === 0;
+  const isInitialReplicaBootstrap = !hasBootstrappedSyncV2Replica();
 
   while (true) {
     try {
@@ -1945,6 +1962,7 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
         const message = await readErrorMessage(response);
         if (isMissingSyncLogEndpoint(response.status, message)) {
           result.skipped = true;
+          result.requiresSnapshot = true;
           result.skipReason = 'The host does not expose /api/sync/log, so desktop sync is using snapshot-only compatibility mode.';
           return result;
         }
@@ -1965,6 +1983,7 @@ async function pullSyncV2ChangeLog(serverUrl: string, token: string) {
 
       if (isInitialReplicaBootstrap) {
         result.skipped = true;
+        result.requiresSnapshot = true;
         result.skipReason =
           'Initializing from a full server snapshot before applying incremental changes.';
         result.snapshotCheckpoint =
@@ -2055,6 +2074,29 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
     const syncV2Result = await pullSyncV2ChangeLog(syncConfig.serverUrl, token);
     result.pulled += syncV2Result.pulled;
     result.errors.push(...syncV2Result.errors);
+    if (syncV2Result.errors.length > 0) {
+      return result;
+    }
+
+    const shouldDownloadSnapshot = syncV2Result.requiresSnapshot || needsFullReplicaPull;
+    if (!shouldDownloadSnapshot) {
+      clearProcessedRequestSyncQueue();
+      refreshOutboxState({ publish: false });
+      setConfig('lastSyncTime', new Date().toISOString());
+      updateSyncProgress({
+        phase: 'pulling',
+        label: 'Desktop replica is current',
+        detail:
+          result.pulled > 0
+            ? `Applied ${describeCount(result.pulled, 'new server change')} without replacing the local replica.`
+            : 'No new server changes were found. The existing local replica was kept.',
+        percent: SYNC_PROGRESS_FINALIZING_PERCENT - 1,
+        pending: syncStatus.outbox.pending,
+        pulled: result.pulled,
+      });
+      return result;
+    }
+
     updateSyncProgress({
       phase: 'pulling',
       label: 'Refreshing desktop replica',
@@ -2111,6 +2153,7 @@ async function pullChanges(): Promise<{ pulled: number; errors: string[] }> {
       pulled: result.pulled,
     });
     replaceReplicaSnapshot(snapshot);
+    markSyncV2ReplicaBootstrapped();
     if (syncV2Result.snapshotCheckpoint !== null) {
       setSyncV2Cursor(syncV2Result.snapshotCheckpoint);
     }
@@ -2227,7 +2270,7 @@ function connectRealtimeSync(target: string) {
       websocketConnected: false,
       lastRealtimeError: `Realtime sync failed to start: ${error.message}`,
     });
-    needsFullReplicaPull = true;
+    needsReplicaCatchup = true;
     scheduleRealtimeSyncReconnect();
     return;
   }
@@ -2246,7 +2289,11 @@ function connectRealtimeSync(target: string) {
       lastRealtimeError: null,
     });
 
-    if (needsFullReplicaPull && !activeSyncPromise && !hasPendingLocalChanges()) {
+    if (
+      (needsFullReplicaPull || needsReplicaCatchup) &&
+      !activeSyncPromise &&
+      !hasPendingLocalChanges()
+    ) {
       void syncAll({ forcePull: true });
     }
   };
@@ -2268,7 +2315,7 @@ function connectRealtimeSync(target: string) {
 
     syncWebSocket = null;
     syncWebSocketTarget = null;
-    needsFullReplicaPull = true;
+    needsReplicaCatchup = true;
     applySyncStatusPatch({
       websocketConnected: false,
     });
@@ -2289,7 +2336,7 @@ function connectRealtimeSync(target: string) {
       const payload = JSON.parse(message) as ReplicaSyncEvent;
       handleRealtimeSyncEvent(payload);
     } catch (error: any) {
-      needsFullReplicaPull = true;
+      needsReplicaCatchup = true;
       applySyncStatusPatch({
         lastRealtimeError: `Realtime sync payload parse failed: ${error.message}`,
       });
@@ -2322,7 +2369,7 @@ function handleRealtimeSyncEvent(event: ReplicaSyncEvent) {
   }
 
   if (activeSyncPromise || hasPendingLocalChanges()) {
-    needsFullReplicaPull = true;
+    needsReplicaCatchup = true;
     return;
   }
 
