@@ -17,6 +17,31 @@ export interface LegacySnapshot {
 	locations: LegacySyncLocationRow[];
 	products: LegacySyncProductRow[];
 	variants: LegacySyncVariantRow[];
+	warnings: string[];
+}
+
+const STOCK_QUANTITY_ANOMALY_LIMIT = 1_000_000_000;
+const STOCK_QUANTITY_COLUMNS = [
+	'Qty', 'Quantity', 'ProductQty', 'StockQty', 'StockQuantity', 'StockBalanceQty',
+	'BalanceQty', 'BalanceQuantity', 'QtyBalance', 'Balance', 'CurrentBalance',
+	'StockBalance', 'CurrentStock', 'CurrentQty', 'ClosingStock', 'ClosingQty',
+	'OnHand', 'OnHandQty', 'StockOnHand', 'AvailableQty', 'AvailableQuantity',
+	'ActualQty', 'NetQty', 'TotalQty', 'Stock',
+];
+
+function normalizedColumnName(value: string) {
+	return value.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+}
+
+function field(row: LegacyRow, candidates: string[]): unknown {
+	const byNormalizedName = new Map(
+		Object.entries(row).map(([key, value]) => [normalizedColumnName(key), value]),
+	);
+	for (const candidate of candidates) {
+		const key = normalizedColumnName(candidate);
+		if (byNormalizedName.has(key)) return byNormalizedName.get(key);
+	}
+	return undefined;
 }
 
 function str(value: unknown): string | undefined {
@@ -125,6 +150,7 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		sizeRows,
 		productRows,
 		productDetailRows,
+		stockReportRows,
 		colorSizeRows,
 		colorSizeDetailRows,
 	] = await Promise.all([
@@ -139,10 +165,12 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		db.query('SELECT ColourID, ColourCode, ColourName FROM colour'),
 		db.query('SELECT SizeID, SizeCode, SizeName FROM size'),
 		db.query('SELECT ProductID, ProductCode, BarCode, ProductName, PrintOnInvoice, DepartmentID, CategoryID, SubCategory1ID, SubCategory2ID, SubCategory3ID, SupplierID, PackSize, PUnit, EUnit, IsActive, IsDelete FROM product'),
-		db.query('SELECT ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, SpecialPrice, Qty, ReOrderLevel FROM productdetail'),
+		db.query('SELECT ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, SpecialPrice, ReOrderLevel FROM productdetail'),
+		db.query('SELECT * FROM vwStockReport'),
 		db.query('SELECT ProductColorSizeID, ProductID, ColorSizeCode, ColorSizeName, ColorID, SizeID, IsActive, IsDelete FROM productcolorsize'),
 		db.query('SELECT ProductColorSizeID, ProductID, LocationID, CostPrice, SellingPrice, WholeSalePrice, IsActive, IsDelete FROM productcolorsizedetail'),
 	]);
+	const warnings: string[] = [];
 
 	const unitNameByCode = new Map<string, string>();
 	const units: LegacySyncUnitRow[] = [];
@@ -210,13 +238,124 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 			sellingPrice: num(row.SellingPrice),
 			wholesalePrice: num(row.WholeSalePrice),
 			bulkPrice: num(row.SpecialPrice),
-			quantity: num(row.Qty),
 			reorderLevel: num(row.ReOrderLevel),
 		};
 		const list = detailsByProduct.get(productId) ?? [];
 		list.push(detail);
 		detailsByProduct.set(productId, list);
 	}
+
+	// ProductDetail.Qty is not the MaxSoft on-hand balance in every deployed
+	// database. vwStockReport is calculated from the stock ledger and is the
+	// authoritative quantity source; ProductDetail still supplies prices and
+	// reorder levels.
+	const productIdByCode = new Map<string, string>();
+	for (const row of productRows) {
+		const productId = id(row.ProductID);
+		const productCode = str(row.ProductCode);
+		if (productId && productCode) productIdByCode.set(productCode.toUpperCase(), productId);
+	}
+	const locationIdByCode = new Map<string, string>();
+	for (const row of locationRows) {
+		const locationId = id(row.LocationID);
+		const locationCode = str(row.LocationCode);
+		if (locationId && locationCode) locationIdByCode.set(locationCode.toUpperCase(), locationId);
+	}
+	const knownLocationIds = locationRows.map((row) => id(row.LocationID)).filter((value): value is string => Boolean(value));
+	const stockByProductLocation = new Map<string, number>();
+	const anomalousStockKeys = new Set<string>();
+	const invalidStockKeys = new Set<string>();
+	let unrecognizedProductRows = 0;
+	let unresolvedLocationRows = 0;
+	let invalidQuantityRows = 0;
+	const anomalyExamples: string[] = [];
+
+	if (stockReportRows.length > 0) {
+		const columns = Object.keys(stockReportRows[0]);
+		const normalizedQuantityColumns = STOCK_QUANTITY_COLUMNS.map(normalizedColumnName);
+		if (!columns.some((column) => normalizedQuantityColumns.includes(normalizedColumnName(column)))) {
+			throw new Error(`vwStockReport has no recognized quantity column. Available columns: ${columns.join(', ')}`);
+		}
+	}
+
+	for (const row of stockReportRows) {
+		const productCode = str(field(row, ['ProductCode', 'SKUCode', 'ItemCode']));
+		const productId = id(field(row, ['ProductID', 'ProductId', 'ItemID', 'SKUId']))
+			?? (productCode ? productIdByCode.get(productCode.toUpperCase()) : undefined);
+		if (!productId) {
+			unrecognizedProductRows += 1;
+			continue;
+		}
+
+		let locationId = id(field(row, ['LocationID', 'LocationId', 'BranchID', 'WarehouseID', 'StoreID']));
+		if (!locationId) {
+			const locationCode = str(field(row, ['LocationCode', 'BranchCode', 'WarehouseCode', 'StoreCode']));
+			if (locationCode) locationId = locationIdByCode.get(locationCode.toUpperCase());
+		}
+		if (!locationId) {
+			const productLocations = [...new Set((detailsByProduct.get(productId) ?? []).map((detail) => detail.locationId))];
+			if (productLocations.length === 1) locationId = productLocations[0];
+			else if (knownLocationIds.length === 1) locationId = knownLocationIds[0];
+		}
+		if (!locationId) {
+			unresolvedLocationRows += 1;
+			continue;
+		}
+
+		const key = `${productId}:${locationId}`;
+		const quantity = num(field(row, STOCK_QUANTITY_COLUMNS));
+		if (quantity === undefined) {
+			invalidQuantityRows += 1;
+			invalidStockKeys.add(key);
+			stockByProductLocation.delete(key);
+			continue;
+		}
+		if (Math.abs(quantity) >= STOCK_QUANTITY_ANOMALY_LIMIT) {
+			anomalousStockKeys.add(key);
+			stockByProductLocation.delete(key);
+			if (anomalyExamples.length < 5) anomalyExamples.push(`${productId} @ ${locationId} = ${quantity}`);
+			continue;
+		}
+		if (!anomalousStockKeys.has(key) && !invalidStockKeys.has(key)) {
+			stockByProductLocation.set(key, (stockByProductLocation.get(key) ?? 0) + quantity);
+		}
+	}
+
+	if (unresolvedLocationRows > 0) {
+		throw new Error(
+			`Could not resolve a location for ${unresolvedLocationRows} vwStockReport rows. `
+			+ 'Add LocationID/LocationCode to the view or ensure each product belongs to only one location.',
+		);
+	}
+	if (stockReportRows.length > 0 && unrecognizedProductRows === stockReportRows.length) {
+		throw new Error('None of the vwStockReport rows could be matched to a product; stock sync was stopped to avoid replacing valid balances with zero.');
+	}
+	if (unrecognizedProductRows > 0) warnings.push(`Ignored ${unrecognizedProductRows} vwStockReport rows whose product could not be matched.`);
+	if (invalidQuantityRows > 0) warnings.push(`Ignored ${invalidQuantityRows} vwStockReport rows with a missing or invalid quantity.`);
+	if (anomalousStockKeys.size > 0) {
+		warnings.push(
+			`Withheld ${anomalousStockKeys.size} stock quantities at or above ${STOCK_QUANTITY_ANOMALY_LIMIT.toLocaleString()} in absolute value for review`
+			+ `${anomalyExamples.length > 0 ? ` (${anomalyExamples.join('; ')})` : ''}.`,
+		);
+	}
+
+	for (const [productId, details] of detailsByProduct) {
+		for (const detail of details) {
+			const key = `${productId}:${detail.locationId}`;
+			if (!anomalousStockKeys.has(key) && !invalidStockKeys.has(key)) detail.quantity = stockByProductLocation.get(key) ?? 0;
+		}
+	}
+	for (const [key, quantity] of stockByProductLocation) {
+		const separator = key.lastIndexOf(':');
+		const productId = key.slice(0, separator);
+		const locationId = key.slice(separator + 1);
+		const details = detailsByProduct.get(productId) ?? [];
+		if (!details.some((detail) => detail.locationId === locationId)) {
+			details.push({ locationId, quantity });
+			detailsByProduct.set(productId, details);
+		}
+	}
+	onProgress?.(`Loaded stock quantities from vwStockReport (${stockByProductLocation.size} product/location balances).`);
 
 	const detailsByColorSize = new Map<string, LegacySyncLocationDetail[]>();
 	for (const row of colorSizeDetailRows) {
@@ -308,5 +447,5 @@ export async function extractSnapshot(db: LegacyDb, onProgress?: (message: strin
 		});
 	}
 
-	return { units, suppliers, locations, products, variants };
+	return { units, suppliers, locations, products, variants, warnings };
 }

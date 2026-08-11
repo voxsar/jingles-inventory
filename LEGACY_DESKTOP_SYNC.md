@@ -38,7 +38,7 @@ shop desktop                                this server
 | `supplier` | Vendors |
 | `location` | Branches (+ default `MAIN` floor) |
 | `department` / `category` / `subcategory1-3` | Category tree (same slugs as the one-time importer) |
-| `product` + `productdetail` | SKUs **or SKU variants** (see below), prices, per-branch quantities |
+| `product` + `productdetail` + `vwStockReport` | SKUs **or SKU variants** (see below), prices, per-branch quantities |
 | `productcolorsize` + `productcolorsizedetail` | SKU variants + variant batch prices |
 | Discovered POS/report tables (sales, invoices, tenders/payments, shifts/cash, day-end/Z-report, customers, loyalty/vouchers/promotions, returns/refunds, orders, configuration and cashier permissions) | Lossless current mirror plus append-only versions in `legacy_pos_records` / `legacy_pos_record_versions` |
 
@@ -73,7 +73,7 @@ products. The server keeps them variants forever:
    value (stored on the link). Curation done here — renames, repricing after a
    merge — is never clobbered by a legacy value that has not moved. On first
    contact with a pre-existing record only missing values are filled in.
-4. **Quantities mirror the POS.** Legacy `productdetail.Qty` per location is
+4. **Quantities mirror the POS.** Legacy `vwStockReport` balances per location are
    mirrored to the matching branch as auditable `LEGACY_SYNC_ADJUSTMENT`
    inventory events (terminal `legacy-desktop-sync`). For merged products the
    quantity flows to the variant; price changes flow to the variant's price
@@ -98,7 +98,7 @@ products. The server keeps them variants forever:
 
 ## Known limits
 
-- Legacy `productdetail.Qty` is product-level, so products that have legacy
+- Legacy `vwStockReport` stock is product-level, so products that have legacy
   color/size rows mirror quantity at the SKU total (the per-variant split does
   not exist in the legacy schema). Merged products (one legacy product per
   variant) mirror exactly at variant level.

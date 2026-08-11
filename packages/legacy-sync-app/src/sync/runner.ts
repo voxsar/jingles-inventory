@@ -81,7 +81,9 @@ export async function runSyncCycle(
 
 	try {
 		onLog('Reading legacy catalog and stock tables...');
-		const snapshot = await extractSnapshot(db);
+		const snapshot = await extractSnapshot(db, onLog);
+		warnings += snapshot.warnings.length;
+		for (const warning of snapshot.warnings) onLog(`extractor: ${warning}`);
 		onLog(
 			`Snapshot: ${snapshot.products.length} products, ${snapshot.variants.length} color/size variants, `
 			+ `${snapshot.suppliers.length} suppliers, ${snapshot.locations.length} locations, ${snapshot.units.length} units.`,

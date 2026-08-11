@@ -39,7 +39,7 @@ export interface LegacySyncCategorySegment {
 	name: string;
 }
 
-// Per-location figures from legacy `productdetail` (product level) or
+// Per-location figures combine `productdetail` prices with product-level `vwStockReport` quantities, or
 // `productcolorsizedetail` (variant level — has prices but no quantity).
 export interface LegacySyncLocationDetail {
 	locationId: string;
