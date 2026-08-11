@@ -1,6 +1,8 @@
 node_modules/
 dist/
 build/
+!packages/electron/build/
+!packages/electron/build/icon.ico
 uploads/
 .env
 .env.local

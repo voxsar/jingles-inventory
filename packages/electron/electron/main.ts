@@ -290,6 +290,14 @@ async function loadRenderer(window: BrowserWindow) {
 }
 
 function createTrayIcon() {
+  const configuredIconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.ico')
+    : path.resolve(__dirname, '../../build/icon.ico');
+  const configuredIcon = nativeImage.createFromPath(configuredIconPath);
+  if (!configuredIcon.isEmpty()) {
+    return configuredIcon.resize({ width: 32, height: 32 });
+  }
+
   const iconSvg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
       <rect width="64" height="64" rx="16" fill="#111827"/>
@@ -587,6 +595,9 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
+    icon: app.isPackaged
+      ? path.join(process.resourcesPath, 'icon.ico')
+      : path.resolve(__dirname, '../../build/icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
