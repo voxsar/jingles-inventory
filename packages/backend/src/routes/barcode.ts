@@ -430,10 +430,47 @@ router.post(
 
 router.get('/prints', async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { grnId, page = '1', pageSize = '30' } = req.query as Record<string, string>;
+    const {
+      grnId,
+      search,
+      sourceType,
+      status,
+      fromDate,
+      toDate,
+      page = '1',
+      pageSize = '30',
+    } = req.query as Record<string, string>;
     const pageNum = Math.max(1, parseInt(page) || 1);
     const take = Math.max(1, Math.min(100, parseInt(pageSize) || 30));
-    const where: any = grnId ? { grnId } : {};
+    const where: any = {};
+    if (grnId) where.grnId = grnId;
+    if (sourceType) where.sourceType = sourceType;
+    if (status) where.status = status;
+    if (fromDate || toDate) {
+      where.createdAt = {};
+      if (fromDate) where.createdAt.gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+    if (search?.trim()) {
+      const query = search.trim();
+      where.OR = [
+        { id: { contains: query, mode: 'insensitive' } },
+        { sourceType: { contains: query, mode: 'insensitive' } },
+        { status: { contains: query, mode: 'insensitive' } },
+        { template: { name: { contains: query, mode: 'insensitive' } } },
+        { grn: { invoiceReference: { contains: query, mode: 'insensitive' } } },
+        { items: { some: { productNameSnapshot: { contains: query, mode: 'insensitive' } } } },
+        { items: { some: { variantNameSnapshot: { contains: query, mode: 'insensitive' } } } },
+        { items: { some: { skuCodeSnapshot: { contains: query, mode: 'insensitive' } } } },
+        { items: { some: { barcodeSnapshot: { contains: query, mode: 'insensitive' } } } },
+        { items: { some: { sku: { name: { contains: query, mode: 'insensitive' } } } } },
+        { items: { some: { sku: { skuCode: { contains: query, mode: 'insensitive' } } } } },
+      ];
+    }
     const [items, total] = await Promise.all([
       prisma.barcodePrintJob.findMany({
         where,
