@@ -33,6 +33,13 @@ import FloorSpreadsheetPage from './pages/spreadsheet/FloorSpreadsheetPage';
 import UnitSpreadsheetPage from './pages/spreadsheet/UnitSpreadsheetPage';
 import TagSpreadsheetPage from './pages/spreadsheet/TagSpreadsheetPage';
 import GRNSpreadsheetPage from './pages/spreadsheet/GRNSpreadsheetPage';
+import BatchSpreadsheetPage from './pages/spreadsheet/BatchSpreadsheetPage';
+import RackSpreadsheetPage from './pages/spreadsheet/RackSpreadsheetPage';
+import ShelfSpreadsheetPage from './pages/spreadsheet/ShelfSpreadsheetPage';
+import BoxSpreadsheetPage from './pages/spreadsheet/BoxSpreadsheetPage';
+import StockTransferSpreadsheetPage from './pages/spreadsheet/StockTransferSpreadsheetPage';
+import UserSpreadsheetPage from './pages/spreadsheet/UserSpreadsheetPage';
+import AttributeSpreadsheetPage from './pages/spreadsheet/AttributeSpreadsheetPage';
 import TagsPage from './pages/TagsPage';
 import UsersPage from './pages/UsersPage';
 import DesktopSyncPage from './pages/DesktopSyncPage';
@@ -112,6 +119,21 @@ function AppRoutes() {
         <Route path="spreadsheet/units" element={<UnitSpreadsheetPage />} />
         <Route path="spreadsheet/tags" element={<TagSpreadsheetPage />} />
         <Route path="spreadsheet/grns" element={<GRNSpreadsheetPage />} />
+        <Route path="spreadsheet/batches" element={<BatchSpreadsheetPage />} />
+        <Route path="spreadsheet/racks" element={<RackSpreadsheetPage />} />
+        <Route path="spreadsheet/shelves" element={<ShelfSpreadsheetPage />} />
+        <Route path="spreadsheet/boxes" element={<BoxSpreadsheetPage />} />
+        <Route path="spreadsheet/stock-transfers" element={<StockTransferSpreadsheetPage />} />
+        <Route path="spreadsheet/users" element={
+          <ProtectedRoute roles={['Admin', 'Manager']}>
+            <UserSpreadsheetPage />
+          </ProtectedRoute>
+        } />
+        <Route path="spreadsheet/attributes" element={
+          <ProtectedRoute roles={['Admin', 'Manager']}>
+            <AttributeSpreadsheetPage />
+          </ProtectedRoute>
+        } />
         <Route path="desktop-sync" element={<DesktopSyncPage />} />
         <Route
           path="vendor-portal"

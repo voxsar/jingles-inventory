@@ -202,3 +202,20 @@ export const buildCreatedRow = <T extends Record<string, any>>(
   ...data,
   ...getApiResponseData(response),
 });
+
+/**
+ * Some relation columns are accepted on create but not on update — the PUT
+ * handlers for racks, shelves and floors deliberately ignore the parent key so
+ * a re-parent cannot skip placement validation. Sending them anyway would look
+ * saved while changing nothing, so reject the edit loudly instead.
+ */
+export const rejectImmutableChanges = (
+  changes: Record<string, any>,
+  immutableFields: Array<{ key: string; message: string }>,
+) => {
+  for (const field of immutableFields) {
+    if (Object.prototype.hasOwnProperty.call(changes, field.key)) {
+      throw new Error(field.message);
+    }
+  }
+};
