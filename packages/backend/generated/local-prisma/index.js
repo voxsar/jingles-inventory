@@ -1136,7 +1136,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/var/www/federation-inventory/jingles-inventory/packages/backend/generated/local-prisma",
+      "value": "D:\\Miyuru\\Projects\\inventory-pos\\quantum-shelf\\packages\\backend\\generated\\local-prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -1145,17 +1145,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "debian-openssl-3.0.x",
+        "value": "windows",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/var/www/federation-inventory/jingles-inventory/packages/backend/prisma/schema.local.prisma",
+    "sourceFilePath": "D:\\Miyuru\\Projects\\inventory-pos\\quantum-shelf\\packages\\backend\\prisma\\schema.local.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "5.22.0",
@@ -1212,8 +1211,8 @@ exports.PrismaClient = PrismaClient
 Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
-path.join(process.cwd(), "generated/local-prisma/libquery_engine-debian-openssl-3.0.x.so.node")
+path.join(__dirname, "query_engine-windows.dll.node");
+path.join(process.cwd(), "generated/local-prisma/query_engine-windows.dll.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "generated/local-prisma/schema.prisma")

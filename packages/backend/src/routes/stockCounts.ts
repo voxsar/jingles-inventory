@@ -48,6 +48,47 @@ const skuVendorInclude = {
 	skuVendors: { include: { vendor: { select: { id: true, name: true } } } },
 } as const;
 
+async function loadStockCatalogProducts() {
+	const skus = await prisma.sKU.findMany({
+		where: { isActive: true },
+		include: {
+			...skuVendorInclude,
+			barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] },
+			variants: {
+				where: { isActive: true },
+				include: { barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] } },
+				orderBy: { variantCode: 'asc' },
+			},
+		},
+		orderBy: [{ name: 'asc' }, { skuCode: 'asc' }],
+	});
+
+	return skus.flatMap((sku: any) => {
+		const common = {
+			skuId: sku.id,
+			skuCode: sku.skuCode,
+			name: sku.name,
+			vendors: uniqueVendors(sku),
+		};
+		const baseEntry = {
+			...common,
+			variantId: null,
+			variantCode: null,
+			variantName: null,
+			barcodes: sku.barcodes.filter((barcode: any) => !barcode.variantId).map((barcode: any) => barcode.barcode),
+		};
+		if (sku.variants.length === 0) return [baseEntry];
+		const variantEntries = sku.variants.map((variant: any) => ({
+			...common,
+			variantId: variant.id,
+			variantCode: variant.variantCode,
+			variantName: variant.name,
+			barcodes: variant.barcodes.map((barcode: any) => barcode.barcode),
+		}));
+		return baseEntry.barcodes.length > 0 ? [baseEntry, ...variantEntries] : variantEntries;
+	});
+}
+
 function locationKey(floorId: string, shelfId: string | null) {
 	return shelfId ? `shelf:${shelfId}` : `floor:${floorId}`;
 }
@@ -129,7 +170,6 @@ stockCountRunRouter.post(
 
 			const branch = await prisma.branch.findFirst({ where: { id: branchId, isActive: true } });
 			if (!branch) throw new StockCountError(404, 'Branch not found');
-
 			const run = await prisma.stockCountRun.create({
 				data: {
 					branchId,
@@ -156,44 +196,7 @@ stockCountRunRouter.get('/:runId/catalog', async (req: AuthRequest, res: Respons
 	try {
 		const run = await prisma.stockCountRun.findUnique({ where: { id: req.params.runId } });
 		if (!run) throw new StockCountError(404, 'Stock-count run not found');
-		const skus = await prisma.sKU.findMany({
-			where: { isActive: true },
-			include: {
-				...skuVendorInclude,
-				barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] },
-				variants: {
-					where: { isActive: true },
-					include: { barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] } },
-					orderBy: { variantCode: 'asc' },
-				},
-			},
-			orderBy: [{ name: 'asc' }, { skuCode: 'asc' }],
-		});
-
-		const products = skus.flatMap((sku: any) => {
-			const common = {
-				skuId: sku.id,
-				skuCode: sku.skuCode,
-				name: sku.name,
-				vendors: uniqueVendors(sku),
-			};
-			const baseEntry = {
-				...common,
-				variantId: null,
-				variantCode: null,
-				variantName: null,
-				barcodes: sku.barcodes.filter((barcode: any) => !barcode.variantId).map((barcode: any) => barcode.barcode),
-			};
-			if (sku.variants.length === 0) return [baseEntry];
-			const variantEntries = sku.variants.map((variant: any) => ({
-				...common,
-				variantId: variant.id,
-				variantCode: variant.variantCode,
-				variantName: variant.name,
-				barcodes: variant.barcodes.map((barcode: any) => barcode.barcode),
-			}));
-			return baseEntry.barcodes.length > 0 ? [baseEntry, ...variantEntries] : variantEntries;
-		});
+		const products = await loadStockCatalogProducts();
 
 		res.json({
 			success: true,
@@ -205,6 +208,20 @@ stockCountRunRouter.get('/:runId/catalog', async (req: AuthRequest, res: Respons
 		});
 	} catch (error) {
 		sendRouteError(res, error, 'Failed to load the stock-count catalog');
+	}
+});
+
+// GET /api/stock-count/catalog
+// Current catalog for online mobile stock additions that do not belong to a count run.
+stockCountRouter.get('/catalog', async (_req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const products = await loadStockCatalogProducts();
+		res.json({
+			success: true,
+			data: { catalogVersion: new Date().toISOString(), products },
+		});
+	} catch (error) {
+		sendRouteError(res, error, 'Failed to load the mobile stock catalog');
 	}
 });
 
@@ -393,17 +410,20 @@ async function applyCount(input: {
 		});
 
 		let createdInventoryRecord = false;
+		const locationWhere: Prisma.InventoryRecordWhereInput = {
+			skuId: input.sku.id,
+			variantId,
+			floorId: session.floorId,
+			shelfId: session.shelfId,
+		};
 		if (!item) {
-			const locationWhere: Prisma.InventoryRecordWhereInput = {
-				skuId: input.sku.id,
-				variantId,
-				floorId: session.floorId,
-				shelfId: session.shelfId,
-			};
-			let inventoryRecord = await tx.inventoryRecord.findFirst({
-				where: { ...locationWhere, boxId: null, batchId: null, state: shelfReadyState },
+			const locationRecords = await tx.inventoryRecord.findMany({
+				where: locationWhere,
 				orderBy: { createdAt: 'asc' },
 			});
+			let inventoryRecord = locationRecords.find((record: any) => (
+				record.boxId === null && record.batchId === null && record.state === shelfReadyState
+			)) ?? null;
 			if (!inventoryRecord) {
 				inventoryRecord = await tx.inventoryRecord.create({
 					data: {
@@ -419,7 +439,54 @@ async function applyCount(input: {
 				});
 				createdInventoryRecord = true;
 			}
-			const startingQuantity = inventoryRecord.quantity;
+
+			// A physical count replaces the existing quantity at this exact location.
+			// Reset lazily, inside the same serializable transaction as the first count,
+			// so users never need to zero the branch manually and a failed count cannot
+			// leave a half-reset location.
+			for (const existingRecord of locationRecords) {
+				if (existingRecord.quantity === 0) continue;
+				const resetRecord = await tx.inventoryRecord.update({
+					where: { id: existingRecord.id },
+					data: {
+						quantity: 0,
+						terminalId: session.deviceId,
+						userId: input.userId,
+						version: { increment: 1 },
+					},
+				});
+				const resetEvent = await tx.inventoryEvent.create({
+					data: {
+						eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+						parentEntityId: existingRecord.id,
+						quantityDelta: -existingRecord.quantity,
+						beforeQuantity: existingRecord.quantity,
+						afterQuantity: 0,
+						reasonCode: 'STOCK_COUNT_BASELINE_RESET',
+						userId: input.userId,
+						terminalId: session.deviceId,
+						metadata: {
+							runId: session.runId,
+							deviceSessionId: session.id,
+							requestId: input.requestId,
+						} as any,
+					},
+				});
+				await enqueueLocalSyncOperation(tx as any, {
+					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE,
+					aggregateId: resetRecord.id,
+					baseVersion: existingRecord.version,
+					payload: { id: resetRecord.id, quantity: 0 },
+				});
+				await recordServerSyncChanges(tx as any, {
+					aggregateId: resetRecord.id,
+					changes: [
+						{ tableName: 'inventory_records', rowId: resetRecord.id, action: 'upsert' },
+						{ tableName: 'inventory_events', rowId: resetEvent.id, action: 'upsert' },
+					],
+				});
+				if (inventoryRecord.id === resetRecord.id) inventoryRecord = resetRecord;
+			}
 			item = await tx.stockCountItem.create({
 				data: {
 					runId: session.runId,
@@ -430,13 +497,16 @@ async function applyCount(input: {
 					shelfId: session.shelfId,
 					locationKey: itemLocationKey,
 					inventoryRecordId: inventoryRecord.id,
-					quantity: startingQuantity,
 				},
 				include: { inventoryRecord: true },
 			});
 		}
 
-		if (item.inventoryRecord.quantity !== item.quantity) {
+		const currentLocationStock = await tx.inventoryRecord.aggregate({
+			where: locationWhere,
+			_sum: { quantity: true },
+		});
+		if ((currentLocationStock._sum.quantity ?? 0) !== item.quantity) {
 			throw new StockCountError(409, 'Inventory changed outside this stock count; reload before continuing');
 		}
 		const existingLine = await tx.stockCountLine.findUnique({
