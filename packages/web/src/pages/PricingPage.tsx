@@ -272,7 +272,7 @@ export default function PricingPage() {
 												key={col.key}
 												className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
 													} ${col.key === 'actions' ? 'table-sticky-cell table-sticky-cell--header' : ''}`}
-												style={col.key === 'actions' ? ({ ['--sticky-bg' as '--sticky-bg']: '#f9fafb' } as React.CSSProperties) : undefined}
+												style={col.key === 'actions' ? ({ ['--sticky-bg' as const]: '#f9fafb' } as React.CSSProperties) : undefined}
 											>
 												{col.header}
 											</th>
@@ -288,7 +288,7 @@ export default function PricingPage() {
 														key={col.key}
 														className={`px-6 py-4 whitespace-nowrap text-sm ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''
 															} ${col.key === 'actions' ? 'table-sticky-cell' : ''}`}
-														style={col.key === 'actions' ? ({ ['--sticky-bg' as '--sticky-bg']: '#ffffff' } as React.CSSProperties) : undefined}
+														style={col.key === 'actions' ? ({ ['--sticky-bg' as const]: '#ffffff' } as React.CSSProperties) : undefined}
 													>
 														{col.render(batch)}
 													</td>

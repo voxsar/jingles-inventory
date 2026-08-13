@@ -164,8 +164,8 @@ model SKU {
   // Voucher-specific fields
   isVoucher        Boolean @default(false) @map("is_voucher")
   voucherValueType String? @map("voucher_value_type") // 'fixed' or 'range'
-  voucherMinValue  Float?  @map("voucher_min_value")
-  voucherMaxValue  Float?  @map("voucher_max_value")
+  voucherMinValue  Decimal? @map("voucher_min_value")
+  voucherMaxValue  Decimal? @map("voucher_max_value")
 
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
@@ -1069,7 +1069,7 @@ model VoucherBatch {
   prefix           String?
   quantity         Int
   generatedCount   Int       @default(0) @map("generated_count")
-  defaultValue     Float     @map("default_value")
+  defaultValue     Decimal   @map("default_value")
   expiryDays       Int?      @map("expiry_days")
   defaultExpiresAt DateTime? @map("default_expires_at")
   status           String    @default("pending") // 'pending', 'generating', 'completed', 'failed'
@@ -1077,12 +1077,12 @@ model VoucherBatch {
   createdAt        DateTime  @default(now()) @map("created_at")
   completedAt      DateTime? @map("completed_at")
 
-  sku          SKU           @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  variant      SKUVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  creator      User?         @relation(fields: [createdBy], references: [id])
+  sku          SKU           @relation(fields: [skuId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  variant      SKUVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  creator      User?         @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
   voucherCodes VoucherCode[]
 
-  @@index([skuId, variantId])
+  @@index([skuId, variantId], map: "voucher_batches_sku_variant_idx")
   @@index([status])
   @@map("voucher_batches")
 }
@@ -1094,8 +1094,8 @@ model VoucherCode {
   variantId         String?   @map("variant_id")
   batchId           String?   @map("batch_id")
   voucherBatchId    String?   @map("voucher_batch_id")
-  initialValue      Float     @map("initial_value")
-  currentBalance    Float     @map("current_balance")
+  initialValue      Decimal   @map("initial_value")
+  currentBalance    Decimal   @map("current_balance")
   currency          String    @default("LKR")
   status            String    @default("active") // 'active', 'redeemed', 'expired', 'cancelled', 'suspended'
   issuedAt          DateTime  @default(now()) @map("issued_at")
@@ -1108,20 +1108,20 @@ model VoucherCode {
   notes             String?
   createdBy         String?   @map("created_by")
   createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  sku          SKU                 @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  variant      SKUVariant?         @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  batch        Batch?              @relation(fields: [batchId], references: [id], onDelete: SetNull)
-  voucherBatch VoucherBatch?       @relation(fields: [voucherBatchId], references: [id], onDelete: SetNull)
-  creator      User?               @relation(fields: [createdBy], references: [id])
+  sku          SKU                 @relation(fields: [skuId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  variant      SKUVariant?         @relation(fields: [variantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  batch        Batch?              @relation(fields: [batchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  voucherBatch VoucherBatch?       @relation(fields: [voucherBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  creator      User?               @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
   redemptions  VoucherRedemption[]
 
   @@index([code])
-  @@index([skuId, variantId])
+  @@index([skuId, variantId], map: "voucher_codes_sku_variant_idx")
   @@index([status])
   @@index([expiresAt])
-  @@index([voucherBatchId])
+  @@index([voucherBatchId], map: "voucher_codes_batch_idx")
   @@map("voucher_codes")
 }
 
@@ -1129,9 +1129,9 @@ model VoucherRedemption {
   id             String   @id @default(uuid())
   voucherCodeId  String   @map("voucher_code_id")
   code           String
-  redeemedAmount Float    @map("redeemed_amount")
-  balanceBefore  Float    @map("balance_before")
-  balanceAfter   Float    @map("balance_after")
+  redeemedAmount Decimal  @map("redeemed_amount")
+  balanceBefore  Decimal  @map("balance_before")
+  balanceAfter   Decimal  @map("balance_after")
   orderId        String?  @map("order_id")
   invoiceNumber  String?  @map("invoice_number")
   branchId       String?  @map("branch_id")
@@ -1140,9 +1140,9 @@ model VoucherRedemption {
   redeemedAt     DateTime @default(now()) @map("redeemed_at")
   notes          String?
 
-  voucherCode VoucherCode @relation(fields: [voucherCodeId], references: [id], onDelete: Cascade)
-  branch      Branch?     @relation(fields: [branchId], references: [id])
-  redeemer    User?       @relation(fields: [redeemedBy], references: [id])
+  voucherCode VoucherCode @relation(fields: [voucherCodeId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  branch      Branch?     @relation(fields: [branchId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  redeemer    User?       @relation(fields: [redeemedBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([voucherCodeId])
   @@index([code])
@@ -1189,6 +1189,165 @@ model LegacySyncRun {
   @@map("legacy_sync_runs")
 }
 
+model LegacyPosRecord {
+  sourceTable   String   @map("source_table")
+  sourceId      String   @map("source_id")
+  payload       String     @default("{}")
+  firstSyncedAt DateTime @default(now()) @map("first_synced_at")
+  lastSyncedAt  DateTime @default(now()) @map("last_synced_at")
+
+  @@id([sourceTable, sourceId])
+  @@index([sourceTable], map: "legacy_pos_records_table_idx")
+  @@map("legacy_pos_records")
+}
+
+model LegacyPosRecordVersion {
+  id          String   @id
+  sourceTable String   @map("source_table")
+  sourceId    String   @map("source_id")
+  payload     String
+  contentHash String   @map("content_hash")
+  syncRunId   String   @map("sync_run_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([sourceTable, sourceId, contentHash])
+  @@map("legacy_pos_record_versions")
+}
+
+model PosShift {
+  id                 String    @id
+  terminalId         String    @map("terminal_id")
+  branchId           String?   @map("branch_id")
+  userId             String    @map("user_id")
+  status             String    @default("OPEN")
+  openingFloat       Float     @default(0) @map("opening_float")
+  closingFloat       Float?    @map("closing_float")
+  notes              String?
+  openingDeclaration String?     @map("opening_declaration")
+  closingDeclaration String?     @map("closing_declaration")
+  synced             Boolean   @default(true)
+  lastVectorClock    String      @default("{}") @map("last_vector_clock")
+  openedAt           DateTime  @default(now()) @map("opened_at")
+  closedAt           DateTime? @map("closed_at")
+
+  @@map("pos_shifts")
+}
+
+model PosHeldSale {
+  id              String   @id
+  holdNumber      String   @unique @map("hold_number")
+  terminalId      String   @map("terminal_id")
+  branchId        String?  @map("branch_id")
+  cashierId       String   @map("cashier_id")
+  customerId      String?  @map("customer_id")
+  customerName    String?  @map("customer_name")
+  status          String   @default("HELD")
+  subtotal        Float
+  discountTotal   Float    @default(0) @map("discount_total")
+  total           Float
+  notes           String?
+  lines           String     @default("[]")
+  lastVectorClock String     @default("{}") @map("last_vector_clock")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @map("updated_at")
+
+  @@map("pos_held_sales")
+}
+
+model PosSale {
+  id                String    @id
+  receiptNumber     String    @unique @map("receipt_number")
+  terminalId        String    @map("terminal_id")
+  branchId          String?   @map("branch_id")
+  userId            String    @map("user_id")
+  customerId        String?   @map("customer_id")
+  shiftId           String?   @map("shift_id")
+  heldSaleId        String?   @map("held_sale_id")
+  status            String    @default("COMPLETED")
+  subtotal          Float
+  discountTotal     Float     @default(0) @map("discount_total")
+  taxTotal          Float     @default(0) @map("tax_total")
+  total             Float
+  marginTotal       Float     @default(0) @map("margin_total")
+  lines             String      @default("[]")
+  payments          String      @default("[]")
+  sourceDeviceId    String?   @map("source_device_id")
+  sourceSequenceNum Int?      @map("source_sequence_num")
+  synced            Boolean   @default(true)
+  lastVectorClock   String      @default("{}") @map("last_vector_clock")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @default(now()) @map("updated_at")
+
+  @@map("pos_sales")
+}
+
+model PosReturn {
+  id                String   @id
+  saleId            String   @map("sale_id")
+  userId            String   @map("user_id")
+  terminalId        String   @map("terminal_id")
+  reason            String?
+  totalRefund       Float    @map("total_refund")
+  lines             String     @default("[]")
+  sourceDeviceId    String?  @map("source_device_id")
+  sourceSequenceNum Int?     @map("source_sequence_num")
+  lastVectorClock   String     @default("{}") @map("last_vector_clock")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("pos_returns")
+}
+
+model PosSyncEvent {
+  id             String    @id
+  aggregateType  String    @map("aggregate_type")
+  aggregateId    String    @map("aggregate_id")
+  eventType      String    @map("event_type")
+  payload        String      @default("{}")
+  vectorClock    String      @default("{}") @map("vector_clock")
+  deviceId       String    @map("device_id")
+  terminalId     String?   @map("terminal_id")
+  sequenceNum    Int       @map("sequence_num")
+  lamport        Int
+  conflictPolicy String    @map("conflict_policy")
+  state          String    @default("PENDING")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  appliedAt      DateTime? @map("applied_at")
+
+  @@unique([deviceId, sequenceNum], map: "pos_sync_events_device_sequence_idx")
+  @@index([aggregateType, aggregateId], map: "pos_sync_events_aggregate_idx")
+  @@map("pos_sync_events")
+}
+
+model PosSyncDeviceState {
+  id                   String    @id
+  deviceId             String    @unique @map("device_id")
+  terminalId           String?   @map("terminal_id")
+  lastSequenceNum      Int       @default(0) @map("last_sequence_num")
+  vectorClock          String      @default("{}") @map("vector_clock")
+  confirmedVectorClock String      @default("{}") @map("confirmed_vector_clock")
+  online               Boolean   @default(false)
+  lastError            String?   @map("last_error")
+  lastSeenAt           DateTime  @default(now()) @map("last_seen_at")
+  lastSyncAt           DateTime? @map("last_sync_at")
+
+  @@map("pos_sync_device_states")
+}
+
+model PosSyncConflict {
+  id            String    @id
+  aggregateType String    @map("aggregate_type")
+  aggregateId   String    @map("aggregate_id")
+  localEventId  String?   @map("local_event_id")
+  remoteEventId String?   @map("remote_event_id")
+  policy        String
+  status        String    @default("OPEN")
+  detail        String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  resolvedAt    DateTime? @map("resolved_at")
+
+  @@map("pos_sync_conflicts")
+}
+
 model ManagedDevice {
   id                 String    @id
   displayName        String    @map("display_name")
@@ -1223,13 +1382,13 @@ model VoucherRestriction {
   targetVariantIds               String?    @map("target_variant_ids") // Array of variant IDs
   cannotCombineWithDiscounts     Boolean  @default(true) @map("cannot_combine_with_discounts")
   cannotCombineWithOtherVouchers Boolean  @default(true) @map("cannot_combine_with_other_vouchers")
-  minPurchaseAmount              Float?   @map("min_purchase_amount")
-  maxDiscountAmount              Float?   @map("max_discount_amount")
+  minPurchaseAmount              Decimal? @map("min_purchase_amount")
+  maxDiscountAmount              Decimal? @map("max_discount_amount")
   priority                       Int      @default(0)
   createdAt                      DateTime @default(now()) @map("created_at")
-  updatedAt                      DateTime @updatedAt @map("updated_at")
+  updatedAt                      DateTime @default(now()) @updatedAt @map("updated_at")
 
-  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([skuId, restrictionType])
   @@index([skuId])

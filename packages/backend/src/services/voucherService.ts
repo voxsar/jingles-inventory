@@ -13,6 +13,32 @@ import prisma from '../prisma/client';
 import { VoucherStatus, VoucherRestrictionType, VoucherBatchStatus } from '@jingles/shared';
 import type { IVoucherValidationContext, IVoucherValidationResult, IVoucherCode } from '@jingles/shared';
 
+function decimalToNumber(value: unknown): number {
+	if (typeof value === 'number') return value;
+	if (typeof value === 'string') return Number(value);
+	if (value && typeof (value as { toNumber?: () => number }).toNumber === 'function') {
+		return (value as { toNumber: () => number }).toNumber();
+	}
+	return Number(value);
+}
+
+function mapVoucherCode<T extends { initialValue: unknown; currentBalance: unknown }>(voucherCode: T) {
+	return {
+		...voucherCode,
+		initialValue: decimalToNumber(voucherCode.initialValue),
+		currentBalance: decimalToNumber(voucherCode.currentBalance),
+	};
+}
+
+function mapVoucherRedemption<T extends { redeemedAmount: unknown; balanceBefore: unknown; balanceAfter: unknown }>(redemption: T) {
+	return {
+		...redemption,
+		redeemedAmount: decimalToNumber(redemption.redeemedAmount),
+		balanceBefore: decimalToNumber(redemption.balanceBefore),
+		balanceAfter: decimalToNumber(redemption.balanceAfter),
+	};
+}
+
 /**
  * Generate a unique voucher code
  */
@@ -79,7 +105,7 @@ export async function createVoucherCode(params: {
 		},
 	});
 
-	return voucherCode as IVoucherCode;
+	return mapVoucherCode(voucherCode) as IVoucherCode;
 }
 
 /**
@@ -212,7 +238,8 @@ export async function validateVoucher(
 	}
 
 	// Check balance
-	if (voucherCode.currentBalance <= 0) {
+	const currentBalance = decimalToNumber(voucherCode.currentBalance);
+	if (currentBalance <= 0) {
 		return {
 			isValid: false,
 			errors: ['Voucher balance is empty'],
@@ -246,9 +273,10 @@ export async function validateVoucher(
 	const minPurchase = restrictions.find(
 		(r: any) => r.minPurchaseAmount !== null
 	);
-	if (minPurchase && context.totalAmount < (minPurchase as any).minPurchaseAmount) {
+	const minPurchaseAmount = minPurchase ? decimalToNumber((minPurchase as any).minPurchaseAmount) : null;
+	if (minPurchaseAmount !== null && context.totalAmount < minPurchaseAmount) {
 		errors.push(
-			`Minimum purchase amount of ${(minPurchase as any).minPurchaseAmount} ${voucherCode.currency} required`
+			`Minimum purchase amount of ${minPurchaseAmount} ${voucherCode.currency} required`
 		);
 	}
 
@@ -351,7 +379,7 @@ export async function validateVoucher(
 	);
 
 	let maxRedeemableAmount = Math.min(
-		voucherCode.currentBalance,
+		currentBalance,
 		applicableTotalPrice
 	);
 
@@ -362,7 +390,7 @@ export async function validateVoucher(
 	if (maxDiscountRestriction) {
 		maxRedeemableAmount = Math.min(
 			maxRedeemableAmount,
-			(maxDiscountRestriction as any).maxDiscountAmount
+			decimalToNumber((maxDiscountRestriction as any).maxDiscountAmount)
 		);
 	}
 
@@ -376,7 +404,7 @@ export async function validateVoucher(
 
 	return {
 		isValid: true,
-		voucher: voucherCode as IVoucherCode,
+		voucher: mapVoucherCode(voucherCode) as IVoucherCode,
 		maxRedeemableAmount,
 		applicableItems: applicableItems.map((item) => ({
 			skuId: item.skuId,
@@ -415,12 +443,13 @@ export async function redeemVoucher(params: {
 			throw new Error(`Voucher is ${voucherCode.status.toLowerCase()}`);
 		}
 
-		if (voucherCode.currentBalance < params.redeemedAmount) {
+		const currentBalance = decimalToNumber(voucherCode.currentBalance);
+		if (currentBalance < params.redeemedAmount) {
 			throw new Error('Insufficient voucher balance');
 		}
 
 		// Calculate new balance
-		const balanceBefore = voucherCode.currentBalance;
+		const balanceBefore = currentBalance;
 		const balanceAfter = balanceBefore - params.redeemedAmount;
 
 		// Update voucher code
@@ -452,8 +481,8 @@ export async function redeemVoucher(params: {
 		});
 
 		return {
-			voucherCode: updatedVoucher,
-			redemption,
+			voucherCode: mapVoucherCode(updatedVoucher),
+			redemption: mapVoucherRedemption(redemption),
 		};
 	});
 }
@@ -477,7 +506,7 @@ export async function getVoucherBalance(code: string) {
 		throw new Error('Voucher code not found');
 	}
 
-	return voucherCode;
+	return mapVoucherCode(voucherCode);
 }
 
 /**
@@ -506,7 +535,7 @@ export async function getVoucherRedemptionHistory(code: string) {
 		},
 	});
 
-	return redemptions;
+	return redemptions.map(mapVoucherRedemption);
 }
 
 /**
@@ -521,7 +550,7 @@ export async function cancelVoucher(code: string, reason?: string) {
 		},
 	});
 
-	return voucherCode;
+	return mapVoucherCode(voucherCode);
 }
 
 /**
@@ -535,5 +564,5 @@ export async function extendVoucherExpiry(code: string, newExpiryDate: Date) {
 		},
 	});
 
-	return voucherCode;
+	return mapVoucherCode(voucherCode);
 }

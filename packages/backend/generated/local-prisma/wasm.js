@@ -441,6 +441,73 @@ exports.Prisma.InventoryEventScalarFieldEnum = {
   metadata: 'metadata'
 };
 
+exports.Prisma.StockCountRunScalarFieldEnum = {
+  id: 'id',
+  branchId: 'branchId',
+  status: 'status',
+  requestId: 'requestId',
+  openBranchKey: 'openBranchKey',
+  startedById: 'startedById',
+  completedById: 'completedById',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt'
+};
+
+exports.Prisma.StockCountDeviceSessionScalarFieldEnum = {
+  id: 'id',
+  runId: 'runId',
+  deviceId: 'deviceId',
+  deviceName: 'deviceName',
+  floorId: 'floorId',
+  shelfId: 'shelfId',
+  status: 'status',
+  startedById: 'startedById',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt'
+};
+
+exports.Prisma.StockCountItemScalarFieldEnum = {
+  id: 'id',
+  runId: 'runId',
+  skuId: 'skuId',
+  variantId: 'variantId',
+  variantKey: 'variantKey',
+  floorId: 'floorId',
+  shelfId: 'shelfId',
+  locationKey: 'locationKey',
+  inventoryRecordId: 'inventoryRecordId',
+  quantity: 'quantity',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StockCountLineScalarFieldEnum = {
+  id: 'id',
+  deviceSessionId: 'deviceSessionId',
+  itemId: 'itemId',
+  quantity: 'quantity',
+  lastBarcode: 'lastBarcode',
+  updatedById: 'updatedById',
+  countedAt: 'countedAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.StockCountSubmissionScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  deviceSessionId: 'deviceSessionId',
+  itemId: 'itemId',
+  lineId: 'lineId',
+  skuId: 'skuId',
+  variantId: 'variantId',
+  barcode: 'barcode',
+  submittedQuantity: 'submittedQuantity',
+  deviceBefore: 'deviceBefore',
+  deviceAfter: 'deviceAfter',
+  totalAfter: 'totalAfter',
+  submittedById: 'submittedById',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.GRNScalarFieldEnum = {
   id: 'id',
   supplierId: 'supplierId',
@@ -759,6 +826,142 @@ exports.Prisma.LegacySyncRunScalarFieldEnum = {
   errorMessage: 'errorMessage'
 };
 
+exports.Prisma.LegacyPosRecordScalarFieldEnum = {
+  sourceTable: 'sourceTable',
+  sourceId: 'sourceId',
+  payload: 'payload',
+  firstSyncedAt: 'firstSyncedAt',
+  lastSyncedAt: 'lastSyncedAt'
+};
+
+exports.Prisma.LegacyPosRecordVersionScalarFieldEnum = {
+  id: 'id',
+  sourceTable: 'sourceTable',
+  sourceId: 'sourceId',
+  payload: 'payload',
+  contentHash: 'contentHash',
+  syncRunId: 'syncRunId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PosShiftScalarFieldEnum = {
+  id: 'id',
+  terminalId: 'terminalId',
+  branchId: 'branchId',
+  userId: 'userId',
+  status: 'status',
+  openingFloat: 'openingFloat',
+  closingFloat: 'closingFloat',
+  notes: 'notes',
+  openingDeclaration: 'openingDeclaration',
+  closingDeclaration: 'closingDeclaration',
+  synced: 'synced',
+  lastVectorClock: 'lastVectorClock',
+  openedAt: 'openedAt',
+  closedAt: 'closedAt'
+};
+
+exports.Prisma.PosHeldSaleScalarFieldEnum = {
+  id: 'id',
+  holdNumber: 'holdNumber',
+  terminalId: 'terminalId',
+  branchId: 'branchId',
+  cashierId: 'cashierId',
+  customerId: 'customerId',
+  customerName: 'customerName',
+  status: 'status',
+  subtotal: 'subtotal',
+  discountTotal: 'discountTotal',
+  total: 'total',
+  notes: 'notes',
+  lines: 'lines',
+  lastVectorClock: 'lastVectorClock',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PosSaleScalarFieldEnum = {
+  id: 'id',
+  receiptNumber: 'receiptNumber',
+  terminalId: 'terminalId',
+  branchId: 'branchId',
+  userId: 'userId',
+  customerId: 'customerId',
+  shiftId: 'shiftId',
+  heldSaleId: 'heldSaleId',
+  status: 'status',
+  subtotal: 'subtotal',
+  discountTotal: 'discountTotal',
+  taxTotal: 'taxTotal',
+  total: 'total',
+  marginTotal: 'marginTotal',
+  lines: 'lines',
+  payments: 'payments',
+  sourceDeviceId: 'sourceDeviceId',
+  sourceSequenceNum: 'sourceSequenceNum',
+  synced: 'synced',
+  lastVectorClock: 'lastVectorClock',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PosReturnScalarFieldEnum = {
+  id: 'id',
+  saleId: 'saleId',
+  userId: 'userId',
+  terminalId: 'terminalId',
+  reason: 'reason',
+  totalRefund: 'totalRefund',
+  lines: 'lines',
+  sourceDeviceId: 'sourceDeviceId',
+  sourceSequenceNum: 'sourceSequenceNum',
+  lastVectorClock: 'lastVectorClock',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PosSyncEventScalarFieldEnum = {
+  id: 'id',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  eventType: 'eventType',
+  payload: 'payload',
+  vectorClock: 'vectorClock',
+  deviceId: 'deviceId',
+  terminalId: 'terminalId',
+  sequenceNum: 'sequenceNum',
+  lamport: 'lamport',
+  conflictPolicy: 'conflictPolicy',
+  state: 'state',
+  createdAt: 'createdAt',
+  appliedAt: 'appliedAt'
+};
+
+exports.Prisma.PosSyncDeviceStateScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  terminalId: 'terminalId',
+  lastSequenceNum: 'lastSequenceNum',
+  vectorClock: 'vectorClock',
+  confirmedVectorClock: 'confirmedVectorClock',
+  online: 'online',
+  lastError: 'lastError',
+  lastSeenAt: 'lastSeenAt',
+  lastSyncAt: 'lastSyncAt'
+};
+
+exports.Prisma.PosSyncConflictScalarFieldEnum = {
+  id: 'id',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  localEventId: 'localEventId',
+  remoteEventId: 'remoteEventId',
+  policy: 'policy',
+  status: 'status',
+  detail: 'detail',
+  createdAt: 'createdAt',
+  resolvedAt: 'resolvedAt'
+};
+
 exports.Prisma.ManagedDeviceScalarFieldEnum = {
   id: 'id',
   displayName: 'displayName',
@@ -834,6 +1037,11 @@ exports.Prisma.ModelName = {
   StockTransferLine: 'StockTransferLine',
   InventoryRecord: 'InventoryRecord',
   InventoryEvent: 'InventoryEvent',
+  StockCountRun: 'StockCountRun',
+  StockCountDeviceSession: 'StockCountDeviceSession',
+  StockCountItem: 'StockCountItem',
+  StockCountLine: 'StockCountLine',
+  StockCountSubmission: 'StockCountSubmission',
   GRN: 'GRN',
   Batch: 'Batch',
   PricingOverlay: 'PricingOverlay',
@@ -855,6 +1063,15 @@ exports.Prisma.ModelName = {
   VoucherRedemption: 'VoucherRedemption',
   LegacyEntityLink: 'LegacyEntityLink',
   LegacySyncRun: 'LegacySyncRun',
+  LegacyPosRecord: 'LegacyPosRecord',
+  LegacyPosRecordVersion: 'LegacyPosRecordVersion',
+  PosShift: 'PosShift',
+  PosHeldSale: 'PosHeldSale',
+  PosSale: 'PosSale',
+  PosReturn: 'PosReturn',
+  PosSyncEvent: 'PosSyncEvent',
+  PosSyncDeviceState: 'PosSyncDeviceState',
+  PosSyncConflict: 'PosSyncConflict',
   ManagedDevice: 'ManagedDevice',
   VoucherRestriction: 'VoucherRestriction'
 };

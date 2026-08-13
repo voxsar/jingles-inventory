@@ -1020,8 +1020,8 @@ export default function SettingsPage() {
 			<div className="flex flex-col gap-4">
 				<div className="page-header">
 					<div className="page-header-left">
-						<h1 className="page-title">🔍 Typesense Search Sync</h1>
-						<p className="page-subtitle">Sync data to Typesense for fast full-text search</p>
+						<h1 className="page-title">🔍 Typesense Index Export</h1>
+						<p className="page-subtitle">Export catalog data to external Typesense collections</p>
 					</div>
 					<div className="flex gap-2">
 						<button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
@@ -1052,7 +1052,7 @@ export default function SettingsPage() {
 						<div>
 							<h2 className="text-lg font-semibold text-gray-800 mb-2">Sync Data</h2>
 							<p className="text-sm text-gray-500 mb-4">
-								Synchronize your data to Typesense collections. Use "Sync All" to sync everything, or choose individual collections.
+								Synchronize catalog data to external Typesense collections. Use "Sync All" to sync everything, or choose individual collections.
 							</p>
 
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1119,6 +1119,7 @@ export default function SettingsPage() {
 							<div className="text-sm text-gray-600 space-y-2">
 								<p><strong>Server:</strong> typesense.artslabcreatives.com</p>
 								<p><strong>Collections:</strong> skus, inventory, vendors</p>
+								<p><strong>In-app search:</strong> Inventory currently uses database search, not Typesense queries.</p>
 								<p className="text-xs text-gray-500 mt-3">
 									Note: "Recreate & Sync All" will delete existing collections and recreate them from scratch.
 									Use this if you've made schema changes or want a fresh sync.
@@ -1227,8 +1228,8 @@ export default function SettingsPage() {
 					<div className="flex items-start gap-4">
 						<div className="text-4xl">🔍</div>
 						<div>
-							<h2 className="font-semibold text-gray-800 text-lg">Typesense Search Sync</h2>
-							<p className="text-sm text-gray-500 mt-1">Sync SKUs, inventory, and vendors to Typesense for fast full-text search</p>
+							<h2 className="font-semibold text-gray-800 text-lg">Typesense Index Export</h2>
+							<p className="text-sm text-gray-500 mt-1">Sync SKUs, inventory, and vendors to external Typesense collections</p>
 							<span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
 						</div>
 					</div>

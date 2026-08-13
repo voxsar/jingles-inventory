@@ -650,11 +650,11 @@ export const HELP_SECTIONS: HelpSection[] = [
 				],
 			},
 			{
-				title: 'Sync the search index',
+				title: 'Export Typesense indexes',
 				steps: [
-					'Open Typesense Search Sync and click "Test Connection".',
+					'Open Typesense Index Export and click "Test Connection".',
 					'Click "Sync All" — the sync runs in the background in small chunks and shows live progress.',
-					'"Recreate & Sync All" rebuilds the index from scratch if search results look stale.',
+					'"Recreate & Sync All" rebuilds the external collections from scratch after index schema changes.',
 				],
 			},
 		],

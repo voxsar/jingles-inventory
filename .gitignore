@@ -23,6 +23,7 @@ out/
 release/
 
 # Generated local build identity files
+packages/generated/
 packages/backend/src/generated/buildInfo.ts
 packages/electron/src/generated/buildInfo.ts
 packages/electron/src/generated/backendBuildInfo.ts

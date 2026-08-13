@@ -38,7 +38,8 @@ function buildLocalSchema(sourceSchema) {
       `datasource db {\n  provider = "sqlite"\n  url      = env("LOCAL_SQLITE_DATABASE_URL")\n}`
     )
     .replace(/\bJson\?/g, 'String?')
-    .replace(/\bJson\b/g, 'String');
+    .replace(/\bJson\b/g, 'String')
+    .replace(/\s+@db\.[A-Za-z0-9_]+(?:\([^)]*\))?/g, '');
 }
 
 function runPrismaCommand(args, options = {}) {

@@ -36,7 +36,7 @@ const categoryStickyActionCellStyle = {
   padding: '8px 16px',
   fontSize: '14px',
   background: 'var(--bg-2)',
-  ['--sticky-bg' as '--sticky-bg']: 'var(--bg-2)',
+  ['--sticky-bg' as const]: 'var(--bg-2)',
 } as React.CSSProperties;
 const categoryStickyActionHeaderStyle = {
   padding: '12px 16px',
@@ -48,7 +48,7 @@ const categoryStickyActionHeaderStyle = {
   letterSpacing: '0.05em',
   borderBottom: '1px solid var(--line)',
   background: 'var(--glass-pop)',
-  ['--sticky-bg' as '--sticky-bg']: 'var(--glass-pop)',
+  ['--sticky-bg' as const]: 'var(--glass-pop)',
 } as React.CSSProperties;
 
 function CategoryRow({

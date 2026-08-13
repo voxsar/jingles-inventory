@@ -223,157 +223,16 @@ type PricingOverlayRow = {
 
 const DATABASE_URL = process.env.DATABASE_URL?.trim();
 const SHELF_READY_STATE = 'ShelfReady';
-const POS_SCHEMA_STATEMENTS = [
-	`
-		CREATE TABLE IF NOT EXISTS legacy_pos_records (
-			source_table TEXT NOT NULL,
-			source_id TEXT NOT NULL,
-			payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-			first_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			last_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			PRIMARY KEY (source_table, source_id)
-		)
-	`,
-	`
-		CREATE TABLE IF NOT EXISTS legacy_pos_record_versions (
-			id TEXT PRIMARY KEY,
-			source_table TEXT NOT NULL,
-			source_id TEXT NOT NULL,
-			payload JSONB NOT NULL,
-			content_hash TEXT NOT NULL,
-			sync_run_id TEXT NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			UNIQUE (source_table, source_id, content_hash)
-		)
-	`,
-	`CREATE INDEX IF NOT EXISTS legacy_pos_records_table_idx ON legacy_pos_records (source_table)`,
-  `
-    CREATE TABLE IF NOT EXISTS pos_shifts (
-      id TEXT PRIMARY KEY,
-      terminal_id TEXT NOT NULL,
-      branch_id TEXT,
-      user_id TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'OPEN',
-      opening_float DOUBLE PRECISION NOT NULL DEFAULT 0,
-      closing_float DOUBLE PRECISION,
-      notes TEXT,
-      opening_declaration JSONB,
-      closing_declaration JSONB,
-      synced BOOLEAN NOT NULL DEFAULT TRUE,
-      last_vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      opened_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      closed_at TIMESTAMPTZ
-    )
-  `,
-  `
-    CREATE TABLE IF NOT EXISTS pos_held_sales (
-      id TEXT PRIMARY KEY,
-      hold_number TEXT NOT NULL UNIQUE,
-      terminal_id TEXT NOT NULL,
-      branch_id TEXT,
-      cashier_id TEXT NOT NULL,
-      customer_id TEXT,
-      customer_name TEXT,
-      status TEXT NOT NULL DEFAULT 'HELD',
-      subtotal DOUBLE PRECISION NOT NULL,
-      discount_total DOUBLE PRECISION NOT NULL DEFAULT 0,
-      total DOUBLE PRECISION NOT NULL,
-      notes TEXT,
-      lines JSONB NOT NULL DEFAULT '[]'::jsonb,
-      last_vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `,
-  `
-    CREATE TABLE IF NOT EXISTS pos_sales (
-      id TEXT PRIMARY KEY,
-      receipt_number TEXT NOT NULL UNIQUE,
-      terminal_id TEXT NOT NULL,
-      branch_id TEXT,
-      user_id TEXT NOT NULL,
-      customer_id TEXT,
-      shift_id TEXT,
-      held_sale_id TEXT,
-      status TEXT NOT NULL DEFAULT 'COMPLETED',
-      subtotal DOUBLE PRECISION NOT NULL,
-      discount_total DOUBLE PRECISION NOT NULL DEFAULT 0,
-      tax_total DOUBLE PRECISION NOT NULL DEFAULT 0,
-      total DOUBLE PRECISION NOT NULL,
-      margin_total DOUBLE PRECISION NOT NULL DEFAULT 0,
-      lines JSONB NOT NULL DEFAULT '[]'::jsonb,
-      payments JSONB NOT NULL DEFAULT '[]'::jsonb,
-      source_device_id TEXT,
-      source_sequence_num INTEGER,
-      synced BOOLEAN NOT NULL DEFAULT TRUE,
-      last_vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `,
-  `
-    CREATE TABLE IF NOT EXISTS pos_returns (
-      id TEXT PRIMARY KEY,
-      sale_id TEXT NOT NULL,
-      user_id TEXT NOT NULL,
-      terminal_id TEXT NOT NULL,
-      reason TEXT,
-      total_refund DOUBLE PRECISION NOT NULL,
-      lines JSONB NOT NULL DEFAULT '[]'::jsonb,
-      source_device_id TEXT,
-      source_sequence_num INTEGER,
-      last_vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `,
-  `
-    CREATE TABLE IF NOT EXISTS pos_sync_events (
-      id TEXT PRIMARY KEY,
-      aggregate_type TEXT NOT NULL,
-      aggregate_id TEXT NOT NULL,
-      event_type TEXT NOT NULL,
-      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-      vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      device_id TEXT NOT NULL,
-      terminal_id TEXT,
-      sequence_num INTEGER NOT NULL,
-      lamport INTEGER NOT NULL,
-      conflict_policy TEXT NOT NULL,
-      state TEXT NOT NULL DEFAULT 'PENDING',
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      applied_at TIMESTAMPTZ
-    )
-  `,
-  `CREATE UNIQUE INDEX IF NOT EXISTS pos_sync_events_device_sequence_idx ON pos_sync_events(device_id, sequence_num)`,
-  `CREATE INDEX IF NOT EXISTS pos_sync_events_aggregate_idx ON pos_sync_events(aggregate_type, aggregate_id)`,
-  `
-    CREATE TABLE IF NOT EXISTS pos_sync_device_states (
-      id TEXT PRIMARY KEY,
-      device_id TEXT NOT NULL UNIQUE,
-      terminal_id TEXT,
-      last_sequence_num INTEGER NOT NULL DEFAULT 0,
-      vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      confirmed_vector_clock JSONB NOT NULL DEFAULT '{}'::jsonb,
-      online BOOLEAN NOT NULL DEFAULT FALSE,
-      last_error TEXT,
-      last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      last_sync_at TIMESTAMPTZ
-    )
-  `,
-  `
-    CREATE TABLE IF NOT EXISTS pos_sync_conflicts (
-      id TEXT PRIMARY KEY,
-      aggregate_type TEXT NOT NULL,
-      aggregate_id TEXT NOT NULL,
-      local_event_id TEXT,
-      remote_event_id TEXT,
-      policy TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'OPEN',
-      detail JSONB,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      resolved_at TIMESTAMPTZ
-    )
-  `,
+const POS_SCHEMA_TABLES = [
+	'legacy_pos_records',
+	'legacy_pos_record_versions',
+	'pos_shifts',
+	'pos_held_sales',
+	'pos_sales',
+	'pos_returns',
+	'pos_sync_events',
+	'pos_sync_device_states',
+	'pos_sync_conflicts',
 ];
 
 let pool: Pool | null = null;
@@ -778,8 +637,16 @@ export async function ensurePosCloudSchema() {
 
   const client = await getPool().connect();
   try {
-    for (const statement of POS_SCHEMA_STATEMENTS) {
-      await client.query(statement);
+    const { rows } = await client.query<{ table_name: string }>(
+      `SELECT table_name
+       FROM information_schema.tables
+       WHERE table_schema = 'public' AND table_name = ANY($1::text[])`,
+      [POS_SCHEMA_TABLES],
+    );
+    const found = new Set(rows.map((row) => row.table_name));
+    const missing = POS_SCHEMA_TABLES.filter((tableName) => !found.has(tableName));
+    if (missing.length > 0) {
+      throw new Error(`POS cloud schema is missing tables: ${missing.join(', ')}. Run Prisma migrations before accepting POS sync traffic.`);
     }
     schemaReady = true;
   } finally {

@@ -9,7 +9,7 @@ const client = new Typesense.Client({
 			protocol: process.env.TYPESENSE_PROTOCOL || 'https',
 		},
 	],
-	apiKey: process.env.TYPESENSE_API_KEY || 'o0q4XFVi7qFgttoXvUmF8m4a9bMG9bRTLBI0pb',
+	apiKey: process.env.TYPESENSE_API_KEY?.trim() || '',
 	connectionTimeoutSeconds: 10,
 });
 
@@ -17,6 +17,10 @@ export default client;
 
 // Test connection helper
 export async function testTypesenseConnection(): Promise<{ success: boolean; error?: string }> {
+	if (!process.env.TYPESENSE_API_KEY?.trim()) {
+		return { success: false, error: 'TYPESENSE_API_KEY is not configured' };
+	}
+
 	try {
 		const health = await client.health.retrieve();
 		logger.info('Typesense connection successful', health);

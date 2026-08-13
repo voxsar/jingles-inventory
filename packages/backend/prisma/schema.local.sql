@@ -104,8 +104,8 @@ CREATE TABLE IF NOT EXISTS "skus" (
     "low_stock_threshold" INTEGER,
     "is_voucher" BOOLEAN NOT NULL DEFAULT false,
     "voucher_value_type" TEXT,
-    "voucher_min_value" REAL,
-    "voucher_max_value" REAL,
+    "voucher_min_value" DECIMAL,
+    "voucher_max_value" DECIMAL,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL,
@@ -782,16 +782,16 @@ CREATE TABLE IF NOT EXISTS "voucher_batches" (
     "prefix" TEXT,
     "quantity" INTEGER NOT NULL,
     "generated_count" INTEGER NOT NULL DEFAULT 0,
-    "default_value" REAL NOT NULL,
+    "default_value" DECIMAL NOT NULL,
     "expiry_days" INTEGER,
     "default_expires_at" DATETIME,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "created_by" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "completed_at" DATETIME,
-    CONSTRAINT "voucher_batches_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "voucher_batches_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "sku_variants" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "voucher_batches_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "voucher_batches_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_batches_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "sku_variants" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_batches_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 -- CreateTable
@@ -802,8 +802,8 @@ CREATE TABLE IF NOT EXISTS "voucher_codes" (
     "variant_id" TEXT,
     "batch_id" TEXT,
     "voucher_batch_id" TEXT,
-    "initial_value" REAL NOT NULL,
-    "current_balance" REAL NOT NULL,
+    "initial_value" DECIMAL NOT NULL,
+    "current_balance" DECIMAL NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'LKR',
     "status" TEXT NOT NULL DEFAULT 'active',
     "issued_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -816,12 +816,12 @@ CREATE TABLE IF NOT EXISTS "voucher_codes" (
     "notes" TEXT,
     "created_by" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "voucher_codes_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "voucher_codes_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "sku_variants" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "voucher_codes_batch_id_fkey" FOREIGN KEY ("batch_id") REFERENCES "batches" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "voucher_codes_voucher_batch_id_fkey" FOREIGN KEY ("voucher_batch_id") REFERENCES "voucher_batches" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "voucher_codes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "voucher_codes_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_codes_variant_id_fkey" FOREIGN KEY ("variant_id") REFERENCES "sku_variants" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_codes_batch_id_fkey" FOREIGN KEY ("batch_id") REFERENCES "batches" ("id") ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_codes_voucher_batch_id_fkey" FOREIGN KEY ("voucher_batch_id") REFERENCES "voucher_batches" ("id") ON DELETE SET NULL ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_codes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 -- CreateTable
@@ -829,9 +829,9 @@ CREATE TABLE IF NOT EXISTS "voucher_redemptions" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "voucher_code_id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
-    "redeemed_amount" REAL NOT NULL,
-    "balance_before" REAL NOT NULL,
-    "balance_after" REAL NOT NULL,
+    "redeemed_amount" DECIMAL NOT NULL,
+    "balance_before" DECIMAL NOT NULL,
+    "balance_after" DECIMAL NOT NULL,
     "order_id" TEXT,
     "invoice_number" TEXT,
     "branch_id" TEXT,
@@ -839,9 +839,9 @@ CREATE TABLE IF NOT EXISTS "voucher_redemptions" (
     "redeemed_by" TEXT,
     "redeemed_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "notes" TEXT,
-    CONSTRAINT "voucher_redemptions_voucher_code_id_fkey" FOREIGN KEY ("voucher_code_id") REFERENCES "voucher_codes" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "voucher_redemptions_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "branches" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "voucher_redemptions_redeemed_by_fkey" FOREIGN KEY ("redeemed_by") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "voucher_redemptions_voucher_code_id_fkey" FOREIGN KEY ("voucher_code_id") REFERENCES "voucher_codes" ("id") ON DELETE CASCADE ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_redemptions_branch_id_fkey" FOREIGN KEY ("branch_id") REFERENCES "branches" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT "voucher_redemptions_redeemed_by_fkey" FOREIGN KEY ("redeemed_by") REFERENCES "users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 -- CreateTable
@@ -869,6 +869,153 @@ CREATE TABLE IF NOT EXISTS "legacy_sync_runs" (
     "finished_at" DATETIME,
     "stats" TEXT,
     "error_message" TEXT
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "legacy_pos_records" (
+    "source_table" TEXT NOT NULL,
+    "source_id" TEXT NOT NULL,
+    "payload" TEXT NOT NULL DEFAULT '{}',
+    "first_synced_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_synced_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY ("source_table", "source_id")
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "legacy_pos_record_versions" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "source_table" TEXT NOT NULL,
+    "source_id" TEXT NOT NULL,
+    "payload" TEXT NOT NULL,
+    "content_hash" TEXT NOT NULL,
+    "sync_run_id" TEXT NOT NULL,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_shifts" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "terminal_id" TEXT NOT NULL,
+    "branch_id" TEXT,
+    "user_id" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'OPEN',
+    "opening_float" REAL NOT NULL DEFAULT 0,
+    "closing_float" REAL,
+    "notes" TEXT,
+    "opening_declaration" TEXT,
+    "closing_declaration" TEXT,
+    "synced" BOOLEAN NOT NULL DEFAULT true,
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "opened_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "closed_at" DATETIME
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_held_sales" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "hold_number" TEXT NOT NULL,
+    "terminal_id" TEXT NOT NULL,
+    "branch_id" TEXT,
+    "cashier_id" TEXT NOT NULL,
+    "customer_id" TEXT,
+    "customer_name" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'HELD',
+    "subtotal" REAL NOT NULL,
+    "discount_total" REAL NOT NULL DEFAULT 0,
+    "total" REAL NOT NULL,
+    "notes" TEXT,
+    "lines" TEXT NOT NULL DEFAULT '[]',
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_sales" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "receipt_number" TEXT NOT NULL,
+    "terminal_id" TEXT NOT NULL,
+    "branch_id" TEXT,
+    "user_id" TEXT NOT NULL,
+    "customer_id" TEXT,
+    "shift_id" TEXT,
+    "held_sale_id" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'COMPLETED',
+    "subtotal" REAL NOT NULL,
+    "discount_total" REAL NOT NULL DEFAULT 0,
+    "tax_total" REAL NOT NULL DEFAULT 0,
+    "total" REAL NOT NULL,
+    "margin_total" REAL NOT NULL DEFAULT 0,
+    "lines" TEXT NOT NULL DEFAULT '[]',
+    "payments" TEXT NOT NULL DEFAULT '[]',
+    "source_device_id" TEXT,
+    "source_sequence_num" INTEGER,
+    "synced" BOOLEAN NOT NULL DEFAULT true,
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_returns" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "sale_id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "terminal_id" TEXT NOT NULL,
+    "reason" TEXT,
+    "total_refund" REAL NOT NULL,
+    "lines" TEXT NOT NULL DEFAULT '[]',
+    "source_device_id" TEXT,
+    "source_sequence_num" INTEGER,
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_sync_events" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "aggregate_type" TEXT NOT NULL,
+    "aggregate_id" TEXT NOT NULL,
+    "event_type" TEXT NOT NULL,
+    "payload" TEXT NOT NULL DEFAULT '{}',
+    "vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "device_id" TEXT NOT NULL,
+    "terminal_id" TEXT,
+    "sequence_num" INTEGER NOT NULL,
+    "lamport" INTEGER NOT NULL,
+    "conflict_policy" TEXT NOT NULL,
+    "state" TEXT NOT NULL DEFAULT 'PENDING',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "applied_at" DATETIME
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_sync_device_states" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "device_id" TEXT NOT NULL,
+    "terminal_id" TEXT,
+    "last_sequence_num" INTEGER NOT NULL DEFAULT 0,
+    "vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "confirmed_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "online" BOOLEAN NOT NULL DEFAULT false,
+    "last_error" TEXT,
+    "last_seen_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_sync_at" DATETIME
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_sync_conflicts" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "aggregate_type" TEXT NOT NULL,
+    "aggregate_id" TEXT NOT NULL,
+    "local_event_id" TEXT,
+    "remote_event_id" TEXT,
+    "policy" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'OPEN',
+    "detail" TEXT,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "resolved_at" DATETIME
 );
 
 -- CreateTable
@@ -903,12 +1050,12 @@ CREATE TABLE IF NOT EXISTS "voucher_restrictions" (
     "target_variant_ids" TEXT,
     "cannot_combine_with_discounts" BOOLEAN NOT NULL DEFAULT true,
     "cannot_combine_with_other_vouchers" BOOLEAN NOT NULL DEFAULT true,
-    "min_purchase_amount" REAL,
-    "max_discount_amount" REAL,
+    "min_purchase_amount" DECIMAL,
+    "max_discount_amount" DECIMAL,
     "priority" INTEGER NOT NULL DEFAULT 0,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL,
-    CONSTRAINT "voucher_restrictions_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "voucher_restrictions_sku_id_fkey" FOREIGN KEY ("sku_id") REFERENCES "skus" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
 -- CreateIndex
@@ -1074,7 +1221,7 @@ CREATE INDEX IF NOT EXISTS "status_options_deleted_at_idx" ON "status_options"("
 CREATE UNIQUE INDEX IF NOT EXISTS "status_options_entity_type_value_key" ON "status_options"("entity_type", "value");
 
 -- CreateIndex
-CREATE INDEX IF NOT EXISTS "voucher_batches_sku_id_variant_id_idx" ON "voucher_batches"("sku_id", "variant_id");
+CREATE INDEX IF NOT EXISTS "voucher_batches_sku_variant_idx" ON "voucher_batches"("sku_id", "variant_id");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "voucher_batches_status_idx" ON "voucher_batches"("status");
@@ -1086,7 +1233,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "voucher_codes_code_key" ON "voucher_codes"("c
 CREATE INDEX IF NOT EXISTS "voucher_codes_code_idx" ON "voucher_codes"("code");
 
 -- CreateIndex
-CREATE INDEX IF NOT EXISTS "voucher_codes_sku_id_variant_id_idx" ON "voucher_codes"("sku_id", "variant_id");
+CREATE INDEX IF NOT EXISTS "voucher_codes_sku_variant_idx" ON "voucher_codes"("sku_id", "variant_id");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "voucher_codes_status_idx" ON "voucher_codes"("status");
@@ -1095,7 +1242,7 @@ CREATE INDEX IF NOT EXISTS "voucher_codes_status_idx" ON "voucher_codes"("status
 CREATE INDEX IF NOT EXISTS "voucher_codes_expires_at_idx" ON "voucher_codes"("expires_at");
 
 -- CreateIndex
-CREATE INDEX IF NOT EXISTS "voucher_codes_voucher_batch_id_idx" ON "voucher_codes"("voucher_batch_id");
+CREATE INDEX IF NOT EXISTS "voucher_codes_batch_idx" ON "voucher_codes"("voucher_batch_id");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "voucher_redemptions_voucher_code_id_idx" ON "voucher_redemptions"("voucher_code_id");
@@ -1117,6 +1264,27 @@ CREATE UNIQUE INDEX IF NOT EXISTS "legacy_entity_links_source_type_source_id_key
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "legacy_sync_runs_started_at_idx" ON "legacy_sync_runs"("started_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "legacy_pos_records_table_idx" ON "legacy_pos_records"("source_table");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "legacy_pos_record_versions_source_table_source_id_content_hash_key" ON "legacy_pos_record_versions"("source_table", "source_id", "content_hash");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "pos_held_sales_hold_number_key" ON "pos_held_sales"("hold_number");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "pos_sales_receipt_number_key" ON "pos_sales"("receipt_number");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "pos_sync_events_aggregate_idx" ON "pos_sync_events"("aggregate_type", "aggregate_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "pos_sync_events_device_sequence_idx" ON "pos_sync_events"("device_id", "sequence_num");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "pos_sync_device_states_device_id_key" ON "pos_sync_device_states"("device_id");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "managed_devices_application_last_seen_at_idx" ON "managed_devices"("application", "last_seen_at");
