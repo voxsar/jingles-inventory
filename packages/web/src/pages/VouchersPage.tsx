@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
+import type { IVoucherCode } from '@jingles/shared';
 import voucherApi from '../api/voucherApi';
 import { skusApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
 
+/** GET /api/vouchers/codes returns voucher rows with the SKU relation included. */
+type VoucherCodeRow = IVoucherCode & {
+  sku?: { id: string; skuCode: string; name: string } | null;
+};
+
 export default function VouchersPage() {
-  const [codes, setCodes] = useState<any[]>([]);
+  const [codes, setCodes] = useState<VoucherCodeRow[]>([]);
   const [skus, setSkus] = useState<any[]>([]);
   const [skuId, setSkuId] = useState('');
   const [value, setValue] = useState('');
@@ -39,7 +45,7 @@ export default function VouchersPage() {
       {skus.length === 0 && <p className="md:col-span-4 text-sm text-amber-700">Create a product marked as a voucher before issuing codes.</p>}
     </form>
     <div className="card overflow-x-auto"><table className="data-table"><thead><tr><th>Code</th><th>Product</th><th>Status</th><th>Original</th><th>Balance</th><th>Expires</th></tr></thead>
-      <tbody>{codes.map((row) => <tr key={row.id}><td className="font-mono font-semibold">{row.code}</td><td>{row.sku?.name ?? row.skuId}</td><td>{row.status}</td><td>{row.originalValue?.toFixed?.(2) ?? row.originalValue} {row.currency}</td><td>{row.currentBalance?.toFixed?.(2) ?? row.currentBalance}</td><td>{row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : 'Never'}</td></tr>)}</tbody>
+      <tbody>{codes.map((row) => <tr key={row.id}><td className="font-mono font-semibold">{row.code}</td><td>{row.sku?.name ?? row.skuId}</td><td>{row.status}</td><td>{Number(row.initialValue).toFixed(2)} {row.currency}</td><td>{Number(row.currentBalance).toFixed(2)}</td><td>{row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : 'Never'}</td></tr>)}</tbody>
     </table>{codes.length === 0 && <div className="p-8 text-center text-gray-500">No voucher codes issued yet.</div>}</div>
   </div>;
 }
