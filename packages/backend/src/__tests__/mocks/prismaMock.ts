@@ -120,6 +120,12 @@ export const prismaMock = {
 		count: vi.fn(),
 		aggregate: vi.fn(),
 	},
+	inventoryControl: {
+		findUnique: vi.fn(),
+		create: vi.fn(),
+		update: vi.fn(),
+		upsert: vi.fn(),
+	},
 	stockCountRun: {
 		findUnique: vi.fn(),
 		findFirst: vi.fn(),
@@ -162,6 +168,7 @@ export const prismaMock = {
 		findUnique: vi.fn(),
 		findMany: vi.fn(),
 		create: vi.fn(),
+		createMany: vi.fn(),
 		count: vi.fn(),
 	},
 	gRN: {
@@ -317,6 +324,8 @@ export const prismaMock = {
 		count: vi.fn(),
 	},
 	$transaction: vi.fn(),
+	$queryRawUnsafe: vi.fn(),
+	$executeRawUnsafe: vi.fn(),
 	$disconnect: vi.fn(),
 };
 
@@ -339,4 +348,6 @@ export function resetPrismaMocks() {
 			});
 		}
 	});
+	prismaMock.inventoryControl.findUnique.mockResolvedValue(null as any);
+	prismaMock.$queryRawUnsafe.mockResolvedValue([] as any);
 }

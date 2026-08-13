@@ -14,6 +14,10 @@ import {
 import { upsertLegacyPosRecords } from '../../services/posCloud';
 import { queueDashboardStatsRefresh } from '../dashboard/dashboardService';
 import { importLegacyDocuments, LegacyDocumentImportResult } from './legacyDocumentImport';
+import {
+	legacyQuantitySyncIsEnabled,
+	lockInventoryQuantityWrites,
+} from '../inventory/inventoryControl';
 
 export const LEGACY_SYNC_TERMINAL_ID = 'legacy-desktop-sync';
 const LEGACY_IMPORT_TERMINAL_ID = 'legacy-sql-import';
@@ -595,10 +599,19 @@ async function mirrorQuantity(args: {
 	legacyRef: { sourceType: string; sourceId: string; locationId: string };
 }) {
 	const { ctx, skuId, variantId, branch, targetQuantity, legacyRef } = args;
+	return prisma.$transaction(async (tx: any) => {
+		await lockInventoryQuantityWrites(tx);
+		if (!(await legacyQuantitySyncIsEnabled(tx))) {
+			if (!ctx.warnings.some((message) => message.includes('quantity mirroring is disabled'))) {
+				warn(ctx, 'MaxSoft quantity mirroring is disabled because inventory was zeroed. Catalog and historical data continue to sync.');
+			}
+			return;
+		}
+
 	const scope = branchScopeFilter(ctx, branch.branchId);
 	const variantFilter = variantId === null ? {} : { variantId };
 
-	const aggregate = await prisma.inventoryRecord.aggregate({
+	const aggregate = await tx.inventoryRecord.aggregate({
 		_sum: { quantity: true },
 		where: {
 			skuId,
@@ -611,7 +624,7 @@ async function mirrorQuantity(args: {
 	let delta = targetQuantity - currentQuantity;
 	if (Math.abs(delta) < QTY_EPSILON) return;
 
-	const legacyOwned = await prisma.inventoryRecord.findMany({
+	const legacyOwned = await tx.inventoryRecord.findMany({
 		where: {
 			skuId,
 			...variantFilter,
@@ -625,12 +638,12 @@ async function mirrorQuantity(args: {
 	if (delta > 0) {
 		const target = legacyOwned[0];
 		if (target) {
-			await prisma.inventoryRecord.update({
+			await tx.inventoryRecord.update({
 				where: { id: target.id },
 				data: { quantity: target.quantity + delta, terminalId: LEGACY_SYNC_TERMINAL_ID },
 			});
 		} else {
-			await prisma.inventoryRecord.create({
+			await tx.inventoryRecord.create({
 				data: {
 					skuId,
 					variantId,
@@ -647,7 +660,7 @@ async function mirrorQuantity(args: {
 			if (remaining <= QTY_EPSILON) break;
 			const take = Math.min(record.quantity, remaining);
 			if (take > 0) {
-				await prisma.inventoryRecord.update({
+				await tx.inventoryRecord.update({
 					where: { id: record.id },
 					data: { quantity: record.quantity - take, terminalId: LEGACY_SYNC_TERMINAL_ID },
 				});
@@ -660,13 +673,13 @@ async function mirrorQuantity(args: {
 			// branch total still mirrors the legacy POS, and flag it for review.
 			const target = legacyOwned[0];
 			if (target) {
-				const fresh = await prisma.inventoryRecord.findUnique({ where: { id: target.id }, select: { quantity: true } });
-				await prisma.inventoryRecord.update({
+				const fresh = await tx.inventoryRecord.findUnique({ where: { id: target.id }, select: { quantity: true } });
+				await tx.inventoryRecord.update({
 					where: { id: target.id },
 					data: { quantity: (fresh?.quantity ?? 0) - remaining },
 				});
 			} else {
-				await prisma.inventoryRecord.create({
+				await tx.inventoryRecord.create({
 					data: {
 						skuId,
 						variantId,
@@ -681,7 +694,7 @@ async function mirrorQuantity(args: {
 		}
 	}
 
-	await prisma.inventoryEvent.create({
+	await tx.inventoryEvent.create({
 		data: {
 			eventType: LEGACY_SYNC_EVENT_TYPE,
 			parentEntityId: `legacy-sync:${legacyRef.sourceType}:${legacyRef.sourceId}:${legacyRef.locationId}`,
@@ -701,6 +714,7 @@ async function mirrorQuantity(args: {
 		},
 	});
 	ctx.inventoryAdjustments += 1;
+	});
 }
 
 // ── Product resolution & apply ──────────────────────────────────────────────

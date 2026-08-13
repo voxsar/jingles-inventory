@@ -441,6 +441,18 @@ exports.Prisma.InventoryEventScalarFieldEnum = {
   metadata: 'metadata'
 };
 
+exports.Prisma.InventoryControlScalarFieldEnum = {
+  id: 'id',
+  legacyQuantitySyncEnabled: 'legacyQuantitySyncEnabled',
+  zeroedAt: 'zeroedAt',
+  zeroedById: 'zeroedById',
+  zeroOperationId: 'zeroOperationId',
+  recordsZeroed: 'recordsZeroed',
+  unitsZeroed: 'unitsZeroed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.StockCountRunScalarFieldEnum = {
   id: 'id',
   branchId: 'branchId',
@@ -1037,6 +1049,7 @@ exports.Prisma.ModelName = {
   StockTransferLine: 'StockTransferLine',
   InventoryRecord: 'InventoryRecord',
   InventoryEvent: 'InventoryEvent',
+  InventoryControl: 'InventoryControl',
   StockCountRun: 'StockCountRun',
   StockCountDeviceSession: 'StockCountDeviceSession',
   StockCountItem: 'StockCountItem',

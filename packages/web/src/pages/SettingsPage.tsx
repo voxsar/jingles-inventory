@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { settingsApi, attributesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
 import { isDesktopRuntime } from '../utils/runtime';
+import { useAuthStore } from '../store/authStore';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
 const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
@@ -64,10 +65,20 @@ const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color
 const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
 const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder: '0' };
 
-type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense';
+type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense' | 'inventory-control';
+
+type InventoryControlStatus = {
+	legacyQuantitySyncEnabled: boolean;
+	zeroedAt: string | null;
+	recordsZeroed: number;
+	unitsZeroed: number;
+	currentNonZeroRecords: number;
+	currentQuantity: number;
+};
 
 export default function SettingsPage() {
 	const navigate = useNavigate();
+	const user = useAuthStore((state) => state.user);
 	const [section, setSection] = useState<Section>('home');
 	const [statusEntityType, setStatusEntityType] = useState<string>('inventory');
 
@@ -108,6 +119,48 @@ export default function SettingsPage() {
 	const [typesenseConnectionOk, setTypesenseConnectionOk] = useState<boolean | null>(null);
 	const [activeJobId, setActiveJobId] = useState<string | null>(null);
 	const [pollInterval, setPollInterval] = useState<number | null>(null);
+	const [inventoryControl, setInventoryControl] = useState<InventoryControlStatus | null>(null);
+	const [inventoryControlLoading, setInventoryControlLoading] = useState(false);
+	const [zeroConfirmation, setZeroConfirmation] = useState('');
+	const [zeroingInventory, setZeroingInventory] = useState(false);
+	const [zeroResult, setZeroResult] = useState<string>('');
+
+	const loadInventoryControl = async () => {
+		setInventoryControlLoading(true);
+		try {
+			const response = await settingsApi.getInventoryControl();
+			setInventoryControl(response.data.data);
+		} catch (err: any) {
+			setZeroResult(err.response?.data?.error ?? 'Failed to load inventory control status');
+		} finally {
+			setInventoryControlLoading(false);
+		}
+	};
+
+	const openInventoryControl = () => {
+		setSection('inventory-control');
+		setZeroConfirmation('');
+		setZeroResult('');
+		void loadInventoryControl();
+	};
+
+	const handleZeroInventory = async () => {
+		if (zeroConfirmation !== 'ZERO INVENTORY') return;
+		if (!window.confirm('This will set every inventory quantity to zero and permanently stop MaxSoft from changing stock quantities. Continue?')) return;
+		setZeroingInventory(true);
+		setZeroResult('');
+		try {
+			const response = await settingsApi.zeroInventory(zeroConfirmation);
+			const result = response.data.data;
+			setZeroResult(`Inventory zeroed: ${result.recordsZeroed.toLocaleString()} records and ${result.unitsZeroed.toLocaleString()} units were reset.`);
+			setZeroConfirmation('');
+			await loadInventoryControl();
+		} catch (err: any) {
+			setZeroResult(err.response?.data?.error ?? 'Failed to zero inventory');
+		} finally {
+			setZeroingInventory(false);
+		}
+	};
 
 	// ── Units ─────────────────────────────────────────────────
 
@@ -1015,6 +1068,70 @@ export default function SettingsPage() {
 		);
 	}
 
+	if (section === 'inventory-control') {
+		return (
+			<div className="flex flex-col gap-4">
+				<div className="page-header">
+					<div className="page-header-left">
+						<h1 className="page-title">Inventory Control</h1>
+						<p className="page-subtitle">Reset the stock baseline and protect it from legacy quantity snapshots.</p>
+					</div>
+					<button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
+				</div>
+
+				<div className="content-section p-6 space-y-6">
+					{inventoryControlLoading && <p className="text-sm text-gray-500">Loading inventory status…</p>}
+					{inventoryControl && (
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+							<div className="rounded-lg border border-gray-200 p-4">
+								<div className="text-xs text-gray-500">Current quantity</div>
+								<div className="text-2xl font-semibold mt-1">{inventoryControl.currentQuantity.toLocaleString()}</div>
+								<div className="text-xs text-gray-500 mt-1">{inventoryControl.currentNonZeroRecords.toLocaleString()} non-zero records</div>
+							</div>
+							<div className="rounded-lg border border-gray-200 p-4">
+								<div className="text-xs text-gray-500">MaxSoft quantities</div>
+								<div className={`text-lg font-semibold mt-1 ${inventoryControl.legacyQuantitySyncEnabled ? 'text-amber-700' : 'text-green-700'}`}>
+									{inventoryControl.legacyQuantitySyncEnabled ? 'Still enabled' : 'Permanently blocked'}
+								</div>
+								<div className="text-xs text-gray-500 mt-1">Catalog and historical data still synchronize</div>
+							</div>
+							<div className="rounded-lg border border-gray-200 p-4">
+								<div className="text-xs text-gray-500">Last zeroed</div>
+								<div className="text-sm font-medium mt-2">{inventoryControl.zeroedAt ? new Date(inventoryControl.zeroedAt).toLocaleString() : 'Never'}</div>
+								{inventoryControl.zeroedAt && <div className="text-xs text-gray-500 mt-1">{inventoryControl.recordsZeroed.toLocaleString()} records reset</div>}
+							</div>
+						</div>
+					)}
+
+					<div className="rounded-lg border border-red-200 bg-red-50 p-5">
+						<h2 className="text-lg font-semibold text-red-900">Zero all inventory</h2>
+						<p className="text-sm text-red-800 mt-2">
+							Every inventory record will be set to zero. Open GRNs and product records are not deleted. Afterward, only native transactions such as GRNs, PRNs, transfers, sales, returns, and manual adjustments can change stock.
+						</p>
+						<p className="text-sm font-medium text-red-900 mt-4">Type <span className="font-mono">ZERO INVENTORY</span> to confirm.</p>
+						<input
+							className="form-input mt-2 max-w-md"
+							value={zeroConfirmation}
+							onChange={(event) => setZeroConfirmation(event.target.value)}
+							placeholder="ZERO INVENTORY"
+							autoComplete="off"
+						/>
+						<div className="mt-3">
+							<button
+								className="btn-primary !bg-red-600 hover:!bg-red-700"
+								disabled={zeroConfirmation !== 'ZERO INVENTORY' || zeroingInventory}
+								onClick={handleZeroInventory}
+							>
+								{zeroingInventory ? 'Zeroing inventory…' : 'Zero Inventory'}
+							</button>
+						</div>
+						{zeroResult && <p className="text-sm mt-3 text-gray-800">{zeroResult}</p>}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	if (section === 'typesense') {
 		return (
 			<div className="flex flex-col gap-4">
@@ -1143,6 +1260,21 @@ export default function SettingsPage() {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{user?.role === 'Admin' && (
+					<button
+						className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer border border-red-100"
+						onClick={openInventoryControl}
+					>
+						<div className="flex items-start gap-4">
+							<div className="text-4xl">⏱️</div>
+							<div>
+								<h2 className="font-semibold text-gray-800 text-lg">Inventory Control</h2>
+								<p className="text-sm text-gray-500 mt-1">Zero the stock baseline and permanently prevent MaxSoft snapshots from restoring old quantities.</p>
+								<span className="inline-block mt-3 text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded-full">Admin only →</span>
+							</div>
+						</div>
+					</button>
+				)}
 				{isDesktopRuntime() && (
 					<button
 						className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"

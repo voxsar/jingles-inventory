@@ -9,10 +9,49 @@ import { getJob, getAllJobs } from '../modules/typesense/jobTracker';
 import { persistSyncMetadata, recordServerSyncChanges } from '../sync/syncV2';
 import logger from '../utils/logger';
 import { getPagination, paginatedPayload } from '../utils/pagination';
+import {
+	getInventoryControlStatus,
+	zeroInventory,
+} from '../modules/inventory/inventoryControl';
 
 const router = Router();
 
 router.use(authenticate);
+
+router.get(
+	'/inventory-control',
+	requireRole('Admin'),
+	async (_req: AuthRequest, res: Response): Promise<void> => {
+		try {
+			res.json({ success: true, data: await getInventoryControlStatus() });
+		} catch (error) {
+			logger.error('Get inventory control status error', error);
+			res.status(500).json({ success: false, error: 'Failed to load inventory control status' });
+		}
+	},
+);
+
+router.post(
+	'/inventory-control/zero',
+	requireRole('Admin'),
+	[body('confirmation').equals('ZERO INVENTORY')],
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ success: false, error: 'Type ZERO INVENTORY to confirm this operation' });
+			return;
+		}
+
+		try {
+			const data = await zeroInventory({ userId: req.user!.id, ipAddress: req.ip });
+			res.json({ success: true, data });
+		} catch (error: any) {
+			logger.error('Zero inventory error', error);
+			const message = error?.message ?? 'Failed to zero inventory';
+			res.status(message.includes('main server') ? 409 : 500).json({ success: false, error: message });
+		}
+	},
+);
 
 async function syncStatusOptionChange(
 	tx: any,

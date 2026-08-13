@@ -47,6 +47,7 @@ const locationLink: LinkRecord = {
 describe('legacySyncService.applyChunk — merged products stay variants', () => {
 	beforeEach(() => {
 		resetPrismaMocks();
+		prismaMock.$transaction.mockImplementation(async (callback: any) => callback(prismaMock));
 	});
 
 	it('routes updates for a variant-linked legacy product to the variant, never creating a SKU', async () => {
@@ -111,6 +112,38 @@ describe('legacySyncService.applyChunk — merged products stay variants', () =>
 			expect.objectContaining({
 				create: expect.objectContaining({ targetType: 'variant', targetId: 'var-1' }),
 			}),
+		);
+	});
+
+	it('keeps syncing catalog data but never restores MaxSoft quantities after inventory is zeroed', async () => {
+		wireBranch();
+		wireLinks([
+			locationLink,
+			{
+				id: 'link-cutoff', sourceType: 'product', sourceId: '102', targetType: 'sku',
+				targetId: 'sku-102', resolution: 'sku-code', isLocked: false,
+				lastApplied: { name: 'Keyboard', isActive: true, sellingPrice: 100 },
+			},
+		]);
+		prismaMock.inventoryControl.findUnique.mockResolvedValue({ legacyQuantitySyncEnabled: false } as any);
+		prismaMock.sKU.findUnique.mockResolvedValue({
+			id: 'sku-102', skuCode: 'P102', name: 'Keyboard', isActive: true, sellingPrice: 100,
+		} as any);
+
+		const result = await applyChunk('run-after-zero', {
+			products: [{
+				productId: '102', productCode: 'P102', name: 'Keyboard', isActive: true,
+				details: [{ locationId: 'loc1', sellingPrice: 100, quantity: 500 }],
+			}],
+		});
+
+		expect(prismaMock.legacyEntityLink.upsert).toHaveBeenCalled();
+		expect(prismaMock.inventoryRecord.aggregate).not.toHaveBeenCalled();
+		expect(prismaMock.inventoryRecord.update).not.toHaveBeenCalled();
+		expect(prismaMock.inventoryRecord.create).not.toHaveBeenCalled();
+		expect(result.inventoryAdjustments).toBe(0);
+		expect(result.warnings).toContain(
+			'MaxSoft quantity mirroring is disabled because inventory was zeroed. Catalog and historical data continue to sync.',
 		);
 	});
 

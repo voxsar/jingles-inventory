@@ -582,6 +582,23 @@ model InventoryEvent {
   @@map("inventory_events")
 }
 
+// Singleton control for the authoritative inventory baseline. Once inventory
+// is zeroed, legacy MaxSoft snapshots may continue syncing catalog data but
+// can no longer overwrite quantities created by native workflows.
+model InventoryControl {
+  id                        String    @id
+  legacyQuantitySyncEnabled Boolean   @default(true) @map("legacy_quantity_sync_enabled")
+  zeroedAt                  DateTime? @map("zeroed_at")
+  zeroedById                String?   @map("zeroed_by_id")
+  zeroOperationId           String?   @map("zero_operation_id")
+  recordsZeroed             Int       @default(0) @map("records_zeroed")
+  unitsZeroed               Float     @default(0) @map("units_zeroed")
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+
+  @@map("inventory_control")
+}
+
 // Branch-wide stock count. Inventory is zeroed through the administrative
 // settings workflow before this run opens; Android devices never zero stock.
 model StockCountRun {

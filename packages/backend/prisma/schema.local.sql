@@ -403,6 +403,19 @@ CREATE TABLE IF NOT EXISTS "inventory_events" (
 );
 
 -- CreateTable
+CREATE TABLE IF NOT EXISTS "inventory_control" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "legacy_quantity_sync_enabled" BOOLEAN NOT NULL DEFAULT true,
+    "zeroed_at" DATETIME,
+    "zeroed_by_id" TEXT,
+    "zero_operation_id" TEXT,
+    "records_zeroed" INTEGER NOT NULL DEFAULT 0,
+    "units_zeroed" REAL NOT NULL DEFAULT 0,
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL
+);
+
+-- CreateTable
 CREATE TABLE IF NOT EXISTS "stock_count_runs" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "branch_id" TEXT NOT NULL,
