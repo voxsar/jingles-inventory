@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { floorsApi, branchesApi } from '../../api/client';
 import ReactSpreadsheetWrapper, { ColumnDefinition } from '../../components/ReactSpreadsheetWrapper';
-import { buildCreatedRow, fetchAllSpreadsheetRows, mergeUpdatedRow, useLazySpreadsheetRows } from './spreadsheetPageUtils';
+import {
+	buildCreatedRow,
+	fetchAllSpreadsheetRows,
+	mergeUpdatedRow,
+	rejectImmutableChanges,
+	useLazySpreadsheetRows,
+} from './spreadsheetPageUtils';
 
 export default function FloorSpreadsheetPage() {
   const navigate = useNavigate();
@@ -107,6 +113,12 @@ export default function FloorSpreadsheetPage() {
 
   const handleSave = async (row: any, changes: Partial<any>) => {
     try {
+      // The floors PUT handler does not accept branchId — moving a floor would
+      // drag its racks, shelves, boxes and stock to another branch, so it is
+      // not a cell edit. Without this the change looked saved and did nothing.
+      rejectImmutableChanges(changes, [
+        { key: 'branchId', message: 'A floor cannot change branch here — recreate it under the target branch.' },
+      ]);
       const response = await floorsApi.update(row.id, changes);
       setFloors(current => current.map(floor => (
         floor.id === row.id ? mergeUpdatedRow(floor, changes, response) : floor
