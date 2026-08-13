@@ -322,14 +322,6 @@ export const ocrApi = {
   },
 };
 
-// Sync
-export const syncApi = {
-  push: (clientId: string, operations: any[]) =>
-    api.post('/sync/push', { clientId, operations }),
-  pull: (clientId: string, since?: string) =>
-    api.get('/sync/pull', { params: { clientId, since } }),
-};
-
 // Batches
 export const batchesApi = {
   list: (params?: Record<string, string>) =>
