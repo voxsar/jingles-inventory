@@ -16,7 +16,6 @@ import boxRoutes from './routes/boxes';
 import inventoryRoutes from './routes/inventory';
 import grnRoutes from './routes/grns';
 import prnRoutes from './routes/prns';
-import inspectionRoutes from './routes/inspections';
 import auditLogRoutes from './routes/auditLogs';
 import ocrRoutes from './routes/ocr';
 import barcodeRoutes from './routes/barcode';
@@ -101,7 +100,6 @@ export function createApp() {
 	app.use('/api/inventory', inventoryRoutes);
 	app.use('/api/grns', grnRoutes);
 	app.use('/api/prns', prnRoutes);
-	app.use('/api/inspections', inspectionRoutes);
 	app.use('/api/audit-logs', auditLogRoutes);
 	app.use('/api/ocr', ocrRoutes);
 	app.use('/api/barcode', barcodeRoutes);

@@ -12,7 +12,7 @@ Add these environment variables to `/packages/backend/.env`:
 TYPESENSE_HOST="typesense.artslabcreatives.com"
 TYPESENSE_PORT="443"
 TYPESENSE_PROTOCOL="https"
-TYPESENSE_API_KEY="o0q4XFVi7qFgttoXvUmF8m4a9bMG9bRTLBI0pb"
+TYPESENSE_API_KEY="your-typesense-api-key"
 ```
 
 ## Collections
