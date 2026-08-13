@@ -41,6 +41,7 @@ import posRoutes from './routes/pos';
 import voucherRoutes from './routes/vouchers';
 import legacySyncRoutes from './routes/legacySync';
 import deviceRoutes from './routes/devices';
+import { stockCountRouter, stockCountRunRouter } from './routes/stockCounts';
 import { preloadStatusCache } from './modules/statuses/statusLookup';
 import { startReplicaRealtime } from './sync/realtime';
 import { getStorageRoot } from './utils/runtimePaths';
@@ -123,6 +124,8 @@ export function createApp() {
 	app.use('/api/pos', posRoutes);
 	app.use('/api/vouchers', voucherRoutes);
 	app.use('/api/devices', deviceRoutes);
+	app.use('/api/stock-count-runs', stockCountRunRouter);
+	app.use('/api/stock-count', stockCountRouter);
 
 	app.use(errorHandler);
 

@@ -17,19 +17,24 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")
 
-  vendor                 Vendor?                @relation(fields: [vendorId], references: [id])
-  inventoryRecords       InventoryRecord[]
-  inventoryEvents        InventoryEvent[]
-  grns                   GRN[]
-  prns                   PRN[]
-  inspectionRecords      InspectionRecord[]
-  auditLogs              AuditLog[]
-  importJobs             ImportJob[]
-  stockTransfersCreated  StockTransfer[]        @relation("StockTransferCreator")
-  stockTransfersApproved StockTransfer[]        @relation("StockTransferApprover")
-  voucherBatches         VoucherBatch[]
-  voucherCodes           VoucherCode[]
-  voucherRedemptions     VoucherRedemption[]
+  vendor                   Vendor?                   @relation(fields: [vendorId], references: [id])
+  inventoryRecords         InventoryRecord[]
+  inventoryEvents          InventoryEvent[]
+  grns                     GRN[]
+  prns                     PRN[]
+  inspectionRecords        InspectionRecord[]
+  auditLogs                AuditLog[]
+  importJobs               ImportJob[]
+  stockTransfersCreated    StockTransfer[]           @relation("StockTransferCreator")
+  stockTransfersApproved   StockTransfer[]           @relation("StockTransferApprover")
+  voucherBatches           VoucherBatch[]
+  voucherCodes             VoucherCode[]
+  voucherRedemptions       VoucherRedemption[]
+  stockCountRunsStarted    StockCountRun[]           @relation("StockCountRunStartedBy")
+  stockCountRunsCompleted  StockCountRun[]           @relation("StockCountRunCompletedBy")
+  stockCountDeviceSessions StockCountDeviceSession[]
+  stockCountLines          StockCountLine[]
+  stockCountSubmissions    StockCountSubmission[]
 
   @@map("users")
 }
@@ -59,14 +64,14 @@ model Vendor {
 }
 
 model Category {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
-  slug        String    @unique
+  slug        String   @unique
   description String?
-  parentId    String?   @map("parent_id")
-  sortOrder   Int       @default(0) @map("sort_order")
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  parentId    String?  @map("parent_id")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
@@ -87,15 +92,15 @@ model Tag {
 }
 
 model UnitOfMeasure {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  abbreviation String
-  baseUnit     String?  @map("base_unit")
-  conversionFactor Float? @map("conversion_factor")
-  type         String
-  isActive     Boolean  @default(true) @map("is_active")
-  isSystem     Boolean  @default(false) @map("is_system")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  name             String   @unique
+  abbreviation     String
+  baseUnit         String?  @map("base_unit")
+  conversionFactor Float?   @map("conversion_factor")
+  type             String
+  isActive         Boolean  @default(true) @map("is_active")
+  isSystem         Boolean  @default(false) @map("is_system")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   skus SKU[]
 
@@ -103,84 +108,87 @@ model UnitOfMeasure {
 }
 
 model Branch {
-  id          String   @id @default(uuid())
-  name        String
-  code        String   @unique
-  address     String?
-  phone       String?
-  email       String?
-  isActive    Boolean  @default(true) @map("is_active")
-  isDefault   Boolean  @default(false) @map("is_default")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  floors                Floor[]
-  stockTransfersFrom    StockTransfer[] @relation("StockTransferFrom")
-  stockTransfersTo      StockTransfer[] @relation("StockTransferTo")
-  voucherRedemptions    VoucherRedemption[]
+  floors             Floor[]
+  stockTransfersFrom StockTransfer[]     @relation("StockTransferFrom")
+  stockTransfersTo   StockTransfer[]     @relation("StockTransferTo")
+  voucherRedemptions VoucherRedemption[]
+  stockCountRuns     StockCountRun[]
 
   @@map("branches")
 }
 
 model SKU {
-  id              String   @id @default(uuid())
-  skuCode         String   @unique @map("sku_code")
+  id              String  @id @default(uuid())
+  skuCode         String  @unique @map("sku_code")
   name            String
   description     String?
-  categoryId      String?  @map("category_id")
-  vendorId        String   @map("vendor_id")
-  unitOfMeasureId String?  @map("unit_of_measure_id")
-  unitOfMeasure   String   @map("unit_of_measure")
-  conversionRules Json?    @map("conversion_rules")
+  categoryId      String? @map("category_id")
+  vendorId        String  @map("vendor_id")
+  unitOfMeasureId String? @map("unit_of_measure_id")
+  unitOfMeasure   String  @map("unit_of_measure")
+  conversionRules Json?   @map("conversion_rules")
   dimensions      Json?
-  videoUrl        String?  @map("video_url")
-  isFragile       Boolean  @default(false) @map("is_fragile")
-  maxStackHeight  Float?   @map("max_stack_height")
+  videoUrl        String? @map("video_url")
+  isFragile       Boolean @default(false) @map("is_fragile")
+  maxStackHeight  Float?  @map("max_stack_height")
 
   // Default pricing fields (used as fallback when no batch-specific price exists)
-  costPrice       Float?   @map("cost_price")
-  sellingPrice    Float?   @map("selling_price")
-  wholesalePrice  Float?   @map("wholesale_price")
-  bulkPrice       Float?   @map("bulk_price")
-  marginType      String?  @map("margin_type")      // 'fixed' or 'percentage'
-  marginValue     Float?   @map("margin_value")     // Amount or %
-  currency        String   @default("LKR")
+  costPrice      Float?  @map("cost_price")
+  sellingPrice   Float?  @map("selling_price")
+  wholesalePrice Float?  @map("wholesale_price")
+  bulkPrice      Float?  @map("bulk_price")
+  marginType     String? @map("margin_type") // 'fixed' or 'percentage'
+  marginValue    Float?  @map("margin_value") // Amount or %
+  currency       String  @default("LKR")
 
   // Default date fields (used as fallback for batches)
-  defaultManufacturingDate DateTime? @map("default_manufacturing_date")  // Default manufacture date
-  defaultExpiryDate        DateTime? @map("default_expiry_date")         // Default expiry date
-  shelfLifeDays            Int?      @map("shelf_life_days")            // Days between manufacture and expiry
+  defaultManufacturingDate DateTime? @map("default_manufacturing_date") // Default manufacture date
+  defaultExpiryDate        DateTime? @map("default_expiry_date") // Default expiry date
+  shelfLifeDays            Int?      @map("shelf_life_days") // Days between manufacture and expiry
 
-  batchPricing    Json?    @map("batch_pricing")
+  batchPricing          Json? @map("batch_pricing")
   batchReferencePricing Json? @map("batch_reference_pricing")
-  lowStockThreshold Int?   @map("low_stock_threshold")
-  
-  // Voucher-specific fields
-  isVoucher          Boolean  @default(false) @map("is_voucher")
-  voucherValueType   String?  @map("voucher_value_type")    // 'fixed' or 'range'
-  voucherMinValue    Float?   @map("voucher_min_value")
-  voucherMaxValue    Float?   @map("voucher_max_value")
-  
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  lowStockThreshold     Int?  @map("low_stock_threshold")
 
-  vendor              Vendor              @relation(fields: [vendorId], references: [id])
-  category            Category?           @relation(fields: [categoryId], references: [id])
-  unitModel           UnitOfMeasure?      @relation(fields: [unitOfMeasureId], references: [id])
-  inventoryRecords    InventoryRecord[]
-  grnLines            GRNLine[]
-  prnLines            PRNLine[]
-  images              ProductImage[]
-  barcodes            ProductBarcode[]
-  tags                SKUTag[]
-  skuAttributes       SKUAttribute[]
-  variants            SKUVariant[]
-  batches             Batch[]
-  stockTransferLines  StockTransferLine[]
-  skuVendors          SKUVendor[]
-  voucherCodes        VoucherCode[]
-  voucherRestrictions VoucherRestriction[]
-  voucherBatches      VoucherBatch[]
+  // Voucher-specific fields
+  isVoucher        Boolean @default(false) @map("is_voucher")
+  voucherValueType String? @map("voucher_value_type") // 'fixed' or 'range'
+  voucherMinValue  Float?  @map("voucher_min_value")
+  voucherMaxValue  Float?  @map("voucher_max_value")
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  vendor                Vendor                 @relation(fields: [vendorId], references: [id])
+  category              Category?              @relation(fields: [categoryId], references: [id])
+  unitModel             UnitOfMeasure?         @relation(fields: [unitOfMeasureId], references: [id])
+  inventoryRecords      InventoryRecord[]
+  grnLines              GRNLine[]
+  prnLines              PRNLine[]
+  images                ProductImage[]
+  barcodes              ProductBarcode[]
+  tags                  SKUTag[]
+  skuAttributes         SKUAttribute[]
+  variants              SKUVariant[]
+  batches               Batch[]
+  stockTransferLines    StockTransferLine[]
+  skuVendors            SKUVendor[]
+  voucherCodes          VoucherCode[]
+  voucherRestrictions   VoucherRestriction[]
+  voucherBatches        VoucherBatch[]
+  stockCountItems       StockCountItem[]
+  stockCountSubmissions StockCountSubmission[]
 
   @@map("skus")
 }
@@ -210,16 +218,16 @@ model SKUTag {
 // ── Global Attribute System ────────────────────────────────
 
 model Attribute {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  type          String   @default("dropdown") // dropdown | text | numeric | boolean | color
-  isActive      Boolean  @default(true) @map("is_active")
-  sortOrder     Int      @default(0) @map("sort_order")
-  createdAt     DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      String   @default("dropdown") // dropdown | text | numeric | boolean | color
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  values         AttributeValue[]
-  skuAttributes  SKUAttribute[]
-  variantValues  SKUVariantValue[]
+  values        AttributeValue[]
+  skuAttributes SKUAttribute[]
+  variantValues SKUVariantValue[]
 
   @@map("attributes")
 }
@@ -247,8 +255,8 @@ model SKUAttribute {
   skuId       String @map("sku_id")
   attributeId String @map("attribute_id")
 
-  sku            SKU                  @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  attribute      Attribute            @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  sku            SKU                 @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  attribute      Attribute           @relation(fields: [attributeId], references: [id], onDelete: Cascade)
   selectedValues SKUAttributeValue[]
 
   @@unique([skuId, attributeId])
@@ -277,17 +285,19 @@ model SKUVariant {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  sku              SKU               @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  attributeValues  SKUVariantValue[]
-  inventoryRecords InventoryRecord[]
-  grnLines         GRNLine[]
-  prnLines         PRNLine[]
-  batches          Batch[]
-  stockTransferLines StockTransferLine[]
-  images           ProductImage[]
-  barcodes         ProductBarcode[]
-  voucherCodes     VoucherCode[]
-  voucherBatches   VoucherBatch[]
+  sku                   SKU                    @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  attributeValues       SKUVariantValue[]
+  inventoryRecords      InventoryRecord[]
+  grnLines              GRNLine[]
+  prnLines              PRNLine[]
+  batches               Batch[]
+  stockTransferLines    StockTransferLine[]
+  images                ProductImage[]
+  barcodes              ProductBarcode[]
+  voucherCodes          VoucherCode[]
+  voucherBatches        VoucherBatch[]
+  stockCountItems       StockCountItem[]
+  stockCountSubmissions StockCountSubmission[]
 
   @@map("sku_variants")
 }
@@ -346,21 +356,23 @@ model Floor {
   name        String
   code        String
   floorNumber Int      @map("floor_number")
-  length      Float?                    // in meters
-  width       Float?                    // in meters
+  length      Float? // in meters
+  width       Float? // in meters
   notes       String?
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  branch           Branch          @relation(fields: [branchId], references: [id])
-  racks            Rack[]
-  shelves          Shelf[]
-  boxes            StorageBox[]
-  inventoryRecords InventoryRecord[]
-  grns             GRN[]
-  prns             PRN[]
-  transfersFrom    StockTransfer[] @relation("StockTransferFromFloor")
-  transfersTo      StockTransfer[] @relation("StockTransferToFloor")
+  branch             Branch                    @relation(fields: [branchId], references: [id])
+  racks              Rack[]
+  shelves            Shelf[]
+  boxes              StorageBox[]
+  inventoryRecords   InventoryRecord[]
+  grns               GRN[]
+  prns               PRN[]
+  transfersFrom      StockTransfer[]           @relation("StockTransferFromFloor")
+  transfersTo        StockTransfer[]           @relation("StockTransferToFloor")
+  stockCountSessions StockCountDeviceSession[]
+  stockCountItems    StockCountItem[]
 
   @@unique([branchId, code])
   @@map("floors")
@@ -376,14 +388,14 @@ model Rack {
   createdAt DateTime @default(now()) @map("created_at")
 
   // 3D layout position (metres) and rotation (degrees around Y axis)
-  posX      Float?   @map("pos_x")
-  posZ      Float?   @map("pos_z")
-  rotY      Float?   @default(0) @map("rot_y")
+  posX Float? @map("pos_x")
+  posZ Float? @map("pos_z")
+  rotY Float? @default(0) @map("rot_y")
 
   // Physical dimensions in cm
-  widthCm   Float?   @map("width_cm")
-  heightCm  Float?   @map("height_cm")
-  depthCm   Float?   @map("depth_cm")
+  widthCm  Float? @map("width_cm")
+  heightCm Float? @map("height_cm")
+  depthCm  Float? @map("depth_cm")
 
   floor   Floor   @relation(fields: [floorId], references: [id])
   shelves Shelf[]
@@ -393,63 +405,65 @@ model Rack {
 }
 
 model Shelf {
-  id            String   @id @default(uuid())
-  floorId       String   @map("floor_id")
-  rackId        String?  @map("rack_id")
-  name          String
-  code          String
+  id          String   @id @default(uuid())
+  floorId     String   @map("floor_id")
+  rackId      String?  @map("rack_id")
+  name        String
+  code        String
   // Physical dimensions in centimetres.
-  height        Float
-  width         Float
-  length        Float
+  height      Float
+  width       Float
+  length      Float
   // Explicit vertical placement inside a rack. elevationCm is the board's top
   // above the floor; levelIndex provides stable bottom-to-top ordering.
-  levelIndex    Int?     @map("level_index")
-  elevationCm   Float?   @map("elevation_cm")
-  hasFreezer    Boolean  @default(false) @map("has_freezer")
-  hasLock       Boolean  @default(false) @map("has_lock")
-  notes         String?
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
+  levelIndex  Int?     @map("level_index")
+  elevationCm Float?   @map("elevation_cm")
+  hasFreezer  Boolean  @default(false) @map("has_freezer")
+  hasLock     Boolean  @default(false) @map("has_lock")
+  notes       String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  floor            Floor            @relation(fields: [floorId], references: [id])
-  rack             Rack?            @relation(fields: [rackId], references: [id])
-  boxes            StorageBox[]
-  inventoryRecords InventoryRecord[]
-  grns             GRN[]
-  prns             PRN[]
+  floor              Floor                     @relation(fields: [floorId], references: [id])
+  rack               Rack?                     @relation(fields: [rackId], references: [id])
+  boxes              StorageBox[]
+  inventoryRecords   InventoryRecord[]
+  grns               GRN[]
+  prns               PRN[]
+  stockCountSessions StockCountDeviceSession[]
+  stockCountItems    StockCountItem[]
 
   @@unique([floorId, code])
   @@map("shelves")
 }
 
 model StorageBox {
-  id             String   @id @default(uuid())
-  shelfId        String?  @map("shelf_id")
-  floorId        String?  @map("floor_id")
-  name           String
-  code           String   @unique
+  id        String   @id @default(uuid())
+  shelfId   String?  @map("shelf_id")
+  floorId   String?  @map("floor_id")
+  name      String
+  code      String   @unique
   // Physical dimensions in centimetres.
-  height         Float
-  width          Float
-  length         Float
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
+  height    Float
+  width     Float
+  length    Float
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
 
   // 3D position/orientation within its parent space (metres / degrees)
-  posX           Float?   @map("pos_x")
-  posY           Float?   @map("pos_y")
-  posZ           Float?   @map("pos_z")
-  rotationAngle  Float?   @default(0) @map("rotation_angle")
+  posX          Float? @map("pos_x")
+  posY          Float? @map("pos_y")
+  posZ          Float? @map("pos_z")
+  rotationAngle Float? @default(0) @map("rotation_angle")
 
   // Stacking support
-  stackOrder     Int?     @default(0) @map("stack_order")
-  parentBoxId    String?  @map("parent_box_id")
+  stackOrder  Int?    @default(0) @map("stack_order")
+  parentBoxId String? @map("parent_box_id")
 
-  shelf            Shelf?           @relation(fields: [shelfId], references: [id])
-  floor            Floor?           @relation(fields: [floorId], references: [id])
-  parentBox        StorageBox?      @relation("BoxStacking", fields: [parentBoxId], references: [id])
-  stackedBoxes     StorageBox[]     @relation("BoxStacking")
+  shelf            Shelf?            @relation(fields: [shelfId], references: [id])
+  floor            Floor?            @relation(fields: [floorId], references: [id])
+  parentBox        StorageBox?       @relation("BoxStacking", fields: [parentBoxId], references: [id])
+  stackedBoxes     StorageBox[]      @relation("BoxStacking")
   barcodes         BoxBarcode[]
   inventoryRecords InventoryRecord[]
 
@@ -471,40 +485,40 @@ model BoxBarcode {
 }
 
 model StockTransfer {
-  id               String    @id @default(uuid())
-  referenceNumber  String    @unique @map("reference_number")
-  fromBranchId     String?   @map("from_branch_id")
-  toBranchId       String?   @map("to_branch_id")
-  fromFloorId      String?   @map("from_floor_id")
-  toFloorId        String?   @map("to_floor_id")
-  status           String    @default("Draft")
-  notes            String?
-  requestedBy      String    @map("requested_by")
-  approvedBy       String?   @map("approved_by")
-  requestedAt      DateTime  @default(now()) @map("requested_at")
-  approvedAt       DateTime? @map("approved_at")
-  completedAt      DateTime? @map("completed_at")
+  id              String    @id @default(uuid())
+  referenceNumber String    @unique @map("reference_number")
+  fromBranchId    String?   @map("from_branch_id")
+  toBranchId      String?   @map("to_branch_id")
+  fromFloorId     String?   @map("from_floor_id")
+  toFloorId       String?   @map("to_floor_id")
+  status          String    @default("Draft")
+  notes           String?
+  requestedBy     String    @map("requested_by")
+  approvedBy      String?   @map("approved_by")
+  requestedAt     DateTime  @default(now()) @map("requested_at")
+  approvedAt      DateTime? @map("approved_at")
+  completedAt     DateTime? @map("completed_at")
 
-  fromBranch   Branch?   @relation("StockTransferFrom", fields: [fromBranchId], references: [id])
-  toBranch     Branch?   @relation("StockTransferTo", fields: [toBranchId], references: [id])
-  fromFloor    Floor?    @relation("StockTransferFromFloor", fields: [fromFloorId], references: [id])
-  toFloor      Floor?    @relation("StockTransferToFloor", fields: [toFloorId], references: [id])
-  requester    User      @relation("StockTransferCreator", fields: [requestedBy], references: [id])
-  approver     User?     @relation("StockTransferApprover", fields: [approvedBy], references: [id])
-  lines        StockTransferLine[]
+  fromBranch Branch?             @relation("StockTransferFrom", fields: [fromBranchId], references: [id])
+  toBranch   Branch?             @relation("StockTransferTo", fields: [toBranchId], references: [id])
+  fromFloor  Floor?              @relation("StockTransferFromFloor", fields: [fromFloorId], references: [id])
+  toFloor    Floor?              @relation("StockTransferToFloor", fields: [toFloorId], references: [id])
+  requester  User                @relation("StockTransferCreator", fields: [requestedBy], references: [id])
+  approver   User?               @relation("StockTransferApprover", fields: [approvedBy], references: [id])
+  lines      StockTransferLine[]
 
   @@map("stock_transfers")
 }
 
 model StockTransferLine {
-  id               String  @id @default(uuid())
-  transferId       String  @map("transfer_id")
-  skuId            String  @map("sku_id")
-  variantId        String? @map("variant_id")
-  batchId          String? @map("batch_id")
-  requestedQty     Int     @map("requested_qty")
-  transferredQty   Int     @default(0) @map("transferred_qty")
-  notes            String?
+  id             String  @id @default(uuid())
+  transferId     String  @map("transfer_id")
+  skuId          String  @map("sku_id")
+  variantId      String? @map("variant_id")
+  batchId        String? @map("batch_id")
+  requestedQty   Int     @map("requested_qty")
+  transferredQty Int     @default(0) @map("transferred_qty")
+  notes          String?
 
   transfer StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
   sku      SKU           @relation(fields: [skuId], references: [id])
@@ -537,13 +551,14 @@ model InventoryRecord {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  sku      SKU         @relation(fields: [skuId], references: [id])
-  variant  SKUVariant? @relation(fields: [variantId], references: [id])
-  batch    Batch?      @relation(fields: [batchId], references: [id])
-  floor    Floor?      @relation(fields: [floorId], references: [id])
-  shelf    Shelf?      @relation(fields: [shelfId], references: [id])
-  box      StorageBox? @relation(fields: [boxId], references: [id])
-  user     User?       @relation(fields: [userId], references: [id])
+  sku             SKU              @relation(fields: [skuId], references: [id])
+  variant         SKUVariant?      @relation(fields: [variantId], references: [id])
+  batch           Batch?           @relation(fields: [batchId], references: [id])
+  floor           Floor?           @relation(fields: [floorId], references: [id])
+  shelf           Shelf?           @relation(fields: [shelfId], references: [id])
+  box             StorageBox?      @relation(fields: [boxId], references: [id])
+  user            User?            @relation(fields: [userId], references: [id])
+  stockCountItems StockCountItem[]
 
   @@map("inventory_records")
 }
@@ -565,6 +580,133 @@ model InventoryEvent {
   user User? @relation(fields: [userId], references: [id])
 
   @@map("inventory_events")
+}
+
+// Branch-wide stock count. Inventory is zeroed through the administrative
+// settings workflow before this run opens; Android devices never zero stock.
+model StockCountRun {
+  id            String    @id @default(uuid())
+  branchId      String    @map("branch_id")
+  status        String    @default("OPEN")
+  requestId     String    @unique @map("request_id")
+  openBranchKey String?   @unique @map("open_branch_key")
+  startedById   String    @map("started_by_id")
+  completedById String?   @map("completed_by_id")
+  startedAt     DateTime  @default(now()) @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+
+  branch         Branch                    @relation(fields: [branchId], references: [id])
+  startedBy      User                      @relation("StockCountRunStartedBy", fields: [startedById], references: [id])
+  completedBy    User?                     @relation("StockCountRunCompletedBy", fields: [completedById], references: [id])
+  deviceSessions StockCountDeviceSession[]
+  items          StockCountItem[]
+
+  @@index([branchId, status])
+  @@map("stock_count_runs")
+}
+
+// One independent Android phone session within a branch-wide run.
+model StockCountDeviceSession {
+  id          String    @id @default(uuid())
+  runId       String    @map("run_id")
+  deviceId    String    @map("device_id")
+  deviceName  String    @map("device_name")
+  floorId     String    @map("floor_id")
+  shelfId     String?   @map("shelf_id")
+  status      String    @default("OPEN")
+  startedById String    @map("started_by_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+
+  run         StockCountRun          @relation(fields: [runId], references: [id], onDelete: Cascade)
+  floor       Floor                  @relation(fields: [floorId], references: [id])
+  shelf       Shelf?                 @relation(fields: [shelfId], references: [id])
+  startedBy   User                   @relation(fields: [startedById], references: [id])
+  lines       StockCountLine[]
+  submissions StockCountSubmission[]
+
+  @@unique([runId, deviceId])
+  @@index([deviceId, status])
+  @@index([runId, status])
+  @@map("stock_count_device_sessions")
+}
+
+// Shared aggregate for a product/variant at one configured location.
+model StockCountItem {
+  id                String   @id @default(uuid())
+  runId             String   @map("run_id")
+  skuId             String   @map("sku_id")
+  variantId         String?  @map("variant_id")
+  variantKey        String   @default("") @map("variant_key")
+  floorId           String   @map("floor_id")
+  shelfId           String?  @map("shelf_id")
+  locationKey       String   @map("location_key")
+  inventoryRecordId String   @map("inventory_record_id")
+  quantity          Float    @default(0)
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  run             StockCountRun          @relation(fields: [runId], references: [id], onDelete: Cascade)
+  sku             SKU                    @relation(fields: [skuId], references: [id])
+  variant         SKUVariant?            @relation(fields: [variantId], references: [id])
+  floor           Floor                  @relation(fields: [floorId], references: [id])
+  shelf           Shelf?                 @relation(fields: [shelfId], references: [id])
+  inventoryRecord InventoryRecord        @relation(fields: [inventoryRecordId], references: [id])
+  lines           StockCountLine[]
+  submissions     StockCountSubmission[]
+
+  @@unique([runId, skuId, variantKey, locationKey])
+  @@index([inventoryRecordId])
+  @@map("stock_count_items")
+}
+
+// Latest quantity assigned by one phone for one shared item.
+model StockCountLine {
+  id              String   @id @default(uuid())
+  deviceSessionId String   @map("device_session_id")
+  itemId          String   @map("item_id")
+  quantity        Float
+  lastBarcode     String?  @map("last_barcode")
+  updatedById     String   @map("updated_by_id")
+  countedAt       DateTime @default(now()) @map("counted_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  deviceSession StockCountDeviceSession @relation(fields: [deviceSessionId], references: [id], onDelete: Cascade)
+  item          StockCountItem          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  updatedBy     User                    @relation(fields: [updatedById], references: [id])
+  submissions   StockCountSubmission[]
+
+  @@unique([deviceSessionId, itemId])
+  @@index([itemId])
+  @@map("stock_count_lines")
+}
+
+// Append-only idempotency and audit record for Android submissions.
+model StockCountSubmission {
+  id                String   @id @default(uuid())
+  requestId         String   @unique @map("request_id")
+  deviceSessionId   String   @map("device_session_id")
+  itemId            String   @map("item_id")
+  lineId            String   @map("line_id")
+  skuId             String   @map("sku_id")
+  variantId         String?  @map("variant_id")
+  barcode           String?
+  submittedQuantity Float    @map("submitted_quantity")
+  deviceBefore      Float    @map("device_before")
+  deviceAfter       Float    @map("device_after")
+  totalAfter        Float    @map("total_after")
+  submittedById     String   @map("submitted_by_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  deviceSession StockCountDeviceSession @relation(fields: [deviceSessionId], references: [id], onDelete: Cascade)
+  item          StockCountItem          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  line          StockCountLine          @relation(fields: [lineId], references: [id], onDelete: Cascade)
+  sku           SKU                     @relation(fields: [skuId], references: [id])
+  variant       SKUVariant?             @relation(fields: [variantId], references: [id])
+  submittedBy   User                    @relation(fields: [submittedById], references: [id])
+
+  @@index([deviceSessionId, createdAt])
+  @@index([itemId, createdAt])
+  @@map("stock_count_submissions")
 }
 
 model GRN {
@@ -592,73 +734,73 @@ model GRN {
 }
 
 model Batch {
-  id              String   @id @default(uuid())
-  batchNumber     String   @unique @map("batch_number")  // e.g., PROD001-B001, VAR001-B001
-  skuId           String   @map("sku_id")
-  variantId       String?  @map("variant_id")
-  sequenceNumber  Int      @map("sequence_number")       // Auto-incremented per SKU/Variant
+  id             String  @id @default(uuid())
+  batchNumber    String  @unique @map("batch_number") // e.g., PROD001-B001, VAR001-B001
+  skuId          String  @map("sku_id")
+  variantId      String? @map("variant_id")
+  sequenceNumber Int     @map("sequence_number") // Auto-incremented per SKU/Variant
 
   // Pricing fields
-  costPrice       Float?   @map("cost_price")            // Cost per unit
-  sellingPrice    Float?   @map("selling_price")         // Retail price
-  wholesalePrice  Float?   @map("wholesale_price")       // Wholesale price
-  bulkPrice       Float?   @map("bulk_price")            // Bulk/distributor price
-  currency        String   @default("LKR")
+  costPrice      Float? @map("cost_price") // Cost per unit
+  sellingPrice   Float? @map("selling_price") // Retail price
+  wholesalePrice Float? @map("wholesale_price") // Wholesale price
+  bulkPrice      Float? @map("bulk_price") // Bulk/distributor price
+  currency       String @default("LKR")
 
   // Margin-based pricing support
-  marginType      String?  @map("margin_type")           // 'fixed' or 'percentage'
-  marginValue     Float?   @map("margin_value")          // Amount or %
+  marginType  String? @map("margin_type") // 'fixed' or 'percentage'
+  marginValue Float?  @map("margin_value") // Amount or %
 
   // Batch metadata
-  vendorId        String?   @map("vendor_id")            // FK to Vendor (supplier for this batch)
-  expiryDate      DateTime? @map("expiry_date")
+  vendorId          String?   @map("vendor_id") // FK to Vendor (supplier for this batch)
+  expiryDate        DateTime? @map("expiry_date")
   manufacturingDate DateTime? @map("manufacturing_date")
-  notes           String?
+  notes             String?
 
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  sku              SKU                @relation(fields: [skuId], references: [id])
-  variant          SKUVariant?        @relation(fields: [variantId], references: [id])
-  vendor           Vendor?            @relation(fields: [vendorId], references: [id])
-  grnLines         GRNLine[]
-  prnLines         PRNLine[]
-  inventoryRecords InventoryRecord[]
+  sku                SKU                 @relation(fields: [skuId], references: [id])
+  variant            SKUVariant?         @relation(fields: [variantId], references: [id])
+  vendor             Vendor?             @relation(fields: [vendorId], references: [id])
+  grnLines           GRNLine[]
+  prnLines           PRNLine[]
+  inventoryRecords   InventoryRecord[]
   stockTransferLines StockTransferLine[]
-  voucherCodes     VoucherCode[]
+  voucherCodes       VoucherCode[]
 
   @@unique([skuId, variantId, sequenceNumber])
   @@map("batches")
 }
 
 model PricingOverlay {
-  id              String   @id @default(uuid())
-  name            String   @unique
-  description     String?
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
 
   // Overlay type and value
-  type            String                                // 'percentage_discount', 'fixed_discount', 'percentage_markup', 'fixed_markup'
-  value           Float                                 // The amount or percentage
+  type  String // 'percentage_discount', 'fixed_discount', 'percentage_markup', 'fixed_markup'
+  value Float // The amount or percentage
 
   // Application scope (JSON to support flexible targeting)
-  appliesTo       Json     @map("applies_to")           // { skuIds?: string[], variantIds?: string[], batchIds?: string[], categoryIds?: string[] }
+  appliesTo Json @map("applies_to") // { skuIds?: string[], variantIds?: string[], batchIds?: string[], categoryIds?: string[] }
 
   // Conditions for overlay activation (JSON for flexibility)
-  conditions      Json?                                 // { minQty?: number, maxQty?: number, customerGroups?: string[], dateRange?: {start, end}, branches?: string[] }
+  conditions Json? // { minQty?: number, maxQty?: number, customerGroups?: string[], dateRange?: {start, end}, branches?: string[] }
 
   // Priority and stacking rules
-  priority        Int      @default(0)                  // Higher priority = applied first
-  stackable       Boolean  @default(false)              // Can be combined with other overlays?
+  priority  Int     @default(0) // Higher priority = applied first
+  stackable Boolean @default(false) // Can be combined with other overlays?
 
   // Status and metadata
-  status          String   @default("active")           // 'active', 'inactive', 'scheduled', 'expired'
-  validFrom       DateTime? @map("valid_from")
-  validTo         DateTime? @map("valid_to")
+  status    String    @default("active") // 'active', 'inactive', 'scheduled', 'expired'
+  validFrom DateTime? @map("valid_from")
+  validTo   DateTime? @map("valid_to")
 
-  createdBy       String?  @map("created_by")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("pricing_overlays")
 }
@@ -673,12 +815,12 @@ model GRNLine {
   receivedQuantity Int     @default(0) @map("received_quantity")
 
   // Pricing at GRN line level (can override batch defaults)
-  costPrice        Float?  @map("cost_price")
-  sellingPrice     Float?  @map("selling_price")
-  wholesalePrice   Float?  @map("wholesale_price")
-  bulkPrice        Float?  @map("bulk_price")
+  costPrice      Float? @map("cost_price")
+  sellingPrice   Float? @map("selling_price")
+  wholesalePrice Float? @map("wholesale_price")
+  bulkPrice      Float? @map("bulk_price")
 
-  notes            String?
+  notes String?
 
   grn               GRN                @relation(fields: [grnId], references: [id])
   sku               SKU                @relation(fields: [skuId], references: [id])
@@ -707,26 +849,26 @@ model InspectionRecord {
 }
 
 model PRN {
-  id                   String    @id @default(uuid())
-  supplierId           String    @map("supplier_id")
-  inspectionRecordId   String?   @map("inspection_record_id")
-  floorId              String?   @map("floor_id")
-  shelfId              String?   @map("shelf_id")
-  returnReason         String?   @map("return_reason")
-  expectedPickupDate   DateTime? @map("expected_pickup_date")
-  pickupDate           DateTime? @map("pickup_date")
-  status               String    @default("Draft")
-  notes                String?
-  createdBy            String    @map("created_by")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid())
+  supplierId         String    @map("supplier_id")
+  inspectionRecordId String?   @map("inspection_record_id")
+  floorId            String?   @map("floor_id")
+  shelfId            String?   @map("shelf_id")
+  returnReason       String?   @map("return_reason")
+  expectedPickupDate DateTime? @map("expected_pickup_date")
+  pickupDate         DateTime? @map("pickup_date")
+  status             String    @default("Draft")
+  notes              String?
+  createdBy          String    @map("created_by")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  supplier          Vendor             @relation(fields: [supplierId], references: [id])
-  inspectionRecord  InspectionRecord?  @relation(fields: [inspectionRecordId], references: [id])
-  floor             Floor?             @relation(fields: [floorId], references: [id])
-  shelf             Shelf?             @relation(fields: [shelfId], references: [id])
-  creator           User               @relation(fields: [createdBy], references: [id])
-  lines             PRNLine[]
+  supplier         Vendor            @relation(fields: [supplierId], references: [id])
+  inspectionRecord InspectionRecord? @relation(fields: [inspectionRecordId], references: [id])
+  floor            Floor?            @relation(fields: [floorId], references: [id])
+  shelf            Shelf?            @relation(fields: [shelfId], references: [id])
+  creator          User              @relation(fields: [createdBy], references: [id])
+  lines            PRNLine[]
 
   @@map("prns")
 }
@@ -769,7 +911,7 @@ model ImportJob {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  creator User?         @relation(fields: [createdBy], references: [id])
+  creator User?          @relation(fields: [createdBy], references: [id])
   records ImportRecord[]
 
   @@index([entityType, status])
@@ -884,19 +1026,19 @@ model SyncServerChange {
 }
 
 model StatusOption {
-  id         String   @id @default(uuid())
-  entityType String   @map("entity_type")
+  id         String    @id @default(uuid())
+  entityType String    @map("entity_type")
   value      String
   label      String
   color      String?
-  sortOrder  Int      @default(0) @map("sort_order")
-  isDefault  Boolean  @default(false) @map("is_default")
-  isSystem   Boolean  @default(false) @map("is_system")
-  isActive   Boolean  @default(true) @map("is_active")
-  specialKey String?  @unique @map("special_key")
-  serverSeq  Int?     @map("server_seq")
+  sortOrder  Int       @default(0) @map("sort_order")
+  isDefault  Boolean   @default(false) @map("is_default")
+  isSystem   Boolean   @default(false) @map("is_system")
+  isActive   Boolean   @default(true) @map("is_active")
+  specialKey String?   @unique @map("special_key")
+  serverSeq  Int?      @map("server_seq")
   deletedAt  DateTime? @map("deleted_at")
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@unique([entityType, value])
   @@index([serverSeq])
@@ -905,13 +1047,13 @@ model StatusOption {
 }
 
 model DashboardStats {
-  id                       String   @id @default(uuid())
-  totalItems               Float    @default(0) @map("total_items")
-  shelfReadyItems          Float    @default(0) @map("shelf_ready_items")
-  damagedItems             Float    @default(0) @map("damaged_items")
-  openGRNs                 Int      @default(0) @map("open_grns")
-  inventoryByState         Json     @default("{}") @map("inventory_by_state") // { "state": { count: number, quantity: number } }
-  lastUpdated              DateTime @default(now()) @map("last_updated")
+  id               String   @id @default(uuid())
+  totalItems       Float    @default(0) @map("total_items")
+  shelfReadyItems  Float    @default(0) @map("shelf_ready_items")
+  damagedItems     Float    @default(0) @map("damaged_items")
+  openGRNs         Int      @default(0) @map("open_grns")
+  inventoryByState Json     @default("{}") @map("inventory_by_state") // { "state": { count: number, quantity: number } }
+  lastUpdated      DateTime @default(now()) @map("last_updated")
 
   @@map("dashboard_stats")
 }
@@ -919,20 +1061,20 @@ model DashboardStats {
 // ── Voucher System ────────────────────────────────────────────
 
 model VoucherBatch {
-  id                String    @id @default(uuid())
-  skuId             String    @map("sku_id")
-  variantId         String?   @map("variant_id")
-  batchName         String    @map("batch_name")
-  prefix            String?
-  quantity          Int
-  generatedCount    Int       @default(0) @map("generated_count")
-  defaultValue      Float     @map("default_value")
-  expiryDays        Int?      @map("expiry_days")
-  defaultExpiresAt  DateTime? @map("default_expires_at")
-  status            String    @default("pending") // 'pending', 'generating', 'completed', 'failed'
-  createdBy         String?   @map("created_by")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  completedAt       DateTime? @map("completed_at")
+  id               String    @id @default(uuid())
+  skuId            String    @map("sku_id")
+  variantId        String?   @map("variant_id")
+  batchName        String    @map("batch_name")
+  prefix           String?
+  quantity         Int
+  generatedCount   Int       @default(0) @map("generated_count")
+  defaultValue     Float     @map("default_value")
+  expiryDays       Int?      @map("expiry_days")
+  defaultExpiresAt DateTime? @map("default_expires_at")
+  status           String    @default("pending") // 'pending', 'generating', 'completed', 'failed'
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  completedAt      DateTime? @map("completed_at")
 
   sku          SKU           @relation(fields: [skuId], references: [id], onDelete: Cascade)
   variant      SKUVariant?   @relation(fields: [variantId], references: [id], onDelete: Cascade)
@@ -967,11 +1109,11 @@ model VoucherCode {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  sku          SKU                  @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  variant      SKUVariant?          @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  batch        Batch?               @relation(fields: [batchId], references: [id], onDelete: SetNull)
-  voucherBatch VoucherBatch?        @relation(fields: [voucherBatchId], references: [id], onDelete: SetNull)
-  creator      User?                @relation(fields: [createdBy], references: [id])
+  sku          SKU                 @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  variant      SKUVariant?         @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  batch        Batch?              @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  voucherBatch VoucherBatch?       @relation(fields: [voucherBatchId], references: [id], onDelete: SetNull)
+  creator      User?               @relation(fields: [createdBy], references: [id])
   redemptions  VoucherRedemption[]
 
   @@index([code])
@@ -983,19 +1125,19 @@ model VoucherCode {
 }
 
 model VoucherRedemption {
-  id               String    @id @default(uuid())
-  voucherCodeId    String    @map("voucher_code_id")
-  code             String
-  redeemedAmount   Float     @map("redeemed_amount")
-  balanceBefore    Float     @map("balance_before")
-  balanceAfter     Float     @map("balance_after")
-  orderId          String?   @map("order_id")
-  invoiceNumber    String?   @map("invoice_number")
-  branchId         String?   @map("branch_id")
-  appliedToItems   Json?     @map("applied_to_items") // Array of {skuId, variantId, quantity, originalPrice, discountedPrice}
-  redeemedBy       String?   @map("redeemed_by")
-  redeemedAt       DateTime  @default(now()) @map("redeemed_at")
-  notes            String?
+  id             String   @id @default(uuid())
+  voucherCodeId  String   @map("voucher_code_id")
+  code           String
+  redeemedAmount Float    @map("redeemed_amount")
+  balanceBefore  Float    @map("balance_before")
+  balanceAfter   Float    @map("balance_after")
+  orderId        String?  @map("order_id")
+  invoiceNumber  String?  @map("invoice_number")
+  branchId       String?  @map("branch_id")
+  appliedToItems Json?    @map("applied_to_items") // Array of {skuId, variantId, quantity, originalPrice, discountedPrice}
+  redeemedBy     String?  @map("redeemed_by")
+  redeemedAt     DateTime @default(now()) @map("redeemed_at")
+  notes          String?
 
   voucherCode VoucherCode @relation(fields: [voucherCodeId], references: [id], onDelete: Cascade)
   branch      Branch?     @relation(fields: [branchId], references: [id])
@@ -1017,11 +1159,11 @@ model VoucherRedemption {
 model LegacyEntityLink {
   id          String    @id @default(uuid())
   sourceType  String    @map("source_type") // 'product' | 'productcolorsize' | 'supplier' | 'location' | 'unit'
-  sourceId    String    @map("source_id")   // legacy primary key, as string
+  sourceId    String    @map("source_id") // legacy primary key, as string
   sourceCode  String?   @map("source_code") // ProductCode / SupplierCode / LocationCode ...
   targetType  String    @map("target_type") // 'sku' | 'variant' | 'vendor' | 'branch' | 'unit'
   targetId    String    @map("target_id")
-  resolution  String    @default("auto")    // 'sku-code' | 'variant-code' | 'barcode' | 'name' | 'created' | 'manual'
+  resolution  String    @default("auto") // 'sku-code' | 'variant-code' | 'barcode' | 'name' | 'created' | 'manual'
   isLocked    Boolean   @default(false) @map("is_locked") // manual links are never re-resolved
   lastApplied Json?     @map("last_applied") // last legacy values applied (3-way merge base)
   lastSeenAt  DateTime? @map("last_seen_at")
@@ -1047,24 +1189,24 @@ model LegacySyncRun {
 }
 
 model ManagedDevice {
-  id                 String   @id
-  displayName        String   @map("display_name")
-  reportedName       String   @map("reported_name")
-  nameVersion        Int      @default(0) @map("name_version")
+  id                 String    @id
+  displayName        String    @map("display_name")
+  reportedName       String    @map("reported_name")
+  nameVersion        Int       @default(0) @map("name_version")
   application        String
-  applicationVersion String   @map("application_version")
+  applicationVersion String    @map("application_version")
   platform           String?
   hostname           String?
-  branchId           String?  @map("branch_id")
-  terminalId         String?  @map("terminal_id")
-  lastIp             String?  @map("last_ip")
-  lastConnection     String?  @map("last_connection")
-  lastSeenAt         DateTime @default(now()) @map("last_seen_at")
+  branchId           String?   @map("branch_id")
+  terminalId         String?   @map("terminal_id")
+  lastIp             String?   @map("last_ip")
+  lastConnection     String?   @map("last_connection")
+  lastSeenAt         DateTime  @default(now()) @map("last_seen_at")
   lastSyncAt         DateTime? @map("last_sync_at")
-  pendingCount       Int      @default(0) @map("pending_count")
-  conflictCount      Int      @default(0) @map("conflict_count")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  pendingCount       Int       @default(0) @map("pending_count")
+  conflictCount      Int       @default(0) @map("conflict_count")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   @@index([application, lastSeenAt])
   @@index([branchId])
@@ -1072,19 +1214,19 @@ model ManagedDevice {
 }
 
 model VoucherRestriction {
-  id                              String   @id @default(uuid())
-  skuId                           String   @map("sku_id")
-  restrictionType                 String   @map("restriction_type") // 'category_exclude', 'category_include', 'sku_exclude', 'sku_include', 'variant_exclude', 'variant_include'
-  targetCategoryIds               Json?    @map("target_category_ids") // Array of category IDs
-  targetSkuIds                    Json?    @map("target_sku_ids") // Array of SKU IDs
-  targetVariantIds                Json?    @map("target_variant_ids") // Array of variant IDs
-  cannotCombineWithDiscounts      Boolean  @default(true) @map("cannot_combine_with_discounts")
-  cannotCombineWithOtherVouchers  Boolean  @default(true) @map("cannot_combine_with_other_vouchers")
-  minPurchaseAmount               Float?   @map("min_purchase_amount")
-  maxDiscountAmount               Float?   @map("max_discount_amount")
-  priority                        Int      @default(0)
-  createdAt                       DateTime @default(now()) @map("created_at")
-  updatedAt                       DateTime @updatedAt @map("updated_at")
+  id                             String   @id @default(uuid())
+  skuId                          String   @map("sku_id")
+  restrictionType                String   @map("restriction_type") // 'category_exclude', 'category_include', 'sku_exclude', 'sku_include', 'variant_exclude', 'variant_include'
+  targetCategoryIds              Json?    @map("target_category_ids") // Array of category IDs
+  targetSkuIds                   Json?    @map("target_sku_ids") // Array of SKU IDs
+  targetVariantIds               Json?    @map("target_variant_ids") // Array of variant IDs
+  cannotCombineWithDiscounts     Boolean  @default(true) @map("cannot_combine_with_discounts")
+  cannotCombineWithOtherVouchers Boolean  @default(true) @map("cannot_combine_with_other_vouchers")
+  minPurchaseAmount              Float?   @map("min_purchase_amount")
+  maxDiscountAmount              Float?   @map("max_discount_amount")
+  priority                       Int      @default(0)
+  createdAt                      DateTime @default(now()) @map("created_at")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
 
   sku SKU @relation(fields: [skuId], references: [id], onDelete: Cascade)
 

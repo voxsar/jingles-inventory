@@ -42,7 +42,13 @@ function buildLocalSchema(sourceSchema) {
 }
 
 function runPrismaCommand(args, options = {}) {
-  return execFileSync(process.execPath, [getPrismaBinaryPath(), ...args], {
+  // On Unix, execute Prisma's shebang entry point directly. Invoking this
+  // bundled CLI as `node index.js` can exit successfully without writing its
+  // `migrate diff` output on newer Node releases, which would empty the local
+  // bootstrap SQL file. Windows still needs the explicit Node executable.
+  const executable = process.platform === 'win32' ? process.execPath : getPrismaBinaryPath();
+  const commandArgs = process.platform === 'win32' ? [getPrismaBinaryPath(), ...args] : args;
+  return execFileSync(executable, commandArgs, {
     cwd: backendRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
     encoding: 'utf8',
