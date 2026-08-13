@@ -39,18 +39,28 @@ describe('mobile stock-count routes', () => {
 		prismaMock.$transaction.mockImplementation(async (callback: any) => callback(prismaMock));
 	});
 
-	it('refuses to open a run until branch inventory is zero', async () => {
+	it('opens a run even when branch inventory already has stock', async () => {
 		prismaMock.stockCountRun.findUnique.mockResolvedValue(null);
 		prismaMock.branch.findFirst.mockResolvedValue({ id: 'branch-001', isActive: true } as any);
-		prismaMock.inventoryRecord.count.mockResolvedValue(3);
+		prismaMock.stockCountRun.create.mockResolvedValue({
+			id: 'run-001',
+			branchId: 'branch-001',
+			status: 'OPEN',
+			startedAt: new Date('2026-08-13T10:00:00.000Z'),
+			completedAt: null,
+			branch: { id: 'branch-001', name: 'Main', code: 'MAIN' },
+		} as any);
 
 		const response = await request(createTestApp())
 			.post('/api/stock-count-runs')
 			.send({ branchId: 'branch-001', requestId: 'request-001' });
 
-		expect(response.status).toBe(409);
-		expect(response.body.error).toContain('must be zero');
-		expect(prismaMock.stockCountRun.create).not.toHaveBeenCalled();
+		expect(response.status).toBe(201);
+		expect(response.body.data).toMatchObject({ runId: 'run-001', branchId: 'branch-001', status: 'OPEN' });
+		expect(prismaMock.inventoryRecord.count).not.toHaveBeenCalled();
+		expect(prismaMock.stockCountRun.create).toHaveBeenCalledWith(expect.objectContaining({
+			data: expect.objectContaining({ branchId: 'branch-001', openBranchKey: 'branch-001' }),
+		}));
 	});
 
 	it('returns the downloaded catalog with every linked vendor', async () => {
@@ -243,6 +253,93 @@ describe('mobile stock-count routes', () => {
 		expect(prismaMock.inventoryRecord.update).toHaveBeenCalledWith(expect.objectContaining({
 			where: { id: 'inventory-001' },
 			data: expect.objectContaining({ quantity: 10 }),
+		}));
+	});
+
+	it('adds a first phone count on top of existing shelf-ready stock', async () => {
+		const sku = {
+			id: 'sku-001',
+			name: 'Tea',
+			isActive: true,
+			vendor: { id: 'vendor-001', name: 'Primary Vendor' },
+			skuVendors: [],
+		};
+		prismaMock.productBarcode.findUnique.mockResolvedValue({
+			barcode: '479000000001',
+			sku,
+			variant: null,
+		} as any);
+		prismaMock.stockCountSubmission.findUnique.mockResolvedValue(null);
+		prismaMock.stockCountDeviceSession.findUnique.mockResolvedValue({
+			id: 'session-001',
+			runId: 'run-001',
+			deviceId: 'phone-001',
+			deviceName: 'Phone 1',
+			floorId: 'floor-001',
+			shelfId: null,
+			status: 'OPEN',
+			run: { id: 'run-001', status: 'OPEN' },
+		} as any);
+		prismaMock.stockCountItem.findUnique.mockResolvedValue(null);
+		prismaMock.inventoryRecord.findFirst.mockResolvedValue({
+			id: 'inventory-001',
+			skuId: 'sku-001',
+			variantId: null,
+			floorId: 'floor-001',
+			shelfId: null,
+			quantity: 5,
+			state: 'ShelfReady',
+			version: 4,
+		} as any);
+		prismaMock.stockCountItem.create.mockResolvedValue({
+			id: 'item-001',
+			runId: 'run-001',
+			skuId: 'sku-001',
+			variantId: null,
+			quantity: 5,
+			inventoryRecordId: 'inventory-001',
+			inventoryRecord: { id: 'inventory-001', quantity: 5, version: 4 },
+		} as any);
+		prismaMock.stockCountLine.findUnique.mockResolvedValue(null);
+		prismaMock.inventoryRecord.update.mockResolvedValue({
+			id: 'inventory-001',
+			skuId: 'sku-001',
+			variantId: null,
+			floorId: 'floor-001',
+			shelfId: null,
+			quantity: 8,
+			state: 'ShelfReady',
+			terminalId: 'phone-001',
+		} as any);
+		prismaMock.stockCountItem.update.mockResolvedValue({ id: 'item-001', quantity: 8 } as any);
+		prismaMock.stockCountLine.create.mockResolvedValue({ id: 'line-001', quantity: 3 } as any);
+		prismaMock.inventoryEvent.create.mockResolvedValue({ id: 'event-001' } as any);
+		prismaMock.stockCountSubmission.create.mockResolvedValue({ id: 'submission-001' } as any);
+
+		const response = await request(createTestApp())
+			.post('/api/stock-count/device-sessions/session-001/scan')
+			.send({ barcode: '479000000001', quantity: 3, requestId: 'request-003' });
+
+		expect(response.status).toBe(200);
+		expect(response.body.data).toMatchObject({
+			deviceQuantity: 3,
+			totalCountedQuantity: 8,
+		});
+		expect(prismaMock.inventoryRecord.aggregate).not.toHaveBeenCalled();
+		expect(prismaMock.stockCountItem.create).toHaveBeenCalledWith(expect.objectContaining({
+			data: expect.objectContaining({ quantity: 5 }),
+		}));
+		expect(prismaMock.inventoryRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+			where: { id: 'inventory-001' },
+			data: expect.objectContaining({ quantity: 8 }),
+		}));
+		expect(prismaMock.inventoryEvent.create).toHaveBeenCalledWith(expect.objectContaining({
+			data: expect.objectContaining({
+				quantityDelta: 3,
+				beforeQuantity: 5,
+				afterQuantity: 8,
+				reasonCode: 'STOCK_COUNT',
+			}),
 		}));
 	});
 });

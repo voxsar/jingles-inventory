@@ -129,15 +129,6 @@ stockCountRunRouter.post(
 
 			const branch = await prisma.branch.findFirst({ where: { id: branchId, isActive: true } });
 			if (!branch) throw new StockCountError(404, 'Branch not found');
-			const nonZeroRecords = await prisma.inventoryRecord.count({
-				where: { floor: { branchId }, quantity: { not: 0 } },
-			});
-			if (nonZeroRecords > 0) {
-				throw new StockCountError(
-					409,
-					`Branch inventory must be zero before opening a stock count (${nonZeroRecords} non-zero records remain)`,
-				);
-			}
 
 			const run = await prisma.stockCountRun.create({
 				data: {
@@ -409,13 +400,6 @@ async function applyCount(input: {
 				floorId: session.floorId,
 				shelfId: session.shelfId,
 			};
-			const stockAtLocation = await tx.inventoryRecord.aggregate({
-				where: locationWhere,
-				_sum: { quantity: true },
-			});
-			if ((stockAtLocation._sum.quantity ?? 0) !== 0) {
-				throw new StockCountError(409, 'This product location is not zero; reset inventory before counting');
-			}
 			let inventoryRecord = await tx.inventoryRecord.findFirst({
 				where: { ...locationWhere, boxId: null, batchId: null, state: shelfReadyState },
 				orderBy: { createdAt: 'asc' },
@@ -435,6 +419,7 @@ async function applyCount(input: {
 				});
 				createdInventoryRecord = true;
 			}
+			const startingQuantity = inventoryRecord.quantity;
 			item = await tx.stockCountItem.create({
 				data: {
 					runId: session.runId,
@@ -445,6 +430,7 @@ async function applyCount(input: {
 					shelfId: session.shelfId,
 					locationKey: itemLocationKey,
 					inventoryRecordId: inventoryRecord.id,
+					quantity: startingQuantity,
 				},
 				include: { inventoryRecord: true },
 			});
