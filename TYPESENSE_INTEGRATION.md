@@ -85,30 +85,24 @@ GET /api/settings/typesense/jobs
 ## Architecture
 
 - **Async Background Jobs**: Sync operations run in the background, avoiding HTTP timeouts
-- **Batch Processing**: Large datasets are processed in 500-record batches
+- **Batch Processing**: Large datasets are processed in 200-record batches
 - **In-Memory Job Tracking**: Job status stored in memory (consider Redis for multi-instance deployments)
 - **Auto-Cleanup**: Completed jobs are removed after 1 hour
 
-## Search Functions
+## Scope: sync only
 
-The sync service exports search functions for use in routes:
+This module keeps Typesense collections in sync with Postgres. **Nothing in the
+application queries Typesense.** Application search is served by Prisma
+(`contains` / `ILIKE`) on the server, and by SQLite FTS5 (`skus_fts`) in the
+Electron local-replica mode — see `packages/backend/src/utils/localSearch.ts`.
 
-```typescript
-import { searchSKUs, searchInventory, searchVendors } from '../modules/typesense/syncService';
-
-// Search SKUs
-const results = await searchSKUs('monitor', { vendorId: 'abc-123' });
-
-// Search inventory
-const results = await searchInventory('warehouse A', { state: 'ShelfReady' });
-
-// Search vendors
-const results = await searchVendors('acme corp');
-```
+If you wire up query-side Typesense later, add routes alongside the sync
+endpoints above and update this section. Until then the collections are written
+but never read.
 
 ## Performance
 
-- **Batch size**: 500 records per batch (configurable)
+- **Batch size**: 200 records per batch (configurable)
 - **Timeout handling**: Jobs run async, no HTTP timeout issues
 - **Progress tracking**: Real-time status updates via polling
 - **Memory efficient**: Batched processing prevents memory exhaustion

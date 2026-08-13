@@ -22,7 +22,7 @@ Use a separate HTTPS directory for every app. Do not point multiple apps at the 
 2. Build a signed release with the appropriate feed URL:
 
 ```powershell
-cd quantum-shelf
+cd jingles-inventory
 $env:JINGLES_INVENTORY_UPDATE_URL='https://inv.theredsun.org/updates/inventory'
 $env:JINGLES_WINDOWS_PUBLISHER='The Red Sun'
 $env:CSC_LINK='C:\secure\jingles-signing.pfx'
@@ -32,7 +32,7 @@ npm run release:update:inventory
 $env:JINGLES_LEGACY_SYNC_UPDATE_URL='https://inv.theredsun.org/updates/legacy-sync'
 npm run release:update:legacy-sync
 
-cd ..\federation-commerce
+cd ..\jingles-pos
 $env:JINGLES_POS_UPDATE_URL='https://pos.theredsun.org/updates/pos'
 npm run release:update:pos
 ```
@@ -40,14 +40,14 @@ npm run release:update:pos
 The URL is embedded in that release's `app-update.yml`. `JINGLES_UPDATE_CHANNEL` may be set to a channel such as `beta`; it defaults to `latest`.
 
 3. Upload the generated NSIS `.exe` and `.exe.blockmap` first. Upload the generated channel YAML (normally `latest.yml`) last so clients never see metadata for an incomplete release.
-4. Keep at least the current and previous installers/blockmaps available. Differential downloads may request the previous blockmap.
+4. Keep at least the current and previous installers/blockmaps available. Differential downloads may request the previous blockmap. When only one version is published (as today), that request 404s and `electron-updater` falls back to a full download — expected, not an error.
 5. Test with one machine on the previous signed version before broad rollout.
 
 Release outputs are:
 
-- Inventory: `quantum-shelf/packages/electron/release`
-- Legacy Sync: `quantum-shelf/packages/legacy-sync-app/release`
-- POS: `federation-commerce/release/electron`
+- Inventory: `jingles-inventory/packages/electron/release`
+- Legacy Sync: `jingles-inventory/packages/legacy-sync-app/release`
+- POS: `jingles-pos/release/electron`
 
 The static host must support HTTPS, byte-range requests, and ordinary `GET`/`HEAD` requests. Serve YAML with a short/no-cache policy and versioned installers/blockmaps with immutable caching.
 
