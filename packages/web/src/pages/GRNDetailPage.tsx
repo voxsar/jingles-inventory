@@ -153,6 +153,11 @@ export default function GRNDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {grn.lines?.length > 0 && (
+            <button className="btn-secondary" onClick={() => navigate(`/barcode-printing?grn=${grn.id}`)}>
+              Print barcodes
+            </button>
+          )}
           {rejectedLines.length > 0 && grn.status !== GRNStatus.Draft && (
             <button className="btn-secondary" onClick={handleCreatePRN}>
               ↩️ Create PRN ({rejectedLines.length} damaged)

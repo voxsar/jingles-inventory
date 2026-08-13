@@ -306,6 +306,19 @@ export const reportsApi = {
 export const barcodeApi = {
   scan: (barcode: string, terminalId?: string) =>
     api.post('/barcode/scan', { barcode, terminalId }),
+  listTemplates: () => api.get('/barcode/templates'),
+  createTemplate: (data: any) => api.post('/barcode/templates', data),
+  updateTemplate: (id: string, data: any) => api.put(`/barcode/templates/${id}`, data),
+  generate: (data: { skuId: string; variantId?: string | null; forceNew?: boolean }) =>
+    api.post('/barcode/generate', data),
+  link: (data: { skuId: string; variantId?: string | null; barcode: string; barcodeType?: string; isDefault?: boolean; label?: string }) =>
+    api.post('/barcode/link', data),
+  listPrintJobs: (params?: Record<string, string>) => api.get('/barcode/prints', { params }),
+  getPrintJob: (id: string) => api.get(`/barcode/prints/${id}`),
+  createPrintJob: (data: any) => api.post('/barcode/prints', data),
+  createPrintJobFromGrn: (grnId: string, data?: { templateId?: string | null }) =>
+    api.post(`/barcode/prints/from-grn/${grnId}`, data ?? {}),
+  markPrintJobPrinted: (id: string) => api.post(`/barcode/prints/${id}/mark-printed`),
 };
 
 // Space

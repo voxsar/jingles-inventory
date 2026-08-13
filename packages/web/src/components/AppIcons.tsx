@@ -121,6 +121,19 @@ export function TagIcon(props: IconProps) {
   );
 }
 
+export function BarcodeIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5v14" />
+      <path d="M7 5v14" />
+      <path d="M11 5v14" />
+      <path d="M15 5v14" />
+      <path d="M18 5v14" />
+      <path d="M21 5v14" />
+    </Icon>
+  );
+}
+
 export function BriefcaseIcon(props: IconProps) {
   return (
     <Icon {...props}>

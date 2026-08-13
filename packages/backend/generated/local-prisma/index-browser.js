@@ -301,6 +301,71 @@ exports.Prisma.ProductBarcodeScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.BarcodePrintTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  pageWidthMm: 'pageWidthMm',
+  pageHeightMm: 'pageHeightMm',
+  marginTopMm: 'marginTopMm',
+  marginRightMm: 'marginRightMm',
+  marginBottomMm: 'marginBottomMm',
+  marginLeftMm: 'marginLeftMm',
+  columns: 'columns',
+  rows: 'rows',
+  labelWidthMm: 'labelWidthMm',
+  labelHeightMm: 'labelHeightMm',
+  gapXMm: 'gapXMm',
+  gapYMm: 'gapYMm',
+  paddingTopMm: 'paddingTopMm',
+  paddingRightMm: 'paddingRightMm',
+  paddingBottomMm: 'paddingBottomMm',
+  paddingLeftMm: 'paddingLeftMm',
+  barcodeHeightMm: 'barcodeHeightMm',
+  barcodeFormat: 'barcodeFormat',
+  showProductName: 'showProductName',
+  showVariantName: 'showVariantName',
+  showPrice: 'showPrice',
+  showSkuCode: 'showSkuCode',
+  showBarcodeNumber: 'showBarcodeNumber',
+  isDefault: 'isDefault',
+  printCount: 'printCount',
+  createdById: 'createdById',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BarcodePrintJobScalarFieldEnum = {
+  id: 'id',
+  templateId: 'templateId',
+  sourceType: 'sourceType',
+  grnId: 'grnId',
+  status: 'status',
+  totalCopies: 'totalCopies',
+  printedCount: 'printedCount',
+  printRunCount: 'printRunCount',
+  createdById: 'createdById',
+  printedAt: 'printedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BarcodePrintJobItemScalarFieldEnum = {
+  id: 'id',
+  jobId: 'jobId',
+  skuId: 'skuId',
+  variantId: 'variantId',
+  barcodeId: 'barcodeId',
+  barcodeSnapshot: 'barcodeSnapshot',
+  productNameSnapshot: 'productNameSnapshot',
+  variantNameSnapshot: 'variantNameSnapshot',
+  skuCodeSnapshot: 'skuCodeSnapshot',
+  priceSnapshot: 'priceSnapshot',
+  copies: 'copies',
+  printedCount: 'printedCount',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.FloorScalarFieldEnum = {
   id: 'id',
   branchId: 'branchId',
@@ -1040,6 +1105,9 @@ exports.Prisma.ModelName = {
   SKUVariantValue: 'SKUVariantValue',
   ProductImage: 'ProductImage',
   ProductBarcode: 'ProductBarcode',
+  BarcodePrintTemplate: 'BarcodePrintTemplate',
+  BarcodePrintJob: 'BarcodePrintJob',
+  BarcodePrintJobItem: 'BarcodePrintJobItem',
   Floor: 'Floor',
   Rack: 'Rack',
   Shelf: 'Shelf',

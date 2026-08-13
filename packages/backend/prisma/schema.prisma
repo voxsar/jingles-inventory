@@ -35,6 +35,8 @@ model User {
   stockCountDeviceSessions StockCountDeviceSession[]
   stockCountLines          StockCountLine[]
   stockCountSubmissions    StockCountSubmission[]
+  barcodePrintTemplates    BarcodePrintTemplate[]
+  barcodePrintJobs         BarcodePrintJob[]
 
   @@map("users")
 }
@@ -189,6 +191,7 @@ model SKU {
   voucherBatches        VoucherBatch[]
   stockCountItems       StockCountItem[]
   stockCountSubmissions StockCountSubmission[]
+  barcodePrintJobItems  BarcodePrintJobItem[]
 
   @@map("skus")
 }
@@ -298,6 +301,7 @@ model SKUVariant {
   voucherBatches        VoucherBatch[]
   stockCountItems       StockCountItem[]
   stockCountSubmissions StockCountSubmission[]
+  barcodePrintJobItems  BarcodePrintJobItem[]
 
   @@map("sku_variants")
 }
@@ -343,11 +347,100 @@ model ProductBarcode {
   label       String?
   createdAt   DateTime @default(now()) @map("created_at")
 
-  sku     SKU         @relation(fields: [skuId], references: [id], onDelete: Cascade)
-  variant SKUVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  sku           SKU                   @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  variant       SKUVariant?           @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  printJobItems BarcodePrintJobItem[]
 
   @@index([skuId, variantId, isDefault])
   @@map("product_barcodes")
+}
+
+model BarcodePrintTemplate {
+  id                String   @id @default(uuid())
+  name              String   @unique
+  description       String?
+  pageWidthMm       Float    @default(210) @map("page_width_mm")
+  pageHeightMm      Float    @default(297) @map("page_height_mm")
+  marginTopMm       Float    @default(8) @map("margin_top_mm")
+  marginRightMm     Float    @default(8) @map("margin_right_mm")
+  marginBottomMm    Float    @default(8) @map("margin_bottom_mm")
+  marginLeftMm      Float    @default(8) @map("margin_left_mm")
+  columns           Int      @default(3)
+  rows              Int      @default(8)
+  labelWidthMm      Float    @default(62) @map("label_width_mm")
+  labelHeightMm     Float    @default(34) @map("label_height_mm")
+  gapXMm            Float    @default(2) @map("gap_x_mm")
+  gapYMm            Float    @default(2) @map("gap_y_mm")
+  paddingTopMm      Float    @default(2) @map("padding_top_mm")
+  paddingRightMm    Float    @default(2) @map("padding_right_mm")
+  paddingBottomMm   Float    @default(2) @map("padding_bottom_mm")
+  paddingLeftMm     Float    @default(2) @map("padding_left_mm")
+  barcodeHeightMm   Float    @default(14) @map("barcode_height_mm")
+  barcodeFormat     String   @default("CODE128") @map("barcode_format")
+  showProductName   Boolean  @default(true) @map("show_product_name")
+  showVariantName   Boolean  @default(true) @map("show_variant_name")
+  showPrice         Boolean  @default(true) @map("show_price")
+  showSkuCode       Boolean  @default(false) @map("show_sku_code")
+  showBarcodeNumber Boolean  @default(true) @map("show_barcode_number")
+  isDefault         Boolean  @default(false) @map("is_default")
+  printCount        Int      @default(0) @map("print_count")
+  createdById       String?  @map("created_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  creator User?             @relation(fields: [createdById], references: [id])
+  jobs    BarcodePrintJob[]
+
+  @@map("barcode_print_templates")
+}
+
+model BarcodePrintJob {
+  id            String    @id @default(uuid())
+  templateId    String?   @map("template_id")
+  sourceType    String    @default("MANUAL") @map("source_type")
+  grnId         String?   @map("grn_id")
+  status        String    @default("DRAFT")
+  totalCopies   Int       @default(0) @map("total_copies")
+  printedCount  Int       @default(0) @map("printed_count")
+  printRunCount Int       @default(0) @map("print_run_count")
+  createdById   String?   @map("created_by")
+  printedAt     DateTime? @map("printed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  template BarcodePrintTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  grn      GRN?                  @relation(fields: [grnId], references: [id], onDelete: SetNull)
+  creator  User?                 @relation(fields: [createdById], references: [id])
+  items    BarcodePrintJobItem[]
+
+  @@index([sourceType, createdAt])
+  @@index([grnId])
+  @@map("barcode_print_jobs")
+}
+
+model BarcodePrintJobItem {
+  id                  String   @id @default(uuid())
+  jobId               String   @map("job_id")
+  skuId               String   @map("sku_id")
+  variantId           String?  @map("variant_id")
+  barcodeId           String?  @map("barcode_id")
+  barcodeSnapshot     String   @map("barcode_snapshot")
+  productNameSnapshot String   @map("product_name_snapshot")
+  variantNameSnapshot String?  @map("variant_name_snapshot")
+  skuCodeSnapshot     String   @map("sku_code_snapshot")
+  priceSnapshot       Decimal? @map("price_snapshot") @db.Decimal(10, 2)
+  copies              Int
+  printedCount        Int      @default(0) @map("printed_count")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  job     BarcodePrintJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sku     SKU             @relation(fields: [skuId], references: [id])
+  variant SKUVariant?     @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  barcode ProductBarcode? @relation(fields: [barcodeId], references: [id], onDelete: SetNull)
+
+  @@index([jobId])
+  @@index([skuId, variantId])
+  @@map("barcode_print_job_items")
 }
 
 model Floor {
@@ -741,11 +834,12 @@ model GRN {
   createdAt            DateTime  @default(now()) @map("created_at")
   updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  supplier Vendor    @relation(fields: [supplierId], references: [id])
-  floor    Floor?    @relation(fields: [floorId], references: [id])
-  shelf    Shelf?    @relation(fields: [shelfId], references: [id])
-  creator  User      @relation(fields: [createdBy], references: [id])
-  lines    GRNLine[]
+  supplier         Vendor            @relation(fields: [supplierId], references: [id])
+  floor            Floor?            @relation(fields: [floorId], references: [id])
+  shelf            Shelf?            @relation(fields: [shelfId], references: [id])
+  creator          User              @relation(fields: [createdBy], references: [id])
+  lines            GRNLine[]
+  barcodePrintJobs BarcodePrintJob[]
 
   @@map("grns")
 }

@@ -503,6 +503,7 @@ export default function GRNPage() {
           {r.status === GRNStatus.Draft && (
             <button className="btn-sm" onClick={() => openEdit(r)}>Edit</button>
           )}
+          <button className="btn-sm" onClick={() => navigate(`/barcode-printing?grn=${r.id}`)}>Barcodes</button>
           <button className="btn-sm" onClick={() => navigate(`/grns/${r.id}`)}>View</button>
         </div>
       ),

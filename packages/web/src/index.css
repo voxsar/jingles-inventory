@@ -43,6 +43,37 @@
 .device-empty { color: var(--text-muted, #6b7280); padding: 32px !important; text-align: center !important; }
 @media (max-width: 900px) { .device-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+.barcode-workspace { display: grid; grid-template-columns: minmax(340px, 420px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.barcode-controls, .barcode-main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.barcode-template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.barcode-checkbox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.barcode-checkbox { display: flex; align-items: center; gap: 8px; color: #4b5563; font-size: 13px; }
+.barcode-product-results, .barcode-job-list, .barcode-row-table { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.barcode-product-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+.barcode-product-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.barcode-variant-list { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+.barcode-job-button { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; color: #111827; text-align: left; }
+.barcode-job-button span { display: flex; flex-direction: column; gap: 3px; }
+.barcode-job-button small, .barcode-job-button span:last-child { color: #6b7280; font-size: 12px; }
+.barcode-print-row { display: grid; grid-template-columns: minmax(180px, 1fr) 86px minmax(150px, 220px) auto auto; gap: 10px; align-items: center; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+.barcode-empty { padding: 24px; color: #6b7280; text-align: center; border: 1px dashed #d1d5db; border-radius: 8px; background: #fafafa; }
+.barcode-preview-frame { overflow: auto; padding: 18px; background: #e5e7eb; border-radius: 8px; }
+.barcode-sheet { background: #fff; color: #111; margin: 0 auto; box-shadow: 0 8px 28px rgba(17, 24, 39, .14); }
+.barcode-sheet-grid { display: grid; align-content: start; }
+.barcode-label { overflow: hidden; display: flex; flex-direction: column; justify-content: center; border: 1px dashed #d1d5db; background: white; color: #111; }
+.barcode-product-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; line-height: 1.1; font-weight: 700; }
+.barcode-variant-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #374151; font-size: 8px; line-height: 1.1; }
+.barcode-image { width: 100%; margin: 1mm 0; color: #111; }
+.barcode-svg { display: block; width: 100%; height: 100%; }
+.barcode-label-footer { display: flex; justify-content: space-between; gap: 2mm; font-size: 7px; line-height: 1.1; font-weight: 700; }
+.barcode-number { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: Consolas, ui-monospace, monospace; font-size: 7px; line-height: 1.1; text-align: center; }
+
+@media (max-width: 1180px) {
+  .barcode-workspace { grid-template-columns: 1fr; }
+  .barcode-print-row { grid-template-columns: 1fr 86px; }
+  .barcode-print-row input:nth-of-type(2), .barcode-print-row button { grid-column: span 1; }
+}
+
 /* Landscape GRN document preview */
 .grn-preview-scroll { overflow-x: auto; padding: 16px; background: #e5e7eb; }
 .grn-preview-sheet { position: relative; box-sizing: border-box; width: 1120px; min-height: 690px; margin: 0 auto; padding: 20px 22px 34px; background: #fff; color: #050505; font: 13px Arial, sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,.12); }

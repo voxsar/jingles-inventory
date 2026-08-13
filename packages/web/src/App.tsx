@@ -16,6 +16,7 @@ import ReportsPage from './pages/ReportsPage';
 import VendorPortalPage from './pages/VendorPortalPage';
 import CategoriesPage from './pages/CategoriesPage';
 import SettingsPage from './pages/SettingsPage';
+import BarcodePrintPage from './pages/BarcodePrintPage';
 import BranchesPage from './pages/BranchesPage';
 import StockTransferPage from './pages/StockTransferPage';
 import SuppliersPage from './pages/SuppliersPage';
@@ -81,6 +82,7 @@ function AppRoutes() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="barcode-printing" element={<BarcodePrintPage />} />
         <Route path="help" element={<HelpPage />} />
         <Route path="branches" element={<BranchesPage />} />
         <Route path="stock-transfers" element={<StockTransferPage />} />
