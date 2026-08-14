@@ -11,6 +11,25 @@ This repository is the inventory system of record. It is an npm-workspaces TypeS
 
 Read `README.md` and any feature-specific root documentation before changing a related workflow. Keep public API and sync-contract changes compatible with the separate Jingles POS repository.
 
+<!--
+  Postmortem, kept out of the rendered guide but not out of the source an agent
+  actually reads: a session was asked to add cashier keyboard shortcuts to
+  "the POS" and, without opening this file first, built a whole parallel POS
+  terminal (route, cart, popups, sale/shift/refund endpoints) inside this
+  inventory repo instead. Line 12 above already said the POS is a separate
+  repository. It was findable in one `ls` at the workspace root
+  (`../federation-commerce`, packages/web/src/posWorkstation.tsx) and would
+  have taken one command to confirm before writing a single file.
+
+  This repository is the inventory system of record. It is not the POS and
+  never becomes the POS by adding a checkout screen to it. If a task talks
+  about ringing up a sale, a till, a cashier, a shift, tender, a receipt
+  printer, or a cash drawer, that is `federation-commerce`, not here — go
+  read its AGENTS.md before writing code. If that repository is genuinely
+  not present on the machine, say so and ask, rather than building a
+  substitute.
+-->
+
 ## Working rules
 
 - Use npm workspaces and the existing package structure. Do not introduce another package manager.
