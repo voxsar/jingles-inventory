@@ -1,6 +1,7 @@
 import prisma from '../../prisma/client';
 import { InventoryEventType } from '@jingles/shared';
 import { ensurePosCloudSchema, getLegacyTableRows } from '../../services/posCloud';
+import { isLocalReplicaMode } from '../../utils/runtimePaths';
 
 /**
  * GRN Report - Good Received Note Report
@@ -28,33 +29,19 @@ export async function getGRNReport(filters: {
 		if (toDate) where.createdAt.lte = toDate;
 	}
 
+	const localPage = isLocalReplicaMode()
+		? await getLocalGRNReportPage({ fromDate, toDate, supplierId, status, branchId, skip, pageSize })
+		: null;
+
 	const [items, total] = await Promise.all([
-		prisma.gRN.findMany({
-			where,
-			skip,
-			take: pageSize,
-			orderBy: { createdAt: 'desc' },
-			include: {
-				supplier: { select: { id: true, name: true, contactEmail: true } },
-				floor: { include: { branch: { select: { id: true, name: true, code: true, address: true, phone: true } } } },
-				shelf: { select: { id: true, name: true, code: true } },
-				creator: { select: { id: true, email: true } },
-				lines: {
-					include: {
-						sku: { select: { id: true, skuCode: true, name: true } },
-						variant: {
-							include: {
-								attributeValues: {
-									include: { attribute: true, attributeValue: true },
-								},
-							},
-						},
-						batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true } },
-					},
-				},
-			},
-		}),
-		prisma.gRN.count({ where }),
+		localPage ? Promise.resolve(localPage.items) : prisma.gRN.findMany({
+				where,
+				skip,
+				take: pageSize,
+				orderBy: { createdAt: 'desc' },
+				include: grnReportInclude,
+			}),
+		localPage ? Promise.resolve(localPage.total) : prisma.gRN.count({ where }),
 	]);
 
 	// Calculate summary statistics
@@ -90,6 +77,89 @@ export async function getGRNReport(filters: {
 		pageSize,
 		totalPages: Math.ceil(total / pageSize),
 		summary,
+	};
+}
+
+const grnReportInclude = {
+	supplier: { select: { id: true, name: true, contactEmail: true } },
+	floor: { include: { branch: { select: { id: true, name: true, code: true, address: true, phone: true } } } },
+	shelf: { select: { id: true, name: true, code: true } },
+	creator: { select: { id: true, email: true } },
+	lines: {
+		include: {
+			sku: { select: { id: true, skuCode: true, name: true } },
+			variant: {
+				include: {
+					attributeValues: {
+						include: { attribute: true, attributeValue: true },
+					},
+				},
+			},
+			batch: { select: { id: true, batchNumber: true, costPrice: true, sellingPrice: true } },
+		},
+	},
+};
+
+async function getLocalGRNReportPage(filters: {
+	fromDate?: Date;
+	toDate?: Date;
+	supplierId?: string;
+	status?: string;
+	branchId?: string;
+	skip: number;
+	pageSize: number;
+}) {
+	const clauses: string[] = [];
+	const params: unknown[] = [];
+
+	if (filters.supplierId) {
+		clauses.push('supplier_id = ?');
+		params.push(filters.supplierId);
+	}
+	if (filters.status) {
+		clauses.push('status = ?');
+		params.push(filters.status);
+	}
+	if (filters.branchId) {
+		clauses.push('floor_id IN (SELECT id FROM floors WHERE branch_id = ?)');
+		params.push(filters.branchId);
+	}
+	if (filters.fromDate) {
+		clauses.push('datetime(created_at) >= datetime(?)');
+		params.push(filters.fromDate.toISOString());
+	}
+	if (filters.toDate) {
+		clauses.push('datetime(created_at) <= datetime(?)');
+		params.push(filters.toDate.toISOString());
+	}
+
+	const whereSql = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+	const idRows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+		`SELECT id FROM grns ${whereSql} ORDER BY datetime(created_at) DESC LIMIT ? OFFSET ?`,
+		...params,
+		filters.pageSize,
+		filters.skip
+	);
+	const countRows = await prisma.$queryRawUnsafe<Array<{ total: bigint | number }>>(
+		`SELECT COUNT(*) AS total FROM grns ${whereSql}`,
+		...params
+	);
+	const ids = idRows.map((row) => row.id);
+	if (ids.length === 0) {
+		return { items: [], total: Number(countRows[0]?.total ?? 0) };
+	}
+
+	const order = new Map(ids.map((id, index) => [id, index]));
+	const items = await prisma.gRN.findMany({
+		where: { id: { in: ids } },
+		include: grnReportInclude,
+	});
+
+	items.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+
+	return {
+		items,
+		total: Number(countRows[0]?.total ?? 0),
 	};
 }
 
