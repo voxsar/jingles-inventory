@@ -336,7 +336,9 @@ router.delete('/held-sales/:id', async (req: AuthRequest, res: Response): Promis
 
 router.get('/sales/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 	try {
-		const sale = await prisma.posSale.findUnique({ where: { id: req.params.id } });
+		const sale =
+			(await prisma.posSale.findUnique({ where: { id: req.params.id } })) ??
+			(await prisma.posSale.findUnique({ where: { receiptNumber: req.params.id } }));
 		if (!sale) {
 			res.status(404).json({ success: false, error: 'Sale not found' });
 			return;
