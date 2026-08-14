@@ -1072,6 +1072,7 @@ CREATE TABLE IF NOT EXISTS "pos_credit_payments" (
     "note" TEXT,
     "terminal_id" TEXT,
     "user_id" TEXT,
+    "shift_id" TEXT,
     "source_device_id" TEXT,
     "source_sequence_num" INTEGER,
     "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
@@ -1418,6 +1419,9 @@ CREATE INDEX IF NOT EXISTS "pos_customers_name_idx" ON "pos_customers"("name");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "pos_credit_payments_customer_created_at_idx" ON "pos_credit_payments"("customer_id", "created_at");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "pos_credit_payments_shift_created_at_idx" ON "pos_credit_payments"("shift_id", "created_at");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "pos_sync_events_aggregate_idx" ON "pos_sync_events"("aggregate_type", "aggregate_id");

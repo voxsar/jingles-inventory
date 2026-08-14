@@ -1791,10 +1791,10 @@ async function applyCreditPaymentRecordedEvent(client: PoolClient, event: SyncEv
   await client.query(
     `
       INSERT INTO pos_credit_payments (
-        id, customer_id, amount, method, note, terminal_id, user_id,
+        id, customer_id, amount, method, note, terminal_id, user_id, shift_id,
         source_device_id, source_sequence_num, last_vector_clock, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `,
     [
       event.aggregateId,
@@ -1804,6 +1804,7 @@ async function applyCreditPaymentRecordedEvent(client: PoolClient, event: SyncEv
       typeof payload.note === 'string' && payload.note.trim() ? payload.note.trim() : null,
       typeof payload.terminalId === 'string' && payload.terminalId.trim() ? payload.terminalId.trim() : null,
       typeof payload.userId === 'string' && payload.userId.trim() ? payload.userId.trim() : null,
+      typeof payload.shiftId === 'string' && payload.shiftId.trim() ? payload.shiftId.trim() : null,
       event.deviceId,
       event.sequenceNum,
       event.vectorClock,

@@ -379,6 +379,11 @@ const getColumns = (reportId: ReportId): ExportColumn[] => {
 				moneyColumn('cashExcess', 'Excess / (Short)', (row) => row.cashExcess),
 				numberColumn('billCount', 'Bills', (row) => row.billCount),
 				numberColumn('productCount', 'Products', (row) => row.productCount),
+				moneyColumn('customerCreditSales', 'Customer Credit Sales', (row) => (row.customerCreditSales ?? []).reduce((sum: number, sale: any) => sum + Number(sale.amount || 0), 0)),
+				moneyColumn('customerCollections', 'Customer Payments', (row) => (row.customerCollections ?? []).reduce((sum: number, payment: any) => sum + Number(payment.amount || 0), 0)),
+				{ key: 'customerCreditBreakdown', header: 'Credit Sale Breakdown', value: (row) => (row.customerCreditSales ?? []).map((sale: any) => `${sale.customerName}: ${currency(sale.amount)} (${sale.receiptNumber})`).join(' | ') },
+				{ key: 'customerPaymentBreakdown', header: 'Payment Breakdown', value: (row) => (row.customerCollections ?? []).map((payment: any) => `${payment.customerName}: ${currency(payment.amount)} (${payment.method})`).join(' | ') },
+				{ key: 'bankInstrumentBreakdown', header: 'Cheque / Transfer Details', value: (row) => (row.paymentDetails ?? []).map((payment: any) => `${payment.method}: ${payment.bankName || '-'} / ${payment.origin || '-'} / ${payment.reference || '-'} / ${payment.reason || '-'}`).join(' | ') },
 			];
 		case 'prn':
 			return [
@@ -618,7 +623,7 @@ const downloadBlob = (content: string, fileName: string, type: string) => {
 	URL.revokeObjectURL(url);
 };
 
-function GrnDocumentPreview({ grn }: { grn: any }) {
+function GrnDocumentPreview({ grn, onDownload, onPrint }: { grn: any; onDownload: () => void; onPrint: () => void }) {
 	const lines = Array.isArray(grn.lines) ? grn.lines : [];
 	const totalQty = lines.reduce((sum: number, line: any) => sum + Number(line.receivedQuantity || line.expectedQuantity || 0), 0);
 	const grossAmount = lines.reduce((sum: number, line: any) => {
@@ -634,6 +639,10 @@ function GrnDocumentPreview({ grn }: { grn: any }) {
 	const documentNumber = grn.invoiceReference ?? grn.id;
 	return (
 		<div className="grn-preview-scroll">
+			<div className="mb-3 flex justify-end gap-2 px-2 print:hidden">
+				<button className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" onClick={onPrint}>Print / PDF this GRN</button>
+				<button className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800" onClick={onDownload}>Download this GRN</button>
+			</div>
 			<article className="grn-preview-sheet">
 				<header className="grn-preview-header">
 					<div>
@@ -955,6 +964,14 @@ export default function ReportsPage() {
 		const html = `<html><head><meta charset="utf-8"></head><body><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
 		downloadBlob(html, `${exportFileName}.xls`, 'application/vnd.ms-excel;charset=utf-8');
 	});
+	const downloadIndividualGrn = (grn: any) => {
+		const sheet = spreadsheetData([grn]);
+		const header = sheet.headers.map((heading) => `<th>${escapeHtml(heading)}</th>`).join('');
+		const body = sheet.rows.map((row) => `<tr>${row.map((value) => `<td>${escapeHtml(value)}</td>`).join('')}</tr>`).join('');
+		const html = `<html><head><meta charset="utf-8"></head><body><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
+		const reference = String(grn.invoiceReference ?? grn.id ?? 'grn').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+		downloadBlob(html, `grn-${reference}.xls`, 'application/vnd.ms-excel;charset=utf-8');
+	};
 
 	const openPrintableView = (reportRows: any[], shouldPrint: boolean) => {
 		const grnDocuments = activeReportId === 'grn-document' ? reportRows.map((grn) => {
@@ -976,7 +993,10 @@ export default function ReportsPage() {
 		}).join('') : '';
 		const zDocuments = activeReportId === 'z-reading' ? reportRows.map((row) => {
 			const tenders = Object.entries(row.paymentBreakdown ?? {}).filter(([method]) => method !== 'CASH').map(([method, amount]) => `<div><span>${escapeHtml(method)}</span><span>${escapeHtml(row.paymentCounts?.[method] ?? 0)} &nbsp; ${currency(amount)}</span></div>`).join('');
-			return `<article class="z-document"><h1>JINGLES</h1><p>Cashier: ${escapeHtml(row.cashier)}<br>Unit No: ${escapeHtml(row.unit)}<br>Location: ${escapeHtml(row.branch)}</p><h2>Z Reading</h2><small>${escapeHtml(dateTime(row.openedAt))}${row.closedAt ? ` - ${escapeHtml(dateTime(row.closedAt))}` : ''}</small><section><div><span>GROSS SALE</span><b>${currency(row.grossSale)}</b></div><div><span>PRODUCT DISCOUNT</span><span>${row.discountedLineCount} &nbsp; ${currency(row.discounts)}</span></div><div><span>REFUNDS</span><span>${currency(row.refunds)}</span></div><div><strong>NET SALE</strong><strong>${currency(row.netSale)}</strong></div></section><section><div><span>CASH SALE</span><span>${row.paymentCounts?.CASH ?? 0} &nbsp; ${currency(row.cashSale)}</span></div><div><span>OPENING FLOAT</span><span>${currency(row.openingFloat)}</span></div><div><span>EXPECTED DRAWER</span><span>${currency(row.expectedDrawer)}</span></div><div><span>DECLARED AMOUNT</span><span>${row.declaredAmount == null ? '-' : currency(row.declaredAmount)}</span></div><div><strong>CASH EXCESS / (SHORT)</strong><strong>${row.cashExcess == null ? '-' : currency(row.cashExcess)}</strong></div></section><section><h3>NON CASH SALES</h3>${tenders}<div><strong>NON CASH TOTAL</strong><strong>${currency(row.nonCashTotal)}</strong></div></section><footer>BILL COUNT: ${row.billCount}<br>PRODUCT COUNT: ${quantity(row.productCount)}<br>SHIFT: ${escapeHtml(row.shiftId)}</footer></article>`;
+			const creditSales = (row.customerCreditSales ?? []).map((sale: any) => `<div><span>${escapeHtml(sale.customerName)} / ${escapeHtml(sale.receiptNumber)}</span><span>${currency(sale.amount)}</span></div>`).join('');
+			const collections = (row.customerCollections ?? []).map((payment: any) => `<div><span>${escapeHtml(payment.customerName)} / ${escapeHtml(payment.method)}${payment.note ? ` / ${escapeHtml(payment.note)}` : ''}</span><span>${currency(payment.amount)}</span></div>`).join('');
+			const instruments = (row.paymentDetails ?? []).map((payment: any) => `<div><span>${escapeHtml(payment.method)} / ${escapeHtml(payment.bankName || '-')} / ${escapeHtml(payment.origin || '-')} / ${escapeHtml(payment.reference || '-')} / ${escapeHtml(payment.reason || '-')}</span><span>${currency(payment.amount)}</span></div>`).join('');
+			return `<article class="z-document"><h1>JINGLES</h1><p>Cashier: ${escapeHtml(row.cashier)}<br>Unit No: ${escapeHtml(row.unit)}<br>Location: ${escapeHtml(row.branch)}</p><h2>Z Reading</h2><small>${escapeHtml(dateTime(row.openedAt))}${row.closedAt ? ` - ${escapeHtml(dateTime(row.closedAt))}` : ''}</small><section><div><span>GROSS SALE</span><b>${currency(row.grossSale)}</b></div><div><span>PRODUCT DISCOUNT</span><span>${row.discountedLineCount} &nbsp; ${currency(row.discounts)}</span></div><div><span>REFUNDS</span><span>${currency(row.refunds)}</span></div><div><strong>NET SALE</strong><strong>${currency(row.netSale)}</strong></div></section><section><div><span>CASH SALE</span><span>${row.paymentCounts?.CASH ?? 0} &nbsp; ${currency(row.cashSale)}</span></div><div><span>OPENING FLOAT</span><span>${currency(row.openingFloat)}</span></div><div><span>EXPECTED DRAWER</span><span>${currency(row.expectedDrawer)}</span></div><div><span>DECLARED AMOUNT</span><span>${row.declaredAmount == null ? '-' : currency(row.declaredAmount)}</span></div><div><strong>CASH EXCESS / (SHORT)</strong><strong>${row.cashExcess == null ? '-' : currency(row.cashExcess)}</strong></div></section><section><h3>NON CASH SALES</h3>${tenders}<div><strong>NON CASH TOTAL</strong><strong>${currency(row.nonCashTotal)}</strong></div></section>${creditSales ? `<section><h3>CUSTOMER CREDIT SALES</h3>${creditSales}</section>` : ''}${collections ? `<section><h3>CUSTOMER BILL COLLECTIONS</h3>${collections}</section>` : ''}${instruments ? `<section><h3>CHEQUE / ONLINE BANK TRANSFER</h3>${instruments}</section>` : ''}<footer>BILL COUNT: ${row.billCount}<br>PRODUCT COUNT: ${quantity(row.productCount)}<br>SHIFT: ${escapeHtml(row.shiftId)}</footer></article>`;
 		}).join('') : '';
 		const header = columns.map((column) => `<th>${escapeHtml(column.header)}</th>`).join('');
 		const body = reportRows.map((row) => `<tr>${columns.map((column) => `<td>${escapeHtml(exportValue(row, column))}</td>`).join('')}</tr>`).join('');
@@ -1185,7 +1205,7 @@ export default function ReportsPage() {
 					<div className="content-section mb-0 overflow-hidden">
 						{activeReportId === 'grn-document' ? (
 							isLoading ? <div className="p-8 text-center text-gray-500">Loading GRN documents...</div>
-								: data.length > 0 ? <div className="flex flex-col gap-6 bg-gray-100 py-4">{data.map((grn) => <GrnDocumentPreview key={grn.id} grn={grn} />)}</div>
+								: data.length > 0 ? <div className="flex flex-col gap-6 bg-gray-100 py-4">{data.map((grn) => <GrnDocumentPreview key={grn.id} grn={grn} onDownload={() => downloadIndividualGrn(grn)} onPrint={() => openPrintableView([grn], true)} />)}</div>
 									: <div className="p-8 text-center text-gray-500">No GRN documents found for this filter set</div>
 						) : (
 							<DataTable columns={tableColumns as any} data={data} isLoading={isLoading} emptyMessage="No rows found for this report and filter set" onRowClick={handleRowClick} />

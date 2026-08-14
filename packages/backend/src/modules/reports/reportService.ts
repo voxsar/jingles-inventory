@@ -1189,6 +1189,13 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 		INNER JOIN pos_sales s ON s.id = r.sale_id
 		WHERE s.shift_id = ANY($1::text[])
 	`, shiftIds);
+	const collections = await prisma.$queryRawUnsafe<any[]>(`
+		SELECT p.*, c.name AS customer_name
+		FROM pos_credit_payments p
+		LEFT JOIN pos_customers c ON c.id = p.customer_id
+		WHERE p.shift_id = ANY($1::text[])
+		ORDER BY p.created_at
+	`, shiftIds);
 	const [branches, users] = await Promise.all([
 		prisma.branch.findMany({ select: { id: true, name: true, code: true } }),
 		prisma.user.findMany({ select: { id: true, email: true } }),
@@ -1197,8 +1204,15 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 	const userMap = new Map(users.map((user) => [user.id, user.email]));
 	const salesByShift = new Map<string, any[]>();
 	const refundsByShift = new Map<string, number>();
+	const collectionsByShift = new Map<string, any[]>();
 	for (const sale of sales) salesByShift.set(sale.shift_id, [...(salesByShift.get(sale.shift_id) ?? []), sale]);
 	for (const row of returns) refundsByShift.set(row.shift_id, (refundsByShift.get(row.shift_id) ?? 0) + numberFrom(row.total_refund));
+	for (const row of collections) collectionsByShift.set(row.shift_id, [...(collectionsByShift.get(row.shift_id) ?? []), row]);
+	const customerIds = [...new Set(sales.map((sale) => sale.customer_id).filter(Boolean))];
+	const customers = customerIds.length > 0
+		? await prisma.$queryRawUnsafe<any[]>(`SELECT id, name FROM pos_customers WHERE id = ANY($1::text[])`, customerIds)
+		: [];
+	const customerMap = new Map(customers.map((customer) => [customer.id, customer.name]));
 
 	let rows = shifts.map((shift) => {
 		const shiftSales = salesByShift.get(shift.id) ?? [];
@@ -1206,12 +1220,40 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 		const paymentCounts: Record<string, number> = {};
 		let productCount = 0;
 		let discountedLineCount = 0;
+		const paymentDetails: any[] = [];
+		const customerCreditSales: any[] = [];
 		for (const sale of shiftSales) {
 			const payments = Array.isArray(sale.payments) ? sale.payments : [];
 			for (const payment of payments) {
 				const method = stringFrom(payment.method, 'OTHER').toUpperCase();
 				paymentBreakdown[method] = (paymentBreakdown[method] ?? 0) + numberFrom(payment.amount);
 				paymentCounts[method] = (paymentCounts[method] ?? 0) + 1;
+				if (method === 'CREDIT') {
+					customerCreditSales.push({
+						saleId: sale.id,
+						receiptNumber: sale.receipt_number,
+						customerId: sale.customer_id ?? undefined,
+						customerName: customerMap.get(sale.customer_id) ?? 'Walk-in customer',
+						amount: numberFrom(payment.amount),
+						createdAt: sale.created_at,
+					});
+				}
+				if (method === 'CHEQUE' || method === 'BANK_TRANSFER') {
+					const metadata = metadataRecord(payment.metadata);
+					paymentDetails.push({
+						saleId: sale.id,
+						receiptNumber: sale.receipt_number,
+						customerId: sale.customer_id ?? undefined,
+						customerName: customerMap.get(sale.customer_id),
+						method,
+						amount: numberFrom(payment.amount),
+						reference: stringFrom(payment.reference),
+						bankName: stringFrom(metadata.bankName, metadata.originatingBank),
+						origin: stringFrom(metadata.origin),
+						reason: stringFrom(metadata.reason),
+						createdAt: sale.created_at,
+					});
+				}
 			}
 			const lines = Array.isArray(sale.lines) ? sale.lines : [];
 			for (const line of lines) {
@@ -1228,6 +1270,16 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 		const expectedDrawer = numberFrom(shift.opening_float) + cashSale - refunds;
 		const declaredAmount = shift.closing_float == null ? null : numberFrom(shift.closing_float);
 		const branch = branchMap.get(shift.branch_id);
+		const customerCollections = (collectionsByShift.get(shift.id) ?? []).map((payment) => ({
+			paymentId: payment.id,
+			customerId: payment.customer_id,
+			customerName: payment.customer_name ?? payment.customer_id,
+			amount: numberFrom(payment.amount),
+			method: payment.method,
+			note: payment.note ?? undefined,
+			userName: userMap.get(payment.user_id),
+			createdAt: payment.created_at,
+		}));
 		return {
 			id: shift.id, shiftId: shift.id, unit: shift.terminal_id, terminalId: shift.terminal_id,
 			branchId: shift.branch_id ?? '', branch: branch?.name ?? shift.branch_id ?? '', branchCode: branch?.code ?? '',
@@ -1237,6 +1289,7 @@ export async function getZReadingReport(filters: CommonReportFilters) {
 			refunds, netSale, billCount: shiftSales.length, productCount, paymentBreakdown, paymentCounts,
 			cashSale, nonCashTotal, openingFloat: numberFrom(shift.opening_float), expectedDrawer,
 			declaredAmount, cashExcess: declaredAmount == null ? null : declaredAmount - expectedDrawer,
+			paymentDetails, customerCreditSales, customerCollections,
 		};
 	});
 	const needle = normalizeSearch(filters.search)?.toLowerCase();
