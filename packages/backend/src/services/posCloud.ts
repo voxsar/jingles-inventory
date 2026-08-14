@@ -2011,7 +2011,7 @@ export async function posSyncPlayback(input: SyncPlaybackRequest): Promise<SyncP
       };
 
       const result = await appendEvent(client, normalizedEvent);
-      acceptedEventIds.push(result.storedEvent.id);
+      acceptedEventIds.push(normalizedEvent.id);
       if (result.conflict) {
         conflicts.push(result.conflict);
       }
