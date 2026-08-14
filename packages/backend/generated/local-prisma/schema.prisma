@@ -693,8 +693,8 @@ model InventoryControl {
   @@map("inventory_control")
 }
 
-// Branch-wide stock count. Inventory is zeroed through the administrative
-// settings workflow before this run opens; Android devices never zero stock.
+// Branch-wide stock count. Each product/location is reset atomically when its
+// first physical count is submitted; no branch-wide pre-zero is required.
 model StockCountRun {
   id            String    @id @default(uuid())
   branchId      String    @map("branch_id")

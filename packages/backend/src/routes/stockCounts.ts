@@ -36,6 +36,11 @@ function readQuantity(value: unknown) {
 	return Number.isFinite(quantity) && quantity >= 0 ? quantity : null;
 }
 
+function readAdjustment(value: unknown) {
+	const quantity = typeof value === 'number' ? value : Number(value);
+	return Number.isFinite(quantity) && quantity !== 0 ? quantity : null;
+}
+
 function uniqueVendors(sku: any) {
 	const vendors = [sku.vendor, ...(sku.skuVendors ?? []).map((entry: any) => entry.vendor)]
 		.filter(Boolean)
@@ -224,6 +229,200 @@ stockCountRouter.get('/catalog', async (_req: AuthRequest, res: Response): Promi
 		sendRouteError(res, error, 'Failed to load the mobile stock catalog');
 	}
 });
+
+function adjustmentPayload(event: any) {
+	const metadata = event.metadata ?? {};
+	return {
+		requestId: event.id,
+		skuId: metadata.skuId,
+		variantId: metadata.variantId ?? null,
+		floorId: metadata.floorId,
+		shelfId: metadata.shelfId ?? null,
+		quantityDelta: event.quantityDelta,
+		beforeQuantity: event.beforeQuantity,
+		afterQuantity: event.afterQuantity,
+		recordsChanged: metadata.recordsChanged ?? 0,
+	};
+}
+
+// POST /api/stock-count/adjust
+// Idempotent online stock-up/stock-down action used by the Android scanner.
+stockCountRouter.post(
+	'/adjust',
+	requireRole(...countingRoles),
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		try {
+			const requestId = cleanText(req.body.requestId);
+			const skuId = cleanText(req.body.skuId);
+			const variantId = cleanText(req.body.variantId) || null;
+			const floorId = cleanText(req.body.floorId);
+			const shelfId = cleanText(req.body.shelfId) || null;
+			const terminalId = cleanText(req.body.terminalId) || null;
+			const quantityDelta = readAdjustment(req.body.quantityDelta);
+			if (!requestId || !skuId || !floorId || quantityDelta === null) {
+				throw new StockCountError(400, 'requestId, skuId, floorId and a non-zero quantityDelta are required');
+			}
+
+			const replayed = await prisma.inventoryEvent.findUnique({ where: { id: requestId } });
+			if (replayed) {
+				if (replayed.reasonCode !== 'MOBILE_STOCK_ADJUSTMENT') {
+					throw new StockCountError(409, 'requestId was already used by another inventory action');
+				}
+				res.json({ success: true, replayed: true, data: adjustmentPayload(replayed) });
+				return;
+			}
+
+			await resolveManualProduct(skuId, variantId);
+			const floor = await prisma.floor.findFirst({ where: { id: floorId, isActive: true } });
+			if (!floor) throw new StockCountError(400, 'Floor not found or inactive');
+			if (shelfId) {
+				const shelf = await prisma.shelf.findFirst({ where: { id: shelfId, floorId, isActive: true } });
+				if (!shelf) throw new StockCountError(400, 'Shelf does not belong to the selected floor');
+			}
+			const shelfReadyState = await getStatusByKey(SpecialStatusKeys.INVENTORY_SHELF_READY);
+
+			let result;
+			try {
+				result = await serializableTransaction(async (tx) => {
+					const concurrentReplay = await tx.inventoryEvent.findUnique({ where: { id: requestId } });
+					if (concurrentReplay) {
+						if (concurrentReplay.reasonCode !== 'MOBILE_STOCK_ADJUSTMENT') {
+							throw new StockCountError(409, 'requestId was already used by another inventory action');
+						}
+						return { replayed: true, data: adjustmentPayload(concurrentReplay) };
+					}
+
+					const where: Prisma.InventoryRecordWhereInput = { skuId, variantId, floorId, shelfId };
+					const records = await tx.inventoryRecord.findMany({ where, orderBy: { createdAt: 'asc' } });
+					const beforeQuantity = records.reduce((sum: number, record: any) => sum + record.quantity, 0);
+					const afterQuantity = beforeQuantity + quantityDelta;
+					if (afterQuantity < -1e-9) {
+						throw new StockCountError(409, `Cannot remove ${Math.abs(quantityDelta)}; only ${beforeQuantity} is available at this location`);
+					}
+
+					const changedRecords: Array<{ record: any; created: boolean; baseVersion: number }> = [];
+					if (quantityDelta > 0) {
+						const target = records.find((record: any) => (
+							record.boxId === null && record.batchId === null && record.state === shelfReadyState
+						));
+						if (target) {
+							const updated = await tx.inventoryRecord.update({
+								where: { id: target.id },
+								data: {
+									quantity: target.quantity + quantityDelta,
+									terminalId,
+									userId: req.user!.id,
+									version: { increment: 1 },
+								},
+							});
+							changedRecords.push({ record: updated, created: false, baseVersion: target.version });
+						} else {
+							const created = await tx.inventoryRecord.create({
+								data: {
+									skuId,
+									variantId,
+									floorId,
+									shelfId,
+									quantity: quantityDelta,
+									state: shelfReadyState,
+									terminalId,
+									userId: req.user!.id,
+								},
+							});
+							changedRecords.push({ record: created, created: true, baseVersion: 0 });
+						}
+					} else {
+						let remaining = Math.abs(quantityDelta);
+						const removalOrder = [...records].sort((left: any, right: any) => {
+							const leftGeneric = left.boxId === null && left.batchId === null && left.state === shelfReadyState ? 0 : 1;
+							const rightGeneric = right.boxId === null && right.batchId === null && right.state === shelfReadyState ? 0 : 1;
+							return leftGeneric - rightGeneric;
+						});
+						for (const record of removalOrder) {
+							if (remaining <= 1e-9 || record.quantity <= 0) continue;
+							const removed = Math.min(record.quantity, remaining);
+							const updated = await tx.inventoryRecord.update({
+								where: { id: record.id },
+								data: {
+									quantity: Math.max(0, record.quantity - removed),
+									terminalId,
+									userId: req.user!.id,
+									version: { increment: 1 },
+								},
+							});
+							changedRecords.push({ record: updated, created: false, baseVersion: record.version });
+							remaining -= removed;
+						}
+					}
+
+					const event = await tx.inventoryEvent.create({
+						data: {
+							id: requestId,
+							eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+							parentEntityId: `mobile-stock:${skuId}:${variantId ?? ''}:${floorId}:${shelfId ?? ''}`,
+							quantityDelta,
+							beforeQuantity,
+							afterQuantity: Math.max(0, afterQuantity),
+							reasonCode: 'MOBILE_STOCK_ADJUSTMENT',
+							userId: req.user!.id,
+							terminalId,
+							metadata: { skuId, variantId, floorId, shelfId, recordsChanged: changedRecords.length } as any,
+						},
+					});
+
+					for (const change of changedRecords) {
+						await enqueueLocalSyncOperation(tx as any, {
+							opType: change.created
+								? SYNC_V2_OPERATION_TYPES.INVENTORY_CREATE
+								: SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE,
+							aggregateId: change.record.id,
+							baseVersion: change.baseVersion,
+							payload: change.created
+								? {
+									id: change.record.id,
+									skuId,
+									variantId,
+									floorId,
+									shelfId,
+									quantity: change.record.quantity,
+									state: change.record.state,
+									terminalId,
+								}
+								: { id: change.record.id, quantity: change.record.quantity },
+						});
+					}
+					await recordServerSyncChanges(tx as any, {
+						aggregateId: requestId,
+						changes: [
+							...changedRecords.map((change) => ({
+								tableName: 'inventory_records' as const,
+								rowId: change.record.id,
+								action: 'upsert' as const,
+							})),
+							{ tableName: 'inventory_events', rowId: event.id, action: 'upsert' },
+						],
+					});
+
+					return { replayed: false, data: adjustmentPayload(event) };
+				});
+			} catch (error) {
+				if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: unknown }).code === 'P2002') {
+					const concurrentReplay = await prisma.inventoryEvent.findUnique({ where: { id: requestId } });
+					if (concurrentReplay?.reasonCode === 'MOBILE_STOCK_ADJUSTMENT') {
+						res.json({ success: true, replayed: true, data: adjustmentPayload(concurrentReplay) });
+						return;
+					}
+				}
+				throw error;
+			}
+
+			queueDashboardStatsRefresh();
+			res.json({ success: true, ...result });
+		} catch (error) {
+			sendRouteError(res, error, 'Failed to adjust stock from the phone');
+		}
+	},
+);
 
 // POST /api/stock-count-runs/:runId/device-sessions
 stockCountRunRouter.post(

@@ -115,6 +115,82 @@ describe('mobile stock-count routes', () => {
 		});
 	});
 
+	it('adds stock at a populated location without requiring a count run', async () => {
+		prismaMock.inventoryEvent.findUnique.mockResolvedValue(null);
+		prismaMock.sKU.findFirst.mockResolvedValue({ id: 'sku-001', isActive: true, skuVendors: [] } as any);
+		prismaMock.floor.findFirst.mockResolvedValue({ id: 'floor-001', isActive: true } as any);
+		prismaMock.inventoryRecord.findMany.mockResolvedValue([{
+			id: 'inventory-001', skuId: 'sku-001', variantId: null, floorId: 'floor-001', shelfId: null,
+			boxId: null, batchId: null, state: 'ShelfReady', quantity: 5, version: 2,
+		}] as any);
+		prismaMock.inventoryRecord.update.mockResolvedValue({
+			id: 'inventory-001', skuId: 'sku-001', variantId: null, floorId: 'floor-001', shelfId: null,
+			boxId: null, batchId: null, state: 'ShelfReady', quantity: 8, version: 3,
+		} as any);
+		prismaMock.inventoryEvent.create.mockResolvedValue({
+			id: '11111111-1111-4111-8111-111111111111', reasonCode: 'MOBILE_STOCK_ADJUSTMENT',
+			quantityDelta: 3, beforeQuantity: 5, afterQuantity: 8,
+			metadata: { skuId: 'sku-001', variantId: null, floorId: 'floor-001', shelfId: null, recordsChanged: 1 },
+		} as any);
+
+		const response = await request(createTestApp())
+			.post('/api/stock-count/adjust')
+			.send({
+				requestId: '11111111-1111-4111-8111-111111111111',
+				skuId: 'sku-001', floorId: 'floor-001', quantityDelta: 3, terminalId: 'phone-001',
+			});
+
+		expect(response.status).toBe(200);
+		expect(response.body.data).toMatchObject({ quantityDelta: 3, beforeQuantity: 5, afterQuantity: 8 });
+		expect(prismaMock.inventoryRecord.update).toHaveBeenCalledWith(expect.objectContaining({
+			where: { id: 'inventory-001' },
+			data: expect.objectContaining({ quantity: 8 }),
+		}));
+	});
+
+	it('removes stock across existing records but never below zero', async () => {
+		prismaMock.inventoryEvent.findUnique.mockResolvedValue(null);
+		prismaMock.sKU.findFirst.mockResolvedValue({ id: 'sku-001', isActive: true, skuVendors: [] } as any);
+		prismaMock.floor.findFirst.mockResolvedValue({ id: 'floor-001', isActive: true } as any);
+		prismaMock.inventoryRecord.findMany.mockResolvedValue([
+			{ id: 'inventory-001', boxId: null, batchId: null, state: 'ShelfReady', quantity: 2, version: 1 },
+			{ id: 'inventory-002', boxId: null, batchId: 'batch-001', state: 'ShelfReady', quantity: 4, version: 4 },
+		] as any);
+		prismaMock.inventoryRecord.update
+			.mockResolvedValueOnce({ id: 'inventory-001', quantity: 0, version: 2 } as any)
+			.mockResolvedValueOnce({ id: 'inventory-002', quantity: 1, version: 5 } as any);
+		prismaMock.inventoryEvent.create.mockResolvedValue({
+			id: '22222222-2222-4222-8222-222222222222', reasonCode: 'MOBILE_STOCK_ADJUSTMENT',
+			quantityDelta: -5, beforeQuantity: 6, afterQuantity: 1,
+			metadata: { skuId: 'sku-001', variantId: null, floorId: 'floor-001', shelfId: null, recordsChanged: 2 },
+		} as any);
+
+		const response = await request(createTestApp())
+			.post('/api/stock-count/adjust')
+			.send({
+				requestId: '22222222-2222-4222-8222-222222222222',
+				skuId: 'sku-001', floorId: 'floor-001', quantityDelta: -5, terminalId: 'phone-001',
+			});
+
+		expect(response.status).toBe(200);
+		expect(response.body.data).toMatchObject({ quantityDelta: -5, beforeQuantity: 6, afterQuantity: 1 });
+		expect(prismaMock.inventoryRecord.update).toHaveBeenNthCalledWith(1, expect.objectContaining({
+			where: { id: 'inventory-001' }, data: expect.objectContaining({ quantity: 0 }),
+		}));
+		expect(prismaMock.inventoryRecord.update).toHaveBeenNthCalledWith(2, expect.objectContaining({
+			where: { id: 'inventory-002' }, data: expect.objectContaining({ quantity: 1 }),
+		}));
+
+		prismaMock.inventoryRecord.findMany.mockResolvedValueOnce([
+			{ id: 'inventory-003', boxId: null, batchId: null, state: 'ShelfReady', quantity: 2, version: 1 },
+		] as any);
+		const rejected = await request(createTestApp())
+			.post('/api/stock-count/adjust')
+			.send({ requestId: '33333333-3333-4333-8333-333333333333', skuId: 'sku-001', floorId: 'floor-001', quantityDelta: -3 });
+		expect(rejected.status).toBe(409);
+		expect(rejected.body.error).toContain('only 2 is available');
+	});
+
 	it('atomically replaces non-zero location stock with the first physical count', async () => {
 		const sku = {
 			id: 'sku-001',
