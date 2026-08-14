@@ -40,6 +40,18 @@ export default function SessionLock() {
   }, [clearTimer, user?.hasPin]);
 
   useEffect(() => {
+    const handleManualLock = () => {
+      if (!user?.hasPin) return;
+      lockedRef.current = true;
+      setIsLocked(true);
+      setPin('');
+      setError('');
+    };
+    window.addEventListener('jingles:lock-now', handleManualLock);
+    return () => window.removeEventListener('jingles:lock-now', handleManualLock);
+  }, [user?.hasPin]);
+
+  useEffect(() => {
     const lastActivityAt = Number(window.localStorage.getItem(LAST_ACTIVITY_STORAGE_KEY));
     const remaining = lastActivityAt
       ? INACTIVITY_TIMEOUT_MS - (Date.now() - lastActivityAt)

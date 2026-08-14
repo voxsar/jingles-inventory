@@ -10,6 +10,7 @@ import {
   BoxIcon,
   BriefcaseIcon,
   BuildingIcon,
+  CashRegisterIcon,
   ChartIcon,
   ChevronRightIcon,
   CloudIcon,
@@ -60,6 +61,7 @@ type NavItem = NavSectionItem | NavRouteItem;
 const baseNavItems: NavItem[] = [
   { type: 'section', id: 'workspace', label: 'Workspace' },
   { type: 'route', to: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+  { type: 'route', to: '/pos', label: 'POS Terminal', icon: CashRegisterIcon, roles: ['Admin', 'Manager', 'Staff'] },
   { type: 'route', to: '/inventory', label: 'Inventory', icon: BoxIcon },
   { type: 'route', to: '/skus', label: 'Products', icon: BoxIcon },
   { type: 'route', to: '/barcode-printing', label: 'Barcodes', icon: BarcodeIcon },

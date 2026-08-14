@@ -48,6 +48,7 @@ import DesktopSyncPage from './pages/DesktopSyncPage';
 import HelpPage from './pages/HelpPage';
 import VouchersPage from './pages/VouchersPage';
 import DevicesPage from './pages/DevicesPage';
+import PosTerminalPage from './pages/PosTerminalPage';
 import { isDesktopRuntime } from './utils/runtime';
 
 function AppRoutes() {
@@ -60,6 +61,17 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/pos"
+        element={
+          <ProtectedRoute roles={['Admin', 'Manager', 'Staff']}>
+            <>
+              <SessionLock />
+              <PosTerminalPage />
+            </>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/"
         element={

@@ -63,6 +63,16 @@ export function ReceiptIcon(props: IconProps) {
   );
 }
 
+export function CashRegisterIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="10" width="18" height="10" rx="1.5" />
+      <path d="M6 10V6a2 2 0 0 1 2-2h3l2 3h3a2 2 0 0 1 2 2v1" />
+      <path d="M8 15h.01M12 15h.01M16 15h.01" />
+    </Icon>
+  );
+}
+
 export function ReturnArrowIcon(props: IconProps) {
   return (
     <Icon {...props}>
