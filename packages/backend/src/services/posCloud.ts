@@ -169,6 +169,10 @@ type PosCatalogSnapshot = {
   generatedAt: string;
   branches: Array<{ id: string; code: string; name: string }>;
   users: Array<{ id: string; code: string; email: string; name: string; initials: string; role: 'CASHIER' | 'MANAGER' }>;
+  customers: Array<{
+    id: string; code: string; name: string; tier: string; email?: string;
+    phone?: string; notes?: string; creditLimit: number;
+  }>;
   categories: Array<{
     id: string;
     name: string;
@@ -769,11 +773,43 @@ export async function getLegacyTableRows(sourceTables: string[]): Promise<Record
 	return rows;
 }
 
+export async function mergePosReferenceData(input: {
+  customers?: Array<Record<string, unknown>>;
+}) {
+  await ensurePosCloudSchema();
+  const customers = Array.isArray(input.customers) ? input.customers : [];
+  if (customers.length === 0) return;
+  await withTransaction(async (client) => {
+    for (const customer of customers) {
+      const id = typeof customer.id === 'string' ? customer.id.trim() : '';
+      const name = typeof customer.name === 'string' ? customer.name.trim() : '';
+      if (!id || !name) continue;
+      await client.query(
+        `INSERT INTO pos_customers (id, code, name, tier, email, phone, notes, credit_limit, updated_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())
+         ON CONFLICT (id) DO UPDATE SET code=EXCLUDED.code, name=EXCLUDED.name,
+           tier=EXCLUDED.tier, email=EXCLUDED.email, phone=EXCLUDED.phone,
+           notes=EXCLUDED.notes, credit_limit=EXCLUDED.credit_limit, updated_at=NOW()`,
+        [
+          id,
+          typeof customer.code === 'string' && customer.code.trim() ? customer.code.trim() : null,
+          name,
+          typeof customer.tier === 'string' && customer.tier.trim() ? customer.tier.trim() : 'Retail',
+          typeof customer.email === 'string' && customer.email.trim() ? customer.email.trim() : null,
+          typeof customer.phone === 'string' && customer.phone.trim() ? customer.phone.trim() : null,
+          typeof customer.notes === 'string' && customer.notes.trim() ? customer.notes.trim() : null,
+          Number.isFinite(Number(customer.creditLimit)) ? Math.max(0, Number(customer.creditLimit)) : 0,
+        ],
+      );
+    }
+  });
+}
+
 export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
   await ensurePosCloudSchema();
   const inventory = getPool();
 
-  const [categoriesResult, skuResult, variantResult, branchesResult, usersResult, overlaysResult] = await Promise.all([
+  const [categoriesResult, skuResult, variantResult, branchesResult, usersResult, customersResult, overlaysResult] = await Promise.all([
     inventory.query<SharedCategoryRow>(
       `
         SELECT id, name, parent_id, sort_order
@@ -870,6 +906,10 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<{ id: string; email: string; role: string }>(
       `SELECT id, email, role FROM users WHERE is_active = TRUE AND role IN ('Admin','Manager','Staff') ORDER BY email`,
     ),
+    inventory.query<{
+      id: string; code: string | null; name: string; tier: string; email: string | null;
+      phone: string | null; notes: string | null; credit_limit: number;
+    }>(`SELECT id, code, name, tier, email, phone, notes, credit_limit FROM pos_customers ORDER BY name`),
     inventory.query<PricingOverlayRow>(
       `SELECT id, name, type, value, applies_to, conditions, priority, stackable, valid_from, valid_to
        FROM pricing_overlays WHERE status = 'active' AND (valid_from IS NULL OR valid_from <= NOW()) AND (valid_to IS NULL OR valid_to >= NOW())
@@ -958,6 +998,16 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
         name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
         role: user.role === 'Staff' ? 'CASHIER' as const : 'MANAGER' as const };
     }),
+    customers: customersResult.rows.map((customer) => ({
+      id: customer.id,
+      code: customer.code ?? customer.id,
+      name: customer.name,
+      tier: customer.tier,
+      email: customer.email ?? undefined,
+      phone: customer.phone ?? undefined,
+      notes: customer.notes ?? undefined,
+      creditLimit: Number(customer.credit_limit) || 0,
+    })),
     categories,
     products,
   };

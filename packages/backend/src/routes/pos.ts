@@ -4,6 +4,7 @@ import {
   ensurePosCloudSchema,
   getPosCatalogSnapshot,
   listLegacyPosRecords,
+  mergePosReferenceData,
   posSyncConfirm,
   posSyncHandshake,
   posSyncPlayback,
@@ -192,6 +193,9 @@ router.post('/sync/handshake', async (req: Request, res: Response) => {
         conflictCount: 0,
       });
     }
+    await mergePosReferenceData({
+      customers: Array.isArray(req.body?.customers) ? req.body.customers : [],
+    });
     return res.json(await posSyncHandshake(readVectorClock(req.body?.vectorClock)));
   } catch (error) {
     console.error(error);
