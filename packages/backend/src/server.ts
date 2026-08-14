@@ -37,6 +37,7 @@ import tagRoutes from './routes/tags';
 import userRoutes from './routes/users';
 import importRoutes from './routes/imports';
 import posRoutes from './routes/pos';
+import posTerminalRoutes from './routes/posTerminal';
 import clientErrorRoutes from './routes/clientErrors';
 import voucherRoutes from './routes/vouchers';
 import legacySyncRoutes from './routes/legacySync';
@@ -124,6 +125,7 @@ export function createApp() {
 	app.use('/api/users', userRoutes);
 	app.use('/api/imports', importRoutes);
 	app.use('/api/pos', posRoutes);
+	app.use('/api/pos-terminal', posTerminalRoutes);
 	app.use('/api/vouchers', voucherRoutes);
 	app.use('/api/devices', deviceRoutes);
 	app.use('/api/stock-count-runs', stockCountRunRouter);

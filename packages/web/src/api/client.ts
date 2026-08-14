@@ -384,3 +384,22 @@ export const usersApi = {
   updatePassword: (id: string, password: string) => api.put(`/users/${id}/password`, { password }),
   delete: (id: string) => api.delete(`/users/${id}`),
 };
+
+// POS terminal (direct-connected checkout screen — see routes/posTerminal.ts)
+export const posTerminalApi = {
+  getActiveShift: (terminalId: string) => api.get('/pos-terminal/shifts/active', { params: { terminalId } }),
+  openShift: (data: { terminalId: string; branchId?: string | null; openingFloat: number; openingDeclaration?: any; notes?: string }) =>
+    api.post('/pos-terminal/shifts', data),
+  closeShift: (id: string, data: { closingFloat: number; closingDeclaration?: any; notes?: string }) =>
+    api.post(`/pos-terminal/shifts/${id}/close`, data),
+  listHeldSales: (terminalId: string) => api.get('/pos-terminal/held-sales', { params: { terminalId } }),
+  holdSale: (data: any) => api.post('/pos-terminal/held-sales', data),
+  deleteHeldSale: (id: string) => api.delete(`/pos-terminal/held-sales/${id}`),
+  getSale: (id: string) => api.get(`/pos-terminal/sales/${id}`),
+  createSale: (data: any) => api.post('/pos-terminal/sales', data),
+  returnSale: (id: string, data: any) => api.post(`/pos-terminal/sales/${id}/return`, data),
+  paidInOut: (data: { shiftId: string; type: 'IN' | 'OUT'; amount: number; reason?: string }) =>
+    api.post('/pos-terminal/paid-in-out', data),
+  drawerKick: (data: { terminalId: string; shiftId?: string }) => api.post('/pos-terminal/drawer-kick', data),
+  shiftSummary: (shiftId: string) => api.get('/pos-terminal/reports/shift-summary', { params: { shiftId } }),
+};
