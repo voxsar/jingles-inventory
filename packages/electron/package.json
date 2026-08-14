@@ -1,6 +1,6 @@
 {
   "name": "jingles-inventory-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Offline-capable Jingles Inventory desktop application",
   "author": "The Red Sun",
   "main": "dist/electron/main.js",
