@@ -77,6 +77,7 @@ const baseNavItems: NavItem[] = [
   { type: 'route', to: '/categories', label: 'Categories', icon: FolderIcon },
   { type: 'route', to: '/tags', label: 'Tags', icon: TagIcon, roles: ['Admin', 'Manager'] },
   { type: 'route', to: '/suppliers', label: 'Suppliers', icon: BriefcaseIcon },
+  { type: 'route', to: '/customers', label: 'Customers', icon: UsersIcon },
   { type: 'section', id: 'locations', label: 'Locations' },
   { type: 'route', to: '/branches', label: 'Branches & Storage', icon: BuildingIcon },
   { type: 'route', to: '/warehouse-3d', label: 'Warehouse 3D', icon: Cube3dIcon },

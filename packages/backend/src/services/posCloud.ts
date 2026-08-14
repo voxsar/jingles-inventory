@@ -13,7 +13,9 @@ type SyncEventType =
   | 'HELD_SALE_RECALLED'
   | 'SALE_COMPLETED'
   | 'SALE_VOIDED'
-  | 'RETURN_CREATED';
+  | 'RETURN_CREATED'
+  | 'CUSTOMER_UPSERTED'
+  | 'CREDIT_PAYMENT_RECORDED';
 
 type SyncEventState = 'PENDING' | 'CONFIRMED' | 'FAILED';
 type SyncConflictPolicy = 'LAST_WRITE_WINS' | 'SERVER_WINS';
@@ -229,6 +231,8 @@ const POS_SCHEMA_TABLES = [
 	'pos_shifts',
 	'pos_held_sales',
 	'pos_sales',
+	'pos_customers',
+	'pos_credit_payments',
 	'pos_returns',
 	'pos_sync_events',
 	'pos_sync_device_states',
@@ -323,6 +327,7 @@ function resolveConflictPolicy(eventType: SyncEventType): SyncConflictPolicy {
     case 'SALE_COMPLETED':
     case 'SALE_VOIDED':
     case 'RETURN_CREATED':
+    case 'CREDIT_PAYMENT_RECORDED':
     case 'SHIFT_CLOSED':
       return 'SERVER_WINS';
     default:
@@ -1721,6 +1726,92 @@ async function applySaleCompletedEvent(client: PoolClient, event: SyncEvent) {
   }
 }
 
+async function applyCustomerUpsertedEvent(client: PoolClient, event: SyncEvent) {
+  const payload = event.payload;
+  const name = typeof payload.name === 'string' && payload.name.trim()
+    ? payload.name.trim()
+    : event.aggregateId;
+  const optionalText = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : null;
+
+  await client.query(
+    `
+      INSERT INTO pos_customers (
+        id, code, name, tier, email, phone, notes, credit_limit,
+        source_device_id, source_sequence_num, last_vector_clock, created_at, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE
+      SET code = EXCLUDED.code,
+          name = EXCLUDED.name,
+          tier = EXCLUDED.tier,
+          email = EXCLUDED.email,
+          phone = EXCLUDED.phone,
+          notes = EXCLUDED.notes,
+          credit_limit = EXCLUDED.credit_limit,
+          source_device_id = EXCLUDED.source_device_id,
+          source_sequence_num = EXCLUDED.source_sequence_num,
+          last_vector_clock = EXCLUDED.last_vector_clock,
+          updated_at = NOW()
+    `,
+    [
+      event.aggregateId,
+      optionalText(payload.code),
+      name,
+      optionalText(payload.tier) ?? 'Retail',
+      optionalText(payload.email),
+      optionalText(payload.phone),
+      optionalText(payload.notes),
+      Math.max(0, normalizeNumber(payload.creditLimit, 0)),
+      event.deviceId,
+      event.sequenceNum,
+      event.vectorClock,
+    ],
+  );
+}
+
+async function applyCreditPaymentRecordedEvent(client: PoolClient, event: SyncEvent) {
+  const payload = event.payload;
+  const customerId = typeof payload.customerId === 'string' ? payload.customerId.trim() : '';
+  const amount = normalizeNumber(payload.amount, Number.NaN);
+  if (!customerId) {
+    throw new Error('A credit payment requires a customer');
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error('A credit payment requires a positive amount');
+  }
+
+  const existing = (await client.query(
+    `SELECT id FROM pos_credit_payments WHERE id = $1 LIMIT 1`,
+    [event.aggregateId],
+  )).rows[0];
+  if (existing) {
+    return;
+  }
+
+  await client.query(
+    `
+      INSERT INTO pos_credit_payments (
+        id, customer_id, amount, method, note, terminal_id, user_id,
+        source_device_id, source_sequence_num, last_vector_clock, created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    `,
+    [
+      event.aggregateId,
+      customerId,
+      amount,
+      typeof payload.method === 'string' && payload.method.trim() ? payload.method.trim() : 'CASH',
+      typeof payload.note === 'string' && payload.note.trim() ? payload.note.trim() : null,
+      typeof payload.terminalId === 'string' && payload.terminalId.trim() ? payload.terminalId.trim() : null,
+      typeof payload.userId === 'string' && payload.userId.trim() ? payload.userId.trim() : null,
+      event.deviceId,
+      event.sequenceNum,
+      event.vectorClock,
+      event.createdAt,
+    ],
+  );
+}
+
 async function getSaleRow(client: PoolClient, saleId: string) {
   const row = (await client.query(
     `SELECT receipt_number, terminal_id, branch_id, lines, status FROM pos_sales WHERE id = $1 LIMIT 1`,
@@ -1895,6 +1986,12 @@ async function applyProjectionEvent(client: PoolClient, event: SyncEvent) {
       return;
     case 'RETURN_CREATED':
       await applyReturnCreatedEvent(client, event);
+      return;
+    case 'CUSTOMER_UPSERTED':
+      await applyCustomerUpsertedEvent(client, event);
+      return;
+    case 'CREDIT_PAYMENT_RECORDED':
+      await applyCreditPaymentRecordedEvent(client, event);
       return;
     default:
       return;

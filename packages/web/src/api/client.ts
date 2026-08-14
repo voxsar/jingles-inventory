@@ -202,6 +202,11 @@ export const vendorsApi = {
   delete: (id: string) => api.delete(`/vendors/${id}`),
 };
 
+export const customersApi = {
+  list: () => api.get('/pos/customers'),
+  get: (id: string) => api.get(`/pos/customers/${encodeURIComponent(id)}`),
+};
+
 // Categories
 export const categoriesApi = {
   list: (params?: Record<string, string>) => api.get('/categories', { params }),

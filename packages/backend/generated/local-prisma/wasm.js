@@ -982,6 +982,36 @@ exports.Prisma.PosSaleScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.PosCustomerScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  tier: 'tier',
+  email: 'email',
+  phone: 'phone',
+  notes: 'notes',
+  creditLimit: 'creditLimit',
+  sourceDeviceId: 'sourceDeviceId',
+  sourceSequenceNum: 'sourceSequenceNum',
+  lastVectorClock: 'lastVectorClock',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PosCreditPaymentScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  amount: 'amount',
+  method: 'method',
+  note: 'note',
+  terminalId: 'terminalId',
+  userId: 'userId',
+  sourceDeviceId: 'sourceDeviceId',
+  sourceSequenceNum: 'sourceSequenceNum',
+  lastVectorClock: 'lastVectorClock',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.PosReturnScalarFieldEnum = {
   id: 'id',
   saleId: 'saleId',
@@ -1149,6 +1179,8 @@ exports.Prisma.ModelName = {
   PosShift: 'PosShift',
   PosHeldSale: 'PosHeldSale',
   PosSale: 'PosSale',
+  PosCustomer: 'PosCustomer',
+  PosCreditPayment: 'PosCreditPayment',
   PosReturn: 'PosReturn',
   PosSyncEvent: 'PosSyncEvent',
   PosSyncDeviceState: 'PosSyncDeviceState',

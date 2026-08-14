@@ -1047,6 +1047,38 @@ CREATE TABLE IF NOT EXISTS "pos_sales" (
 );
 
 -- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_customers" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "code" TEXT,
+    "name" TEXT NOT NULL,
+    "tier" TEXT NOT NULL DEFAULT 'Retail',
+    "email" TEXT,
+    "phone" TEXT,
+    "notes" TEXT,
+    "credit_limit" REAL NOT NULL DEFAULT 0,
+    "source_device_id" TEXT,
+    "source_sequence_num" INTEGER,
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "pos_credit_payments" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "customer_id" TEXT NOT NULL,
+    "amount" REAL NOT NULL,
+    "method" TEXT NOT NULL DEFAULT 'CASH',
+    "note" TEXT,
+    "terminal_id" TEXT,
+    "user_id" TEXT,
+    "source_device_id" TEXT,
+    "source_sequence_num" INTEGER,
+    "last_vector_clock" TEXT NOT NULL DEFAULT '{}',
+    "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
 CREATE TABLE IF NOT EXISTS "pos_returns" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sale_id" TEXT NOT NULL,
@@ -1380,6 +1412,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS "pos_held_sales_hold_number_key" ON "pos_held_
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "pos_sales_receipt_number_key" ON "pos_sales"("receipt_number");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "pos_customers_name_idx" ON "pos_customers"("name");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "pos_credit_payments_customer_created_at_idx" ON "pos_credit_payments"("customer_id", "created_at");
 
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "pos_sync_events_aggregate_idx" ON "pos_sync_events"("aggregate_type", "aggregate_id");

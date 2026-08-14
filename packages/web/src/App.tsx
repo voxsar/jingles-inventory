@@ -21,6 +21,7 @@ import BranchesPage from './pages/BranchesPage';
 import StockTransferPage from './pages/StockTransferPage';
 import StockAdjustmentsPage from './pages/StockAdjustmentsPage';
 import SuppliersPage from './pages/SuppliersPage';
+import CustomersPage from './pages/CustomersPage';
 import WarehouseVisualizerPage from './pages/WarehouseVisualizerPage';
 import PricingPage from './pages/PricingPage';
 import PricingOverlaysPage from './pages/PricingOverlaysPage';
@@ -101,6 +102,7 @@ function AppRoutes() {
         <Route path="stock-transfers" element={<StockTransferPage />} />
         <Route path="stock-adjustments" element={<ProtectedRoute roles={['Admin', 'Manager', 'Staff']}><StockAdjustmentsPage /></ProtectedRoute>} />
         <Route path="suppliers" element={<SuppliersPage />} />
+        <Route path="customers" element={<CustomersPage />} />
         <Route path="pricing" element={<PricingPage />} />
         <Route path="pricing-overlays" element={<PricingOverlaysPage />} />
         <Route path="vouchers" element={<ProtectedRoute roles={['Admin', 'Manager', 'Staff']}><VouchersPage /></ProtectedRoute>} />

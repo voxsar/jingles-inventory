@@ -1391,6 +1391,42 @@ model PosSale {
   @@map("pos_sales")
 }
 
+model PosCustomer {
+  id                String   @id
+  code              String?
+  name              String
+  tier              String   @default("Retail")
+  email             String?
+  phone             String?
+  notes             String?
+  creditLimit       Float    @default(0) @map("credit_limit")
+  sourceDeviceId    String?  @map("source_device_id")
+  sourceSequenceNum Int?     @map("source_sequence_num")
+  lastVectorClock   Json     @default("{}") @map("last_vector_clock")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([name], map: "pos_customers_name_idx")
+  @@map("pos_customers")
+}
+
+model PosCreditPayment {
+  id                String   @id
+  customerId        String   @map("customer_id")
+  amount            Float
+  method            String   @default("CASH")
+  note              String?
+  terminalId        String?  @map("terminal_id")
+  userId            String?  @map("user_id")
+  sourceDeviceId    String?  @map("source_device_id")
+  sourceSequenceNum Int?     @map("source_sequence_num")
+  lastVectorClock   Json     @default("{}") @map("last_vector_clock")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([customerId, createdAt], map: "pos_credit_payments_customer_created_at_idx")
+  @@map("pos_credit_payments")
+}
+
 model PosReturn {
   id                String   @id
   saleId            String   @map("sale_id")

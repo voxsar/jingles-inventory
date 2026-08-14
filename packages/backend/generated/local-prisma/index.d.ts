@@ -319,6 +319,16 @@ export type PosHeldSale = $Result.DefaultSelection<Prisma.$PosHeldSalePayload>
  */
 export type PosSale = $Result.DefaultSelection<Prisma.$PosSalePayload>
 /**
+ * Model PosCustomer
+ * 
+ */
+export type PosCustomer = $Result.DefaultSelection<Prisma.$PosCustomerPayload>
+/**
+ * Model PosCreditPayment
+ * 
+ */
+export type PosCreditPayment = $Result.DefaultSelection<Prisma.$PosCreditPaymentPayload>
+/**
  * Model PosReturn
  * 
  */
@@ -1083,6 +1093,26 @@ export class PrismaClient<
   get posSale(): Prisma.PosSaleDelegate<ExtArgs>;
 
   /**
+   * `prisma.posCustomer`: Exposes CRUD operations for the **PosCustomer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PosCustomers
+    * const posCustomers = await prisma.posCustomer.findMany()
+    * ```
+    */
+  get posCustomer(): Prisma.PosCustomerDelegate<ExtArgs>;
+
+  /**
+   * `prisma.posCreditPayment`: Exposes CRUD operations for the **PosCreditPayment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PosCreditPayments
+    * const posCreditPayments = await prisma.posCreditPayment.findMany()
+    * ```
+    */
+  get posCreditPayment(): Prisma.PosCreditPaymentDelegate<ExtArgs>;
+
+  /**
    * `prisma.posReturn`: Exposes CRUD operations for the **PosReturn** model.
     * Example usage:
     * ```ts
@@ -1643,6 +1673,8 @@ export namespace Prisma {
     PosShift: 'PosShift',
     PosHeldSale: 'PosHeldSale',
     PosSale: 'PosSale',
+    PosCustomer: 'PosCustomer',
+    PosCreditPayment: 'PosCreditPayment',
     PosReturn: 'PosReturn',
     PosSyncEvent: 'PosSyncEvent',
     PosSyncDeviceState: 'PosSyncDeviceState',
@@ -1664,7 +1696,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "barcodePrintTemplate" | "barcodePrintJob" | "barcodePrintJobItem" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "inventoryControl" | "stockCountRun" | "stockCountDeviceSession" | "stockCountItem" | "stockCountLine" | "stockCountSubmission" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats" | "voucherBatch" | "voucherCode" | "voucherRedemption" | "legacyEntityLink" | "legacySyncRun" | "legacyPosRecord" | "legacyPosRecordVersion" | "posShift" | "posHeldSale" | "posSale" | "posReturn" | "posSyncEvent" | "posSyncDeviceState" | "posSyncConflict" | "managedDevice" | "voucherRestriction"
+      modelProps: "user" | "vendor" | "category" | "tag" | "unitOfMeasure" | "branch" | "sKU" | "sKUVendor" | "sKUTag" | "attribute" | "attributeValue" | "sKUAttribute" | "sKUAttributeValue" | "sKUVariant" | "sKUVariantValue" | "productImage" | "productBarcode" | "barcodePrintTemplate" | "barcodePrintJob" | "barcodePrintJobItem" | "floor" | "rack" | "shelf" | "storageBox" | "boxBarcode" | "stockTransfer" | "stockTransferLine" | "inventoryRecord" | "inventoryEvent" | "inventoryControl" | "stockCountRun" | "stockCountDeviceSession" | "stockCountItem" | "stockCountLine" | "stockCountSubmission" | "gRN" | "batch" | "pricingOverlay" | "gRNLine" | "inspectionRecord" | "pRN" | "pRNLine" | "importJob" | "importRecord" | "auditLog" | "syncOperationLog" | "syncConflict" | "syncServerSequence" | "syncServerChange" | "statusOption" | "dashboardStats" | "voucherBatch" | "voucherCode" | "voucherRedemption" | "legacyEntityLink" | "legacySyncRun" | "legacyPosRecord" | "legacyPosRecordVersion" | "posShift" | "posHeldSale" | "posSale" | "posCustomer" | "posCreditPayment" | "posReturn" | "posSyncEvent" | "posSyncDeviceState" | "posSyncConflict" | "managedDevice" | "voucherRestriction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5935,6 +5967,146 @@ export namespace Prisma {
           count: {
             args: Prisma.PosSaleCountArgs<ExtArgs>
             result: $Utils.Optional<PosSaleCountAggregateOutputType> | number
+          }
+        }
+      }
+      PosCustomer: {
+        payload: Prisma.$PosCustomerPayload<ExtArgs>
+        fields: Prisma.PosCustomerFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PosCustomerFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PosCustomerFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          findFirst: {
+            args: Prisma.PosCustomerFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PosCustomerFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          findMany: {
+            args: Prisma.PosCustomerFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>[]
+          }
+          create: {
+            args: Prisma.PosCustomerCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          createMany: {
+            args: Prisma.PosCustomerCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PosCustomerCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>[]
+          }
+          delete: {
+            args: Prisma.PosCustomerDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          update: {
+            args: Prisma.PosCustomerUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          deleteMany: {
+            args: Prisma.PosCustomerDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PosCustomerUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PosCustomerUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCustomerPayload>
+          }
+          aggregate: {
+            args: Prisma.PosCustomerAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePosCustomer>
+          }
+          groupBy: {
+            args: Prisma.PosCustomerGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PosCustomerGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PosCustomerCountArgs<ExtArgs>
+            result: $Utils.Optional<PosCustomerCountAggregateOutputType> | number
+          }
+        }
+      }
+      PosCreditPayment: {
+        payload: Prisma.$PosCreditPaymentPayload<ExtArgs>
+        fields: Prisma.PosCreditPaymentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PosCreditPaymentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PosCreditPaymentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          findFirst: {
+            args: Prisma.PosCreditPaymentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PosCreditPaymentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          findMany: {
+            args: Prisma.PosCreditPaymentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>[]
+          }
+          create: {
+            args: Prisma.PosCreditPaymentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          createMany: {
+            args: Prisma.PosCreditPaymentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PosCreditPaymentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>[]
+          }
+          delete: {
+            args: Prisma.PosCreditPaymentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          update: {
+            args: Prisma.PosCreditPaymentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          deleteMany: {
+            args: Prisma.PosCreditPaymentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PosCreditPaymentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PosCreditPaymentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PosCreditPaymentPayload>
+          }
+          aggregate: {
+            args: Prisma.PosCreditPaymentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePosCreditPayment>
+          }
+          groupBy: {
+            args: Prisma.PosCreditPaymentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PosCreditPaymentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PosCreditPaymentCountArgs<ExtArgs>
+            result: $Utils.Optional<PosCreditPaymentCountAggregateOutputType> | number
           }
         }
       }
@@ -74436,6 +74608,2002 @@ export namespace Prisma {
 
 
   /**
+   * Model PosCustomer
+   */
+
+  export type AggregatePosCustomer = {
+    _count: PosCustomerCountAggregateOutputType | null
+    _avg: PosCustomerAvgAggregateOutputType | null
+    _sum: PosCustomerSumAggregateOutputType | null
+    _min: PosCustomerMinAggregateOutputType | null
+    _max: PosCustomerMaxAggregateOutputType | null
+  }
+
+  export type PosCustomerAvgAggregateOutputType = {
+    creditLimit: number | null
+    sourceSequenceNum: number | null
+  }
+
+  export type PosCustomerSumAggregateOutputType = {
+    creditLimit: number | null
+    sourceSequenceNum: number | null
+  }
+
+  export type PosCustomerMinAggregateOutputType = {
+    id: string | null
+    code: string | null
+    name: string | null
+    tier: string | null
+    email: string | null
+    phone: string | null
+    notes: string | null
+    creditLimit: number | null
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PosCustomerMaxAggregateOutputType = {
+    id: string | null
+    code: string | null
+    name: string | null
+    tier: string | null
+    email: string | null
+    phone: string | null
+    notes: string | null
+    creditLimit: number | null
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PosCustomerCountAggregateOutputType = {
+    id: number
+    code: number
+    name: number
+    tier: number
+    email: number
+    phone: number
+    notes: number
+    creditLimit: number
+    sourceDeviceId: number
+    sourceSequenceNum: number
+    lastVectorClock: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PosCustomerAvgAggregateInputType = {
+    creditLimit?: true
+    sourceSequenceNum?: true
+  }
+
+  export type PosCustomerSumAggregateInputType = {
+    creditLimit?: true
+    sourceSequenceNum?: true
+  }
+
+  export type PosCustomerMinAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    tier?: true
+    email?: true
+    phone?: true
+    notes?: true
+    creditLimit?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PosCustomerMaxAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    tier?: true
+    email?: true
+    phone?: true
+    notes?: true
+    creditLimit?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PosCustomerCountAggregateInputType = {
+    id?: true
+    code?: true
+    name?: true
+    tier?: true
+    email?: true
+    phone?: true
+    notes?: true
+    creditLimit?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PosCustomerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PosCustomer to aggregate.
+     */
+    where?: PosCustomerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCustomers to fetch.
+     */
+    orderBy?: PosCustomerOrderByWithRelationInput | PosCustomerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PosCustomerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCustomers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCustomers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PosCustomers
+    **/
+    _count?: true | PosCustomerCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PosCustomerAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PosCustomerSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PosCustomerMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PosCustomerMaxAggregateInputType
+  }
+
+  export type GetPosCustomerAggregateType<T extends PosCustomerAggregateArgs> = {
+        [P in keyof T & keyof AggregatePosCustomer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePosCustomer[P]>
+      : GetScalarType<T[P], AggregatePosCustomer[P]>
+  }
+
+
+
+
+  export type PosCustomerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PosCustomerWhereInput
+    orderBy?: PosCustomerOrderByWithAggregationInput | PosCustomerOrderByWithAggregationInput[]
+    by: PosCustomerScalarFieldEnum[] | PosCustomerScalarFieldEnum
+    having?: PosCustomerScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PosCustomerCountAggregateInputType | true
+    _avg?: PosCustomerAvgAggregateInputType
+    _sum?: PosCustomerSumAggregateInputType
+    _min?: PosCustomerMinAggregateInputType
+    _max?: PosCustomerMaxAggregateInputType
+  }
+
+  export type PosCustomerGroupByOutputType = {
+    id: string
+    code: string | null
+    name: string
+    tier: string
+    email: string | null
+    phone: string | null
+    notes: string | null
+    creditLimit: number
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string
+    createdAt: Date
+    updatedAt: Date
+    _count: PosCustomerCountAggregateOutputType | null
+    _avg: PosCustomerAvgAggregateOutputType | null
+    _sum: PosCustomerSumAggregateOutputType | null
+    _min: PosCustomerMinAggregateOutputType | null
+    _max: PosCustomerMaxAggregateOutputType | null
+  }
+
+  type GetPosCustomerGroupByPayload<T extends PosCustomerGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PosCustomerGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PosCustomerGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PosCustomerGroupByOutputType[P]>
+            : GetScalarType<T[P], PosCustomerGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PosCustomerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    tier?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    creditLimit?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["posCustomer"]>
+
+  export type PosCustomerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    tier?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    creditLimit?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["posCustomer"]>
+
+  export type PosCustomerSelectScalar = {
+    id?: boolean
+    code?: boolean
+    name?: boolean
+    tier?: boolean
+    email?: boolean
+    phone?: boolean
+    notes?: boolean
+    creditLimit?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $PosCustomerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PosCustomer"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      code: string | null
+      name: string
+      tier: string
+      email: string | null
+      phone: string | null
+      notes: string | null
+      creditLimit: number
+      sourceDeviceId: string | null
+      sourceSequenceNum: number | null
+      lastVectorClock: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["posCustomer"]>
+    composites: {}
+  }
+
+  type PosCustomerGetPayload<S extends boolean | null | undefined | PosCustomerDefaultArgs> = $Result.GetResult<Prisma.$PosCustomerPayload, S>
+
+  type PosCustomerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PosCustomerFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PosCustomerCountAggregateInputType | true
+    }
+
+  export interface PosCustomerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PosCustomer'], meta: { name: 'PosCustomer' } }
+    /**
+     * Find zero or one PosCustomer that matches the filter.
+     * @param {PosCustomerFindUniqueArgs} args - Arguments to find a PosCustomer
+     * @example
+     * // Get one PosCustomer
+     * const posCustomer = await prisma.posCustomer.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PosCustomerFindUniqueArgs>(args: SelectSubset<T, PosCustomerFindUniqueArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PosCustomer that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PosCustomerFindUniqueOrThrowArgs} args - Arguments to find a PosCustomer
+     * @example
+     * // Get one PosCustomer
+     * const posCustomer = await prisma.posCustomer.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PosCustomerFindUniqueOrThrowArgs>(args: SelectSubset<T, PosCustomerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PosCustomer that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerFindFirstArgs} args - Arguments to find a PosCustomer
+     * @example
+     * // Get one PosCustomer
+     * const posCustomer = await prisma.posCustomer.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PosCustomerFindFirstArgs>(args?: SelectSubset<T, PosCustomerFindFirstArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PosCustomer that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerFindFirstOrThrowArgs} args - Arguments to find a PosCustomer
+     * @example
+     * // Get one PosCustomer
+     * const posCustomer = await prisma.posCustomer.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PosCustomerFindFirstOrThrowArgs>(args?: SelectSubset<T, PosCustomerFindFirstOrThrowArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PosCustomers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PosCustomers
+     * const posCustomers = await prisma.posCustomer.findMany()
+     * 
+     * // Get first 10 PosCustomers
+     * const posCustomers = await prisma.posCustomer.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const posCustomerWithIdOnly = await prisma.posCustomer.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PosCustomerFindManyArgs>(args?: SelectSubset<T, PosCustomerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PosCustomer.
+     * @param {PosCustomerCreateArgs} args - Arguments to create a PosCustomer.
+     * @example
+     * // Create one PosCustomer
+     * const PosCustomer = await prisma.posCustomer.create({
+     *   data: {
+     *     // ... data to create a PosCustomer
+     *   }
+     * })
+     * 
+     */
+    create<T extends PosCustomerCreateArgs>(args: SelectSubset<T, PosCustomerCreateArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PosCustomers.
+     * @param {PosCustomerCreateManyArgs} args - Arguments to create many PosCustomers.
+     * @example
+     * // Create many PosCustomers
+     * const posCustomer = await prisma.posCustomer.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PosCustomerCreateManyArgs>(args?: SelectSubset<T, PosCustomerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PosCustomers and returns the data saved in the database.
+     * @param {PosCustomerCreateManyAndReturnArgs} args - Arguments to create many PosCustomers.
+     * @example
+     * // Create many PosCustomers
+     * const posCustomer = await prisma.posCustomer.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PosCustomers and only return the `id`
+     * const posCustomerWithIdOnly = await prisma.posCustomer.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PosCustomerCreateManyAndReturnArgs>(args?: SelectSubset<T, PosCustomerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PosCustomer.
+     * @param {PosCustomerDeleteArgs} args - Arguments to delete one PosCustomer.
+     * @example
+     * // Delete one PosCustomer
+     * const PosCustomer = await prisma.posCustomer.delete({
+     *   where: {
+     *     // ... filter to delete one PosCustomer
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PosCustomerDeleteArgs>(args: SelectSubset<T, PosCustomerDeleteArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PosCustomer.
+     * @param {PosCustomerUpdateArgs} args - Arguments to update one PosCustomer.
+     * @example
+     * // Update one PosCustomer
+     * const posCustomer = await prisma.posCustomer.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PosCustomerUpdateArgs>(args: SelectSubset<T, PosCustomerUpdateArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PosCustomers.
+     * @param {PosCustomerDeleteManyArgs} args - Arguments to filter PosCustomers to delete.
+     * @example
+     * // Delete a few PosCustomers
+     * const { count } = await prisma.posCustomer.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PosCustomerDeleteManyArgs>(args?: SelectSubset<T, PosCustomerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PosCustomers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PosCustomers
+     * const posCustomer = await prisma.posCustomer.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PosCustomerUpdateManyArgs>(args: SelectSubset<T, PosCustomerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PosCustomer.
+     * @param {PosCustomerUpsertArgs} args - Arguments to update or create a PosCustomer.
+     * @example
+     * // Update or create a PosCustomer
+     * const posCustomer = await prisma.posCustomer.upsert({
+     *   create: {
+     *     // ... data to create a PosCustomer
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PosCustomer we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PosCustomerUpsertArgs>(args: SelectSubset<T, PosCustomerUpsertArgs<ExtArgs>>): Prisma__PosCustomerClient<$Result.GetResult<Prisma.$PosCustomerPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PosCustomers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerCountArgs} args - Arguments to filter PosCustomers to count.
+     * @example
+     * // Count the number of PosCustomers
+     * const count = await prisma.posCustomer.count({
+     *   where: {
+     *     // ... the filter for the PosCustomers we want to count
+     *   }
+     * })
+    **/
+    count<T extends PosCustomerCountArgs>(
+      args?: Subset<T, PosCustomerCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PosCustomerCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PosCustomer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PosCustomerAggregateArgs>(args: Subset<T, PosCustomerAggregateArgs>): Prisma.PrismaPromise<GetPosCustomerAggregateType<T>>
+
+    /**
+     * Group by PosCustomer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCustomerGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PosCustomerGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PosCustomerGroupByArgs['orderBy'] }
+        : { orderBy?: PosCustomerGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PosCustomerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPosCustomerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PosCustomer model
+   */
+  readonly fields: PosCustomerFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PosCustomer.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PosCustomerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PosCustomer model
+   */ 
+  interface PosCustomerFieldRefs {
+    readonly id: FieldRef<"PosCustomer", 'String'>
+    readonly code: FieldRef<"PosCustomer", 'String'>
+    readonly name: FieldRef<"PosCustomer", 'String'>
+    readonly tier: FieldRef<"PosCustomer", 'String'>
+    readonly email: FieldRef<"PosCustomer", 'String'>
+    readonly phone: FieldRef<"PosCustomer", 'String'>
+    readonly notes: FieldRef<"PosCustomer", 'String'>
+    readonly creditLimit: FieldRef<"PosCustomer", 'Float'>
+    readonly sourceDeviceId: FieldRef<"PosCustomer", 'String'>
+    readonly sourceSequenceNum: FieldRef<"PosCustomer", 'Int'>
+    readonly lastVectorClock: FieldRef<"PosCustomer", 'String'>
+    readonly createdAt: FieldRef<"PosCustomer", 'DateTime'>
+    readonly updatedAt: FieldRef<"PosCustomer", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PosCustomer findUnique
+   */
+  export type PosCustomerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCustomer to fetch.
+     */
+    where: PosCustomerWhereUniqueInput
+  }
+
+  /**
+   * PosCustomer findUniqueOrThrow
+   */
+  export type PosCustomerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCustomer to fetch.
+     */
+    where: PosCustomerWhereUniqueInput
+  }
+
+  /**
+   * PosCustomer findFirst
+   */
+  export type PosCustomerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCustomer to fetch.
+     */
+    where?: PosCustomerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCustomers to fetch.
+     */
+    orderBy?: PosCustomerOrderByWithRelationInput | PosCustomerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PosCustomers.
+     */
+    cursor?: PosCustomerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCustomers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCustomers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PosCustomers.
+     */
+    distinct?: PosCustomerScalarFieldEnum | PosCustomerScalarFieldEnum[]
+  }
+
+  /**
+   * PosCustomer findFirstOrThrow
+   */
+  export type PosCustomerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCustomer to fetch.
+     */
+    where?: PosCustomerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCustomers to fetch.
+     */
+    orderBy?: PosCustomerOrderByWithRelationInput | PosCustomerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PosCustomers.
+     */
+    cursor?: PosCustomerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCustomers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCustomers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PosCustomers.
+     */
+    distinct?: PosCustomerScalarFieldEnum | PosCustomerScalarFieldEnum[]
+  }
+
+  /**
+   * PosCustomer findMany
+   */
+  export type PosCustomerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCustomers to fetch.
+     */
+    where?: PosCustomerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCustomers to fetch.
+     */
+    orderBy?: PosCustomerOrderByWithRelationInput | PosCustomerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PosCustomers.
+     */
+    cursor?: PosCustomerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCustomers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCustomers.
+     */
+    skip?: number
+    distinct?: PosCustomerScalarFieldEnum | PosCustomerScalarFieldEnum[]
+  }
+
+  /**
+   * PosCustomer create
+   */
+  export type PosCustomerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * The data needed to create a PosCustomer.
+     */
+    data: XOR<PosCustomerCreateInput, PosCustomerUncheckedCreateInput>
+  }
+
+  /**
+   * PosCustomer createMany
+   */
+  export type PosCustomerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PosCustomers.
+     */
+    data: PosCustomerCreateManyInput | PosCustomerCreateManyInput[]
+  }
+
+  /**
+   * PosCustomer createManyAndReturn
+   */
+  export type PosCustomerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PosCustomers.
+     */
+    data: PosCustomerCreateManyInput | PosCustomerCreateManyInput[]
+  }
+
+  /**
+   * PosCustomer update
+   */
+  export type PosCustomerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * The data needed to update a PosCustomer.
+     */
+    data: XOR<PosCustomerUpdateInput, PosCustomerUncheckedUpdateInput>
+    /**
+     * Choose, which PosCustomer to update.
+     */
+    where: PosCustomerWhereUniqueInput
+  }
+
+  /**
+   * PosCustomer updateMany
+   */
+  export type PosCustomerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PosCustomers.
+     */
+    data: XOR<PosCustomerUpdateManyMutationInput, PosCustomerUncheckedUpdateManyInput>
+    /**
+     * Filter which PosCustomers to update
+     */
+    where?: PosCustomerWhereInput
+  }
+
+  /**
+   * PosCustomer upsert
+   */
+  export type PosCustomerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * The filter to search for the PosCustomer to update in case it exists.
+     */
+    where: PosCustomerWhereUniqueInput
+    /**
+     * In case the PosCustomer found by the `where` argument doesn't exist, create a new PosCustomer with this data.
+     */
+    create: XOR<PosCustomerCreateInput, PosCustomerUncheckedCreateInput>
+    /**
+     * In case the PosCustomer was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PosCustomerUpdateInput, PosCustomerUncheckedUpdateInput>
+  }
+
+  /**
+   * PosCustomer delete
+   */
+  export type PosCustomerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+    /**
+     * Filter which PosCustomer to delete.
+     */
+    where: PosCustomerWhereUniqueInput
+  }
+
+  /**
+   * PosCustomer deleteMany
+   */
+  export type PosCustomerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PosCustomers to delete
+     */
+    where?: PosCustomerWhereInput
+  }
+
+  /**
+   * PosCustomer without action
+   */
+  export type PosCustomerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCustomer
+     */
+    select?: PosCustomerSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PosCreditPayment
+   */
+
+  export type AggregatePosCreditPayment = {
+    _count: PosCreditPaymentCountAggregateOutputType | null
+    _avg: PosCreditPaymentAvgAggregateOutputType | null
+    _sum: PosCreditPaymentSumAggregateOutputType | null
+    _min: PosCreditPaymentMinAggregateOutputType | null
+    _max: PosCreditPaymentMaxAggregateOutputType | null
+  }
+
+  export type PosCreditPaymentAvgAggregateOutputType = {
+    amount: number | null
+    sourceSequenceNum: number | null
+  }
+
+  export type PosCreditPaymentSumAggregateOutputType = {
+    amount: number | null
+    sourceSequenceNum: number | null
+  }
+
+  export type PosCreditPaymentMinAggregateOutputType = {
+    id: string | null
+    customerId: string | null
+    amount: number | null
+    method: string | null
+    note: string | null
+    terminalId: string | null
+    userId: string | null
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string | null
+    createdAt: Date | null
+  }
+
+  export type PosCreditPaymentMaxAggregateOutputType = {
+    id: string | null
+    customerId: string | null
+    amount: number | null
+    method: string | null
+    note: string | null
+    terminalId: string | null
+    userId: string | null
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string | null
+    createdAt: Date | null
+  }
+
+  export type PosCreditPaymentCountAggregateOutputType = {
+    id: number
+    customerId: number
+    amount: number
+    method: number
+    note: number
+    terminalId: number
+    userId: number
+    sourceDeviceId: number
+    sourceSequenceNum: number
+    lastVectorClock: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PosCreditPaymentAvgAggregateInputType = {
+    amount?: true
+    sourceSequenceNum?: true
+  }
+
+  export type PosCreditPaymentSumAggregateInputType = {
+    amount?: true
+    sourceSequenceNum?: true
+  }
+
+  export type PosCreditPaymentMinAggregateInputType = {
+    id?: true
+    customerId?: true
+    amount?: true
+    method?: true
+    note?: true
+    terminalId?: true
+    userId?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+  }
+
+  export type PosCreditPaymentMaxAggregateInputType = {
+    id?: true
+    customerId?: true
+    amount?: true
+    method?: true
+    note?: true
+    terminalId?: true
+    userId?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+  }
+
+  export type PosCreditPaymentCountAggregateInputType = {
+    id?: true
+    customerId?: true
+    amount?: true
+    method?: true
+    note?: true
+    terminalId?: true
+    userId?: true
+    sourceDeviceId?: true
+    sourceSequenceNum?: true
+    lastVectorClock?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PosCreditPaymentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PosCreditPayment to aggregate.
+     */
+    where?: PosCreditPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCreditPayments to fetch.
+     */
+    orderBy?: PosCreditPaymentOrderByWithRelationInput | PosCreditPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PosCreditPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCreditPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCreditPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PosCreditPayments
+    **/
+    _count?: true | PosCreditPaymentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PosCreditPaymentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PosCreditPaymentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PosCreditPaymentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PosCreditPaymentMaxAggregateInputType
+  }
+
+  export type GetPosCreditPaymentAggregateType<T extends PosCreditPaymentAggregateArgs> = {
+        [P in keyof T & keyof AggregatePosCreditPayment]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePosCreditPayment[P]>
+      : GetScalarType<T[P], AggregatePosCreditPayment[P]>
+  }
+
+
+
+
+  export type PosCreditPaymentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PosCreditPaymentWhereInput
+    orderBy?: PosCreditPaymentOrderByWithAggregationInput | PosCreditPaymentOrderByWithAggregationInput[]
+    by: PosCreditPaymentScalarFieldEnum[] | PosCreditPaymentScalarFieldEnum
+    having?: PosCreditPaymentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PosCreditPaymentCountAggregateInputType | true
+    _avg?: PosCreditPaymentAvgAggregateInputType
+    _sum?: PosCreditPaymentSumAggregateInputType
+    _min?: PosCreditPaymentMinAggregateInputType
+    _max?: PosCreditPaymentMaxAggregateInputType
+  }
+
+  export type PosCreditPaymentGroupByOutputType = {
+    id: string
+    customerId: string
+    amount: number
+    method: string
+    note: string | null
+    terminalId: string | null
+    userId: string | null
+    sourceDeviceId: string | null
+    sourceSequenceNum: number | null
+    lastVectorClock: string
+    createdAt: Date
+    _count: PosCreditPaymentCountAggregateOutputType | null
+    _avg: PosCreditPaymentAvgAggregateOutputType | null
+    _sum: PosCreditPaymentSumAggregateOutputType | null
+    _min: PosCreditPaymentMinAggregateOutputType | null
+    _max: PosCreditPaymentMaxAggregateOutputType | null
+  }
+
+  type GetPosCreditPaymentGroupByPayload<T extends PosCreditPaymentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PosCreditPaymentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PosCreditPaymentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PosCreditPaymentGroupByOutputType[P]>
+            : GetScalarType<T[P], PosCreditPaymentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PosCreditPaymentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    customerId?: boolean
+    amount?: boolean
+    method?: boolean
+    note?: boolean
+    terminalId?: boolean
+    userId?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["posCreditPayment"]>
+
+  export type PosCreditPaymentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    customerId?: boolean
+    amount?: boolean
+    method?: boolean
+    note?: boolean
+    terminalId?: boolean
+    userId?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["posCreditPayment"]>
+
+  export type PosCreditPaymentSelectScalar = {
+    id?: boolean
+    customerId?: boolean
+    amount?: boolean
+    method?: boolean
+    note?: boolean
+    terminalId?: boolean
+    userId?: boolean
+    sourceDeviceId?: boolean
+    sourceSequenceNum?: boolean
+    lastVectorClock?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $PosCreditPaymentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PosCreditPayment"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      customerId: string
+      amount: number
+      method: string
+      note: string | null
+      terminalId: string | null
+      userId: string | null
+      sourceDeviceId: string | null
+      sourceSequenceNum: number | null
+      lastVectorClock: string
+      createdAt: Date
+    }, ExtArgs["result"]["posCreditPayment"]>
+    composites: {}
+  }
+
+  type PosCreditPaymentGetPayload<S extends boolean | null | undefined | PosCreditPaymentDefaultArgs> = $Result.GetResult<Prisma.$PosCreditPaymentPayload, S>
+
+  type PosCreditPaymentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PosCreditPaymentFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PosCreditPaymentCountAggregateInputType | true
+    }
+
+  export interface PosCreditPaymentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PosCreditPayment'], meta: { name: 'PosCreditPayment' } }
+    /**
+     * Find zero or one PosCreditPayment that matches the filter.
+     * @param {PosCreditPaymentFindUniqueArgs} args - Arguments to find a PosCreditPayment
+     * @example
+     * // Get one PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PosCreditPaymentFindUniqueArgs>(args: SelectSubset<T, PosCreditPaymentFindUniqueArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PosCreditPayment that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PosCreditPaymentFindUniqueOrThrowArgs} args - Arguments to find a PosCreditPayment
+     * @example
+     * // Get one PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PosCreditPaymentFindUniqueOrThrowArgs>(args: SelectSubset<T, PosCreditPaymentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PosCreditPayment that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentFindFirstArgs} args - Arguments to find a PosCreditPayment
+     * @example
+     * // Get one PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PosCreditPaymentFindFirstArgs>(args?: SelectSubset<T, PosCreditPaymentFindFirstArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PosCreditPayment that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentFindFirstOrThrowArgs} args - Arguments to find a PosCreditPayment
+     * @example
+     * // Get one PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PosCreditPaymentFindFirstOrThrowArgs>(args?: SelectSubset<T, PosCreditPaymentFindFirstOrThrowArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PosCreditPayments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PosCreditPayments
+     * const posCreditPayments = await prisma.posCreditPayment.findMany()
+     * 
+     * // Get first 10 PosCreditPayments
+     * const posCreditPayments = await prisma.posCreditPayment.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const posCreditPaymentWithIdOnly = await prisma.posCreditPayment.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PosCreditPaymentFindManyArgs>(args?: SelectSubset<T, PosCreditPaymentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PosCreditPayment.
+     * @param {PosCreditPaymentCreateArgs} args - Arguments to create a PosCreditPayment.
+     * @example
+     * // Create one PosCreditPayment
+     * const PosCreditPayment = await prisma.posCreditPayment.create({
+     *   data: {
+     *     // ... data to create a PosCreditPayment
+     *   }
+     * })
+     * 
+     */
+    create<T extends PosCreditPaymentCreateArgs>(args: SelectSubset<T, PosCreditPaymentCreateArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PosCreditPayments.
+     * @param {PosCreditPaymentCreateManyArgs} args - Arguments to create many PosCreditPayments.
+     * @example
+     * // Create many PosCreditPayments
+     * const posCreditPayment = await prisma.posCreditPayment.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PosCreditPaymentCreateManyArgs>(args?: SelectSubset<T, PosCreditPaymentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PosCreditPayments and returns the data saved in the database.
+     * @param {PosCreditPaymentCreateManyAndReturnArgs} args - Arguments to create many PosCreditPayments.
+     * @example
+     * // Create many PosCreditPayments
+     * const posCreditPayment = await prisma.posCreditPayment.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PosCreditPayments and only return the `id`
+     * const posCreditPaymentWithIdOnly = await prisma.posCreditPayment.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PosCreditPaymentCreateManyAndReturnArgs>(args?: SelectSubset<T, PosCreditPaymentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PosCreditPayment.
+     * @param {PosCreditPaymentDeleteArgs} args - Arguments to delete one PosCreditPayment.
+     * @example
+     * // Delete one PosCreditPayment
+     * const PosCreditPayment = await prisma.posCreditPayment.delete({
+     *   where: {
+     *     // ... filter to delete one PosCreditPayment
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PosCreditPaymentDeleteArgs>(args: SelectSubset<T, PosCreditPaymentDeleteArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PosCreditPayment.
+     * @param {PosCreditPaymentUpdateArgs} args - Arguments to update one PosCreditPayment.
+     * @example
+     * // Update one PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PosCreditPaymentUpdateArgs>(args: SelectSubset<T, PosCreditPaymentUpdateArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PosCreditPayments.
+     * @param {PosCreditPaymentDeleteManyArgs} args - Arguments to filter PosCreditPayments to delete.
+     * @example
+     * // Delete a few PosCreditPayments
+     * const { count } = await prisma.posCreditPayment.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PosCreditPaymentDeleteManyArgs>(args?: SelectSubset<T, PosCreditPaymentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PosCreditPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PosCreditPayments
+     * const posCreditPayment = await prisma.posCreditPayment.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PosCreditPaymentUpdateManyArgs>(args: SelectSubset<T, PosCreditPaymentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PosCreditPayment.
+     * @param {PosCreditPaymentUpsertArgs} args - Arguments to update or create a PosCreditPayment.
+     * @example
+     * // Update or create a PosCreditPayment
+     * const posCreditPayment = await prisma.posCreditPayment.upsert({
+     *   create: {
+     *     // ... data to create a PosCreditPayment
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PosCreditPayment we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PosCreditPaymentUpsertArgs>(args: SelectSubset<T, PosCreditPaymentUpsertArgs<ExtArgs>>): Prisma__PosCreditPaymentClient<$Result.GetResult<Prisma.$PosCreditPaymentPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PosCreditPayments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentCountArgs} args - Arguments to filter PosCreditPayments to count.
+     * @example
+     * // Count the number of PosCreditPayments
+     * const count = await prisma.posCreditPayment.count({
+     *   where: {
+     *     // ... the filter for the PosCreditPayments we want to count
+     *   }
+     * })
+    **/
+    count<T extends PosCreditPaymentCountArgs>(
+      args?: Subset<T, PosCreditPaymentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PosCreditPaymentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PosCreditPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PosCreditPaymentAggregateArgs>(args: Subset<T, PosCreditPaymentAggregateArgs>): Prisma.PrismaPromise<GetPosCreditPaymentAggregateType<T>>
+
+    /**
+     * Group by PosCreditPayment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PosCreditPaymentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PosCreditPaymentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PosCreditPaymentGroupByArgs['orderBy'] }
+        : { orderBy?: PosCreditPaymentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PosCreditPaymentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPosCreditPaymentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PosCreditPayment model
+   */
+  readonly fields: PosCreditPaymentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PosCreditPayment.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PosCreditPaymentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PosCreditPayment model
+   */ 
+  interface PosCreditPaymentFieldRefs {
+    readonly id: FieldRef<"PosCreditPayment", 'String'>
+    readonly customerId: FieldRef<"PosCreditPayment", 'String'>
+    readonly amount: FieldRef<"PosCreditPayment", 'Float'>
+    readonly method: FieldRef<"PosCreditPayment", 'String'>
+    readonly note: FieldRef<"PosCreditPayment", 'String'>
+    readonly terminalId: FieldRef<"PosCreditPayment", 'String'>
+    readonly userId: FieldRef<"PosCreditPayment", 'String'>
+    readonly sourceDeviceId: FieldRef<"PosCreditPayment", 'String'>
+    readonly sourceSequenceNum: FieldRef<"PosCreditPayment", 'Int'>
+    readonly lastVectorClock: FieldRef<"PosCreditPayment", 'String'>
+    readonly createdAt: FieldRef<"PosCreditPayment", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PosCreditPayment findUnique
+   */
+  export type PosCreditPaymentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCreditPayment to fetch.
+     */
+    where: PosCreditPaymentWhereUniqueInput
+  }
+
+  /**
+   * PosCreditPayment findUniqueOrThrow
+   */
+  export type PosCreditPaymentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCreditPayment to fetch.
+     */
+    where: PosCreditPaymentWhereUniqueInput
+  }
+
+  /**
+   * PosCreditPayment findFirst
+   */
+  export type PosCreditPaymentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCreditPayment to fetch.
+     */
+    where?: PosCreditPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCreditPayments to fetch.
+     */
+    orderBy?: PosCreditPaymentOrderByWithRelationInput | PosCreditPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PosCreditPayments.
+     */
+    cursor?: PosCreditPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCreditPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCreditPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PosCreditPayments.
+     */
+    distinct?: PosCreditPaymentScalarFieldEnum | PosCreditPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * PosCreditPayment findFirstOrThrow
+   */
+  export type PosCreditPaymentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCreditPayment to fetch.
+     */
+    where?: PosCreditPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCreditPayments to fetch.
+     */
+    orderBy?: PosCreditPaymentOrderByWithRelationInput | PosCreditPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PosCreditPayments.
+     */
+    cursor?: PosCreditPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCreditPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCreditPayments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PosCreditPayments.
+     */
+    distinct?: PosCreditPaymentScalarFieldEnum | PosCreditPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * PosCreditPayment findMany
+   */
+  export type PosCreditPaymentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter, which PosCreditPayments to fetch.
+     */
+    where?: PosCreditPaymentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PosCreditPayments to fetch.
+     */
+    orderBy?: PosCreditPaymentOrderByWithRelationInput | PosCreditPaymentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PosCreditPayments.
+     */
+    cursor?: PosCreditPaymentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PosCreditPayments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PosCreditPayments.
+     */
+    skip?: number
+    distinct?: PosCreditPaymentScalarFieldEnum | PosCreditPaymentScalarFieldEnum[]
+  }
+
+  /**
+   * PosCreditPayment create
+   */
+  export type PosCreditPaymentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * The data needed to create a PosCreditPayment.
+     */
+    data: XOR<PosCreditPaymentCreateInput, PosCreditPaymentUncheckedCreateInput>
+  }
+
+  /**
+   * PosCreditPayment createMany
+   */
+  export type PosCreditPaymentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PosCreditPayments.
+     */
+    data: PosCreditPaymentCreateManyInput | PosCreditPaymentCreateManyInput[]
+  }
+
+  /**
+   * PosCreditPayment createManyAndReturn
+   */
+  export type PosCreditPaymentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PosCreditPayments.
+     */
+    data: PosCreditPaymentCreateManyInput | PosCreditPaymentCreateManyInput[]
+  }
+
+  /**
+   * PosCreditPayment update
+   */
+  export type PosCreditPaymentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * The data needed to update a PosCreditPayment.
+     */
+    data: XOR<PosCreditPaymentUpdateInput, PosCreditPaymentUncheckedUpdateInput>
+    /**
+     * Choose, which PosCreditPayment to update.
+     */
+    where: PosCreditPaymentWhereUniqueInput
+  }
+
+  /**
+   * PosCreditPayment updateMany
+   */
+  export type PosCreditPaymentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PosCreditPayments.
+     */
+    data: XOR<PosCreditPaymentUpdateManyMutationInput, PosCreditPaymentUncheckedUpdateManyInput>
+    /**
+     * Filter which PosCreditPayments to update
+     */
+    where?: PosCreditPaymentWhereInput
+  }
+
+  /**
+   * PosCreditPayment upsert
+   */
+  export type PosCreditPaymentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * The filter to search for the PosCreditPayment to update in case it exists.
+     */
+    where: PosCreditPaymentWhereUniqueInput
+    /**
+     * In case the PosCreditPayment found by the `where` argument doesn't exist, create a new PosCreditPayment with this data.
+     */
+    create: XOR<PosCreditPaymentCreateInput, PosCreditPaymentUncheckedCreateInput>
+    /**
+     * In case the PosCreditPayment was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PosCreditPaymentUpdateInput, PosCreditPaymentUncheckedUpdateInput>
+  }
+
+  /**
+   * PosCreditPayment delete
+   */
+  export type PosCreditPaymentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+    /**
+     * Filter which PosCreditPayment to delete.
+     */
+    where: PosCreditPaymentWhereUniqueInput
+  }
+
+  /**
+   * PosCreditPayment deleteMany
+   */
+  export type PosCreditPaymentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PosCreditPayments to delete
+     */
+    where?: PosCreditPaymentWhereInput
+  }
+
+  /**
+   * PosCreditPayment without action
+   */
+  export type PosCreditPaymentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PosCreditPayment
+     */
+    select?: PosCreditPaymentSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Model PosReturn
    */
 
@@ -81549,6 +83717,42 @@ export namespace Prisma {
   export type PosSaleScalarFieldEnum = (typeof PosSaleScalarFieldEnum)[keyof typeof PosSaleScalarFieldEnum]
 
 
+  export const PosCustomerScalarFieldEnum: {
+    id: 'id',
+    code: 'code',
+    name: 'name',
+    tier: 'tier',
+    email: 'email',
+    phone: 'phone',
+    notes: 'notes',
+    creditLimit: 'creditLimit',
+    sourceDeviceId: 'sourceDeviceId',
+    sourceSequenceNum: 'sourceSequenceNum',
+    lastVectorClock: 'lastVectorClock',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PosCustomerScalarFieldEnum = (typeof PosCustomerScalarFieldEnum)[keyof typeof PosCustomerScalarFieldEnum]
+
+
+  export const PosCreditPaymentScalarFieldEnum: {
+    id: 'id',
+    customerId: 'customerId',
+    amount: 'amount',
+    method: 'method',
+    note: 'note',
+    terminalId: 'terminalId',
+    userId: 'userId',
+    sourceDeviceId: 'sourceDeviceId',
+    sourceSequenceNum: 'sourceSequenceNum',
+    lastVectorClock: 'lastVectorClock',
+    createdAt: 'createdAt'
+  };
+
+  export type PosCreditPaymentScalarFieldEnum = (typeof PosCreditPaymentScalarFieldEnum)[keyof typeof PosCreditPaymentScalarFieldEnum]
+
+
   export const PosReturnScalarFieldEnum: {
     id: 'id',
     saleId: 'saleId',
@@ -87554,6 +89758,184 @@ export namespace Prisma {
     lastVectorClock?: StringWithAggregatesFilter<"PosSale"> | string
     createdAt?: DateTimeWithAggregatesFilter<"PosSale"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"PosSale"> | Date | string
+  }
+
+  export type PosCustomerWhereInput = {
+    AND?: PosCustomerWhereInput | PosCustomerWhereInput[]
+    OR?: PosCustomerWhereInput[]
+    NOT?: PosCustomerWhereInput | PosCustomerWhereInput[]
+    id?: StringFilter<"PosCustomer"> | string
+    code?: StringNullableFilter<"PosCustomer"> | string | null
+    name?: StringFilter<"PosCustomer"> | string
+    tier?: StringFilter<"PosCustomer"> | string
+    email?: StringNullableFilter<"PosCustomer"> | string | null
+    phone?: StringNullableFilter<"PosCustomer"> | string | null
+    notes?: StringNullableFilter<"PosCustomer"> | string | null
+    creditLimit?: FloatFilter<"PosCustomer"> | number
+    sourceDeviceId?: StringNullableFilter<"PosCustomer"> | string | null
+    sourceSequenceNum?: IntNullableFilter<"PosCustomer"> | number | null
+    lastVectorClock?: StringFilter<"PosCustomer"> | string
+    createdAt?: DateTimeFilter<"PosCustomer"> | Date | string
+    updatedAt?: DateTimeFilter<"PosCustomer"> | Date | string
+  }
+
+  export type PosCustomerOrderByWithRelationInput = {
+    id?: SortOrder
+    code?: SortOrderInput | SortOrder
+    name?: SortOrder
+    tier?: SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    creditLimit?: SortOrder
+    sourceDeviceId?: SortOrderInput | SortOrder
+    sourceSequenceNum?: SortOrderInput | SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PosCustomerWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PosCustomerWhereInput | PosCustomerWhereInput[]
+    OR?: PosCustomerWhereInput[]
+    NOT?: PosCustomerWhereInput | PosCustomerWhereInput[]
+    code?: StringNullableFilter<"PosCustomer"> | string | null
+    name?: StringFilter<"PosCustomer"> | string
+    tier?: StringFilter<"PosCustomer"> | string
+    email?: StringNullableFilter<"PosCustomer"> | string | null
+    phone?: StringNullableFilter<"PosCustomer"> | string | null
+    notes?: StringNullableFilter<"PosCustomer"> | string | null
+    creditLimit?: FloatFilter<"PosCustomer"> | number
+    sourceDeviceId?: StringNullableFilter<"PosCustomer"> | string | null
+    sourceSequenceNum?: IntNullableFilter<"PosCustomer"> | number | null
+    lastVectorClock?: StringFilter<"PosCustomer"> | string
+    createdAt?: DateTimeFilter<"PosCustomer"> | Date | string
+    updatedAt?: DateTimeFilter<"PosCustomer"> | Date | string
+  }, "id">
+
+  export type PosCustomerOrderByWithAggregationInput = {
+    id?: SortOrder
+    code?: SortOrderInput | SortOrder
+    name?: SortOrder
+    tier?: SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    creditLimit?: SortOrder
+    sourceDeviceId?: SortOrderInput | SortOrder
+    sourceSequenceNum?: SortOrderInput | SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PosCustomerCountOrderByAggregateInput
+    _avg?: PosCustomerAvgOrderByAggregateInput
+    _max?: PosCustomerMaxOrderByAggregateInput
+    _min?: PosCustomerMinOrderByAggregateInput
+    _sum?: PosCustomerSumOrderByAggregateInput
+  }
+
+  export type PosCustomerScalarWhereWithAggregatesInput = {
+    AND?: PosCustomerScalarWhereWithAggregatesInput | PosCustomerScalarWhereWithAggregatesInput[]
+    OR?: PosCustomerScalarWhereWithAggregatesInput[]
+    NOT?: PosCustomerScalarWhereWithAggregatesInput | PosCustomerScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PosCustomer"> | string
+    code?: StringNullableWithAggregatesFilter<"PosCustomer"> | string | null
+    name?: StringWithAggregatesFilter<"PosCustomer"> | string
+    tier?: StringWithAggregatesFilter<"PosCustomer"> | string
+    email?: StringNullableWithAggregatesFilter<"PosCustomer"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"PosCustomer"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"PosCustomer"> | string | null
+    creditLimit?: FloatWithAggregatesFilter<"PosCustomer"> | number
+    sourceDeviceId?: StringNullableWithAggregatesFilter<"PosCustomer"> | string | null
+    sourceSequenceNum?: IntNullableWithAggregatesFilter<"PosCustomer"> | number | null
+    lastVectorClock?: StringWithAggregatesFilter<"PosCustomer"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PosCustomer"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PosCustomer"> | Date | string
+  }
+
+  export type PosCreditPaymentWhereInput = {
+    AND?: PosCreditPaymentWhereInput | PosCreditPaymentWhereInput[]
+    OR?: PosCreditPaymentWhereInput[]
+    NOT?: PosCreditPaymentWhereInput | PosCreditPaymentWhereInput[]
+    id?: StringFilter<"PosCreditPayment"> | string
+    customerId?: StringFilter<"PosCreditPayment"> | string
+    amount?: FloatFilter<"PosCreditPayment"> | number
+    method?: StringFilter<"PosCreditPayment"> | string
+    note?: StringNullableFilter<"PosCreditPayment"> | string | null
+    terminalId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    userId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    sourceDeviceId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    sourceSequenceNum?: IntNullableFilter<"PosCreditPayment"> | number | null
+    lastVectorClock?: StringFilter<"PosCreditPayment"> | string
+    createdAt?: DateTimeFilter<"PosCreditPayment"> | Date | string
+  }
+
+  export type PosCreditPaymentOrderByWithRelationInput = {
+    id?: SortOrder
+    customerId?: SortOrder
+    amount?: SortOrder
+    method?: SortOrder
+    note?: SortOrderInput | SortOrder
+    terminalId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    sourceDeviceId?: SortOrderInput | SortOrder
+    sourceSequenceNum?: SortOrderInput | SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PosCreditPaymentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PosCreditPaymentWhereInput | PosCreditPaymentWhereInput[]
+    OR?: PosCreditPaymentWhereInput[]
+    NOT?: PosCreditPaymentWhereInput | PosCreditPaymentWhereInput[]
+    customerId?: StringFilter<"PosCreditPayment"> | string
+    amount?: FloatFilter<"PosCreditPayment"> | number
+    method?: StringFilter<"PosCreditPayment"> | string
+    note?: StringNullableFilter<"PosCreditPayment"> | string | null
+    terminalId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    userId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    sourceDeviceId?: StringNullableFilter<"PosCreditPayment"> | string | null
+    sourceSequenceNum?: IntNullableFilter<"PosCreditPayment"> | number | null
+    lastVectorClock?: StringFilter<"PosCreditPayment"> | string
+    createdAt?: DateTimeFilter<"PosCreditPayment"> | Date | string
+  }, "id">
+
+  export type PosCreditPaymentOrderByWithAggregationInput = {
+    id?: SortOrder
+    customerId?: SortOrder
+    amount?: SortOrder
+    method?: SortOrder
+    note?: SortOrderInput | SortOrder
+    terminalId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    sourceDeviceId?: SortOrderInput | SortOrder
+    sourceSequenceNum?: SortOrderInput | SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    _count?: PosCreditPaymentCountOrderByAggregateInput
+    _avg?: PosCreditPaymentAvgOrderByAggregateInput
+    _max?: PosCreditPaymentMaxOrderByAggregateInput
+    _min?: PosCreditPaymentMinOrderByAggregateInput
+    _sum?: PosCreditPaymentSumOrderByAggregateInput
+  }
+
+  export type PosCreditPaymentScalarWhereWithAggregatesInput = {
+    AND?: PosCreditPaymentScalarWhereWithAggregatesInput | PosCreditPaymentScalarWhereWithAggregatesInput[]
+    OR?: PosCreditPaymentScalarWhereWithAggregatesInput[]
+    NOT?: PosCreditPaymentScalarWhereWithAggregatesInput | PosCreditPaymentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PosCreditPayment"> | string
+    customerId?: StringWithAggregatesFilter<"PosCreditPayment"> | string
+    amount?: FloatWithAggregatesFilter<"PosCreditPayment"> | number
+    method?: StringWithAggregatesFilter<"PosCreditPayment"> | string
+    note?: StringNullableWithAggregatesFilter<"PosCreditPayment"> | string | null
+    terminalId?: StringNullableWithAggregatesFilter<"PosCreditPayment"> | string | null
+    userId?: StringNullableWithAggregatesFilter<"PosCreditPayment"> | string | null
+    sourceDeviceId?: StringNullableWithAggregatesFilter<"PosCreditPayment"> | string | null
+    sourceSequenceNum?: IntNullableWithAggregatesFilter<"PosCreditPayment"> | number | null
+    lastVectorClock?: StringWithAggregatesFilter<"PosCreditPayment"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PosCreditPayment"> | Date | string
   }
 
   export type PosReturnWhereInput = {
@@ -94501,6 +96883,216 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PosCustomerCreateInput = {
+    id: string
+    code?: string | null
+    name: string
+    tier?: string
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    creditLimit?: number
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PosCustomerUncheckedCreateInput = {
+    id: string
+    code?: string | null
+    name: string
+    tier?: string
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    creditLimit?: number
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PosCustomerUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    creditLimit?: FloatFieldUpdateOperationsInput | number
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCustomerUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    creditLimit?: FloatFieldUpdateOperationsInput | number
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCustomerCreateManyInput = {
+    id: string
+    code?: string | null
+    name: string
+    tier?: string
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+    creditLimit?: number
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PosCustomerUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    creditLimit?: FloatFieldUpdateOperationsInput | number
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCustomerUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    code?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    tier?: StringFieldUpdateOperationsInput | string
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    creditLimit?: FloatFieldUpdateOperationsInput | number
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCreditPaymentCreateInput = {
+    id: string
+    customerId: string
+    amount: number
+    method?: string
+    note?: string | null
+    terminalId?: string | null
+    userId?: string | null
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+  }
+
+  export type PosCreditPaymentUncheckedCreateInput = {
+    id: string
+    customerId: string
+    amount: number
+    method?: string
+    note?: string | null
+    terminalId?: string | null
+    userId?: string | null
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+  }
+
+  export type PosCreditPaymentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    method?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCreditPaymentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    method?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCreditPaymentCreateManyInput = {
+    id: string
+    customerId: string
+    amount: number
+    method?: string
+    note?: string | null
+    terminalId?: string | null
+    userId?: string | null
+    sourceDeviceId?: string | null
+    sourceSequenceNum?: number | null
+    lastVectorClock?: string
+    createdAt?: Date | string
+  }
+
+  export type PosCreditPaymentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    method?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PosCreditPaymentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    customerId?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    method?: StringFieldUpdateOperationsInput | string
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    terminalId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceDeviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    sourceSequenceNum?: NullableIntFieldUpdateOperationsInput | number | null
+    lastVectorClock?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type PosReturnCreateInput = {
     id: string
     saleId: string
@@ -99250,6 +101842,116 @@ export namespace Prisma {
     taxTotal?: SortOrder
     total?: SortOrder
     marginTotal?: SortOrder
+    sourceSequenceNum?: SortOrder
+  }
+
+  export type PosCustomerCountOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    tier?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    creditLimit?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PosCustomerAvgOrderByAggregateInput = {
+    creditLimit?: SortOrder
+    sourceSequenceNum?: SortOrder
+  }
+
+  export type PosCustomerMaxOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    tier?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    creditLimit?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PosCustomerMinOrderByAggregateInput = {
+    id?: SortOrder
+    code?: SortOrder
+    name?: SortOrder
+    tier?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    notes?: SortOrder
+    creditLimit?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PosCustomerSumOrderByAggregateInput = {
+    creditLimit?: SortOrder
+    sourceSequenceNum?: SortOrder
+  }
+
+  export type PosCreditPaymentCountOrderByAggregateInput = {
+    id?: SortOrder
+    customerId?: SortOrder
+    amount?: SortOrder
+    method?: SortOrder
+    note?: SortOrder
+    terminalId?: SortOrder
+    userId?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PosCreditPaymentAvgOrderByAggregateInput = {
+    amount?: SortOrder
+    sourceSequenceNum?: SortOrder
+  }
+
+  export type PosCreditPaymentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    customerId?: SortOrder
+    amount?: SortOrder
+    method?: SortOrder
+    note?: SortOrder
+    terminalId?: SortOrder
+    userId?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PosCreditPaymentMinOrderByAggregateInput = {
+    id?: SortOrder
+    customerId?: SortOrder
+    amount?: SortOrder
+    method?: SortOrder
+    note?: SortOrder
+    terminalId?: SortOrder
+    userId?: SortOrder
+    sourceDeviceId?: SortOrder
+    sourceSequenceNum?: SortOrder
+    lastVectorClock?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PosCreditPaymentSumOrderByAggregateInput = {
+    amount?: SortOrder
     sourceSequenceNum?: SortOrder
   }
 
@@ -134793,6 +137495,14 @@ export namespace Prisma {
      * @deprecated Use PosSaleDefaultArgs instead
      */
     export type PosSaleArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PosSaleDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PosCustomerDefaultArgs instead
+     */
+    export type PosCustomerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PosCustomerDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PosCreditPaymentDefaultArgs instead
+     */
+    export type PosCreditPaymentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PosCreditPaymentDefaultArgs<ExtArgs>
     /**
      * @deprecated Use PosReturnDefaultArgs instead
      */

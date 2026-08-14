@@ -11,6 +11,7 @@ import {
 import { validateVoucher } from '../services/voucherService';
 import { isLocalReplicaMode } from '../utils/runtimePaths';
 import { getPosLanVectorClock, queuePosLanPlayback } from '../services/posLanBridge';
+import prisma from '../prisma/client';
 
 const router = Router();
 
@@ -37,6 +38,110 @@ router.use(async (_req, res, next) => {
 });
 
 router.use(authenticatePosSyncRequest);
+
+type PosCustomerListRow = {
+  id: string;
+  code: string | null;
+  name: string;
+  tier: string;
+  email: string | null;
+  phone: string | null;
+  credit_limit: number;
+  credit_balance: number;
+};
+
+function creditAmount(payments: unknown) {
+  if (!Array.isArray(payments)) return 0;
+  return payments.reduce((total, payment) => {
+    if (!payment || typeof payment !== 'object') return total;
+    const record = payment as Record<string, unknown>;
+    if (record.method !== 'CREDIT') return total;
+    const amount = Number(record.amount);
+    return total + (Number.isFinite(amount) ? amount : 0);
+  }, 0);
+}
+
+router.get('/customers', async (_req: Request, res: Response) => {
+  try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'Customer accounts are available from the cloud host.' });
+    }
+    const rows = await prisma.$queryRaw<PosCustomerListRow[]>`
+      SELECT
+        customer.id,
+        customer.code,
+        customer.name,
+        customer.tier,
+        customer.email,
+        customer.phone,
+        customer.credit_limit,
+        GREATEST(0, COALESCE(sales.credit_owed, 0) - COALESCE(repayments.credit_repaid, 0)) AS credit_balance
+      FROM pos_customers customer
+      LEFT JOIN (
+        SELECT sale.customer_id, SUM((payment.item ->> 'amount')::double precision) AS credit_owed
+        FROM pos_sales sale
+        CROSS JOIN LATERAL jsonb_array_elements(sale.payments) AS payment(item)
+        WHERE sale.status = 'COMPLETED' AND payment.item ->> 'method' = 'CREDIT'
+        GROUP BY sale.customer_id
+      ) sales ON sales.customer_id = customer.id
+      LEFT JOIN (
+        SELECT customer_id, SUM(amount) AS credit_repaid
+        FROM pos_credit_payments
+        GROUP BY customer_id
+      ) repayments ON repayments.customer_id = customer.id
+      ORDER BY customer.name ASC
+    `;
+    return res.json(rows.map((row) => ({
+      id: row.id,
+      code: row.code,
+      name: row.name,
+      tier: row.tier,
+      email: row.email,
+      phone: row.phone,
+      creditLimit: Number(row.credit_limit),
+      creditBalance: Number(row.credit_balance),
+      availableCredit: Math.max(0, Number(row.credit_limit) - Number(row.credit_balance)),
+    })));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to load customer accounts' });
+  }
+});
+
+router.get('/customers/:id', async (req: Request, res: Response) => {
+  try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'Customer accounts are available from the cloud host.' });
+    }
+    const customer = await prisma.posCustomer.findUnique({ where: { id: req.params.id } });
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    const [sales, creditPayments] = await Promise.all([
+      prisma.posSale.findMany({ where: { customerId: customer.id }, orderBy: { createdAt: 'desc' } }),
+      prisma.posCreditPayment.findMany({ where: { customerId: customer.id }, orderBy: { createdAt: 'desc' } }),
+    ]);
+    const creditOwed = sales
+      .filter((sale) => sale.status === 'COMPLETED')
+      .reduce((total, sale) => total + creditAmount(sale.payments), 0);
+    const creditRepaid = creditPayments.reduce((total, payment) => total + payment.amount, 0);
+    const creditBalance = Math.max(0, creditOwed - creditRepaid);
+
+    return res.json({
+      customer: {
+        ...customer,
+        creditBalance,
+        availableCredit: Math.max(0, customer.creditLimit - creditBalance),
+      },
+      sales,
+      creditPayments,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to load customer account' });
+  }
+});
 
 router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   try {
