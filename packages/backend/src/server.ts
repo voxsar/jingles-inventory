@@ -37,6 +37,7 @@ import tagRoutes from './routes/tags';
 import userRoutes from './routes/users';
 import importRoutes from './routes/imports';
 import posRoutes from './routes/pos';
+import clientErrorRoutes from './routes/clientErrors';
 import voucherRoutes from './routes/vouchers';
 import legacySyncRoutes from './routes/legacySync';
 import deviceRoutes from './routes/devices';
@@ -72,6 +73,9 @@ export function createApp() {
 	// Mounted before the global JSON parser so the desktop legacy-sync app can
 	// push larger payloads (the router has its own body limit).
 	app.use('/api/legacy-sync', legacySyncRoutes);
+	// Also mounted before the global parser so unauthenticated error reports have
+	// a much smaller abuse-resistant body limit. The router has its own limiter.
+	app.use('/api/pos/client-errors', express.json({ limit: '32kb' }), clientErrorRoutes);
 
 	app.use(express.json());
 

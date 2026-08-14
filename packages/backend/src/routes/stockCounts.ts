@@ -446,7 +446,7 @@ stockCountRunRouter.post(
 				const shelf = await prisma.shelf.findFirst({ where: { id: shelfId, floorId, isActive: true } });
 				if (!shelf) throw new StockCountError(400, 'Shelf does not belong to the selected floor');
 			}
-
+			
 			const existing = await prisma.stockCountDeviceSession.findUnique({
 				where: { runId_deviceId: { runId: run.id, deviceId } },
 				include: { floor: true, shelf: true, run: { include: { branch: true } } },
