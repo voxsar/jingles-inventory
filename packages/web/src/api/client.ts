@@ -90,6 +90,8 @@ export const inventoryApi = {
   delete: (id: string) => api.delete(`/inventory/${id}`),
   transition: (id: string, toState: string, reason?: string) =>
     api.post(`/inventory/${id}/transition`, { toState, reason }),
+  adjust: (id: string, data: { quantityDelta: number; reasonCode: string; note?: string; requestId?: string }) =>
+    api.post(`/inventory/${id}/adjust`, data),
   openBox: (data: any) => api.post('/inventory/box-open', data),
   events: (params?: Record<string, string>) =>
     api.get('/inventory/events', { params }),

@@ -7,8 +7,10 @@ import Pagination from '../components/Pagination';
 import StateBadge from '../components/StateBadge';
 import BarcodeInput from '../components/BarcodeInput';
 import SearchableSelect from '../components/SearchableSelect';
+import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import { UiText } from '../components/UiPrimitives';
 import { applyQuantityDelta, formatQuantity, parsePositiveQuantity, QUANTITY_INPUT_MIN, QUANTITY_INPUT_STEP } from '../utils/quantity';
+import { formatInventoryLocation } from '../utils/location';
 
 const PAGE_SIZE = 20;
 
@@ -65,6 +67,7 @@ export default function InventoryPage() {
   const [editForm, setEditForm] = useState(defaultEditForm);
   const [isSaving, setIsSaving] = useState(false);
   const [skuVariants, setSkuVariants] = useState<any[]>([]);
+  const [adjustRecord, setAdjustRecord] = useState<any>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchInventory = async () => {
@@ -289,16 +292,11 @@ export default function InventoryPage() {
     }
   };
 
-  const formatLocation = (record: any) => {
-    const parts: string[] = [];
-    if (record.floor) {
-      const branchName = record.floor.branch?.name;
-      parts.push(branchName ? `🏢 ${branchName} › ${record.floor.name}` : `${record.floor.name} (${record.floor.code})`);
-    }
-    if (record.shelf) parts.push(`📚 ${record.shelf.name}`);
-    if (record.box) parts.push(`📦 ${record.box.name}`);
-    return parts.length > 0 ? parts.join(' › ') : '—';
-  };
+  const openAdjust = (record: any) => setAdjustRecord(record);
+
+  const closeAdjust = () => setAdjustRecord(null);
+
+  const formatLocation = formatInventoryLocation;
 
   const columns = [
     { key: 'sku', header: 'SKU Code', sortable: true, render: (r: any) => <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{r.sku?.skuCode}</span> },
@@ -322,6 +320,12 @@ export default function InventoryPage() {
             onClick={(e: any) => { e.stopPropagation(); openEdit(r); }}
           >
             Edit
+          </button>
+          <button
+            className="btn-sm"
+            onClick={(e: any) => { e.stopPropagation(); openAdjust(r); }}
+          >
+            Adjust
           </button>
           <button
             className="btn-sm"
@@ -806,6 +810,15 @@ export default function InventoryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Stock Adjustment Modal */}
+      {adjustRecord && (
+        <StockAdjustmentModal
+          record={adjustRecord}
+          onClose={closeAdjust}
+          onAdjusted={fetchInventory}
+        />
       )}
 
       {/* Transition Modal */}

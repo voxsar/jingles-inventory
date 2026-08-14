@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import prisma from '../prisma/client';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
-import { UserRole, InventoryState, InventoryEventType } from '@jingles/shared';
+import { UserRole, InventoryState, InventoryEventType, StockAdjustmentReason } from '@jingles/shared';
 import { performTransition } from '../modules/inventory/stateMachine';
 import { getEvents } from '../modules/inventory/eventLedger';
 import { convert } from '../modules/conversion/unitConverter';
@@ -33,6 +33,18 @@ function normalizeQuantityInput(value: unknown) {
 		return Number.isFinite(parsed) ? parsed : undefined;
 	}
 	return undefined;
+}
+
+// Quantities are floats, so compare against the same epsilon the mobile
+// stock adjustment endpoint uses instead of testing exact equality with 0.
+const QUANTITY_EPSILON = 1e-9;
+
+const STOCK_ADJUSTMENT_REASONS = new Set<string>(Object.values(StockAdjustmentReason));
+
+class InventoryAdjustmentError extends Error {
+	constructor(public status: number, message: string) {
+		super(message);
+	}
 }
 
 function normalizeOptionalCoordinate(value: unknown): number | null | undefined {
@@ -602,6 +614,189 @@ router.put(
 		} catch (error) {
 			logger.error('Update inventory error', error);
 			res.status(500).json({ success: false, error: 'Failed to update inventory record' });
+		}
+	}
+);
+
+function adjustmentEventPayload(event: any) {
+	return {
+		eventId: event.id,
+		quantityDelta: event.quantityDelta,
+		beforeQuantity: event.beforeQuantity,
+		afterQuantity: event.afterQuantity,
+		reasonCode: event.reasonCode,
+		note: (event.metadata ?? {}).note ?? null,
+		timestamp: event.timestamp,
+	};
+}
+
+// POST /api/inventory/:id/adjust
+// Stock up/down of a single record by a signed delta with a mandatory reason.
+// Unlike PUT /:id this records the reason on the event and allows writing the
+// record down to exactly 0. Pass requestId to make a retry idempotent.
+router.post(
+	'/:id/adjust',
+	requireRole(UserRole.Admin, UserRole.Manager, UserRole.Staff),
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		try {
+			const { id } = req.params as { id: string };
+			const { quantityDelta, reasonCode, note, requestId, terminalId } = req.body as {
+				quantityDelta?: number | string;
+				reasonCode?: string;
+				note?: string;
+				requestId?: string;
+				terminalId?: string;
+			};
+			const user = req.user!;
+
+			const normalizedDelta = normalizeQuantityInput(quantityDelta);
+			if (normalizedDelta === undefined || Math.abs(normalizedDelta) < QUANTITY_EPSILON) {
+				res.status(400).json({ success: false, error: 'quantityDelta must be a non-zero number' });
+				return;
+			}
+			if (!reasonCode || !STOCK_ADJUSTMENT_REASONS.has(reasonCode)) {
+				res.status(400).json({
+					success: false,
+					error: `reasonCode must be one of: ${Object.values(StockAdjustmentReason).join(', ')}`,
+				});
+				return;
+			}
+			const trimmedNote = typeof note === 'string' ? note.trim() : '';
+			if (reasonCode === StockAdjustmentReason.Other && !trimmedNote) {
+				res.status(400).json({ success: false, error: 'note is required when reasonCode is Other' });
+				return;
+			}
+			const normalizedRequestId = typeof requestId === 'string' && requestId.trim() ? requestId.trim() : null;
+			const normalizedTerminalId = typeof terminalId === 'string' && terminalId.trim() ? terminalId.trim() : null;
+
+			// Fast path for a retried request that already landed.
+			if (normalizedRequestId) {
+				const replayed = await prisma.inventoryEvent.findUnique({ where: { id: normalizedRequestId } });
+				if (replayed) {
+					if (replayed.eventType !== InventoryEventType.MANUAL_ADJUSTMENT || replayed.parentEntityId !== id) {
+						res.status(409).json({ success: false, error: 'requestId was already used by another inventory action' });
+						return;
+					}
+					const current = await prisma.inventoryRecord.findUnique({
+						where: { id },
+						include: inventoryRecordDetailInclude,
+					});
+					res.json({ success: true, replayed: true, data: current, adjustment: adjustmentEventPayload(replayed) });
+					return;
+				}
+			}
+
+			const result = await prisma.$transaction(async (tx: any) => {
+				if (normalizedRequestId) {
+					const concurrentReplay = await tx.inventoryEvent.findUnique({ where: { id: normalizedRequestId } });
+					if (concurrentReplay) {
+						if (
+							concurrentReplay.eventType !== InventoryEventType.MANUAL_ADJUSTMENT
+							|| concurrentReplay.parentEntityId !== id
+						) {
+							throw new InventoryAdjustmentError(409, 'requestId was already used by another inventory action');
+						}
+						const current = await tx.inventoryRecord.findUnique({
+							where: { id },
+							include: inventoryRecordDetailInclude,
+						});
+						return { replayed: true, record: current, event: concurrentReplay };
+					}
+				}
+
+				const existing = await tx.inventoryRecord.findUnique({ where: { id } });
+				if (!existing) {
+					throw new InventoryAdjustmentError(404, 'Inventory record not found');
+				}
+
+				const beforeQuantity = existing.quantity;
+				const afterQuantity = beforeQuantity + normalizedDelta;
+				if (afterQuantity < -QUANTITY_EPSILON) {
+					throw new InventoryAdjustmentError(
+						409,
+						`Cannot remove ${Math.abs(normalizedDelta)}; only ${beforeQuantity} is available on this record`,
+					);
+				}
+				const settledQuantity = Math.max(0, afterQuantity);
+
+				// Optimistic lock: refuse the write if the record moved since it was read.
+				const updated = await tx.inventoryRecord.updateMany({
+					where: { id, version: existing.version },
+					data: {
+						quantity: settledQuantity,
+						version: { increment: 1 },
+						userId: user.id,
+						...(normalizedTerminalId ? { terminalId: normalizedTerminalId } : {}),
+						updatedAt: new Date(),
+					},
+				});
+				if (updated.count === 0) {
+					throw new InventoryAdjustmentError(409, 'Inventory record changed while adjusting; reload and try again');
+				}
+
+				const event = await tx.inventoryEvent.create({
+					data: {
+						...(normalizedRequestId ? { id: normalizedRequestId } : {}),
+						eventType: InventoryEventType.MANUAL_ADJUSTMENT,
+						parentEntityId: id,
+						quantityDelta: normalizedDelta,
+						beforeQuantity,
+						afterQuantity: settledQuantity,
+						reasonCode,
+						userId: user.id,
+						terminalId: normalizedTerminalId,
+						overrideFlag: false,
+						metadata: {
+							note: trimmedNote || null,
+							skuId: existing.skuId,
+							variantId: existing.variantId ?? null,
+							floorId: existing.floorId ?? null,
+							shelfId: existing.shelfId ?? null,
+							boxId: existing.boxId ?? null,
+							batchId: existing.batchId ?? null,
+						} as any,
+					},
+				});
+
+				await enqueueLocalSyncOperation(tx, {
+					opType: SYNC_V2_OPERATION_TYPES.INVENTORY_UPDATE,
+					aggregateId: id,
+					baseVersion: existing.version,
+					payload: { id, quantity: settledQuantity },
+				});
+
+				await recordServerSyncChanges(tx, {
+					aggregateId: id,
+					changes: [
+						{ tableName: 'inventory_records' as const, rowId: id, action: 'upsert' as const },
+						{ tableName: 'inventory_events' as const, rowId: event.id, action: 'upsert' as const },
+					],
+				});
+
+				const record = await tx.inventoryRecord.findUnique({
+					where: { id },
+					include: inventoryRecordDetailInclude,
+				});
+
+				return { replayed: false, record, event };
+			});
+
+			// Queue dashboard stats refresh in background
+			queueDashboardStatsRefresh();
+
+			res.json({
+				success: true,
+				replayed: result.replayed,
+				data: result.record,
+				adjustment: adjustmentEventPayload(result.event),
+			});
+		} catch (error) {
+			if (error instanceof InventoryAdjustmentError) {
+				res.status(error.status).json({ success: false, error: error.message });
+				return;
+			}
+			logger.error('Adjust inventory error', error);
+			res.status(500).json({ success: false, error: 'Failed to adjust inventory record' });
 		}
 	}
 );

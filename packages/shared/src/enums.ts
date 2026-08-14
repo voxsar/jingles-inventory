@@ -22,6 +22,20 @@ export enum InventoryEventType {
 	DAMAGE_RECORDED = 'DAMAGE_RECORDED',
 }
 
+// Reason recorded on the InventoryEvent.reasonCode of a manual stock adjustment.
+// Surfaced as the "Reason" column of the stock adjustment note report.
+export enum StockAdjustmentReason {
+	StockCountCorrection = 'StockCountCorrection',
+	Damaged = 'Damaged',
+	Expired = 'Expired',
+	LostOrStolen = 'LostOrStolen',
+	FoundStock = 'FoundStock',
+	SupplierShortage = 'SupplierShortage',
+	InternalUse = 'InternalUse',
+	DataEntryError = 'DataEntryError',
+	Other = 'Other',
+}
+
 export enum GRNStatus {
 	Draft = 'Draft',
 	Submitted = 'Submitted',

@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import BarcodePrintPage from './pages/BarcodePrintPage';
 import BranchesPage from './pages/BranchesPage';
 import StockTransferPage from './pages/StockTransferPage';
+import StockAdjustmentsPage from './pages/StockAdjustmentsPage';
 import SuppliersPage from './pages/SuppliersPage';
 import WarehouseVisualizerPage from './pages/WarehouseVisualizerPage';
 import PricingPage from './pages/PricingPage';
@@ -86,6 +87,7 @@ function AppRoutes() {
         <Route path="help" element={<HelpPage />} />
         <Route path="branches" element={<BranchesPage />} />
         <Route path="stock-transfers" element={<StockTransferPage />} />
+        <Route path="stock-adjustments" element={<ProtectedRoute roles={['Admin', 'Manager', 'Staff']}><StockAdjustmentsPage /></ProtectedRoute>} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="pricing" element={<PricingPage />} />
         <Route path="pricing-overlays" element={<PricingOverlaysPage />} />

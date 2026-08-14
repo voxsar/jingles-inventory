@@ -2,6 +2,7 @@ export * from './electron';
 export {
 	InventoryState,
 	InventoryEventType,
+	StockAdjustmentReason,
 	GRNStatus,
 	PRNStatus,
 	UserRole,
