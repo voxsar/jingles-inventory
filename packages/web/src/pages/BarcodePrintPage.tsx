@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { barcodeApi, skusApi, variantsApi } from '../api/client';
 import { UiBadge, UiText } from '../components/UiPrimitives';
 import Pagination from '../components/Pagination';
+import { buildTscTe244Prn } from '../utils/barcodePrinterFiles';
 
 const CODE128_PATTERNS = [
   '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
@@ -97,6 +98,33 @@ const defaultTemplate: BarcodeTemplate = {
   showSkuCode: false,
   showBarcodeNumber: true,
   isDefault: true,
+};
+
+const tscTe244FourAcrossTemplate: BarcodeTemplate = {
+  ...defaultTemplate,
+  name: 'TSC TE244 4 across - 25 x 15 mm',
+  description: 'TSC TE244 203 dpi roll preset; verify the physical stock dimensions before printing',
+  pageWidthMm: 108,
+  pageHeightMm: 17,
+  marginTopMm: 0,
+  marginRightMm: 1,
+  marginBottomMm: 0,
+  marginLeftMm: 1,
+  columns: 4,
+  rows: 1,
+  labelWidthMm: 25,
+  labelHeightMm: 15,
+  gapXMm: 2,
+  gapYMm: 2,
+  paddingTopMm: 1,
+  paddingRightMm: 2,
+  paddingBottomMm: 1,
+  paddingLeftMm: 2,
+  barcodeHeightMm: 3,
+  showVariantName: false,
+  showSkuCode: false,
+  isDefault: false,
+  id: undefined,
 };
 
 function encodeCode128B(value: string) {
@@ -232,8 +260,8 @@ function buildZpl(rows: PrintRow[], template: BarcodeTemplate) {
   }).join('\n');
 }
 
-function downloadTextFile(filename: string, content: string) {
-  const blob = new Blob([content], { type: 'application/zpl;charset=utf-8' });
+function downloadTextFile(filename: string, content: string, contentType = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type: contentType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -430,7 +458,7 @@ export default function BarcodePrintPage() {
       : job?.id
         ? `barcode-print-${job.id.slice(0, 8)}`
         : `barcode-print-${new Date().toISOString().slice(0, 10)}`;
-    downloadTextFile(`${safeFilePart(nameSeed)}.zpl`, zpl);
+    downloadTextFile(`${safeFilePart(nameSeed)}.zpl`, zpl, 'application/zpl;charset=utf-8');
   };
 
   const downloadJobZpl = async (job: any) => {
@@ -445,6 +473,38 @@ export default function BarcodePrintPage() {
       );
     } catch (error: any) {
       setNotice(error.response?.data?.error ?? 'Failed to download ZPL');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const downloadTsc = (sourceRows = rows, sourceTemplate = template, job?: any) => {
+    try {
+      const printerFile = buildTscTe244Prn(sourceRows, sourceTemplate);
+      const nameSeed = job?.grn?.invoiceReference
+        ? `grn-${job.grn.invoiceReference}`
+        : job?.id
+          ? `barcode-print-${job.id.slice(0, 8)}`
+          : `barcode-print-${new Date().toISOString().slice(0, 10)}`;
+      downloadTextFile(`${safeFilePart(nameSeed)}-tsc-te244.prn`, printerFile, 'application/octet-stream');
+      setNotice('TSC TE244 printer file downloaded. It packs labels left-to-right using the template column count.');
+    } catch (error: any) {
+      setNotice(error.message ?? 'Failed to build the TSC TE244 printer file.');
+    }
+  };
+
+  const downloadJobTsc = async (job: any) => {
+    setBusy(`tsc-${job.id}`);
+    try {
+      const response = await barcodeApi.getPrintJob(job.id);
+      const fullJob = response.data?.data;
+      downloadTsc(
+        (fullJob.items ?? []).map(rowFromJobItem),
+        normalizeTemplate(fullJob.template ?? template),
+        fullJob,
+      );
+    } catch (error: any) {
+      setNotice(error.response?.data?.error ?? error.message ?? 'Failed to download the TSC TE244 printer file.');
     } finally {
       setBusy(null);
     }
@@ -780,6 +840,7 @@ export default function BarcodePrintPage() {
                         <div className="flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
                           <button type="button" className="btn-sm" onClick={() => void loadJob(job.id)}>Open</button>
                           <button type="button" className="btn-sm" onClick={() => void downloadJobZpl(job)} disabled={busy === `zpl-${job.id}`}>ZPL</button>
+                          <button type="button" className="btn-sm" onClick={() => void downloadJobTsc(job)} disabled={busy === `tsc-${job.id}`}>TSC</button>
                         </div>
                       </td>
                     </tr>
@@ -816,6 +877,7 @@ export default function BarcodePrintPage() {
           {currentJob && <UiBadge tone={currentJob.status === 'PRINTED' ? 'success' : 'info'}>{currentJob.status}</UiBadge>}
           <button type="button" className="btn-secondary" onClick={() => void savePrintJob()} disabled={busy === 'job'}>Save print</button>
           <button type="button" className="btn-secondary" onClick={() => downloadZpl()} disabled={rows.length === 0}>Download ZPL</button>
+          <button type="button" className="btn-secondary" onClick={() => downloadTsc()} disabled={rows.length === 0}>Download TSC TE244</button>
           <button type="button" className="btn-primary" onClick={() => void printLabels()} disabled={rows.length === 0 || Boolean(busy)}>Print labels</button>
         </div>
       </div>
@@ -835,7 +897,19 @@ export default function BarcodePrintPage() {
                 <h2 className="text-base font-semibold text-gray-900">Template</h2>
                 <p className="text-xs text-gray-500">{template.printCount ?? 0} labels printed with this template</p>
               </div>
-              <button type="button" className="btn-secondary" onClick={() => setTemplate({ ...defaultTemplate, name: 'New template', id: undefined })}>New</button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    setTemplate({ ...tscTe244FourAcrossTemplate });
+                    setNotice('TE244 preset applied: 25 x 15 mm labels, 2 mm gaps, four across on 108 mm media. Confirm these measurements against the physical roll before printing.');
+                  }}
+                >
+                  TE244 4-up preset
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setTemplate({ ...defaultTemplate, name: 'New template', id: undefined })}>New</button>
+              </div>
             </div>
             <div className="form-stack">
               <label className="form-group">
