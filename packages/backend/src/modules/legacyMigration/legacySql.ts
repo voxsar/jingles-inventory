@@ -1848,7 +1848,7 @@ async function preloadCaches(db: PrismaClient): Promise<CreatedCaches> {
 		stockTransfers,
 		inventoryEvents,
 	] = await Promise.all([
-		db.user.findMany({ select: { id: true, email: true, legacySalespersonCode: true } }),
+		db.user.findMany({ select: { id: true, email: true, legacyCode: true } }),
 		db.unitOfMeasure.findMany({ select: { id: true, name: true, abbreviation: true } }),
 		db.vendor.findMany({ select: { id: true, name: true } }),
 		db.branch.findMany({ select: { id: true, code: true } }),
@@ -1871,8 +1871,8 @@ async function preloadCaches(db: PrismaClient): Promise<CreatedCaches> {
 		legacyUserByName: new Map(),
 		legacySalespersonByCode: new Map(
 			users
-				.filter((user) => Boolean(user.legacySalespersonCode))
-				.map((user) => [normalizeLookup(user.legacySalespersonCode), user.id]),
+				.filter((user) => Boolean(user.legacyCode))
+				.map((user) => [normalizeLookup(user.legacyCode), user.id]),
 		),
 		unitByKey: new Map(
 			units.flatMap((unit) => [
@@ -1983,7 +1983,7 @@ async function ensureLegacySalespersonUser(
 	const existing = await db.user.findFirst({
 		where: {
 			OR: [
-				{ legacySalespersonCode: code },
+				{ legacyCode: code },
 				{ email },
 			],
 		},
@@ -1997,7 +1997,7 @@ async function ensureLegacySalespersonUser(
 		accessScope: 'BOTH',
 		isSalesman: true,
 		isActive: true,
-		legacySalespersonCode: code,
+		legacyCode: code,
 	} as const;
 
 	if (existing) {
