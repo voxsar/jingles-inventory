@@ -4,6 +4,7 @@ import { settingsApi, attributesApi } from '../api/client';
 import SearchableSelect from '../components/SearchableSelect';
 import { isDesktopRuntime } from '../utils/runtime';
 import { useAuthStore } from '../store/authStore';
+import { persistSessionLockMinutes, readSessionLockMinutes } from '../utils/sessionLock';
 
 const UNIT_TYPES = ['Weight', 'Volume', 'Length', 'Count', 'Area', 'Other'];
 const ATTRIBUTE_TYPES = ['dropdown', 'text', 'numeric', 'boolean', 'color'];
@@ -80,6 +81,7 @@ export default function SettingsPage() {
 	const navigate = useNavigate();
 	const user = useAuthStore((state) => state.user);
 	const [section, setSection] = useState<Section>('home');
+	const [sessionLockMinutes, setSessionLockMinutes] = useState(readSessionLockMinutes);
 	const [statusEntityType, setStatusEntityType] = useState<string>('inventory');
 
 	// Units state
@@ -1260,6 +1262,13 @@ export default function SettingsPage() {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<section className="content-section p-6">
+					<h2 className="font-semibold text-gray-800 text-lg">Session lock</h2>
+					<p className="text-sm text-gray-500 mt-1">Lock automatically after inactivity. Alt+L locks immediately.</p>
+					<label className="block text-sm font-medium text-gray-700 mt-4">Inactive minutes</label>
+					<input className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg" type="number" min={1} max={120} value={sessionLockMinutes} onChange={(event) => setSessionLockMinutes(Number(event.target.value) || 2)} />
+					<button className="btn-primary mt-3" onClick={() => persistSessionLockMinutes(sessionLockMinutes)}>Save lock time</button>
+				</section>
 				{user?.role === 'Admin' && (
 					<button
 						className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer border border-red-100"

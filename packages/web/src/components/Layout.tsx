@@ -37,6 +37,7 @@ import {
 } from './AppIcons';
 import { isDesktopRuntime } from '../utils/runtime';
 import { getStoredUITheme, persistUITheme, toggleUITheme, type UITheme } from '../utils/uiTheme';
+import { lockSessionNow } from '../utils/sessionLock';
 
 type NavIcon = (props: IconProps) => JSX.Element;
 
@@ -331,6 +332,9 @@ export default function Layout() {
             </div>
             <button type="button" className="logout-button" onClick={handleLogout} aria-label="Log out">
               <LogOutIcon size={15} />
+            </button>
+            <button type="button" className="logout-button" onClick={lockSessionNow} aria-label="Lock" title="Lock (Alt+L)">
+              Lock
             </button>
           </div>
         </aside>

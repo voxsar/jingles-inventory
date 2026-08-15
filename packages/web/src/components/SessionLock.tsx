@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { readSessionLockMinutes, SESSION_LOCK_SETTINGS_EVENT } from '../utils/sessionLock';
 
-const INACTIVITY_TIMEOUT_MS = 60_000;
 const LAST_ACTIVITY_STORAGE_KEY = 'jingles-inventory-last-activity-at';
 const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
   'mousedown',
@@ -28,7 +28,7 @@ export default function SessionLock() {
     }
   }, []);
 
-  const armTimer = useCallback((delay = INACTIVITY_TIMEOUT_MS) => {
+  const armTimer = useCallback((delay = readSessionLockMinutes() * 60_000) => {
     clearTimer();
     if (!user?.hasPin || lockedRef.current) return;
     timerRef.current = window.setTimeout(() => {
@@ -52,13 +52,29 @@ export default function SessionLock() {
   }, [user?.hasPin]);
 
   useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.key.toLowerCase() !== 'l') return;
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent('jingles:lock-now'));
+    };
+    const handleSettingsChange = () => armTimer();
+    window.addEventListener('keydown', handleShortcut, true);
+    window.addEventListener(SESSION_LOCK_SETTINGS_EVENT, handleSettingsChange);
+    return () => {
+      window.removeEventListener('keydown', handleShortcut, true);
+      window.removeEventListener(SESSION_LOCK_SETTINGS_EVENT, handleSettingsChange);
+    };
+  }, [armTimer]);
+
+  useEffect(() => {
+    const timeoutMs = readSessionLockMinutes() * 60_000;
     const lastActivityAt = Number(window.localStorage.getItem(LAST_ACTIVITY_STORAGE_KEY));
     const remaining = lastActivityAt
-      ? INACTIVITY_TIMEOUT_MS - (Date.now() - lastActivityAt)
+      ? timeoutMs - (Date.now() - lastActivityAt)
       : 0;
     lockedRef.current = Boolean(user?.hasPin && remaining <= 0);
     setIsLocked(lockedRef.current);
-    if (!lockedRef.current) armTimer(remaining || INACTIVITY_TIMEOUT_MS);
+    if (!lockedRef.current) armTimer(remaining || timeoutMs);
 
     const handleActivity = () => {
       if (!lockedRef.current) {

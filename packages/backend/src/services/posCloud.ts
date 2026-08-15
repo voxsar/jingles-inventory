@@ -903,8 +903,8 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<{ id: string; code: string; name: string }>(
       `SELECT id, code, name FROM branches WHERE is_active = TRUE ORDER BY code`,
     ),
-    inventory.query<{ id: string; email: string; role: string }>(
-      `SELECT id, email, role FROM users WHERE is_active = TRUE AND role IN ('Admin','Manager','Staff') ORDER BY email`,
+    inventory.query<{ id: string; email: string; role: string; access_scope: string; is_salesman: boolean }>(
+      `SELECT id, email, role, access_scope, is_salesman FROM users WHERE is_active = TRUE AND access_scope IN ('CASHIER','BOTH','ADMIN') ORDER BY email`,
     ),
     inventory.query<{
       id: string; code: string | null; name: string; tier: string; email: string | null;
@@ -996,7 +996,8 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       const name = user.email.split('@')[0]!.replace(/[._-]+/g, ' ');
       return { id: user.id, code: `INV-${user.id.slice(0, 8).toUpperCase()}`, email: user.email,
         name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
-        role: user.role === 'Staff' ? 'CASHIER' as const : 'MANAGER' as const };
+        role: user.access_scope === 'ADMIN' ? 'MANAGER' as const : 'CASHIER' as const,
+        accessScope: user.access_scope as 'CASHIER' | 'BOTH' | 'ADMIN', isSalesman: user.is_salesman };
     }),
     customers: customersResult.rows.map((customer) => ({
       id: customer.id,

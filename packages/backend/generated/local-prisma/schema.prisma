@@ -14,6 +14,8 @@ model User {
   passwordHash String   @map("password_hash")
   pinHash      String?  @map("pin_hash")
   role         String
+  accessScope  String   @default("BOTH") @map("access_scope")
+  isSalesman   Boolean  @default(true) @map("is_salesman")
   vendorId     String?  @map("vendor_id")
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")
@@ -1419,12 +1421,14 @@ model PosCreditPayment {
   note              String?
   terminalId        String?  @map("terminal_id")
   userId            String?  @map("user_id")
+  shiftId           String?  @map("shift_id")
   sourceDeviceId    String?  @map("source_device_id")
   sourceSequenceNum Int?     @map("source_sequence_num")
   lastVectorClock   String   @default("{}") @map("last_vector_clock")
   createdAt         DateTime @default(now()) @map("created_at")
 
   @@index([customerId, createdAt], map: "pos_credit_payments_customer_created_at_idx")
+  @@index([shiftId, createdAt], map: "pos_credit_payments_shift_created_at_idx")
   @@map("pos_credit_payments")
 }
 

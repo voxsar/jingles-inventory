@@ -235,6 +235,8 @@ function buildFtsQuery(query: string): string {
 function runMigrations(): void {
   const database = getDB();
   ensureColumnExists(database, 'users', 'pin_hash', 'TEXT');
+  ensureColumnExists(database, 'users', 'access_scope', "TEXT NOT NULL DEFAULT 'BOTH'");
+  ensureColumnExists(database, 'users', 'is_salesman', 'INTEGER NOT NULL DEFAULT 1');
   ensureColumnExists(database, 'skus', 'category', 'TEXT');
   ensureColumnExists(database, 'skus', 'synced_at', 'TEXT');
 

@@ -125,6 +125,8 @@ exports.Prisma.UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   pinHash: 'pinHash',
   role: 'role',
+  accessScope: 'accessScope',
+  isSalesman: 'isSalesman',
   vendorId: 'vendorId',
   createdAt: 'createdAt',
   isActive: 'isActive'
@@ -1006,6 +1008,7 @@ exports.Prisma.PosCreditPaymentScalarFieldEnum = {
   note: 'note',
   terminalId: 'terminalId',
   userId: 'userId',
+  shiftId: 'shiftId',
   sourceDeviceId: 'sourceDeviceId',
   sourceSequenceNum: 'sourceSequenceNum',
   lastVectorClock: 'lastVectorClock',

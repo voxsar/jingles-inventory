@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS "users" (
     "password_hash" TEXT NOT NULL,
     "pin_hash" TEXT,
     "role" TEXT NOT NULL,
+    "access_scope" TEXT NOT NULL DEFAULT 'BOTH',
+    "is_salesman" BOOLEAN NOT NULL DEFAULT true,
     "vendor_id" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "is_active" BOOLEAN NOT NULL DEFAULT true,

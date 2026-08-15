@@ -8,6 +8,12 @@ import { UserRole } from '@jingles/shared';
 import { getPagination, paginatedPayload } from '../utils/pagination';
 
 const router = Router();
+const ACCESS_SCOPES = ['CASHIER', 'INVENTORY', 'BOTH', 'ADMIN'] as const;
+
+function permissionRoleForAccess(accessScope: string, currentRole?: string) {
+  if (currentRole === UserRole.Vendor || currentRole === UserRole.Inspector) return currentRole;
+  return accessScope === 'ADMIN' ? UserRole.Admin : UserRole.Staff;
+}
 
 const validPin = (value: unknown) => {
   const pin = String(value ?? '');
@@ -31,8 +37,9 @@ router.use(requireRole('Admin', 'Manager'));
 
 // GET /api/users - List all users
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { role, isActive, search } = req.query as {
+  const { role, accessScope, isActive, search } = req.query as {
     role?: string;
+    accessScope?: string;
     isActive?: string;
     search?: string;
     vendorId?: string;
@@ -41,6 +48,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
   const where: Prisma.UserWhereInput = {
     ...(role ? { role } : {}),
+    ...(accessScope ? { accessScope } : {}),
     ...(req.query.vendorId ? { vendorId: req.query.vendorId as string } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
     ...(search
@@ -52,6 +60,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     id: true,
     email: true,
     role: true,
+    accessScope: true,
+    isSalesman: true,
     vendorId: true,
     createdAt: true,
     isActive: true,
@@ -114,6 +124,8 @@ router.get(
         id: true,
         email: true,
         role: true,
+        accessScope: true,
+        isSalesman: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -146,6 +158,8 @@ router.post(
       .custom(validPin)
       .withMessage('PIN must contain 4 to 6 digits and cannot read the same backwards'),
     body('role').isIn(Object.values(UserRole)),
+    body('accessScope').optional().isIn(ACCESS_SCOPES),
+    body('isSalesman').optional().isBoolean(),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -158,11 +172,13 @@ router.post(
       return;
     }
 
-    const { email, password, pin, role, vendorId } = req.body as {
+    const { email, password, pin, role, accessScope = 'BOTH', isSalesman = true, vendorId } = req.body as {
       email: string;
       password: string;
       pin: string;
       role: string;
+      accessScope?: string;
+      isSalesman?: boolean;
       vendorId?: string;
     };
 
@@ -187,13 +203,17 @@ router.post(
       data: {
         email,
         passwordHash,
-        role,
+        role: permissionRoleForAccess(accessScope, role),
+        accessScope,
+        isSalesman,
         vendorId: vendorId || null,
       },
       select: {
         id: true,
         email: true,
         role: true,
+        accessScope: true,
+        isSalesman: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -221,6 +241,8 @@ router.put(
     param('id').isUUID(),
     body('email').optional().isEmail().normalizeEmail(),
     body('role').optional().isIn(Object.values(UserRole)),
+    body('accessScope').optional().isIn(ACCESS_SCOPES),
+    body('isSalesman').optional().isBoolean(),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -238,9 +260,11 @@ router.put(
       return;
     }
 
-    const { email, role, vendorId, isActive, pin } = req.body as {
+    const { email, role, accessScope, isSalesman, vendorId, isActive, pin } = req.body as {
       email?: string;
       role?: string;
+      accessScope?: string;
+      isSalesman?: boolean;
       vendorId?: string | null;
       isActive?: boolean;
       pin?: string;
@@ -272,7 +296,9 @@ router.put(
       where: { id: req.params!.id },
       data: {
         email,
-        role,
+        role: accessScope ? permissionRoleForAccess(accessScope, role) : role,
+        accessScope,
+        isSalesman,
         vendorId,
         isActive,
       },
@@ -280,6 +306,8 @@ router.put(
         id: true,
         email: true,
         role: true,
+        accessScope: true,
+        isSalesman: true,
         vendorId: true,
         createdAt: true,
         isActive: true,

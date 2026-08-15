@@ -5,6 +5,8 @@ export interface IUser {
 	email: string;
 	passwordHash: string;
 	role: UserRole;
+	accessScope?: 'CASHIER' | 'INVENTORY' | 'BOTH' | 'ADMIN';
+	isSalesman?: boolean;
 	vendorId?: string | null;
 	createdAt: Date;
 	isActive: boolean;

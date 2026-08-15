@@ -122,6 +122,8 @@ describe('POST /api/auth/login', () => {
         id: 'user-001',
         email: 'admin@theredsun.org',
         role: 'Admin',
+        accessScope: 'BOTH',
+        isSalesman: true,
         hasPin: false,
       });
       expect(typeof res.body.token).toBe('string');

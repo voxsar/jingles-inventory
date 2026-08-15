@@ -15,6 +15,8 @@ type AuthPayload = {
     id: string;
     email: string;
     role: string;
+    accessScope?: string;
+    isSalesman?: boolean;
     vendorId?: string | null;
     createdAt?: string | null;
     hasPin?: boolean;
@@ -52,6 +54,8 @@ function parseAuthPayload(payload: unknown): AuthPayload | null {
   const vendorId = 'vendorId' in user ? user.vendorId : null;
   const createdAt = 'createdAt' in user ? user.createdAt : null;
   const hasPin = 'hasPin' in user ? user.hasPin : false;
+  const accessScope = 'accessScope' in user ? user.accessScope : 'BOTH';
+  const isSalesman = 'isSalesman' in user ? user.isSalesman : true;
 
   if (typeof id !== 'string' || typeof email !== 'string' || typeof role !== 'string') {
     return null;
@@ -63,6 +67,8 @@ function parseAuthPayload(payload: unknown): AuthPayload | null {
       id,
       email,
       role,
+      accessScope: typeof accessScope === 'string' ? accessScope : 'BOTH',
+      isSalesman: typeof isSalesman === 'boolean' ? isSalesman : true,
       vendorId: typeof vendorId === 'string' || vendorId === null ? vendorId : null,
       createdAt: typeof createdAt === 'string' || createdAt === null ? createdAt : null,
       hasPin: typeof hasPin === 'boolean' ? hasPin : false,
@@ -129,6 +135,8 @@ async function upsertReplicaUser(user: AuthPayload['user'], passwordHash = '') {
     update: {
       email: user.email,
       role: user.role,
+      accessScope: user.accessScope ?? 'BOTH',
+      isSalesman: user.isSalesman !== false,
       vendorId: user.vendorId ?? null,
       isActive: true,
       ...(passwordHash ? { passwordHash } : {}),
@@ -137,6 +145,8 @@ async function upsertReplicaUser(user: AuthPayload['user'], passwordHash = '') {
       id: user.id,
       email: user.email,
       role: user.role,
+      accessScope: user.accessScope ?? 'BOTH',
+      isSalesman: user.isSalesman !== false,
       vendorId: user.vendorId ?? null,
       isActive: true,
       passwordHash,
@@ -166,7 +176,7 @@ async function findLocalUserById(id: string) {
   try {
     return await prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, role: true, vendorId: true, createdAt: true },
+      select: { id: true, email: true, role: true, accessScope: true, isSalesman: true, vendorId: true, createdAt: true },
     });
   } catch (error) {
     logger.warn('Failed to read the current user from the local replica', error);
@@ -298,6 +308,8 @@ router.post(
               id: user.id,
               email: user.email,
               role: user.role,
+              accessScope: user.accessScope ?? 'BOTH',
+              isSalesman: user.isSalesman !== false,
               vendorId: user.vendorId,
               hasPin: Boolean(pinHash),
             },
@@ -358,6 +370,8 @@ router.post(
         id: upstreamResult.user.id,
         email: upstreamResult.user.email,
         role: upstreamResult.user.role,
+        accessScope: upstreamResult.user.accessScope ?? 'BOTH',
+        isSalesman: upstreamResult.user.isSalesman !== false,
         vendorId: upstreamResult.user.vendorId,
         hasPin: Boolean(upstreamResult.user.hasPin),
       },

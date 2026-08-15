@@ -13,6 +13,8 @@ model User {
   passwordHash String   @map("password_hash")
   pinHash      String?  @map("pin_hash")
   role         String
+  accessScope  String   @default("BOTH") @map("access_scope")
+  isSalesman   Boolean  @default(true) @map("is_salesman")
   vendorId     String?  @map("vendor_id")
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")

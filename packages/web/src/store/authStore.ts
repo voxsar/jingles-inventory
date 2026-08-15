@@ -30,13 +30,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 			// Handle potential response structure variations
 			const responseData = res.data?.data ?? res.data;
 			const { token, user, syncToken } = responseData;
+			if (user?.accessScope === 'CASHIER') {
+				clearDesktopAuthCache();
+				set({ error: 'This account has POS access only.', isLoading: false, user: null, token: null });
+				throw new Error('This account has POS access only.');
+			}
 			localStorage.setItem(branding.tokenStorageKey, token);
 			localStorage.setItem(LAST_ACTIVITY_STORAGE_KEY, String(Date.now()));
 			persistDesktopAuthCache(token, user, syncToken);
 			set({ token, user, isLoading: false });
 		} catch (err: any) {
 			set({
-				error: err.response?.data?.error ?? 'Login failed',
+				error: err.response?.data?.error ?? err.message ?? 'Login failed',
 				isLoading: false,
 			});
 			throw err;

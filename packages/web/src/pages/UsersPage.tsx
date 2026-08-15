@@ -8,11 +8,18 @@ const defaultUserForm = {
   password: '',
   pin: '',
   role: 'Staff',
+  accessScope: 'BOTH',
+  isSalesman: true,
   vendorId: '',
   isActive: true,
 };
 
-const roleOptions = ['Admin', 'Manager', 'Staff', 'Inspector', 'Vendor'];
+const accessOptions = [
+  { value: 'CASHIER', label: 'Cashier only' },
+  { value: 'INVENTORY', label: 'Inventory only' },
+  { value: 'BOTH', label: 'Both' },
+  { value: 'ADMIN', label: 'Admin' },
+];
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -32,7 +39,7 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       const params: Record<string, string> = {};
-      if (roleFilter) params.role = roleFilter;
+      if (roleFilter) params.accessScope = roleFilter;
       if (activeFilter) params.isActive = activeFilter;
       if (searchTerm) params.search = searchTerm;
       if (vendorFilter) params.vendorId = vendorFilter;
@@ -76,6 +83,8 @@ export default function UsersPage() {
       password: '', // Don't populate password
       pin: '', // PIN hashes are never returned by the API
       role: user.role || 'Staff',
+      accessScope: user.accessScope || (user.role === 'Admin' ? 'ADMIN' : 'BOTH'),
+      isSalesman: user.isSalesman !== false,
       vendorId: user.vendorId || '',
       isActive: user.isActive !== false,
     });
@@ -100,7 +109,10 @@ export default function UsersPage() {
     e.preventDefault();
     try {
       const { vendorId, password, pin, ...rest } = userForm;
-      const payload: Record<string, any> = { ...rest };
+      const payload: Record<string, any> = {
+        ...rest,
+        role: userForm.accessScope === 'ADMIN' ? 'Admin' : 'Staff',
+      };
 
       if (pin) {
         if (!/^\d{4,6}$/.test(pin)) {
@@ -167,13 +179,18 @@ export default function UsersPage() {
   const userColumns = [
     { header: 'Email', key: 'email', sortable: true },
     {
-      header: 'Role',
-      key: 'role',
+      header: 'Access',
+      key: 'accessScope',
       render: (row: any) => (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-          {row.role}
+          {accessOptions.find((option) => option.value === row.accessScope)?.label ?? row.accessScope ?? row.role}
         </span>
       ),
+    },
+    {
+      header: 'Salesman',
+      key: 'isSalesman',
+      render: (row: any) => row.isSalesman !== false ? 'Yes' : 'No',
     },
     {
       header: 'Vendor',
@@ -271,7 +288,7 @@ export default function UsersPage() {
           <SearchableSelect
             options={[
               { value: '', label: 'All Roles' },
-              ...roleOptions.map((role) => ({ value: role, label: role })),
+              ...accessOptions,
             ]}
             value={roleFilter}
             onChange={(value) => setRoleFilter(value)}
@@ -378,21 +395,31 @@ export default function UsersPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Used to unlock the screen after 60 seconds of inactivity. Palindromic PINs are not allowed.
+                  Used to unlock the screen after inactivity. Palindromic PINs are not allowed.
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
+                  Access role *
                 </label>
                 <SearchableSelect
-                  options={roleOptions.map((role) => ({ value: role, label: role }))}
-                  value={userForm.role}
-                  onChange={(value) => setUserForm({ ...userForm, role: value })}
+                  options={accessOptions}
+                  value={userForm.accessScope}
+                  onChange={(value) => setUserForm({ ...userForm, accessScope: value })}
                   isClearable={false}
                 />
               </div>
+
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={userForm.isSalesman}
+                  onChange={(e) => setUserForm({ ...userForm, isSalesman: e.target.checked })}
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Salesman (appears in POS staff selection)</span>
+              </label>
 
               {userForm.role === 'Vendor' && (
                 <div>
