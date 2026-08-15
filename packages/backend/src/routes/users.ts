@@ -55,9 +55,9 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
       ? {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },
-          { displayName: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' } },
           { phone: { contains: search, mode: 'insensitive' } },
-          { legacySalespersonCode: { contains: search, mode: 'insensitive' } },
+          { legacyCode: { contains: search, mode: 'insensitive' } },
         ],
       }
       : {}),
@@ -66,12 +66,12 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
   const select = {
     id: true,
     email: true,
-    displayName: true,
+    name: true,
     phone: true,
     role: true,
     accessScope: true,
     isSalesman: true,
-    legacySalespersonCode: true,
+    legacyCode: true,
     vendorId: true,
     createdAt: true,
     isActive: true,
@@ -133,12 +133,12 @@ router.get(
       select: {
         id: true,
         email: true,
-        displayName: true,
+        name: true,
         phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
-        legacySalespersonCode: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -166,7 +166,6 @@ router.post(
   requireRole('Admin'),
   [
     body('email').isEmail().normalizeEmail(),
-    body('displayName').optional({ nullable: true }).trim(),
     body('phone').optional({ nullable: true }).trim(),
     body('password').isLength({ min: 6 }),
     body('pin')
@@ -175,6 +174,8 @@ router.post(
     body('role').isIn(Object.values(UserRole)),
     body('accessScope').optional().isIn(ACCESS_SCOPES),
     body('isSalesman').optional().isBoolean(),
+    body('name').optional({ nullable: true }).isString().trim().isLength({ max: 100 }),
+    body('legacyCode').optional({ nullable: true }).isString().trim().isLength({ max: 20 }),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -187,15 +188,16 @@ router.post(
       return;
     }
 
-    const { email, displayName, phone, password, pin, role, accessScope = 'BOTH', isSalesman = true, vendorId } = req.body as {
+    const { email, name, phone, password, pin, role, accessScope = 'BOTH', isSalesman = true, legacyCode, vendorId } = req.body as {
       email: string;
-      displayName?: string;
+      name?: string | null;
       phone?: string;
       password: string;
       pin: string;
       role: string;
       accessScope?: string;
       isSalesman?: boolean;
+      legacyCode?: string | null;
       vendorId?: string;
     };
 
@@ -204,6 +206,14 @@ router.post(
     if (existing) {
       res.status(400).json({ error: 'User with this email already exists' });
       return;
+    }
+
+    if (legacyCode) {
+      const existingLegacy = await prisma.user.findUnique({ where: { legacyCode } });
+      if (existingLegacy) {
+        res.status(400).json({ error: 'User with this legacy code already exists' });
+        return;
+      }
     }
 
     // Validate vendor role logic
@@ -219,23 +229,24 @@ router.post(
     const user = await prisma.user.create({
       data: {
         email,
-        displayName: displayName || null,
+        name: name || null,
         phone: phone || null,
         passwordHash,
         role: permissionRoleForAccess(accessScope, role),
         accessScope,
         isSalesman,
+        legacyCode: legacyCode || null,
         vendorId: vendorId || null,
       },
       select: {
         id: true,
         email: true,
-        displayName: true,
+        name: true,
         phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
-        legacySalespersonCode: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -262,11 +273,12 @@ router.put(
   [
     param('id').isUUID(),
     body('email').optional().isEmail().normalizeEmail(),
-    body('displayName').optional({ nullable: true }).trim(),
     body('phone').optional({ nullable: true }).trim(),
     body('role').optional().isIn(Object.values(UserRole)),
     body('accessScope').optional().isIn(ACCESS_SCOPES),
     body('isSalesman').optional().isBoolean(),
+    body('name').optional({ nullable: true }).isString().trim().isLength({ max: 100 }),
+    body('legacyCode').optional({ nullable: true }).isString().trim().isLength({ max: 20 }),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -284,13 +296,14 @@ router.put(
       return;
     }
 
-    const { email, displayName, phone, role, accessScope, isSalesman, vendorId, isActive, pin } = req.body as {
+    const { email, name, phone, role, accessScope, isSalesman, legacyCode, vendorId, isActive, pin } = req.body as {
       email?: string;
-      displayName?: string | null;
+      name?: string | null;
       phone?: string | null;
       role?: string;
       accessScope?: string;
       isSalesman?: boolean;
+      legacyCode?: string | null;
       vendorId?: string | null;
       isActive?: boolean;
       pin?: string;
@@ -301,6 +314,15 @@ router.put(
       const existing = await prisma.user.findUnique({ where: { email } });
       if (existing && existing.id !== req.params!.id) {
         res.status(400).json({ error: 'User with this email already exists' });
+        return;
+      }
+    }
+
+    // If updating legacy code, check uniqueness
+    if (legacyCode) {
+      const existingLegacy = await prisma.user.findUnique({ where: { legacyCode } });
+      if (existingLegacy && existingLegacy.id !== req.params!.id) {
+        res.status(400).json({ error: 'User with this legacy code already exists' });
         return;
       }
     }
@@ -322,23 +344,24 @@ router.put(
       where: { id: req.params!.id },
       data: {
         email,
-        displayName,
+        name,
         phone,
         role: accessScope ? permissionRoleForAccess(accessScope, role) : role,
         accessScope,
         isSalesman,
+        legacyCode,
         vendorId,
         isActive,
       },
       select: {
         id: true,
         email: true,
-        displayName: true,
+        name: true,
         phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
-        legacySalespersonCode: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,

@@ -5,7 +5,7 @@ import SearchableSelect from '../components/SearchableSelect';
 
 const defaultUserForm = {
   email: '',
-  displayName: '',
+  name: '',
   phone: '',
   password: '',
   pin: '',
@@ -82,7 +82,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setUserForm({
       email: user.email || '',
-      displayName: user.displayName || '',
+      name: user.name || '',
       phone: user.phone || '',
       password: '', // Don't populate password
       pin: '', // PIN hashes are never returned by the API
@@ -112,11 +112,11 @@ export default function UsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { vendorId, password, pin, displayName, phone, ...rest } = userForm;
+      const { vendorId, password, pin, name, phone, ...rest } = userForm;
       const payload: Record<string, any> = {
         ...rest,
-        displayName: displayName || null,
-        phone: phone || null,
+        name: name.trim() || null,
+        phone: phone.trim() || null,
         role: userForm.accessScope === 'ADMIN' ? 'Admin' : 'Staff',
       };
 
@@ -185,12 +185,12 @@ export default function UsersPage() {
   const userColumns = [
     {
       header: 'Name',
-      key: 'displayName',
+      key: 'name',
       sortable: true,
       render: (row: any) => (
         <div>
-          <div className="font-medium text-gray-900">{row.displayName || row.email}</div>
-          {row.legacySalespersonCode && <div className="text-xs text-gray-500">Code {row.legacySalespersonCode}</div>}
+          <div className="font-medium text-gray-900">{row.name || row.email}</div>
+          {row.legacyCode && <div className="text-xs text-gray-500">Code {row.legacyCode}</div>}
         </div>
       ),
     },
@@ -368,18 +368,6 @@ export default function UsersPage() {
               <div className="modal-body form-stack">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Display name
-                </label>
-                <input
-                  type="text"
-                  value={userForm.displayName}
-                  onChange={(e) => setUserForm({ ...userForm, displayName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email *
                 </label>
                 <input
@@ -387,6 +375,19 @@ export default function UsersPage() {
                   value={userForm.email}
                   onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                   required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display name
+                </label>
+                <input
+                  type="text"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  placeholder="Shown in POS staff selection instead of the email"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>

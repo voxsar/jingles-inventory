@@ -4,12 +4,12 @@ export interface IUser {
 	id: string;
 	email: string;
 	passwordHash: string;
-	displayName?: string | null;
+	name?: string | null;
 	phone?: string | null;
 	role: UserRole;
 	accessScope?: 'CASHIER' | 'INVENTORY' | 'BOTH' | 'ADMIN';
 	isSalesman?: boolean;
-	legacySalespersonCode?: string | null;
+	legacyCode?: string | null;
 	vendorId?: string | null;
 	createdAt: Date;
 	isActive: boolean;
