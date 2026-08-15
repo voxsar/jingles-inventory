@@ -689,7 +689,9 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 				category: true,
 				unitModel: true,
 				images: { where: { isPrimary: true, variantId: null }, take: 1 },
-				barcodes: { where: { isDefault: true }, take: 1 },
+				// Return every saved barcode so all clients retain the same aliases.
+				// Default-first ordering preserves the existing display barcode at [0].
+				barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] },
 				tags: { include: { tag: true } },
 				skuVendors: { include: { vendor: true } },
 				inventoryRecords: {

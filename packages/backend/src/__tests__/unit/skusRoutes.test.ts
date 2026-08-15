@@ -215,6 +215,34 @@ describe('sku routes', () => {
 		expect(res.body.data.sku).toMatchObject({ skuCode: 'SKU-001', name: 'Matched product' });
 	});
 
+	it('uses one SKU search across every saved barcode and returns all aliases default-first', async () => {
+		prismaMock.sKU.findMany.mockResolvedValue([{
+			id: 'sku-001',
+			skuCode: 'SKU-001',
+			name: 'Matched product',
+			barcodes: [
+				{ id: 'barcode-default', barcode: '4790000000001', isDefault: true },
+				{ id: 'barcode-alternate', barcode: '4790000000002', isDefault: false },
+			],
+		} as any]);
+		prismaMock.sKU.count.mockResolvedValue(1);
+
+		const res = await request(createTestApp()).get('/api/skus?search=4790000000002');
+
+		expect(res.status).toBe(200);
+		expect(res.body.data.items[0].barcodes).toHaveLength(2);
+		expect(prismaMock.sKU.findMany).toHaveBeenCalledWith(expect.objectContaining({
+			where: expect.objectContaining({
+				OR: expect.arrayContaining([
+					{ barcodes: { some: { barcode: { contains: '4790000000002' } } } },
+				]),
+			}),
+			include: expect.objectContaining({
+				barcodes: { orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] },
+			}),
+		}));
+	});
+
 	it('blocks creation when the entered barcode already belongs to a product', async () => {
 		prismaMock.productBarcode.findUnique.mockResolvedValue({
 			id: 'barcode-001',

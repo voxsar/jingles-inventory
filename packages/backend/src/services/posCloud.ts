@@ -89,6 +89,7 @@ type SharedSkuRow = {
   bulk_price: number | null;
   batch_pricing: unknown;
   barcode: string | null;
+  barcodes: string[] | null;
   stock_on_hand: number | string | null;
   stock_by_branch: Record<string, number> | null;
 };
@@ -98,6 +99,7 @@ type SharedVariantRow = {
   variant_id: string;
   variant_code: string;
   variant_name: string | null;
+  barcodes: string[] | null;
   variant_stock_on_hand: number | string | null;
   stock_by_branch: Record<string, number> | null;
   selling_price: number | null;
@@ -183,6 +185,7 @@ type PosCatalogSnapshot = {
     id: string;
     sku: string;
     barcode?: string;
+    barcodes?: string[];
     name: string;
     categoryId: string;
     subcategory: string;
@@ -203,6 +206,7 @@ type PosCatalogSnapshot = {
       id: string;
       productId: string;
       variantCode: string;
+      barcodes?: string[];
       name?: string;
       stockOnHand: number;
       stockByBranch: Record<string, number>;
@@ -439,6 +443,7 @@ function buildProductVariants(rows: SharedVariantRow[]) {
       id: row.variant_id,
       productId: row.sku_id,
       variantCode: row.variant_code,
+      barcodes: row.barcodes ?? [],
       name: row.variant_name ?? undefined,
       stockOnHand: normalizeNumber(row.variant_stock_on_hand),
       stockByBranch: row.stock_by_branch ?? {},
@@ -834,6 +839,11 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
           SELECT DISTINCT ON (sku_id) sku_id, barcode
           FROM product_barcodes
           ORDER BY sku_id, is_default DESC, created_at ASC
+        ),
+        all_barcodes AS (
+          SELECT sku_id, array_agg(barcode ORDER BY is_default DESC, created_at ASC) AS barcodes
+          FROM product_barcodes
+          GROUP BY sku_id
         )
         SELECT
           s.id,
@@ -847,10 +857,12 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
           COALESCE(latest.bulk_price, s.bulk_price) AS bulk_price,
           s.batch_pricing,
           pb.barcode,
+          COALESCE(ab.barcodes, ARRAY[]::text[]) AS barcodes,
           COALESCE(sr.stock_on_hand, 0) AS stock_on_hand,
           COALESCE(sr.stock_by_branch, '{}'::jsonb) AS stock_by_branch
         FROM skus s
         LEFT JOIN preferred_barcodes pb ON pb.sku_id = s.id
+        LEFT JOIN all_barcodes ab ON ab.sku_id = s.id
         LEFT JOIN shelf_ready_stock sr ON sr.sku_id = s.id
         LEFT JOIN LATERAL (
           SELECT selling_price, wholesale_price, bulk_price FROM batches
@@ -875,6 +887,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
           ) ir GROUP BY ir.variant_id
         )
         SELECT v.sku_id, v.id AS variant_id, v.variant_code, v.name AS variant_name,
+          COALESCE(vb.barcodes, ARRAY[]::text[]) AS barcodes,
           COALESCE(vs.stock_on_hand, 0) AS variant_stock_on_hand,
           COALESCE(vs.stock_by_branch, '{}'::jsonb) AS stock_by_branch,
           COALESCE(bp.selling_price, s.selling_price) AS selling_price,
@@ -887,6 +900,11 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
         FROM sku_variants v
         INNER JOIN skus s ON s.id = v.sku_id
         LEFT JOIN variant_stock vs ON vs.variant_id = v.id
+        LEFT JOIN LATERAL (
+          SELECT array_agg(barcode ORDER BY is_default DESC, created_at ASC) AS barcodes
+          FROM product_barcodes
+          WHERE variant_id = v.id
+        ) vb ON TRUE
         LEFT JOIN LATERAL (
           SELECT selling_price, wholesale_price, bulk_price FROM batches
           WHERE sku_id = v.sku_id AND variant_id = v.id AND is_active = TRUE
@@ -937,6 +955,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       id: row.id,
       sku: row.sku_code,
       barcode: row.barcode ?? undefined,
+      barcodes: row.barcodes ?? [],
       name: row.name,
       categoryId: categoryMeta.categoryId,
       subcategory: categoryMeta.subcategory,
