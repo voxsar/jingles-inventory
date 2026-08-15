@@ -1,5 +1,6 @@
 import fs from 'fs';
 import type { PrismaClient } from '@prisma/client';
+import { LEGACY_REFERENCE_BARCODE_LABEL, LEGACY_REFERENCE_BARCODE_TYPE } from '../../utils/legacyReferenceCode';
 
 export type LegacyScalar = string | number | boolean | null;
 export type LegacyRow = Record<string, LegacyScalar>;
@@ -2386,6 +2387,7 @@ async function ensureProductBarcode(
 	counts: LegacySqlImportCounts,
 	skuId: string,
 	barcode: string,
+	options: { barcodeType?: string; isDefault?: boolean; label?: string } = {},
 ) {
 	if (caches.barcodeSet.has(barcode)) return;
 
@@ -2393,9 +2395,9 @@ async function ensureProductBarcode(
 		data: {
 			skuId,
 			barcode,
-			barcodeType: detectBarcodeType(barcode),
-			isDefault: true,
-			label: 'Legacy barcode',
+			barcodeType: options.barcodeType ?? detectBarcodeType(barcode),
+			isDefault: options.isDefault ?? true,
+			label: options.label ?? 'Legacy barcode',
 		},
 	});
 	caches.barcodeSet.add(barcode);
@@ -2664,6 +2666,15 @@ export async function importLegacySqlDump(
 		const barcode = compactString(product.BarCode);
 		if (barcode) {
 			await ensureProductBarcode(db, caches, counts, sku.id, barcode);
+		}
+
+		const legacyReferenceCode = compactString(product.ReferenceCode);
+		if (legacyReferenceCode) {
+			await ensureProductBarcode(db, caches, counts, sku.id, legacyReferenceCode, {
+				barcodeType: LEGACY_REFERENCE_BARCODE_TYPE,
+				isDefault: false,
+				label: LEGACY_REFERENCE_BARCODE_LABEL,
+			});
 		}
 	}
 
