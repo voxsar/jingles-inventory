@@ -924,7 +924,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<{ id: string; email: string; name: string | null; role: string; access_scope: string; is_salesman: boolean; legacy_code: string | null }>(
       `SELECT id, email, name, role, access_scope, is_salesman, legacy_code
        FROM users
-       WHERE is_active = TRUE AND access_scope IN ('CASHIER','BOTH','ADMIN')
+       WHERE is_active = TRUE AND (access_scope IN ('CASHIER','BOTH','ADMIN') OR is_salesman = TRUE)
        ORDER BY
          CASE WHEN legacy_code ~ '^[0-9]+$' THEN legacy_code::integer END NULLS LAST,
          COALESCE(legacy_code, email),
@@ -1022,7 +1022,7 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
       return { id: user.id, code: user.legacy_code ?? `INV-${user.id.slice(0, 8).toUpperCase()}`, email: user.email,
         name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
         role: user.access_scope === 'ADMIN' ? 'MANAGER' as const : 'CASHIER' as const,
-        accessScope: user.access_scope as 'CASHIER' | 'BOTH' | 'ADMIN', isSalesman: user.is_salesman };
+        accessScope: user.access_scope as 'CASHIER' | 'INVENTORY' | 'BOTH' | 'ADMIN', isSalesman: user.is_salesman };
     }),
     customers: customersResult.rows.map((customer) => ({
       id: customer.id,
