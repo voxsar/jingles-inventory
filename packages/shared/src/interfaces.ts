@@ -7,6 +7,8 @@ export interface IUser {
 	role: UserRole;
 	accessScope?: 'CASHIER' | 'INVENTORY' | 'BOTH' | 'ADMIN';
 	isSalesman?: boolean;
+	name?: string | null;
+	legacyCode?: string | null;
 	vendorId?: string | null;
 	createdAt: Date;
 	isActive: boolean;

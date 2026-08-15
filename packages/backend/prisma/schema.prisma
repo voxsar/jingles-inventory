@@ -15,6 +15,8 @@ model User {
   role         String
   accessScope  String   @default("BOTH") @map("access_scope")
   isSalesman   Boolean  @default(true) @map("is_salesman")
+  name         String?
+  legacyCode   String?  @unique @map("legacy_code")
   vendorId     String?  @map("vendor_id")
   createdAt    DateTime @default(now()) @map("created_at")
   isActive     Boolean  @default(true) @map("is_active")

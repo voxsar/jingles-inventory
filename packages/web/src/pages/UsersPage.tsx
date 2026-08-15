@@ -5,6 +5,7 @@ import SearchableSelect from '../components/SearchableSelect';
 
 const defaultUserForm = {
   email: '',
+  name: '',
   password: '',
   pin: '',
   role: 'Staff',
@@ -80,6 +81,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setUserForm({
       email: user.email || '',
+      name: user.name || '',
       password: '', // Don't populate password
       pin: '', // PIN hashes are never returned by the API
       role: user.role || 'Staff',
@@ -108,9 +110,10 @@ export default function UsersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { vendorId, password, pin, ...rest } = userForm;
+      const { vendorId, password, pin, name, ...rest } = userForm;
       const payload: Record<string, any> = {
         ...rest,
+        name: name.trim() || null,
         role: userForm.accessScope === 'ADMIN' ? 'Admin' : 'Staff',
       };
 
@@ -178,6 +181,11 @@ export default function UsersPage() {
 
   const userColumns = [
     { header: 'Email', key: 'email', sortable: true },
+    {
+      header: 'Name',
+      key: 'name',
+      render: (row: any) => row.name || <span className="text-gray-400">—</span>,
+    },
     {
       header: 'Access',
       key: 'accessScope',
@@ -357,6 +365,19 @@ export default function UsersPage() {
                   value={userForm.email}
                   onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                   required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Display name
+                </label>
+                <input
+                  type="text"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  placeholder="Shown in POS staff selection instead of the email"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>

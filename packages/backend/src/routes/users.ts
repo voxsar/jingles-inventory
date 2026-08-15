@@ -62,6 +62,8 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     role: true,
     accessScope: true,
     isSalesman: true,
+    name: true,
+    legacyCode: true,
     vendorId: true,
     createdAt: true,
     isActive: true,
@@ -126,6 +128,8 @@ router.get(
         role: true,
         accessScope: true,
         isSalesman: true,
+        name: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -160,6 +164,8 @@ router.post(
     body('role').isIn(Object.values(UserRole)),
     body('accessScope').optional().isIn(ACCESS_SCOPES),
     body('isSalesman').optional().isBoolean(),
+    body('name').optional({ nullable: true }).isString().trim().isLength({ max: 100 }),
+    body('legacyCode').optional({ nullable: true }).isString().trim().isLength({ max: 20 }),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -172,13 +178,15 @@ router.post(
       return;
     }
 
-    const { email, password, pin, role, accessScope = 'BOTH', isSalesman = true, vendorId } = req.body as {
+    const { email, password, pin, role, accessScope = 'BOTH', isSalesman = true, name, legacyCode, vendorId } = req.body as {
       email: string;
       password: string;
       pin: string;
       role: string;
       accessScope?: string;
       isSalesman?: boolean;
+      name?: string | null;
+      legacyCode?: string | null;
       vendorId?: string;
     };
 
@@ -187,6 +195,14 @@ router.post(
     if (existing) {
       res.status(400).json({ error: 'User with this email already exists' });
       return;
+    }
+
+    if (legacyCode) {
+      const existingLegacy = await prisma.user.findUnique({ where: { legacyCode } });
+      if (existingLegacy) {
+        res.status(400).json({ error: 'User with this legacy code already exists' });
+        return;
+      }
     }
 
     // Validate vendor role logic
@@ -206,6 +222,8 @@ router.post(
         role: permissionRoleForAccess(accessScope, role),
         accessScope,
         isSalesman,
+        name: name || null,
+        legacyCode: legacyCode || null,
         vendorId: vendorId || null,
       },
       select: {
@@ -214,6 +232,8 @@ router.post(
         role: true,
         accessScope: true,
         isSalesman: true,
+        name: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -243,6 +263,8 @@ router.put(
     body('role').optional().isIn(Object.values(UserRole)),
     body('accessScope').optional().isIn(ACCESS_SCOPES),
     body('isSalesman').optional().isBoolean(),
+    body('name').optional({ nullable: true }).isString().trim().isLength({ max: 100 }),
+    body('legacyCode').optional({ nullable: true }).isString().trim().isLength({ max: 20 }),
     body('vendorId')
       .optional({ nullable: true })
       .if(body('vendorId').notEmpty())
@@ -260,11 +282,13 @@ router.put(
       return;
     }
 
-    const { email, role, accessScope, isSalesman, vendorId, isActive, pin } = req.body as {
+    const { email, role, accessScope, isSalesman, name, legacyCode, vendorId, isActive, pin } = req.body as {
       email?: string;
       role?: string;
       accessScope?: string;
       isSalesman?: boolean;
+      name?: string | null;
+      legacyCode?: string | null;
       vendorId?: string | null;
       isActive?: boolean;
       pin?: string;
@@ -275,6 +299,15 @@ router.put(
       const existing = await prisma.user.findUnique({ where: { email } });
       if (existing && existing.id !== req.params!.id) {
         res.status(400).json({ error: 'User with this email already exists' });
+        return;
+      }
+    }
+
+    // If updating legacy code, check uniqueness
+    if (legacyCode) {
+      const existingLegacy = await prisma.user.findUnique({ where: { legacyCode } });
+      if (existingLegacy && existingLegacy.id !== req.params!.id) {
+        res.status(400).json({ error: 'User with this legacy code already exists' });
         return;
       }
     }
@@ -299,6 +332,8 @@ router.put(
         role: accessScope ? permissionRoleForAccess(accessScope, role) : role,
         accessScope,
         isSalesman,
+        name,
+        legacyCode,
         vendorId,
         isActive,
       },
@@ -308,6 +343,8 @@ router.put(
         role: true,
         accessScope: true,
         isSalesman: true,
+        name: true,
+        legacyCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,

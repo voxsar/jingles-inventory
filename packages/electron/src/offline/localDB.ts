@@ -237,6 +237,8 @@ function runMigrations(): void {
   ensureColumnExists(database, 'users', 'pin_hash', 'TEXT');
   ensureColumnExists(database, 'users', 'access_scope', "TEXT NOT NULL DEFAULT 'BOTH'");
   ensureColumnExists(database, 'users', 'is_salesman', 'INTEGER NOT NULL DEFAULT 1');
+  ensureColumnExists(database, 'users', 'name', 'TEXT');
+  ensureColumnExists(database, 'users', 'legacy_code', 'TEXT');
   ensureColumnExists(database, 'skus', 'category', 'TEXT');
   ensureColumnExists(database, 'skus', 'synced_at', 'TEXT');
 
