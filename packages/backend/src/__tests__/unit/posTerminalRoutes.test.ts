@@ -35,6 +35,7 @@ function mockSaleTransaction() {
 		},
 		inventoryEvent: {
 			create: vi.fn().mockResolvedValue({ id: 'evt-001' }),
+			update: vi.fn().mockResolvedValue({}),
 		},
 		posSale: {
 			create: vi.fn().mockImplementation(({ data }: any) => Promise.resolve(data)),

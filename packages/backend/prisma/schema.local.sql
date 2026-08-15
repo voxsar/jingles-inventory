@@ -4,9 +4,12 @@ CREATE TABLE IF NOT EXISTS "users" (
     "email" TEXT NOT NULL,
     "password_hash" TEXT NOT NULL,
     "pin_hash" TEXT,
+    "display_name" TEXT,
+    "phone" TEXT,
     "role" TEXT NOT NULL,
     "access_scope" TEXT NOT NULL DEFAULT 'BOTH',
     "is_salesman" BOOLEAN NOT NULL DEFAULT true,
+    "legacy_salesperson_code" TEXT,
     "vendor_id" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "is_active" BOOLEAN NOT NULL DEFAULT true,
@@ -1184,6 +1187,9 @@ CREATE TABLE IF NOT EXISTS "voucher_restrictions" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "users_legacy_salesperson_code_key" ON "users"("legacy_salesperson_code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "vendors_name_key" ON "vendors"("name");

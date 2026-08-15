@@ -147,6 +147,7 @@ type SourceRowMaps = {
 type CreatedCaches = {
 	userByEmail: Map<string, string>;
 	legacyUserByName: Map<string, string>;
+	legacySalespersonByCode: Map<string, string>;
 	unitByKey: Map<string, { id: string; name: string; abbreviation: string }>;
 	vendorBySourceId: Map<string, string>;
 	branchBySourceId: Map<string, string>;
@@ -166,6 +167,7 @@ type CreatedCaches = {
 
 const DIRECT_SUPPORT_LEVELS: Record<string, LegacySupportLevel> = {
 	supplier: 'full',
+	salesperson: 'full',
 	unitofmeasure: 'full',
 	location: 'partial',
 	department: 'partial',
@@ -252,6 +254,14 @@ const IMPORTABLE_DOMAINS: LegacyImportDomain[] = [
 		targetTables: ['units_of_measure'],
 		support: 'full',
 		notes: ['Legacy unit codes and names can be imported directly.'],
+	},
+	{
+		key: 'salespeople',
+		label: 'Salespeople',
+		sourceTables: ['salesperson'],
+		targetTables: ['users'],
+		support: 'full',
+		notes: ['Legacy salesperson codes and contact details become active Staff users flagged for salesman selection.'],
 	},
 	{
 		key: 'branches',
@@ -431,6 +441,13 @@ const STREAMED_IMPORT_ROW_COLUMNS: Record<string, string[]> = {
 		'Branch',
 		'PayeeName',
 		'Reference',
+	],
+	salesperson: [
+		'SalesPersonCode',
+		'SalesPersonName',
+		'Reference',
+		'ContactName',
+		'ContactNo',
 	],
 	location: [
 		'LocationID',
@@ -777,6 +794,12 @@ function asDate(value: LegacyScalar | undefined) {
 function buildLegacyImportUserEmail(username?: string) {
 	const slug = slugify(username ?? 'legacy-import') || 'legacy-import';
 	return `${slug}@legacy-import.local`;
+}
+
+function buildLegacySalespersonEmail(code: string, name: string) {
+	const codeSlug = slugify(code) || 'unknown';
+	const nameSlug = slugify(name) || 'salesperson';
+	return `salesperson-${codeSlug}-${nameSlug}@legacy-salesman.local`;
 }
 
 function normalizeDocumentQuantity(
@@ -1825,7 +1848,7 @@ async function preloadCaches(db: PrismaClient): Promise<CreatedCaches> {
 		stockTransfers,
 		inventoryEvents,
 	] = await Promise.all([
-		db.user.findMany({ select: { id: true, email: true } }),
+		db.user.findMany({ select: { id: true, email: true, legacySalespersonCode: true } }),
 		db.unitOfMeasure.findMany({ select: { id: true, name: true, abbreviation: true } }),
 		db.vendor.findMany({ select: { id: true, name: true } }),
 		db.branch.findMany({ select: { id: true, code: true } }),
@@ -1846,6 +1869,11 @@ async function preloadCaches(db: PrismaClient): Promise<CreatedCaches> {
 	return {
 		userByEmail: new Map(users.map((user) => [normalizeLookup(user.email), user.id])),
 		legacyUserByName: new Map(),
+		legacySalespersonByCode: new Map(
+			users
+				.filter((user) => Boolean(user.legacySalespersonCode))
+				.map((user) => [normalizeLookup(user.legacySalespersonCode), user.id]),
+		),
 		unitByKey: new Map(
 			units.flatMap((unit) => [
 				[normalizeLookup(unit.name), { id: unit.id, name: unit.name, abbreviation: unit.abbreviation }],
@@ -1932,6 +1960,72 @@ async function ensureLegacyUser(
 	counts.usersCreated += 1;
 	caches.userByEmail.set(normalizeLookup(created.email), created.id);
 	caches.legacyUserByName.set(normalizedName, created.id);
+	return created.id;
+}
+
+async function ensureLegacySalespersonUser(
+	db: PrismaClient,
+	caches: CreatedCaches,
+	counts: LegacySqlImportCounts,
+	row: LegacyRow,
+) {
+	const code = compactString(row.SalesPersonCode ?? row.SalespersonCode ?? row.SalesPersonID ?? row.SalesmanCode);
+	const name = compactString(row.SalesPersonName ?? row.SalespersonName ?? row.SalesmanName ?? row.ContactName);
+	if (!code || !name) return undefined;
+
+	const contactName = compactString(row.ContactName);
+	const phone = compactString(row.ContactNo ?? row.ContactNumber ?? row.Phone ?? row.Mobile);
+	const email = buildLegacySalespersonEmail(code, name);
+	const codeKey = normalizeLookup(code);
+	const cached = caches.legacySalespersonByCode.get(codeKey);
+	if (cached) return cached;
+
+	const existing = await db.user.findFirst({
+		where: {
+			OR: [
+				{ legacySalespersonCode: code },
+				{ email },
+			],
+		},
+		select: { id: true, email: true },
+	});
+
+	const data = {
+		displayName: name,
+		phone: phone ?? null,
+		role: 'Staff',
+		accessScope: 'BOTH',
+		isSalesman: true,
+		isActive: true,
+		legacySalespersonCode: code,
+	} as const;
+
+	if (existing) {
+		await db.user.update({
+			where: { id: existing.id },
+			data,
+		});
+		caches.userByEmail.set(normalizeLookup(existing.email), existing.id);
+		caches.legacySalespersonByCode.set(codeKey, existing.id);
+		caches.legacyUserByName.set(normalizeLookup(name), existing.id);
+		if (contactName) caches.legacyUserByName.set(normalizeLookup(contactName), existing.id);
+		return existing.id;
+	}
+
+	const created = await db.user.create({
+		data: {
+			email,
+			passwordHash: 'legacy-salesman-disabled',
+			...data,
+		},
+		select: { id: true, email: true },
+	});
+
+	counts.usersCreated += 1;
+	caches.userByEmail.set(normalizeLookup(created.email), created.id);
+	caches.legacySalespersonByCode.set(codeKey, created.id);
+	caches.legacyUserByName.set(normalizeLookup(name), created.id);
+	if (contactName) caches.legacyUserByName.set(normalizeLookup(contactName), created.id);
 	return created.id;
 }
 
@@ -2554,6 +2648,10 @@ export async function importLegacySqlDump(
 		if (!name) continue;
 		const abbreviation = compactString(row.UnitOfMeasureCode) ?? name.slice(0, 3).toUpperCase();
 		await ensureUnit(db, caches, counts, name, abbreviation);
+	}
+
+	for (const row of dump.rowsByTable.salesperson ?? []) {
+		await ensureLegacySalespersonUser(db, caches, counts, row);
 	}
 
 	for (const row of supplierRows) {

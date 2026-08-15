@@ -257,6 +257,36 @@ describe('legacy SQL migration helpers', () => {
 		});
 	});
 
+	it('retains legacy salesperson rows for user import', async () => {
+		const sql = [
+			'CREATE TABLE `salesperson` (',
+			'  `SalesPersonCode` varchar(10) NOT NULL,',
+			'  `SalesPersonName` varchar(100) NOT NULL,',
+			'  `Reference` varchar(50) DEFAULT NULL,',
+			'  `ContactName` varchar(100) DEFAULT NULL,',
+			'  `ContactNo` varchar(20) DEFAULT NULL',
+			') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;',
+			'',
+			'INSERT INTO `salesperson` VALUES (\'10\',\'REENI\',NULL,\'REENI\',\'0762102188\');',
+		].join('\n');
+
+		const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'legacy-sql-salesperson-'));
+		const filePath = path.join(tempDir, 'salesperson.sql');
+		fs.writeFileSync(filePath, sql);
+
+		const dump = await parseLegacySqlDumpFile(filePath, getLegacyImportFileParseOptions());
+		const analysis = buildLegacySchemaAnalysis(dump);
+
+		expect(dump.rowsByTable.salesperson).toHaveLength(1);
+		expect(dump.rowsByTable.salesperson[0]).toMatchObject({
+			SalesPersonCode: '10',
+			SalesPersonName: 'REENI',
+			ContactName: 'REENI',
+			ContactNo: '0762102188',
+		});
+		expect(analysis.importableDomains.some((domain) => domain.key === 'salespeople')).toBe(true);
+	});
+
 	it('rejects a SQL file that ends mid-statement', async () => {
 		const sql = [
 			'CREATE TABLE `product` (',

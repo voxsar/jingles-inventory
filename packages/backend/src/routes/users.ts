@@ -52,16 +52,26 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     ...(req.query.vendorId ? { vendorId: req.query.vendorId as string } : {}),
     ...(isActive !== undefined ? { isActive: isActive === 'true' } : {}),
     ...(search
-      ? { email: { contains: search, mode: 'insensitive' } }
+      ? {
+        OR: [
+          { email: { contains: search, mode: 'insensitive' } },
+          { displayName: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+          { legacySalespersonCode: { contains: search, mode: 'insensitive' } },
+        ],
+      }
       : {}),
   };
 
   const select = {
     id: true,
     email: true,
+    displayName: true,
+    phone: true,
     role: true,
     accessScope: true,
     isSalesman: true,
+    legacySalespersonCode: true,
     vendorId: true,
     createdAt: true,
     isActive: true,
@@ -123,9 +133,12 @@ router.get(
       select: {
         id: true,
         email: true,
+        displayName: true,
+        phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
+        legacySalespersonCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -153,6 +166,8 @@ router.post(
   requireRole('Admin'),
   [
     body('email').isEmail().normalizeEmail(),
+    body('displayName').optional({ nullable: true }).trim(),
+    body('phone').optional({ nullable: true }).trim(),
     body('password').isLength({ min: 6 }),
     body('pin')
       .custom(validPin)
@@ -172,8 +187,10 @@ router.post(
       return;
     }
 
-    const { email, password, pin, role, accessScope = 'BOTH', isSalesman = true, vendorId } = req.body as {
+    const { email, displayName, phone, password, pin, role, accessScope = 'BOTH', isSalesman = true, vendorId } = req.body as {
       email: string;
+      displayName?: string;
+      phone?: string;
       password: string;
       pin: string;
       role: string;
@@ -202,6 +219,8 @@ router.post(
     const user = await prisma.user.create({
       data: {
         email,
+        displayName: displayName || null,
+        phone: phone || null,
         passwordHash,
         role: permissionRoleForAccess(accessScope, role),
         accessScope,
@@ -211,9 +230,12 @@ router.post(
       select: {
         id: true,
         email: true,
+        displayName: true,
+        phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
+        legacySalespersonCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,
@@ -240,6 +262,8 @@ router.put(
   [
     param('id').isUUID(),
     body('email').optional().isEmail().normalizeEmail(),
+    body('displayName').optional({ nullable: true }).trim(),
+    body('phone').optional({ nullable: true }).trim(),
     body('role').optional().isIn(Object.values(UserRole)),
     body('accessScope').optional().isIn(ACCESS_SCOPES),
     body('isSalesman').optional().isBoolean(),
@@ -260,8 +284,10 @@ router.put(
       return;
     }
 
-    const { email, role, accessScope, isSalesman, vendorId, isActive, pin } = req.body as {
+    const { email, displayName, phone, role, accessScope, isSalesman, vendorId, isActive, pin } = req.body as {
       email?: string;
+      displayName?: string | null;
+      phone?: string | null;
       role?: string;
       accessScope?: string;
       isSalesman?: boolean;
@@ -296,6 +322,8 @@ router.put(
       where: { id: req.params!.id },
       data: {
         email,
+        displayName,
+        phone,
         role: accessScope ? permissionRoleForAccess(accessScope, role) : role,
         accessScope,
         isSalesman,
@@ -305,9 +333,12 @@ router.put(
       select: {
         id: true,
         email: true,
+        displayName: true,
+        phone: true,
         role: true,
         accessScope: true,
         isSalesman: true,
+        legacySalespersonCode: true,
         vendorId: true,
         createdAt: true,
         isActive: true,

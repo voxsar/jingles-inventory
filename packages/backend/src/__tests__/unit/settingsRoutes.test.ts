@@ -175,4 +175,33 @@ describe('settings routes sync coverage', () => {
       statusId
     );
   });
+
+  it('returns the default commission settings when no config value exists', async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([]);
+
+    const app = createTestApp();
+    const res = await request(app).get('/api/settings/commission');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({
+      defaultRatePercent: 2,
+      commissionBasis: 'after_discounts',
+    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalled();
+    expect(prismaMock.$queryRaw).toHaveBeenCalled();
+  });
+
+  it('saves commission settings', async () => {
+    const app = createTestApp();
+    const res = await request(app).put('/api/settings/commission').send({
+      defaultRatePercent: 3.5,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({
+      defaultRatePercent: 3.5,
+      commissionBasis: 'after_discounts',
+    });
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(2);
+  });
 });

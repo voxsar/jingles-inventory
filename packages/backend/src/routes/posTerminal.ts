@@ -10,6 +10,7 @@ import {
 	enqueueLocalSyncOperation,
 	recordServerSyncChanges,
 } from '../sync/syncV2';
+import { getSalesmanCommissionSettings } from '../modules/reports/commissionSettings';
 import logger from '../utils/logger';
 
 const router = Router();
@@ -33,6 +34,13 @@ interface SaleLineInput {
 interface PaymentInput {
 	type: string;
 	amount: number;
+}
+
+interface SaleDeductionEventRef {
+	id: string;
+	quantity: number;
+	parentEntityId: string | null;
+	oversold?: boolean;
 }
 
 function toFiniteNumber(value: unknown): number | undefined {
@@ -72,7 +80,7 @@ async function deductStockForSale(
 		terminalId?: string;
 		allowOversell: boolean;
 	}
-): Promise<{ touchedRecordIds: string[]; eventIds: string[]; shortfall: number }> {
+): Promise<{ touchedRecordIds: string[]; eventIds: string[]; events: SaleDeductionEventRef[]; shortfall: number }> {
 	const shelfReadyState = await getStatusesByKeys([SpecialStatusKeys.INVENTORY_SHELF_READY]).then(
 		(m) => m.get(SpecialStatusKeys.INVENTORY_SHELF_READY)!
 	);
@@ -92,6 +100,7 @@ async function deductStockForSale(
 	let remaining = params.qty;
 	const touchedRecordIds: string[] = [];
 	const eventIds: string[] = [];
+	const events: SaleDeductionEventRef[] = [];
 
 	for (const record of candidates) {
 		if (remaining <= 0) break;
@@ -126,6 +135,7 @@ async function deductStockForSale(
 
 		touchedRecordIds.push(record.id);
 		eventIds.push(event.id);
+		events.push({ id: event.id, quantity: take, parentEntityId: record.id });
 		remaining -= take;
 	}
 
@@ -148,9 +158,10 @@ async function deductStockForSale(
 			},
 		});
 		eventIds.push(event.id);
+		events.push({ id: event.id, quantity: remaining, parentEntityId: null, oversold: true });
 	}
 
-	return { touchedRecordIds, eventIds, shortfall: Math.max(0, remaining) };
+	return { touchedRecordIds, eventIds, events, shortfall: Math.max(0, remaining) };
 }
 
 // -----------------------------------------------------------------------------
@@ -361,6 +372,7 @@ router.post('/sales', async (req: AuthRequest, res: Response): Promise<void> => 
 			customerId?: string | null;
 			customerName?: string | null;
 			salesmanId?: string | null;
+			salesmanName?: string | null;
 			isCredit?: boolean;
 			lines?: SaleLineInput[];
 			discountTotal?: number | string;
@@ -394,6 +406,10 @@ router.post('/sales', async (req: AuthRequest, res: Response): Promise<void> => 
 		});
 		const subtotal = lineTotals.reduce((sum, v) => sum + v, 0);
 		const total = Math.max(0, subtotal - discountTotal + taxTotal);
+		const commissionSettings = await getSalesmanCommissionSettings();
+		const commissionRate = commissionSettings.defaultRatePercent;
+		const allocatableDiscount = Math.min(Math.max(discountTotal, 0), Math.max(subtotal, 0));
+		const salesmanName = body.salesmanName?.trim() || body.salesmanId?.trim() || '';
 
 		const allowOversell = Boolean(body.allowOversell) && [UserRole.Admin, UserRole.Manager].includes(user.role as UserRole);
 
@@ -402,13 +418,22 @@ router.post('/sales', async (req: AuthRequest, res: Response): Promise<void> => 
 		const sale = await prisma.$transaction(async (tx: any) => {
 			const touchedRecordIds: string[] = [];
 			const touchedEventIds: string[] = [];
+			const eventMetadataUpdates: Array<{ eventId: string; metadata: Record<string, unknown> }> = [];
 
-			for (const line of body.lines!) {
+			for (const [lineIndex, line] of body.lines!.entries()) {
+				const qty = toFiniteNumber(line.qty) ?? 0;
+				const unitPrice = toFiniteNumber(line.unitPrice) ?? 0;
+				const lineDiscount = toFiniteNumber(line.lineDiscount) ?? 0;
+				const grossLineTotal = qty * unitPrice;
+				const discountedLineTotal = Math.max(0, grossLineTotal - lineDiscount);
+				const orderDiscountShare = subtotal > 0 ? (allocatableDiscount * discountedLineTotal) / subtotal : 0;
+				const lineCommissionableAmount = Math.max(0, discountedLineTotal - orderDiscountShare);
+
 				const result = await deductStockForSale(tx, {
 					skuId: line.skuId,
 					variantId: line.variantId ?? null,
 					branchId: body.branchId ?? null,
-					qty: toFiniteNumber(line.qty) ?? 0,
+					qty,
 					userId: user.id,
 					terminalId: body.terminalId,
 					allowOversell,
@@ -416,6 +441,39 @@ router.post('/sales', async (req: AuthRequest, res: Response): Promise<void> => 
 				touchedRecordIds.push(...result.touchedRecordIds);
 				touchedEventIds.push(...result.eventIds);
 				if (result.shortfall > 0) shortfalls.push({ skuId: line.skuId, shortfall: result.shortfall });
+
+				for (const event of result.events) {
+					const eventShare = qty > 0 ? event.quantity / qty : 0;
+					const commissionableAmount = lineCommissionableAmount * eventShare;
+					const discountAmount = Math.max(0, grossLineTotal - lineCommissionableAmount) * eventShare;
+					eventMetadataUpdates.push({
+						eventId: event.id,
+						metadata: {
+							skuId: line.skuId,
+							variantId: line.variantId ?? null,
+							quantity: event.quantity,
+							unit: line.unit,
+							unitPrice,
+							grossAmount: grossLineTotal * eventShare,
+							lineDiscount: lineDiscount * eventShare,
+							saleDiscount: orderDiscountShare * eventShare,
+							discountAmount,
+							revenue: commissionableAmount,
+							totalAmount: commissionableAmount,
+							commissionableAmount,
+							commissionRate,
+							commissionAmount: (commissionableAmount * commissionRate) / 100,
+							commissionBasis: commissionSettings.commissionBasis,
+							salesman: salesmanName || null,
+							salesmanId: body.salesmanId ?? null,
+							salesPerson: salesmanName || null,
+							customerId: body.customerId ?? null,
+							customerName: body.customerName ?? null,
+							lineIndex,
+							oversold: event.oversold ?? false,
+						},
+					});
+				}
 			}
 
 			const saleId = randomUUID();
@@ -440,6 +498,18 @@ router.post('/sales', async (req: AuthRequest, res: Response): Promise<void> => 
 					synced: true,
 				},
 			});
+
+			await Promise.all(eventMetadataUpdates.map((update) => tx.inventoryEvent.update({
+				where: { id: update.eventId },
+				data: {
+					metadata: {
+						...update.metadata,
+						saleId,
+						receiptNumber: created.receiptNumber,
+						reference: created.receiptNumber,
+					},
+				},
+			})));
 
 			if (body.heldSaleId) {
 				await tx.posHeldSale.delete({ where: { id: body.heldSaleId } }).catch(() => null);

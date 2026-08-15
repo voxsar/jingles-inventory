@@ -921,8 +921,14 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     inventory.query<{ id: string; code: string; name: string }>(
       `SELECT id, code, name FROM branches WHERE is_active = TRUE ORDER BY code`,
     ),
-    inventory.query<{ id: string; email: string; role: string; access_scope: string; is_salesman: boolean }>(
-      `SELECT id, email, role, access_scope, is_salesman FROM users WHERE is_active = TRUE AND access_scope IN ('CASHIER','BOTH','ADMIN') ORDER BY email`,
+    inventory.query<{ id: string; email: string; display_name: string | null; role: string; access_scope: string; is_salesman: boolean; legacy_salesperson_code: string | null }>(
+      `SELECT id, email, display_name, role, access_scope, is_salesman, legacy_salesperson_code
+       FROM users
+       WHERE is_active = TRUE AND access_scope IN ('CASHIER','BOTH','ADMIN')
+       ORDER BY
+         CASE WHEN legacy_salesperson_code ~ '^[0-9]+$' THEN legacy_salesperson_code::integer END NULLS LAST,
+         COALESCE(legacy_salesperson_code, email),
+         email`,
     ),
     inventory.query<{
       id: string; code: string | null; name: string; tier: string; email: string | null;
@@ -1012,8 +1018,8 @@ export async function getPosCatalogSnapshot(): Promise<PosCatalogSnapshot> {
     generatedAt: new Date().toISOString(),
     branches: branchesResult.rows,
     users: usersResult.rows.map((user) => {
-      const name = user.email.split('@')[0]!.replace(/[._-]+/g, ' ');
-      return { id: user.id, code: `INV-${user.id.slice(0, 8).toUpperCase()}`, email: user.email,
+      const name = user.display_name || user.email.split('@')[0]!.replace(/[._-]+/g, ' ');
+      return { id: user.id, code: user.legacy_salesperson_code ?? `INV-${user.id.slice(0, 8).toUpperCase()}`, email: user.email,
         name, initials: name.split(/\s+/).map((part) => part[0]).join('').slice(0, 3).toUpperCase(),
         role: user.access_scope === 'ADMIN' ? 'MANAGER' as const : 'CASHIER' as const,
         accessScope: user.access_scope as 'CASHIER' | 'BOTH' | 'ADMIN', isSalesman: user.is_salesman };

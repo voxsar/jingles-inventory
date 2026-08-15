@@ -2,6 +2,7 @@ import prisma from '../../prisma/client';
 import { InventoryEventType } from '@jingles/shared';
 import { ensurePosCloudSchema, getLegacyTableRows } from '../../services/posCloud';
 import { isLocalReplicaMode } from '../../utils/runtimePaths';
+import { getSalesmanCommissionSettings } from './commissionSettings';
 
 /**
  * GRN Report - Good Received Note Report
@@ -671,6 +672,15 @@ const numberFrom = (...values: any[]) => {
 	return 0;
 };
 
+const optionalNumberFrom = (...values: any[]) => {
+	for (const value of values) {
+		if (value === undefined || value === null || value === '') continue;
+		const number = Number(value);
+		if (Number.isFinite(number)) return number;
+	}
+	return undefined;
+};
+
 const paginateRows = <T>(rows: T[], filters: CommonReportFilters) => {
 	const page = filters.page ?? 1;
 	const pageSize = filters.pageSize ?? 50;
@@ -729,7 +739,7 @@ const getInventoryEventRows = async (
 		const quantity = Math.abs(Number(metadata.quantity ?? event.quantityDelta ?? 0));
 		const unitCost = Number(metadata.unitCost ?? metadata.costPrice ?? record?.batch?.costPrice ?? record?.sku?.costPrice ?? 0);
 		const unitPrice = Number(metadata.unitPrice ?? metadata.sellingPrice ?? metadata.price ?? record?.batch?.sellingPrice ?? record?.sku?.sellingPrice ?? 0);
-		const revenue = Number(metadata.revenue ?? metadata.totalAmount ?? (unitPrice * quantity));
+		const revenue = Number(metadata.revenue ?? metadata.totalAmount ?? metadata.lineTotal ?? metadata.netLineTotal ?? (unitPrice * quantity));
 		const cost = Number(metadata.cost ?? (unitCost * quantity));
 		const paymentMethod = String(metadata.paymentMethod ?? metadata.tenderType ?? '');
 		const receiptNumber = metadata.receiptNumber ?? metadata.receiptNo ?? metadata.invoiceNo ?? '';
@@ -1546,6 +1556,7 @@ export async function getPaidInOutReport(filters: CommonReportFilters) {
 }
 
 export async function getSalesmenCommissionReport(filters: CommonReportFilters) {
+	const commissionSettings = await getSalesmanCommissionSettings();
 	const eventData = await getInventoryEventRows([InventoryEventType.SALE_DEDUCTED], { ...filters, page: 1, pageSize: 10000 });
 	const groups = new Map<string, any>();
 	const needle = normalizeSearch(filters.search)?.toLowerCase();
@@ -1554,8 +1565,11 @@ export async function getSalesmenCommissionReport(filters: CommonReportFilters) 
 		const metadata = metadataRecord(row.metadata);
 		const salesman = stringFrom(row.salesman, metadata.salesmanId, metadata.salesPersonId, 'Unassigned');
 		if (needle && ![salesman, row.reference, row.receiptNumber, row.productName, row.skuCode].join(' ').toLowerCase().includes(needle)) continue;
-		const commissionRate = numberFrom(metadata.commissionRate, metadata.commissionPercent, metadata.salesmanCommissionRate);
-		const commissionAmount = numberFrom(metadata.commissionAmount, metadata.salesmanCommissionAmount, commissionRate ? (row.revenue * commissionRate) / 100 : 0);
+		const commissionableAmount = numberFrom(metadata.commissionableAmount, row.revenue);
+		const commissionRate = optionalNumberFrom(metadata.commissionRate, metadata.commissionPercent, metadata.salesmanCommissionRate)
+			?? commissionSettings.defaultRatePercent;
+		const commissionAmount = optionalNumberFrom(metadata.commissionAmount, metadata.salesmanCommissionAmount)
+			?? ((commissionableAmount * commissionRate) / 100);
 		if (!groups.has(salesman)) {
 			groups.set(salesman, {
 				id: salesman,
@@ -1574,7 +1588,7 @@ export async function getSalesmenCommissionReport(filters: CommonReportFilters) 
 		group.quantity += row.quantity;
 		group.revenue += row.revenue;
 		group.grossProfit += row.grossProfit;
-		group.commissionableAmount += numberFrom(metadata.commissionableAmount, row.revenue);
+		group.commissionableAmount += commissionableAmount;
 		group.commissionAmount += commissionAmount;
 		if (!group.commissionRate && commissionRate) group.commissionRate = commissionRate;
 	}
@@ -1590,14 +1604,20 @@ export async function getSalesmenCommissionReport(filters: CommonReportFilters) 
 		acc.totalRevenue += row.revenue;
 		acc.totalCommission += row.commissionAmount;
 		return acc;
-	}, { sourceStatus: 'Derived from SALE_DEDUCTED inventory_events metadata', totalSalesmen: 0, totalTransactions: 0, totalRevenue: 0, totalCommission: 0 });
+	}, {
+		sourceStatus: `Derived from SALE_DEDUCTED inventory_events; default commission ${commissionSettings.defaultRatePercent}% after discounts`,
+		totalSalesmen: 0,
+		totalTransactions: 0,
+		totalRevenue: 0,
+		totalCommission: 0,
+	});
 
 	const paged = paginateRows(rows, filters);
 	return {
 		...paged,
 		summary,
 		notice: rows.length === 0
-			? 'No sales rows were found for commission reporting. For full live commissions, connect a salesman commission policy/table or write commissionRate/commissionAmount and salesman metadata on SALE_DEDUCTED events.'
+			? 'No sales rows were found for commission reporting. Default commission is configured, but SALE_DEDUCTED sales events are required to calculate commissions.'
 			: undefined,
 	};
 }

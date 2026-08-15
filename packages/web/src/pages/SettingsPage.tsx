@@ -66,7 +66,7 @@ const defaultStatusForm = { entityType: 'inventory', value: '', label: '', color
 const defaultAttrForm = { name: '', type: 'dropdown', sortOrder: '0' };
 const defaultAttrValueForm = { displayName: '', representedValue: '', sortOrder: '0' };
 
-type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense' | 'inventory-control';
+type Section = 'home' | 'units' | 'statuses' | 'status-detail' | 'attributes' | 'typesense' | 'inventory-control' | 'commission';
 
 type InventoryControlStatus = {
 	legacyQuantitySyncEnabled: boolean;
@@ -75,6 +75,11 @@ type InventoryControlStatus = {
 	unitsZeroed: number;
 	currentNonZeroRecords: number;
 	currentQuantity: number;
+};
+
+type CommissionSettings = {
+	defaultRatePercent: number;
+	commissionBasis: 'after_discounts';
 };
 
 export default function SettingsPage() {
@@ -126,6 +131,11 @@ export default function SettingsPage() {
 	const [zeroConfirmation, setZeroConfirmation] = useState('');
 	const [zeroingInventory, setZeroingInventory] = useState(false);
 	const [zeroResult, setZeroResult] = useState<string>('');
+	const [commissionSettings, setCommissionSettings] = useState<CommissionSettings | null>(null);
+	const [commissionRateInput, setCommissionRateInput] = useState('2');
+	const [commissionLoading, setCommissionLoading] = useState(false);
+	const [commissionSaving, setCommissionSaving] = useState(false);
+	const [commissionMessage, setCommissionMessage] = useState('');
 
 	const loadInventoryControl = async () => {
 		setInventoryControlLoading(true);
@@ -161,6 +171,43 @@ export default function SettingsPage() {
 			setZeroResult(err.response?.data?.error ?? 'Failed to zero inventory');
 		} finally {
 			setZeroingInventory(false);
+		}
+	};
+
+	const loadCommissionSettings = async () => {
+		setCommissionLoading(true);
+		setCommissionMessage('');
+		try {
+			const response = await settingsApi.getCommission();
+			const settings = response.data.data as CommissionSettings;
+			setCommissionSettings(settings);
+			setCommissionRateInput(String(settings.defaultRatePercent));
+		} catch (err: any) {
+			setCommissionMessage(err.response?.data?.error ?? 'Failed to load commission settings');
+		} finally {
+			setCommissionLoading(false);
+		}
+	};
+
+	const handleSaveCommissionSettings = async (event: React.FormEvent) => {
+		event.preventDefault();
+		const defaultRatePercent = Number(commissionRateInput);
+		if (!Number.isFinite(defaultRatePercent) || defaultRatePercent < 0 || defaultRatePercent > 100) {
+			setCommissionMessage('Commission rate must be between 0 and 100.');
+			return;
+		}
+		setCommissionSaving(true);
+		setCommissionMessage('');
+		try {
+			const response = await settingsApi.updateCommission({ defaultRatePercent });
+			const settings = response.data.data as CommissionSettings;
+			setCommissionSettings(settings);
+			setCommissionRateInput(String(settings.defaultRatePercent));
+			setCommissionMessage('Commission settings saved.');
+		} catch (err: any) {
+			setCommissionMessage(err.response?.data?.error ?? 'Failed to save commission settings');
+		} finally {
+			setCommissionSaving(false);
 		}
 	};
 
@@ -500,6 +547,7 @@ export default function SettingsPage() {
 		if (section === 'status-detail') loadStatuses(statusEntityType);
 		if (section === 'attributes') loadAttributes();
 		if (section === 'typesense') testTypesenseConnection();
+		if (section === 'commission') loadCommissionSettings();
 	}, [section]);
 
 	useEffect(() => {
@@ -1134,6 +1182,56 @@ export default function SettingsPage() {
 		);
 	}
 
+	if (section === 'commission') {
+		return (
+			<div className="flex flex-col gap-4">
+				<div className="page-header">
+					<div className="page-header-left">
+						<h1 className="page-title">Sales Commission</h1>
+						<p className="page-subtitle">Default salesman commission used when sale events do not specify their own rate.</p>
+					</div>
+					<button className="btn-secondary" onClick={() => setSection('home')}>← Settings</button>
+				</div>
+
+				<div className="content-section p-6">
+					{commissionLoading ? (
+						<p className="text-sm text-gray-500">Loading commission settings…</p>
+					) : (
+						<form onSubmit={handleSaveCommissionSettings} className="max-w-xl space-y-5">
+							<div>
+								<label className="form-label">Default commission rate</label>
+								<div className="flex items-center gap-2">
+									<input
+										className="form-input max-w-[180px]"
+										type="number"
+										min={0}
+										max={100}
+										step={0.01}
+										value={commissionRateInput}
+										onChange={(event) => setCommissionRateInput(event.target.value)}
+									/>
+									<span className="text-sm font-medium text-gray-600">%</span>
+								</div>
+							</div>
+							<div className="rounded-lg border border-gray-200 p-4">
+								<div className="text-xs text-gray-500">Commission basis</div>
+								<div className="text-sm font-semibold text-gray-800 mt-1">After discounts</div>
+								<div className="text-xs text-gray-500 mt-1">Line discounts and bill discounts are deducted before commission is calculated.</div>
+							</div>
+							<button className="btn-primary" type="submit" disabled={commissionSaving}>
+								{commissionSaving ? 'Saving…' : 'Save Commission'}
+							</button>
+							{commissionMessage && <p className="text-sm text-gray-700">{commissionMessage}</p>}
+							{commissionSettings && (
+								<p className="text-xs text-gray-500">Current default: {commissionSettings.defaultRatePercent}% after discounts.</p>
+							)}
+						</form>
+					)}
+				</div>
+			</div>
+		);
+	}
+
 	if (section === 'typesense') {
 		return (
 			<div className="flex flex-col gap-4">
@@ -1280,6 +1378,21 @@ export default function SettingsPage() {
 								<h2 className="font-semibold text-gray-800 text-lg">Inventory Control</h2>
 								<p className="text-sm text-gray-500 mt-1">Zero the stock baseline and permanently prevent MaxSoft snapshots from restoring old quantities.</p>
 								<span className="inline-block mt-3 text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded-full">Admin only →</span>
+							</div>
+						</div>
+					</button>
+				)}
+				{user?.role === 'Admin' && (
+					<button
+						className="content-section p-6 text-left hover:shadow-md transition-shadow cursor-pointer"
+						onClick={() => setSection('commission')}
+					>
+						<div className="flex items-start gap-4">
+							<div className="text-4xl">%</div>
+							<div>
+								<h2 className="font-semibold text-gray-800 text-lg">Sales Commission</h2>
+								<p className="text-sm text-gray-500 mt-1">Set the default salesman commission percentage used after discounts.</p>
+								<span className="inline-block mt-3 text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Manage →</span>
 							</div>
 						</div>
 					</button>

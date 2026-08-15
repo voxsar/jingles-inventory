@@ -277,6 +277,7 @@ export default function PosTerminalPage() {
           branchId,
           shiftId: shift.id,
           customerName: customerName || null,
+          salesmanName: salesman || null,
           isCredit,
           lines: cart.map((l) => ({
             skuId: l.skuId,

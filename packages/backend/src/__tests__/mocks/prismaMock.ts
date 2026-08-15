@@ -354,6 +354,8 @@ export const prismaMock = {
 		count: vi.fn(),
 	},
 	$transaction: vi.fn(),
+	$queryRaw: vi.fn(),
+	$executeRaw: vi.fn(),
 	$queryRawUnsafe: vi.fn(),
 	$executeRawUnsafe: vi.fn(),
 	$disconnect: vi.fn(),
@@ -365,8 +367,10 @@ vi.mock('../../prisma/client', () => ({
 
 export function resetPrismaMocks() {
 	// Reset top-level functions
-	if (typeof prismaMock.$transaction === 'function' && 'mockReset' in prismaMock.$transaction) {
-		(prismaMock.$transaction as ReturnType<typeof vi.fn>).mockReset();
+	for (const fn of [prismaMock.$transaction, prismaMock.$queryRaw, prismaMock.$executeRaw, prismaMock.$queryRawUnsafe, prismaMock.$executeRawUnsafe]) {
+		if (typeof fn === 'function' && 'mockReset' in fn) {
+			(fn as ReturnType<typeof vi.fn>).mockReset();
+		}
 	}
 	// Reset model methods
 	Object.values(prismaMock).forEach(model => {
@@ -379,5 +383,7 @@ export function resetPrismaMocks() {
 		}
 	});
 	prismaMock.inventoryControl.findUnique.mockResolvedValue(null as any);
+	prismaMock.$queryRaw.mockResolvedValue([] as any);
+	prismaMock.$executeRaw.mockResolvedValue(0 as any);
 	prismaMock.$queryRawUnsafe.mockResolvedValue([] as any);
 }

@@ -13,6 +13,10 @@ import {
 	getInventoryControlStatus,
 	zeroInventory,
 } from '../modules/inventory/inventoryControl';
+import {
+	getSalesmanCommissionSettings,
+	saveSalesmanCommissionSettings,
+} from '../modules/reports/commissionSettings';
 
 const router = Router();
 
@@ -49,6 +53,42 @@ router.post(
 			logger.error('Zero inventory error', error);
 			const message = error?.message ?? 'Failed to zero inventory';
 			res.status(message.includes('main server') ? 409 : 500).json({ success: false, error: message });
+		}
+	},
+);
+
+router.get(
+	'/commission',
+	requireRole('Admin'),
+	async (_req: AuthRequest, res: Response): Promise<void> => {
+		try {
+			res.json({ success: true, data: await getSalesmanCommissionSettings() });
+		} catch (error) {
+			logger.error('Get commission settings error', error);
+			res.status(500).json({ success: false, error: 'Failed to load commission settings' });
+		}
+	},
+);
+
+router.put(
+	'/commission',
+	requireRole('Admin'),
+	[body('defaultRatePercent').isFloat({ min: 0, max: 100 })],
+	async (req: AuthRequest, res: Response): Promise<void> => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			res.status(400).json({ success: false, error: 'Commission rate must be between 0 and 100' });
+			return;
+		}
+
+		try {
+			const data = await saveSalesmanCommissionSettings({
+				defaultRatePercent: Number(req.body.defaultRatePercent),
+			});
+			res.json({ success: true, data });
+		} catch (error) {
+			logger.error('Save commission settings error', error);
+			res.status(500).json({ success: false, error: 'Failed to save commission settings' });
 		}
 	},
 );
