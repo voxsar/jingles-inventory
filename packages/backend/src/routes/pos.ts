@@ -12,6 +12,8 @@ import {
 import { validateVoucher } from '../services/voucherService';
 import { isLocalReplicaMode } from '../utils/runtimePaths';
 import { getPosLanVectorClock, queuePosLanPlayback } from '../services/posLanBridge';
+import { lookupBarcode } from '../modules/barcode/barcodeProcessor';
+import { createBatch } from '../modules/batch/batchService';
 import prisma from '../prisma/client';
 
 const router = Router();
@@ -153,6 +155,87 @@ router.get('/catalog/snapshot', async (_req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Failed to load the POS catalog snapshot' });
+  }
+});
+
+/**
+ * Lets a POS terminal make a price-override typed at the till (see the
+ * "<price>-<code>" checkout shorthand) stick permanently, by recording it as
+ * a new batch-pricing entry — the same mechanism the catalog snapshot
+ * already reads the "current" price from (`getPosCatalogSnapshot` takes the
+ * most recently created active batch's `sellingPrice` over the SKU's base
+ * price), so it takes effect on the terminal's very next catalog sync with
+ * no other code path involved.
+ *
+ * Deliberately terse: a cashier confirming this mid-sale has no vendor,
+ * expiry, or manufacturing date to give it, and receipt printing can't wait
+ * on a form. `createBatch` already tolerates every batch field but
+ * `skuId`/`sellingPrice` being absent, so the note and timestamp are the
+ * only audit trail, both filled in from what the POS already knows.
+ */
+router.post('/pricing/override', async (req: Request, res: Response) => {
+  try {
+    if (isLocalReplicaMode()) {
+      return res.status(503).json({ error: 'Price overrides need the cloud host; the LAN hub cannot write pricing.' });
+    }
+
+    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
+    const price = Number(req.body?.price);
+    const tierLabel = typeof req.body?.tierLabel === 'string' ? req.body.tierLabel.trim() : 'Retail';
+    const tierKey = tierLabel.toLowerCase();
+    const tierPrices = req.body?.tierPrices && typeof req.body.tierPrices === 'object' ? req.body.tierPrices : {};
+    const terminalId = typeof req.body?.terminalId === 'string' ? req.body.terminalId.trim() : '';
+    const cashierName = typeof req.body?.cashierName === 'string' ? req.body.cashierName.trim() : '';
+    const receiptReference = typeof req.body?.receiptReference === 'string' ? req.body.receiptReference.trim() : '';
+
+    if (!code) {
+      return res.status(400).json({ error: 'code is required' });
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      return res.status(400).json({ error: 'price must be a positive, finite number' });
+    }
+    if (!['retail', 'wholesale', 'bulk'].includes(tierKey)) {
+      return res.status(400).json({ error: `Unsupported price tier ${tierLabel}` });
+    }
+
+    const lookup = await lookupBarcode(code);
+    if (!lookup.found || !lookup.sku) {
+      return res.status(404).json({ error: `No product matches code ${code}` });
+    }
+
+    const notes = [
+      'POS price override',
+      `tier ${tierLabel}`,
+      terminalId && `terminal ${terminalId}`,
+      cashierName && `by ${cashierName}`,
+      receiptReference && `sale ${receiptReference}`,
+      new Date().toISOString(),
+    ].filter(Boolean).join(' - ');
+
+    const batch = await createBatch({
+      skuId: lookup.sku.id,
+      variantId: lookup.variant?.id ?? null,
+      sellingPrice: tierKey === 'retail' ? price : Number(tierPrices.retail) || null,
+      wholesalePrice: tierKey === 'wholesale' ? price : Number(tierPrices.wholesale) || null,
+      bulkPrice: tierKey === 'bulk' ? price : Number(tierPrices.bulk) || null,
+      notes,
+    });
+
+    return res.status(201).json({
+      sku: { id: lookup.sku.id, skuCode: lookup.sku.skuCode, name: lookup.sku.name },
+      variant: lookup.variant ? { id: lookup.variant.id, variantCode: lookup.variant.variantCode } : null,
+      batch: {
+        id: batch.id,
+        batchNumber: batch.batchNumber,
+        sellingPrice: batch.sellingPrice,
+        wholesalePrice: batch.wholesalePrice,
+        bulkPrice: batch.bulkPrice,
+        createdAt: batch.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Failed to record the price override' });
   }
 });
 
