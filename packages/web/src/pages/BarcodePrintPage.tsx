@@ -4,6 +4,7 @@ import { barcodeApi, skusApi, variantsApi } from '../api/client';
 import { UiBadge, UiText } from '../components/UiPrimitives';
 import Pagination from '../components/Pagination';
 import { buildTscTe244Prn } from '../utils/barcodePrinterFiles';
+import { resolveBackendUrl } from '../utils/runtime';
 
 const CODE128_PATTERNS = [
   '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
@@ -46,6 +47,8 @@ type BarcodeTemplate = {
   showPrice: boolean;
   showSkuCode: boolean;
   showBarcodeNumber: boolean;
+  showLogo: boolean;
+  logoUrl?: string | null;
   isDefault: boolean;
   printCount?: number;
 };
@@ -97,6 +100,8 @@ const defaultTemplate: BarcodeTemplate = {
   showPrice: true,
   showSkuCode: false,
   showBarcodeNumber: true,
+  showLogo: false,
+  logoUrl: null,
   isDefault: true,
 };
 
@@ -286,6 +291,9 @@ function BarcodeLabel({ row, template }: { row: PrintRow; template: BarcodeTempl
         padding: `${template.paddingTopMm}mm ${template.paddingRightMm}mm ${template.paddingBottomMm}mm ${template.paddingLeftMm}mm`,
       }}
     >
+      {template.showLogo && template.logoUrl && (
+        <img className="barcode-logo" src={resolveBackendUrl(template.logoUrl)} alt="" />
+      )}
       {template.showProductName && <div className="barcode-product-name">{row.productName}</div>}
       {template.showVariantName && row.variantName && <div className="barcode-variant-name">{row.variantName}</div>}
       <div className="barcode-image" style={{ height: `${template.barcodeHeightMm}mm` }}>
@@ -531,6 +539,37 @@ export default function BarcodePrintPage() {
     }
   };
 
+  const uploadLogo = async (file: File) => {
+    if (!template.id) return;
+    setBusy('logo');
+    try {
+      const response = await barcodeApi.uploadTemplateLogo(template.id, file);
+      const logoUrl = response.data?.data?.logoUrl ?? null;
+      setTemplate((current) => ({ ...current, logoUrl }));
+      await loadTemplates();
+      setNotice('Logo uploaded.');
+    } catch (error: any) {
+      setNotice(error.response?.data?.error ?? 'Failed to upload logo');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const removeLogo = async () => {
+    if (!template.id) return;
+    setBusy('logo');
+    try {
+      await barcodeApi.deleteTemplateLogo(template.id);
+      setTemplate((current) => ({ ...current, logoUrl: null }));
+      await loadTemplates();
+      setNotice('Logo removed.');
+    } catch (error: any) {
+      setNotice(error.response?.data?.error ?? 'Failed to remove logo');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const loadVariants = async (skuId: string) => {
     if (variantsBySku[skuId]) return;
     try {
@@ -691,6 +730,7 @@ export default function BarcodePrintPage() {
             .barcode-label { overflow: hidden; border: 0; display: flex; flex-direction: column; justify-content: center; color: #111; background: white; }
             .barcode-product-name { font-weight: 700; font-size: 9pt; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .barcode-variant-name { font-size: 7.5pt; line-height: 1.1; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .barcode-logo { display: block; max-width: 100%; max-height: 8mm; margin: 0 auto 0.5mm; object-fit: contain; }
             .barcode-image { width: 100%; margin: 1mm 0; color: #111; }
             .barcode-svg { width: 100%; height: 100%; display: block; }
             .barcode-label-footer { display: flex; justify-content: space-between; gap: 2mm; font-size: 7pt; font-weight: 700; }
@@ -956,7 +996,8 @@ export default function BarcodePrintPage() {
               <div className="barcode-checkbox-grid">
                 {[
                   ['Product name', 'showProductName'], ['Variant name', 'showVariantName'], ['Price', 'showPrice'],
-                  ['SKU code', 'showSkuCode'], ['Barcode number', 'showBarcodeNumber'], ['Default template', 'isDefault'],
+                  ['SKU code', 'showSkuCode'], ['Barcode number', 'showBarcodeNumber'], ['Company logo', 'showLogo'],
+                  ['Default template', 'isDefault'],
                 ].map(([label, key]) => (
                   <label key={key} className="barcode-checkbox">
                     <input
@@ -967,6 +1008,38 @@ export default function BarcodePrintPage() {
                     <span>{label}</span>
                   </label>
                 ))}
+              </div>
+              <div className="form-group">
+                <span className="form-label">Logo image</span>
+                {template.id ? (
+                  <div className="flex items-center gap-3">
+                    {template.logoUrl && (
+                      <img
+                        src={resolveBackendUrl(template.logoUrl)}
+                        alt="Template logo"
+                        className="barcode-logo-preview"
+                      />
+                    )}
+                    <input
+                      className="input-field"
+                      type="file"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      disabled={busy === 'logo'}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = '';
+                        if (file) void uploadLogo(file);
+                      }}
+                    />
+                    {template.logoUrl && (
+                      <button type="button" className="btn-sm" disabled={busy === 'logo'} onClick={() => void removeLogo()}>
+                        Remove logo
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <UiText className="text-xs text-gray-500">Save this template first to upload a logo.</UiText>
+                )}
               </div>
               <button type="button" className="btn-primary self-start" onClick={() => void saveTemplate()} disabled={busy === 'template'}>
                 Save template

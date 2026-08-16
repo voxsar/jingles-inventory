@@ -387,6 +387,8 @@ model BarcodePrintTemplate {
   showPrice         Boolean  @default(true) @map("show_price")
   showSkuCode       Boolean  @default(false) @map("show_sku_code")
   showBarcodeNumber Boolean  @default(true) @map("show_barcode_number")
+  showLogo          Boolean  @default(false) @map("show_logo")
+  logoUrl           String?  @map("logo_url")
   isDefault         Boolean  @default(false) @map("is_default")
   printCount        Int      @default(0) @map("print_count")
   createdById       String?  @map("created_by")

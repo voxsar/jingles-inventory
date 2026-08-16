@@ -279,8 +279,20 @@ export default function SKUPage() {
 		setter((f: any) => ({ ...f, unitOfMeasureId: unitId, unitOfMeasure: unit?.name ?? '' }));
 	};
 
+	// New products default to the seeded "Piece" unit (abbreviation 'pc') so the
+	// unit picker isn't left blank for the common case. Matched on abbreviation,
+	// not name, since a custom unit could reuse the "Piece" label. Falls back to
+	// blank (prior behavior) if the seed unit isn't present.
+	const getDefaultUnitFields = () => {
+		const pieceUnit = units.find((u: any) => u.isSystem && u.abbreviation === 'pc')
+			?? units.find((u: any) => u.abbreviation === 'pc');
+		return pieceUnit
+			? { unitOfMeasureId: pieceUnit.id, unitOfMeasure: pieceUnit.name }
+			: { unitOfMeasureId: '', unitOfMeasure: '' };
+	};
+
 	const resetCreateState = () => {
-		setForm(defaultForm);
+		setForm({ ...defaultForm, ...getDefaultUnitFields() });
 		setCreateBarcode('');
 		setCreateBarcodeMatch(null);
 		setFormTags([]);

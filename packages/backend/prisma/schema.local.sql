@@ -260,6 +260,8 @@ CREATE TABLE IF NOT EXISTS "barcode_print_templates" (
     "show_price" BOOLEAN NOT NULL DEFAULT true,
     "show_sku_code" BOOLEAN NOT NULL DEFAULT false,
     "show_barcode_number" BOOLEAN NOT NULL DEFAULT true,
+    "show_logo" BOOLEAN NOT NULL DEFAULT false,
+    "logo_url" TEXT,
     "is_default" BOOLEAN NOT NULL DEFAULT false,
     "print_count" INTEGER NOT NULL DEFAULT 0,
     "created_by" TEXT,

@@ -13,10 +13,11 @@ model User {
   email        String   @unique
   passwordHash String   @map("password_hash")
   pinHash      String?  @map("pin_hash")
+  name         String?
+  phone        String?
   role         String
   accessScope  String   @default("BOTH") @map("access_scope")
   isSalesman   Boolean  @default(true) @map("is_salesman")
-  name         String?
   legacyCode   String?  @unique @map("legacy_code")
   vendorId     String?  @map("vendor_id")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -387,6 +388,8 @@ model BarcodePrintTemplate {
   showPrice         Boolean  @default(true) @map("show_price")
   showSkuCode       Boolean  @default(false) @map("show_sku_code")
   showBarcodeNumber Boolean  @default(true) @map("show_barcode_number")
+  showLogo          Boolean  @default(false) @map("show_logo")
+  logoUrl           String?  @map("logo_url")
   isDefault         Boolean  @default(false) @map("is_default")
   printCount        Int      @default(0) @map("print_count")
   createdById       String?  @map("created_by")

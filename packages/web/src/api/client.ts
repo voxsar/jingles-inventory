@@ -328,6 +328,12 @@ export const barcodeApi = {
   createPrintJobFromGrn: (grnId: string, data?: { templateId?: string | null }) =>
     api.post(`/barcode/prints/from-grn/${grnId}`, data ?? {}),
   markPrintJobPrinted: (id: string) => api.post(`/barcode/prints/${id}/mark-printed`),
+  uploadTemplateLogo: (templateId: string, file: File) => {
+    const form = new FormData();
+    form.append('logo', file);
+    return api.post(`/uploads/barcode-logo/${templateId}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  deleteTemplateLogo: (templateId: string) => api.delete(`/uploads/barcode-logo/${templateId}`),
 };
 
 // Space

@@ -5,7 +5,7 @@ import fs from 'fs';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import prisma from '../prisma/client';
 import logger from '../utils/logger';
-import { getProductsUploadRoot, getStorageRoot } from '../utils/runtimePaths';
+import { getProductsUploadRoot, getBarcodeUploadRoot, getStorageRoot } from '../utils/runtimePaths';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -31,6 +31,34 @@ const upload = multer({
 			cb(null, true);
 		} else {
 			cb(new Error('Only image (jpg, jpeg, png, gif, webp) and video (mp4, webm, mov, avi) files are allowed'));
+		}
+	},
+});
+
+// Barcode template logos are images only (no video), stored separately from
+// product media so they don't get swept up in per-SKU gallery listings.
+const logoStorage = multer.diskStorage({
+	destination: (_req, _file, cb) => {
+		cb(null, getBarcodeUploadRoot());
+	},
+	filename: (_req, file, cb) => {
+		const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+		const ext = path.extname(file.originalname);
+		cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+	},
+});
+
+const logoUpload = multer({
+	storage: logoStorage,
+	limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+	fileFilter: (_req, file, cb) => {
+		const imageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+		const ext = path.extname(file.originalname).toLowerCase();
+
+		if (imageTypes.includes(ext)) {
+			cb(null, true);
+		} else {
+			cb(new Error('Only image (jpg, jpeg, png, gif, webp) files are allowed'));
 		}
 	},
 });
@@ -365,6 +393,93 @@ router.delete('/video/:skuId', async (req: AuthRequest, res: Response): Promise<
 	} catch (error: any) {
 		logger.error('Failed to delete video:', error);
 		res.status(500).json({ success: false, error: 'Failed to delete video' });
+	}
+});
+
+// Upload a logo for a barcode print template
+router.post('/barcode-logo/:templateId', logoUpload.single('logo'), async (req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const { templateId } = req.params;
+		const file = req.file;
+
+		if (!file) {
+			res.status(400).json({ success: false, error: 'No file uploaded' });
+			return;
+		}
+
+		const template = await prisma.barcodePrintTemplate.findUnique({ where: { id: templateId } });
+		if (!template) {
+			fs.unlinkSync(file.path);
+			res.status(404).json({ success: false, error: 'Barcode template not found' });
+			return;
+		}
+
+		// If the template already has a logo, delete the old file
+		if (template.logoUrl) {
+			const oldLogoPath = path.join(getStorageRoot(), template.logoUrl);
+			if (fs.existsSync(oldLogoPath)) {
+				fs.unlinkSync(oldLogoPath);
+			}
+		}
+
+		const logoUrl = `/uploads/barcode/${file.filename}`;
+		await prisma.barcodePrintTemplate.update({
+			where: { id: templateId },
+			data: { logoUrl },
+		});
+
+		logger.info(`Uploaded logo for barcode template ${templateId} by user ${req.user?.id}`);
+		res.json({ success: true, data: { logoUrl } });
+	} catch (error: any) {
+		logger.error('Barcode logo upload failed:', error);
+
+		if (req.file && fs.existsSync(req.file.path)) {
+			fs.unlinkSync(req.file.path);
+		}
+
+		if (error.message?.includes('Only')) {
+			res.status(400).json({ success: false, error: error.message });
+		} else {
+			res.status(500).json({ success: false, error: 'Failed to upload logo' });
+		}
+	}
+});
+
+// Delete a barcode print template's logo
+router.delete('/barcode-logo/:templateId', async (req: AuthRequest, res: Response): Promise<void> => {
+	try {
+		const { templateId } = req.params;
+
+		const template = await prisma.barcodePrintTemplate.findUnique({
+			where: { id: templateId },
+			select: { logoUrl: true },
+		});
+
+		if (!template) {
+			res.status(404).json({ success: false, error: 'Barcode template not found' });
+			return;
+		}
+
+		if (!template.logoUrl) {
+			res.status(404).json({ success: false, error: 'No logo found for this template' });
+			return;
+		}
+
+		const filePath = path.join(getStorageRoot(), template.logoUrl);
+		if (fs.existsSync(filePath)) {
+			fs.unlinkSync(filePath);
+		}
+
+		await prisma.barcodePrintTemplate.update({
+			where: { id: templateId },
+			data: { logoUrl: null },
+		});
+
+		logger.info(`Deleted logo for barcode template ${templateId} by user ${req.user?.id}`);
+		res.json({ success: true });
+	} catch (error: any) {
+		logger.error('Failed to delete barcode template logo:', error);
+		res.status(500).json({ success: false, error: 'Failed to delete logo' });
 	}
 });
 

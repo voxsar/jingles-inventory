@@ -34,6 +34,10 @@ export function getOcrUploadRoot() {
   return ensureDirectory(path.join(getUploadsRoot(), 'ocr'));
 }
 
+export function getBarcodeUploadRoot() {
+  return ensureDirectory(path.join(getUploadsRoot(), 'barcode'));
+}
+
 export function getUpstreamServerUrl() {
   const rawValue =
     process.env.JINGLES_UPSTREAM_SERVER_URL?.trim() ||

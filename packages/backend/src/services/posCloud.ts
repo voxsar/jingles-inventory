@@ -2167,46 +2167,104 @@ export async function posSyncHandshake(vectorClock: VectorClock) {
   };
 }
 
+/**
+ * Records (or refreshes) an "apply failed" conflict for an event that threw
+ * while being applied, keyed on the event's own id so a workstation that
+ * keeps resending the same still-pending event every sync cycle updates one
+ * row instead of piling up a fresh conflict every five minutes.
+ */
+async function recordEventApplyFailure(event: SyncEvent, message: string): Promise<SyncConflict> {
+  const pool = getPool();
+  const detail = {
+    reason: 'APPLY_ERROR',
+    message,
+    eventType: event.eventType,
+    deviceId: event.deviceId,
+    sequenceNum: event.sequenceNum,
+  };
+
+  const existing = (await pool.query(
+    `SELECT * FROM pos_sync_conflicts WHERE remote_event_id = $1 AND policy = 'SYNC_ERROR' AND status = 'OPEN' LIMIT 1`,
+    [event.id],
+  )).rows[0];
+
+  if (existing) {
+    const updated = (await pool.query(
+      `UPDATE pos_sync_conflicts SET detail = $1 WHERE id = $2 RETURNING *`,
+      [detail, existing.id],
+    )).rows[0];
+    return toConflictDto(updated);
+  }
+
+  const created = (await pool.query(
+    `
+      INSERT INTO pos_sync_conflicts (
+        id, aggregate_type, aggregate_id, local_event_id, remote_event_id,
+        policy, status, detail
+      )
+      VALUES ($1, $2, $3, NULL, $4, 'SYNC_ERROR', 'OPEN', $5)
+      RETURNING *
+    `,
+    [randomUUID(), event.aggregateType, event.aggregateId, event.id, detail],
+  )).rows[0];
+  return toConflictDto(created);
+}
+
 export async function posSyncPlayback(input: SyncPlaybackRequest): Promise<SyncPlaybackResponse> {
   await ensurePosCloudSchema();
-  return withTransaction(async (client) => {
-    const acceptedEventIds: string[] = [];
-    const conflicts: SyncConflict[] = [];
 
-    const sortedIncoming = [...(input.events ?? [])].sort((left, right) =>
-      compareEventOrder(left.sequenceNum, left.deviceId, right.sequenceNum, right.deviceId),
-    );
+  const acceptedEventIds: string[] = [];
+  const conflicts: SyncConflict[] = [];
 
-    for (const event of sortedIncoming) {
-      const normalizedEvent: SyncEvent = {
-        ...event,
-        conflictPolicy: event.conflictPolicy ?? resolveConflictPolicy(event.eventType),
-        state: event.state ?? 'PENDING',
-      };
+  const sortedIncoming = [...(input.events ?? [])].sort((left, right) =>
+    compareEventOrder(left.sequenceNum, left.deviceId, right.sequenceNum, right.deviceId),
+  );
 
-      const result = await appendEvent(client, normalizedEvent);
+  // Every event gets its own transaction. A batch mixes independent
+  // "tables" (shifts, sales, returns, customers, credit payments) - one
+  // malformed or rejected event must never roll back events that already
+  // applied cleanly earlier in the same playback call. A failure is
+  // recorded as an open conflict and playback continues with the rest.
+  for (const event of sortedIncoming) {
+    const normalizedEvent: SyncEvent = {
+      ...event,
+      conflictPolicy: event.conflictPolicy ?? resolveConflictPolicy(event.eventType),
+      state: event.state ?? 'PENDING',
+    };
+
+    try {
+      const result = await withTransaction((client) => appendEvent(client, normalizedEvent));
       acceptedEventIds.push(normalizedEvent.id);
       if (result.conflict) {
         conflicts.push(result.conflict);
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown sync error';
+      console.error('[POS sync] Event application failed; continuing with the remaining events', {
+        eventId: normalizedEvent.id,
+        eventType: normalizedEvent.eventType,
+        aggregateId: normalizedEvent.aggregateId,
+        message,
+      });
+      conflicts.push(await recordEventApplyFailure(normalizedEvent, message));
     }
+  }
 
-    const serverVectorClock = await getServerVectorClock(client);
-    const remoteEventsRows = (await client.query(
-      `SELECT * FROM pos_sync_events ORDER BY created_at ASC`,
-    )).rows;
+  const [serverVectorClock, remoteEventsResult] = await Promise.all([
+    getServerVectorClock(),
+    getPool().query(`SELECT * FROM pos_sync_events ORDER BY created_at ASC`),
+  ]);
 
-    const remoteEvents = remoteEventsRows
-      .map(toStoredEventDto)
-      .filter((event) => event.sequenceNum > (input.vectorClock[event.deviceId] ?? 0));
+  const remoteEvents = remoteEventsResult.rows
+    .map(toStoredEventDto)
+    .filter((event) => event.sequenceNum > (input.vectorClock[event.deviceId] ?? 0));
 
-    return {
-      acceptedEventIds,
-      remoteEvents,
-      serverVectorClock,
-      conflicts,
-    };
-  });
+  return {
+    acceptedEventIds,
+    remoteEvents,
+    serverVectorClock,
+    conflicts,
+  };
 }
 
 export async function posSyncConfirm(input: SyncConfirmRequest) {

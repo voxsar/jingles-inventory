@@ -159,6 +159,51 @@ describe('SKUPage', () => {
 		});
 	});
 
+	it('defaults the create form unit to the seeded Piece unit when one is available', async () => {
+		const user = userEvent.setup();
+		listUnitsMock.mockResolvedValue({
+			data: {
+				data: [
+					{ id: 'unit-piece', name: 'Piece', abbreviation: 'pc', isSystem: true },
+					{ id: 'unit-box', name: 'Box', abbreviation: 'box', isSystem: true },
+				],
+			},
+		});
+
+		render(<SKUPage />);
+
+		await waitFor(() => {
+			expect(screen.getByText('GLOBE PADLOCK 701 20MM')).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByRole('button', { name: '+ New Product' }));
+
+		await waitFor(() => {
+			expect(screen.getByText('➕ Create New Product')).toBeInTheDocument();
+			expect(screen.getByText('Piece (pc)')).toBeInTheDocument();
+		});
+	});
+
+	it('leaves the create form unit blank when no Piece unit is seeded', async () => {
+		const user = userEvent.setup();
+		listUnitsMock.mockResolvedValue({
+			data: { data: [{ id: 'unit-box', name: 'Box', abbreviation: 'box', isSystem: true }] },
+		});
+
+		render(<SKUPage />);
+
+		await waitFor(() => {
+			expect(screen.getByText('GLOBE PADLOCK 701 20MM')).toBeInTheDocument();
+		});
+
+		await user.click(screen.getByRole('button', { name: '+ New Product' }));
+
+		await waitFor(() => {
+			expect(screen.getByText('➕ Create New Product')).toBeInTheDocument();
+			expect(screen.getByText('— Select Unit —')).toBeInTheDocument();
+		});
+	});
+
 	it('suggests existing products while typing a name and opens one in edit mode', async () => {
 		const user = userEvent.setup();
 

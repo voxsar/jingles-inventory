@@ -8444,10 +8444,11 @@ export namespace Prisma {
     email: string | null
     passwordHash: string | null
     pinHash: string | null
+    name: string | null
+    phone: string | null
     role: string | null
     accessScope: string | null
     isSalesman: boolean | null
-    name: string | null
     legacyCode: string | null
     vendorId: string | null
     createdAt: Date | null
@@ -8459,10 +8460,11 @@ export namespace Prisma {
     email: string | null
     passwordHash: string | null
     pinHash: string | null
+    name: string | null
+    phone: string | null
     role: string | null
     accessScope: string | null
     isSalesman: boolean | null
-    name: string | null
     legacyCode: string | null
     vendorId: string | null
     createdAt: Date | null
@@ -8474,10 +8476,11 @@ export namespace Prisma {
     email: number
     passwordHash: number
     pinHash: number
+    name: number
+    phone: number
     role: number
     accessScope: number
     isSalesman: number
-    name: number
     legacyCode: number
     vendorId: number
     createdAt: number
@@ -8491,10 +8494,11 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     pinHash?: true
+    name?: true
+    phone?: true
     role?: true
     accessScope?: true
     isSalesman?: true
-    name?: true
     legacyCode?: true
     vendorId?: true
     createdAt?: true
@@ -8506,10 +8510,11 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     pinHash?: true
+    name?: true
+    phone?: true
     role?: true
     accessScope?: true
     isSalesman?: true
-    name?: true
     legacyCode?: true
     vendorId?: true
     createdAt?: true
@@ -8521,10 +8526,11 @@ export namespace Prisma {
     email?: true
     passwordHash?: true
     pinHash?: true
+    name?: true
+    phone?: true
     role?: true
     accessScope?: true
     isSalesman?: true
-    name?: true
     legacyCode?: true
     vendorId?: true
     createdAt?: true
@@ -8609,10 +8615,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash: string | null
+    name: string | null
+    phone: string | null
     role: string
     accessScope: string
     isSalesman: boolean
-    name: string | null
     legacyCode: string | null
     vendorId: string | null
     createdAt: Date
@@ -8641,10 +8648,11 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     pinHash?: boolean
+    name?: boolean
+    phone?: boolean
     role?: boolean
     accessScope?: boolean
     isSalesman?: boolean
-    name?: boolean
     legacyCode?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -8677,10 +8685,11 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     pinHash?: boolean
+    name?: boolean
+    phone?: boolean
     role?: boolean
     accessScope?: boolean
     isSalesman?: boolean
-    name?: boolean
     legacyCode?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -8693,10 +8702,11 @@ export namespace Prisma {
     email?: boolean
     passwordHash?: boolean
     pinHash?: boolean
+    name?: boolean
+    phone?: boolean
     role?: boolean
     accessScope?: boolean
     isSalesman?: boolean
-    name?: boolean
     legacyCode?: boolean
     vendorId?: boolean
     createdAt?: boolean
@@ -8759,10 +8769,11 @@ export namespace Prisma {
       email: string
       passwordHash: string
       pinHash: string | null
+      name: string | null
+      phone: string | null
       role: string
       accessScope: string
       isSalesman: boolean
-      name: string | null
       legacyCode: string | null
       vendorId: string | null
       createdAt: Date
@@ -9184,10 +9195,11 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly pinHash: FieldRef<"User", 'String'>
+    readonly name: FieldRef<"User", 'String'>
+    readonly phone: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'String'>
     readonly accessScope: FieldRef<"User", 'String'>
     readonly isSalesman: FieldRef<"User", 'Boolean'>
-    readonly name: FieldRef<"User", 'String'>
     readonly legacyCode: FieldRef<"User", 'String'>
     readonly vendorId: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
@@ -27000,6 +27012,8 @@ export namespace Prisma {
     showPrice: boolean | null
     showSkuCode: boolean | null
     showBarcodeNumber: boolean | null
+    showLogo: boolean | null
+    logoUrl: string | null
     isDefault: boolean | null
     printCount: number | null
     createdById: string | null
@@ -27034,6 +27048,8 @@ export namespace Prisma {
     showPrice: boolean | null
     showSkuCode: boolean | null
     showBarcodeNumber: boolean | null
+    showLogo: boolean | null
+    logoUrl: string | null
     isDefault: boolean | null
     printCount: number | null
     createdById: string | null
@@ -27068,6 +27084,8 @@ export namespace Prisma {
     showPrice: number
     showSkuCode: number
     showBarcodeNumber: number
+    showLogo: number
+    logoUrl: number
     isDefault: number
     printCount: number
     createdById: number
@@ -27146,6 +27164,8 @@ export namespace Prisma {
     showPrice?: true
     showSkuCode?: true
     showBarcodeNumber?: true
+    showLogo?: true
+    logoUrl?: true
     isDefault?: true
     printCount?: true
     createdById?: true
@@ -27180,6 +27200,8 @@ export namespace Prisma {
     showPrice?: true
     showSkuCode?: true
     showBarcodeNumber?: true
+    showLogo?: true
+    logoUrl?: true
     isDefault?: true
     printCount?: true
     createdById?: true
@@ -27214,6 +27236,8 @@ export namespace Prisma {
     showPrice?: true
     showSkuCode?: true
     showBarcodeNumber?: true
+    showLogo?: true
+    logoUrl?: true
     isDefault?: true
     printCount?: true
     createdById?: true
@@ -27335,6 +27359,8 @@ export namespace Prisma {
     showPrice: boolean
     showSkuCode: boolean
     showBarcodeNumber: boolean
+    showLogo: boolean
+    logoUrl: string | null
     isDefault: boolean
     printCount: number
     createdById: string | null
@@ -27388,6 +27414,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: boolean
     isDefault?: boolean
     printCount?: boolean
     createdById?: boolean
@@ -27425,6 +27453,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: boolean
     isDefault?: boolean
     printCount?: boolean
     createdById?: boolean
@@ -27460,6 +27490,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: boolean
     isDefault?: boolean
     printCount?: boolean
     createdById?: boolean
@@ -27509,6 +27541,8 @@ export namespace Prisma {
       showPrice: boolean
       showSkuCode: boolean
       showBarcodeNumber: boolean
+      showLogo: boolean
+      logoUrl: string | null
       isDefault: boolean
       printCount: number
       createdById: string | null
@@ -27935,6 +27969,8 @@ export namespace Prisma {
     readonly showPrice: FieldRef<"BarcodePrintTemplate", 'Boolean'>
     readonly showSkuCode: FieldRef<"BarcodePrintTemplate", 'Boolean'>
     readonly showBarcodeNumber: FieldRef<"BarcodePrintTemplate", 'Boolean'>
+    readonly showLogo: FieldRef<"BarcodePrintTemplate", 'Boolean'>
+    readonly logoUrl: FieldRef<"BarcodePrintTemplate", 'String'>
     readonly isDefault: FieldRef<"BarcodePrintTemplate", 'Boolean'>
     readonly printCount: FieldRef<"BarcodePrintTemplate", 'Int'>
     readonly createdById: FieldRef<"BarcodePrintTemplate", 'String'>
@@ -82736,10 +82772,11 @@ export namespace Prisma {
     email: 'email',
     passwordHash: 'passwordHash',
     pinHash: 'pinHash',
+    name: 'name',
+    phone: 'phone',
     role: 'role',
     accessScope: 'accessScope',
     isSalesman: 'isSalesman',
-    name: 'name',
     legacyCode: 'legacyCode',
     vendorId: 'vendorId',
     createdAt: 'createdAt',
@@ -82995,6 +83032,8 @@ export namespace Prisma {
     showPrice: 'showPrice',
     showSkuCode: 'showSkuCode',
     showBarcodeNumber: 'showBarcodeNumber',
+    showLogo: 'showLogo',
+    logoUrl: 'logoUrl',
     isDefault: 'isDefault',
     printCount: 'printCount',
     createdById: 'createdById',
@@ -84004,10 +84043,11 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     pinHash?: StringNullableFilter<"User"> | string | null
+    name?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     accessScope?: StringFilter<"User"> | string
     isSalesman?: BoolFilter<"User"> | boolean
-    name?: StringNullableFilter<"User"> | string | null
     legacyCode?: StringNullableFilter<"User"> | string | null
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -84039,10 +84079,11 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     pinHash?: SortOrderInput | SortOrder
+    name?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
     role?: SortOrder
     accessScope?: SortOrder
     isSalesman?: SortOrder
-    name?: SortOrderInput | SortOrder
     legacyCode?: SortOrderInput | SortOrder
     vendorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -84078,10 +84119,11 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     passwordHash?: StringFilter<"User"> | string
     pinHash?: StringNullableFilter<"User"> | string | null
+    name?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     accessScope?: StringFilter<"User"> | string
     isSalesman?: BoolFilter<"User"> | boolean
-    name?: StringNullableFilter<"User"> | string | null
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     isActive?: BoolFilter<"User"> | boolean
@@ -84112,10 +84154,11 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     pinHash?: SortOrderInput | SortOrder
+    name?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
     role?: SortOrder
     accessScope?: SortOrder
     isSalesman?: SortOrder
-    name?: SortOrderInput | SortOrder
     legacyCode?: SortOrderInput | SortOrder
     vendorId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -84133,10 +84176,11 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     pinHash?: StringNullableWithAggregatesFilter<"User"> | string | null
+    name?: StringNullableWithAggregatesFilter<"User"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: StringWithAggregatesFilter<"User"> | string
     accessScope?: StringWithAggregatesFilter<"User"> | string
     isSalesman?: BoolWithAggregatesFilter<"User"> | boolean
-    name?: StringNullableWithAggregatesFilter<"User"> | string | null
     legacyCode?: StringNullableWithAggregatesFilter<"User"> | string | null
     vendorId?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -85457,6 +85501,8 @@ export namespace Prisma {
     showPrice?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showSkuCode?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showBarcodeNumber?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    showLogo?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    logoUrl?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
     isDefault?: BoolFilter<"BarcodePrintTemplate"> | boolean
     printCount?: IntFilter<"BarcodePrintTemplate"> | number
     createdById?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
@@ -85493,6 +85539,8 @@ export namespace Prisma {
     showPrice?: SortOrder
     showSkuCode?: SortOrder
     showBarcodeNumber?: SortOrder
+    showLogo?: SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     isDefault?: SortOrder
     printCount?: SortOrder
     createdById?: SortOrderInput | SortOrder
@@ -85532,6 +85580,8 @@ export namespace Prisma {
     showPrice?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showSkuCode?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showBarcodeNumber?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    showLogo?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    logoUrl?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
     isDefault?: BoolFilter<"BarcodePrintTemplate"> | boolean
     printCount?: IntFilter<"BarcodePrintTemplate"> | number
     createdById?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
@@ -85568,6 +85618,8 @@ export namespace Prisma {
     showPrice?: SortOrder
     showSkuCode?: SortOrder
     showBarcodeNumber?: SortOrder
+    showLogo?: SortOrder
+    logoUrl?: SortOrderInput | SortOrder
     isDefault?: SortOrder
     printCount?: SortOrder
     createdById?: SortOrderInput | SortOrder
@@ -85610,6 +85662,8 @@ export namespace Prisma {
     showPrice?: BoolWithAggregatesFilter<"BarcodePrintTemplate"> | boolean
     showSkuCode?: BoolWithAggregatesFilter<"BarcodePrintTemplate"> | boolean
     showBarcodeNumber?: BoolWithAggregatesFilter<"BarcodePrintTemplate"> | boolean
+    showLogo?: BoolWithAggregatesFilter<"BarcodePrintTemplate"> | boolean
+    logoUrl?: StringNullableWithAggregatesFilter<"BarcodePrintTemplate"> | string | null
     isDefault?: BoolWithAggregatesFilter<"BarcodePrintTemplate"> | boolean
     printCount?: IntWithAggregatesFilter<"BarcodePrintTemplate"> | number
     createdById?: StringNullableWithAggregatesFilter<"BarcodePrintTemplate"> | string | null
@@ -90590,10 +90644,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -90624,10 +90679,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -90658,10 +90714,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -90692,10 +90749,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90726,10 +90784,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -90741,10 +90800,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -90755,10 +90815,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92180,6 +92241,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdAt?: Date | string
@@ -92215,6 +92278,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdById?: string | null
@@ -92250,6 +92315,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92285,6 +92352,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -92320,6 +92389,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdById?: string | null
@@ -92354,6 +92425,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -92387,6 +92460,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -98104,10 +98179,11 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     pinHash?: SortOrder
+    name?: SortOrder
+    phone?: SortOrder
     role?: SortOrder
     accessScope?: SortOrder
     isSalesman?: SortOrder
-    name?: SortOrder
     legacyCode?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -98119,10 +98195,11 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     pinHash?: SortOrder
+    name?: SortOrder
+    phone?: SortOrder
     role?: SortOrder
     accessScope?: SortOrder
     isSalesman?: SortOrder
-    name?: SortOrder
     legacyCode?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -98134,10 +98211,11 @@ export namespace Prisma {
     email?: SortOrder
     passwordHash?: SortOrder
     pinHash?: SortOrder
+    name?: SortOrder
+    phone?: SortOrder
     role?: SortOrder
     accessScope?: SortOrder
     isSalesman?: SortOrder
-    name?: SortOrder
     legacyCode?: SortOrder
     vendorId?: SortOrder
     createdAt?: SortOrder
@@ -99235,6 +99313,8 @@ export namespace Prisma {
     showPrice?: SortOrder
     showSkuCode?: SortOrder
     showBarcodeNumber?: SortOrder
+    showLogo?: SortOrder
+    logoUrl?: SortOrder
     isDefault?: SortOrder
     printCount?: SortOrder
     createdById?: SortOrder
@@ -99290,6 +99370,8 @@ export namespace Prisma {
     showPrice?: SortOrder
     showSkuCode?: SortOrder
     showBarcodeNumber?: SortOrder
+    showLogo?: SortOrder
+    logoUrl?: SortOrder
     isDefault?: SortOrder
     printCount?: SortOrder
     createdById?: SortOrder
@@ -99324,6 +99406,8 @@ export namespace Prisma {
     showPrice?: SortOrder
     showSkuCode?: SortOrder
     showBarcodeNumber?: SortOrder
+    showLogo?: SortOrder
+    logoUrl?: SortOrder
     isDefault?: SortOrder
     printCount?: SortOrder
     createdById?: SortOrder
@@ -110101,6 +110185,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdAt?: Date | string
@@ -110135,6 +110221,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdAt?: Date | string
@@ -110842,6 +110930,8 @@ export namespace Prisma {
     showPrice?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showSkuCode?: BoolFilter<"BarcodePrintTemplate"> | boolean
     showBarcodeNumber?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    showLogo?: BoolFilter<"BarcodePrintTemplate"> | boolean
+    logoUrl?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
     isDefault?: BoolFilter<"BarcodePrintTemplate"> | boolean
     printCount?: IntFilter<"BarcodePrintTemplate"> | number
     createdById?: StringNullableFilter<"BarcodePrintTemplate"> | string | null
@@ -110888,10 +110978,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -110921,10 +111012,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -111257,10 +111349,11 @@ export namespace Prisma {
     email?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     pinHash?: StringNullableFilter<"User"> | string | null
+    name?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
     role?: StringFilter<"User"> | string
     accessScope?: StringFilter<"User"> | string
     isSalesman?: BoolFilter<"User"> | boolean
-    name?: StringNullableFilter<"User"> | string | null
     legacyCode?: StringNullableFilter<"User"> | string | null
     vendorId?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -116597,10 +116690,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -116630,10 +116724,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -116718,10 +116813,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -116751,10 +116847,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -116822,6 +116919,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdAt?: Date | string
@@ -116856,6 +116955,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdById?: string | null
@@ -116912,10 +117013,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -116945,10 +117047,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -117055,6 +117158,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -117089,6 +117194,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdById?: NullableStringFieldUpdateOperationsInput | string | null
@@ -117157,10 +117264,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -117190,10 +117298,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -119942,10 +120051,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -119975,10 +120085,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -120013,10 +120124,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -120046,10 +120158,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -120320,10 +120433,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -120353,10 +120467,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -120397,10 +120512,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -120430,10 +120546,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -121369,10 +121486,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -121402,10 +121520,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -121888,10 +122007,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -121921,10 +122041,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -121970,10 +122091,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -122003,10 +122125,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -122052,10 +122175,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -122085,10 +122209,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -122155,10 +122280,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -122188,10 +122314,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -122226,10 +122353,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -122259,10 +122387,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -122427,10 +122556,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -122460,10 +122590,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -122504,10 +122635,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -122537,10 +122669,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -122733,10 +122866,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -122766,10 +122900,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -123036,10 +123171,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -123069,10 +123205,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -124018,10 +124155,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -124051,10 +124189,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -124221,10 +124360,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -124254,10 +124394,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -124556,10 +124697,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -124589,10 +124731,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -124921,10 +125064,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -124954,10 +125098,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -125132,10 +125277,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -125165,10 +125311,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -125455,10 +125602,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -125488,10 +125636,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -126878,10 +127027,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -126911,10 +127061,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -127042,10 +127193,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -127075,10 +127227,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -127296,10 +127449,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -127329,10 +127483,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -127603,10 +127758,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -127636,10 +127792,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -128213,10 +128370,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -128246,10 +128404,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -128342,10 +128501,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -128375,10 +128535,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -128547,10 +128708,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -128580,10 +128742,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -128629,10 +128792,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -128662,10 +128826,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -128853,10 +129018,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -128886,10 +129052,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -129162,10 +129329,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -129195,10 +129363,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -129498,10 +129667,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -129531,10 +129701,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -129897,10 +130068,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -129930,10 +130102,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -130069,10 +130242,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -130102,10 +130276,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     vendorId?: string | null
     createdAt?: Date | string
@@ -130253,10 +130428,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -130286,10 +130462,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     vendorId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -130814,6 +130991,8 @@ export namespace Prisma {
     showPrice?: boolean
     showSkuCode?: boolean
     showBarcodeNumber?: boolean
+    showLogo?: boolean
+    logoUrl?: string | null
     isDefault?: boolean
     printCount?: number
     createdAt?: Date | string
@@ -131642,6 +131821,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -131676,6 +131857,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -131710,6 +131893,8 @@ export namespace Prisma {
     showPrice?: BoolFieldUpdateOperationsInput | boolean
     showSkuCode?: BoolFieldUpdateOperationsInput | boolean
     showBarcodeNumber?: BoolFieldUpdateOperationsInput | boolean
+    showLogo?: BoolFieldUpdateOperationsInput | boolean
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     isDefault?: BoolFieldUpdateOperationsInput | boolean
     printCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -131765,10 +131950,11 @@ export namespace Prisma {
     email: string
     passwordHash: string
     pinHash?: string | null
+    name?: string | null
+    phone?: string | null
     role: string
     accessScope?: string
     isSalesman?: boolean
-    name?: string | null
     legacyCode?: string | null
     createdAt?: Date | string
     isActive?: boolean
@@ -131869,10 +132055,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -131902,10 +132089,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -131935,10 +132123,11 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     pinHash?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     role?: StringFieldUpdateOperationsInput | string
     accessScope?: StringFieldUpdateOperationsInput | string
     isSalesman?: BoolFieldUpdateOperationsInput | boolean
-    name?: NullableStringFieldUpdateOperationsInput | string | null
     legacyCode?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean

@@ -38,6 +38,8 @@ const defaultTemplate = {
   showPrice: true,
   showSkuCode: false,
   showBarcodeNumber: true,
+  showLogo: false,
+  logoUrl: null as string | null,
   isDefault: true,
 };
 
@@ -164,6 +166,7 @@ function normalizeTemplatePayload(input: any) {
     showPrice: boolFromBody(input.showPrice, true),
     showSkuCode: boolFromBody(input.showSkuCode, false),
     showBarcodeNumber: boolFromBody(input.showBarcodeNumber, true),
+    showLogo: boolFromBody(input.showLogo, false),
     isDefault: boolFromBody(input.isDefault, false),
   };
 }
